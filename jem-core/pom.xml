@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>pw.phylame.jem</groupId>
+        <artifactId>jem-project</artifactId>
+        <version>3.0.0</version>
+        <relativePath>../jem-project/pom.xml</relativePath>
+    </parent>
+
+    <artifactId>jem-core</artifactId>
+    <name>Jem Core</name>
+    <description>Core of Jem toolkit</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>pw.phylame.ycl</groupId>
+            <artifactId>ycl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+    </dependencies>
+</project>

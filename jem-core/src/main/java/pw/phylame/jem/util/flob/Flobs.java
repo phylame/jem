@@ -16,9 +16,10 @@
  * limitations under the License.
  */
 
-package pw.phylame.jem.util;
+package pw.phylame.jem.util.flob;
 
 import lombok.NonNull;
+import pw.phylame.jem.util.Variants;
 import pw.phylame.ycl.io.IOUtils;
 import pw.phylame.ycl.io.RAFInputStream;
 import pw.phylame.ycl.util.Exceptions;
@@ -36,38 +37,27 @@ public final class Flobs {
     }
 
     public static Flob forFile(@NonNull File file, String mime) throws IOException {
-        return new NormalFlob(file, getOrDetectMime(file.getPath(), mime));
+        return new NormalFlob(file, mime);
     }
 
     public static Flob forZip(@NonNull ZipFile zipFile, @NonNull String entry, String mime) throws IOException {
-        return new EntryFlob(zipFile, entry, getOrDetectMime(entry, mime));
+        return new EntryFlob(zipFile, entry, mime);
     }
 
     public static BlockFlob forBlock(@NonNull String name, @NonNull RandomAccessFile file, long offset, long size, String mime) throws IOException {
-        return new BlockFlob(name, file, offset, size, getOrDetectMime(name, mime));
+        return new BlockFlob(name, file, offset, size, mime);
     }
 
     public static Flob forURL(@NonNull URL url, String mime) {
-        return new URLFlob(url, getOrDetectMime(url.getPath(), mime));
+        return new URLFlob(url, mime);
     }
 
     public static Flob forBytes(@NonNull String name, byte[] bytes, String mime) {
-        return new ByteFlob(name, bytes, getOrDetectMime(name, mime));
+        return new ByteFlob(name, bytes, mime);
     }
 
     public static Flob forEmpty(String name, String mime) {
         return forBytes(name, null, mime);
-    }
-
-    /**
-     * Detects MIME type by file name if not specified.
-     *
-     * @param path path name of file
-     * @param mime given mime
-     * @return the mime type text
-     */
-    private static String getOrDetectMime(String path, String mime) {
-        return mime == null || mime.isEmpty() ? IOUtils.getMimeType(path) : mime;
     }
 
     private static class NormalFlob extends AbstractFlob {

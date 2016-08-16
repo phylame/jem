@@ -27,11 +27,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
-public final class EpmManager {
-    private EpmManager() {
+public final class Registry {
+    private Registry() {
     }
 
-    private static final String TAG = "EPM";
+    private static final String TAG = "RSY";
 
     /**
      * File path of parser registration
@@ -43,19 +43,20 @@ public final class EpmManager {
      */
     public static final String MAKER_DEFINE_FILE = "META-INF/jem/makers.prop";
 
+    /**
+     * Name of system property to auto load customized parsers and parsers.
+     */
     public static final String AUTO_LOAD_CUSTOMIZED_KEY = "jem.emp.autoLoad";
 
     /**
      * Holds registered <code>Parser</code> class information.
      */
-    private static final ImplementorFactory<Parser> parsers = new ImplementorFactory<>(Parser.class, true,
-            EpmManager.class.getClassLoader());
+    private static final ImplementorFactory<Parser> parsers = new ImplementorFactory<>(Parser.class, true, null);
 
     /**
      * Holds registered <code>Maker</code> class information.
      */
-    private static final ImplementorFactory<Maker> makers = new ImplementorFactory<>(Maker.class, true,
-            EpmManager.class.getClassLoader());
+    private static final ImplementorFactory<Maker> makers = new ImplementorFactory<>(Maker.class, true, null);
 
     /**
      * Mapping parser and maker name to file extension names.
@@ -250,9 +251,9 @@ public final class EpmManager {
     }
 
     public static void loadCustomizedImplementors() {
-        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        loadRegisters(classLoader, PARSER_DEFINE_FILE, parsers);
-        loadRegisters(classLoader, MAKER_DEFINE_FILE, makers);
+        val loader = Thread.currentThread().getContextClassLoader();
+        loadRegisters(loader, PARSER_DEFINE_FILE, parsers);
+        loadRegisters(loader, MAKER_DEFINE_FILE, makers);
     }
 
     private static final String NAME_EXTENSION_SEPARATOR = ";";

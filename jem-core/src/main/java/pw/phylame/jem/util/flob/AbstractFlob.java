@@ -16,13 +16,12 @@
  * limitations under the License.
  */
 
-package pw.phylame.jem.util;
+package pw.phylame.jem.util.flob;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 import pw.phylame.ycl.io.IOUtils;
+import pw.phylame.ycl.io.PathUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,11 +30,20 @@ import java.io.OutputStream;
 /**
  * Abstract <code>Flob</code> implementation.
  */
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class AbstractFlob implements Flob {
-    @Getter
+    @Getter(lazy = true)
     @NonNull
-    private final String mime;
+    private final String mime = detectMime();
+
+    protected AbstractFlob(String mime) {
+        _mime = mime;
+    }
+
+    private final String _mime;
+
+    private String detectMime() {
+        return PathUtils.mimeOrDetect(getName(), _mime);
+    }
 
     @Override
     public byte[] readAll() throws IOException {

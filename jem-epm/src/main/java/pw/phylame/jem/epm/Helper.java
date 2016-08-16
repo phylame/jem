@@ -20,18 +20,18 @@ import lombok.NonNull;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.util.JemException;
 import pw.phylame.jem.util.UnsupportedFormatException;
-import pw.phylame.ycl.io.IOUtils;
+import pw.phylame.ycl.io.PathUtils;
 import pw.phylame.ycl.util.Log;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-public final class Books {
-    private Books() {
+public final class Helper {
+    private Helper() {
     }
 
-    private static final String TAG = "BOOKS";
+    private static final String TAG = "EMP";
 
     /**
      * The default format of Jem.
@@ -45,13 +45,13 @@ public final class Books {
      * @return string represent the format
      */
     public static String formatOfExtension(String path) {
-        return EpmManager.nameOfExtension(IOUtils.getExtension(path).toLowerCase());
+        return Registry.nameOfExtension(PathUtils.extensionName(path).toLowerCase());
     }
 
     public static Parser parserForFormat(@NonNull String format) throws UnsupportedFormatException {
         Parser parser = null;
         try {
-            parser = EpmManager.parserFor(format);
+            parser = Registry.parserFor(format);
         } catch (IllegalAccessException | ClassNotFoundException | InstantiationException e) {
             Log.e(TAG, e);
         }
@@ -80,7 +80,7 @@ public final class Books {
     public static Maker makerForFormat(@NonNull String format) throws UnsupportedFormatException {
         Maker maker = null;
         try {
-            maker = EpmManager.makerFor(format);
+            maker = Registry.makerFor(format);
         } catch (IllegalAccessException | ClassNotFoundException | InstantiationException e) {
             Log.e(TAG, e);
         }

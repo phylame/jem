@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package pw.phylame.jem.util;
+package pw.phylame.jem.util.text;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

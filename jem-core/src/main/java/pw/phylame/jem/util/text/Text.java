@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package pw.phylame.jem.util;
+package pw.phylame.jem.util.text;
 
 import java.io.IOException;
 import java.io.Writer;

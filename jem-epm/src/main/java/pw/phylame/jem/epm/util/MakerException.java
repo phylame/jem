@@ -1,7 +1,5 @@
 /*
- * Copyright 2014-2016 Peng Wan <phylame@163.com>
- *
- * This file is part of Jem.
+ * Copyright 2016 Peng Wan <phylame@163.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +14,24 @@
  * limitations under the License.
  */
 
-package pw.phylame.jem.core;
+package pw.phylame.jem.epm.util;
+
+import pw.phylame.jem.util.JemException;
 
 /**
- * Interface for cleaning resources and others when destroying chapter.
- *
- * @since 2.0.1
+ * Exception for Jem Maker errors.
  */
-public interface Cleanable {
-    /**
-     * Cleans the specified <code>Chapter</code>.
-     *
-     * @param chapter the <code>Chapter</code> to be cleaned
-     */
-    void clean(Chapter chapter);
+public class MakerException extends JemException {
+
+    public MakerException(String message) {
+        super(message);
+    }
+
+    public MakerException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public MakerException(Throwable cause) {
+        super(cause);
+    }
 }

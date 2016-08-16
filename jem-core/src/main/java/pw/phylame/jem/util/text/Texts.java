@@ -16,10 +16,12 @@
  * limitations under the License.
  */
 
-package pw.phylame.jem.util;
+package pw.phylame.jem.util.text;
 
 import lombok.NonNull;
 import lombok.SneakyThrows;
+import pw.phylame.jem.util.Variants;
+import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.ycl.io.IOUtils;
 
 import java.io.IOException;

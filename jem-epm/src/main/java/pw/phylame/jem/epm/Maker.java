@@ -38,11 +38,11 @@ public interface Maker {
     /**
      * Writes <code>Book</code> to book file.
      *
-     * @param book      the <code>Book</code> to be written
-     * @param file      output file to store book
-     * @param arguments arguments to the maker
+     * @param book the <code>Book</code> to be written
+     * @param file output file to store book
+     * @param args arguments to the maker
      * @throws IOException  if occurs I/O errors
      * @throws JemException if occurs errors when making book file
      */
-    void make(Book book, File file, Map<String, Object> arguments) throws IOException, JemException;
+    void make(Book book, File file, Map<String, Object> args) throws IOException, JemException;
 }

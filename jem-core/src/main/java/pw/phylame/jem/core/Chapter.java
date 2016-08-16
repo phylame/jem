@@ -22,8 +22,8 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
-import pw.phylame.jem.util.Flob;
-import pw.phylame.jem.util.Text;
+import pw.phylame.jem.util.flob.Flob;
+import pw.phylame.jem.util.text.Text;
 import pw.phylame.jem.util.VariantMap;
 import pw.phylame.ycl.util.Validate;
 

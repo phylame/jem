@@ -35,7 +35,7 @@ public class PmabOutConfig extends ZipOutConfig {
     public static final String XML_CONFIG = "xmlConfig";
     public static final String TEXT_ENCODING = "encoding";
     public static final String DATE_FORMAT = "dateFormat";
-    public static final String META_INFO = "metaInfo";
+    public static final String META_INFO = "metadata";
 
     /**
      * Output PMAB version
@@ -84,7 +84,7 @@ public class PmabOutConfig extends ZipOutConfig {
      * <p><strong>NOTE:</strong> The key and value stored as String.
      */
     @Mapped(META_INFO)
-    public Map<Object, Object> metaInfo = null;
+    public Map<Object, Object> metadata = null;
 
     @Override
     public void adjust() {

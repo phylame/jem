@@ -45,21 +45,25 @@ public class XmlRender {
         doIndent = StringUtils.isNotEmpty(config.indentString);
     }
 
-    public void setOutput(Writer writer) throws IOException {
+    public XmlRender setOutput(Writer writer) throws IOException {
         xmlSerializer.setOutput(writer);
+        return this;
     }
 
-    public void setOutput(OutputStream outputStream) throws IOException {
+    public XmlRender setOutput(OutputStream outputStream) throws IOException {
         xmlSerializer.setOutput(outputStream, config.encoding);
+        return this;
     }
 
-    public void flush() throws IOException {
+    public XmlRender flush() throws IOException {
         xmlSerializer.flush();
+        return this;
     }
 
-    public void startXml() throws IOException {
+    public XmlRender startXml() throws IOException {
         xmlSerializer.startDocument(config.encoding, config.standalone);
         reset();
+        return this;
     }
 
     public void endXml() throws IOException {
@@ -67,18 +71,21 @@ public class XmlRender {
         flush();
     }
 
-    public void reset() {
+    public XmlRender reset() {
         tagStack.clear();
         indentCount = 0;
+        return this;
     }
 
-    public void docdecl(String root, String id, String url) throws IOException {
+    public XmlRender docdecl(String root, String id, String url) throws IOException {
         docdecl(root + " PUBLIC \"" + id + "\" \"" + url + "\"");
+        return this;
     }
 
-    public void docdecl(String text) throws IOException {
+    public XmlRender docdecl(String text) throws IOException {
         xmlSerializer.text(config.lineSeparator);
         xmlSerializer.docdecl(" " + text);
+        return this;
     }
 
     private void indent(int count) throws IOException {

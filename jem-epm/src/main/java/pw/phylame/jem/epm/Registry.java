@@ -26,7 +26,6 @@ import pw.phylame.ycl.util.Log;
 import pw.phylame.ycl.util.MiscUtils;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
 
 public final class Registry {
@@ -215,18 +214,22 @@ public final class Registry {
     /**
      * Maps specified file extension names to parser (or maker) name.
      *
-     * @param name the name of parser or maker
-     * @param exts file extension names supported by the parser (or maker),
-     *             if <code>null</code> use the parser name as one extension
+     * @param name       the name of parser or maker
+     * @param extensions file extension names supported by the parser (or maker),
+     *                   if <code>null</code> use the parser name as one extension
      * @throws NullPointerException if the <code>name</code> is <code>null</code>
      */
-    public static void mapExtensions(@NonNull String name, Collection<String> exts) {
-        Set<String> current = extensions.get(name);
+    public static void mapExtensions(@NonNull String name, Collection<String> extensions) {
+        Set<String> current = Registry.extensions.get(name);
         if (current == null) {
-            extensions.put(name, current = new HashSet<>());
+            Registry.extensions.put(name, current = new HashSet<>());
         }
-        current.addAll(exts);
-        for (String ext : exts) {
+        if (MiscUtils.isEmpty(extensions)) {
+            current.add(name);
+        } else {
+            current.addAll(extensions);
+        }
+        for (String ext : current) {
             names.put(ext, name);
         }
     }
@@ -267,7 +270,7 @@ public final class Registry {
             return;
         }
         while (urls.hasMoreElements()) {
-            try (InputStream in = urls.nextElement().openStream()) {
+            try (val in = urls.nextElement().openStream()) {
                 val prop = new Properties();
                 prop.load(in);
                 for (val e : prop.entrySet()) {

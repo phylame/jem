@@ -53,7 +53,7 @@ public final class ConfigUtils {
         try {
             // get config object in m, key: prefix + <Class>.SELF
             val field = clazz.getField(EpmConfig.SELF_FIELD_NAME);
-            if (field.isAccessible() && Modifier.isStatic(field.getModifiers())) {
+            if (Modifier.isStatic(field.getModifiers())) {
                 config = fetchObject(m, (prefix != null ? prefix : "") + field.get(null), clazz, null); // find the config object by key
             }
         } catch (NoSuchFieldException | IllegalAccessException e) {
@@ -93,9 +93,9 @@ public final class ConfigUtils {
             if (mapped == null) {
                 continue;
             }
-            if (!field.isAccessible() || Modifier.isStatic(field.getModifiers())) {
+            if (Modifier.isStatic(field.getModifiers())) {
                 throw new BadConfigException(mapped.value(), null,
-                        Messages.tr("err.config.inaccessible", epmConfig.getClass(), field.getName(), "inaccessible or static"));
+                        Messages.tr("err.config.inaccessible", field.getName(), epmConfig.getClass(), "found static field"));
             }
             String key = mapped.value();
             if (prefix != null) {

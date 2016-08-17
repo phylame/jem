@@ -18,22 +18,18 @@
 
 package pw.phylame.jem.epm.util;
 
-import pw.phylame.jem.util.JemException;
+import java.io.Closeable;
+import java.io.File;
 
-/**
- * Exception for Jem Maker errors.
- */
-public class MakerException extends JemException {
-
-    public MakerException(String message) {
-        super(message);
-    }
-
-    public MakerException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public MakerException(Throwable cause) {
-        super(cause);
+public class FileDeleter extends InputCleaner {
+    public FileDeleter(Closeable in, final File file) {
+        super(in, new Runnable() {
+            @Override
+            public void run() {
+                if (!file.delete()) {
+                    throw new RuntimeException(Messages.tr("err.common.deleteFile", file.getPath()));
+                }
+            }
+        });
     }
 }

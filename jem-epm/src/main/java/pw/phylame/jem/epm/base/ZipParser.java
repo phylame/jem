@@ -16,24 +16,19 @@
  * limitations under the License.
  */
 
-package pw.phylame.jem.epm.util;
+package pw.phylame.jem.epm.base;
 
-import pw.phylame.jem.util.JemException;
+import java.io.File;
+import java.io.IOException;
+import java.util.zip.ZipFile;
 
-/**
- * Exception for Jem Maker errors.
- */
-public class MakerException extends JemException {
-
-    public MakerException(String message) {
-        super(message);
+public abstract class ZipParser<C extends ZipInConfig> extends AbstractParser<ZipFile, C> {
+    protected ZipParser(String name, Class<C> clazz) {
+        super(name, clazz);
     }
 
-    public MakerException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public MakerException(Throwable cause) {
-        super(cause);
+    @Override
+    protected ZipFile open(File file, C config) throws IOException {
+        return new ZipFile(file);
     }
 }

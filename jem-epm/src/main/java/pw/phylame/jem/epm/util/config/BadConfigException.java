@@ -16,24 +16,25 @@
  * limitations under the License.
  */
 
-package pw.phylame.jem.epm.util;
+package pw.phylame.jem.epm.util.config;
 
+
+import lombok.Getter;
 import pw.phylame.jem.util.JemException;
 
-/**
- * Exception for Jem Maker errors.
- */
-public class MakerException extends JemException {
+@Getter
+public class BadConfigException extends JemException {
+    private final String key;
+    private final Object value;
 
-    public MakerException(String message) {
+    public BadConfigException(String key, Object value) {
+        this.key = key;
+        this.value = value;
+    }
+
+    public BadConfigException(String key, Object value, String message) {
         super(message);
-    }
-
-    public MakerException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public MakerException(Throwable cause) {
-        super(cause);
+        this.key = key;
+        this.value = value;
     }
 }

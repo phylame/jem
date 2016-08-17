@@ -16,24 +16,7 @@
  * limitations under the License.
  */
 
-package pw.phylame.jem.epm.util;
+package pw.phylame.jem.epm.util.config;
 
-import pw.phylame.jem.util.JemException;
-
-/**
- * Exception for Jem Maker errors.
- */
-public class MakerException extends JemException {
-
-    public MakerException(String message) {
-        super(message);
-    }
-
-    public MakerException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public MakerException(Throwable cause) {
-        super(cause);
-    }
+public final class NonConfig implements EpmConfig {
 }

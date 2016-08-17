@@ -18,22 +18,30 @@
 
 package pw.phylame.jem.epm.util;
 
-import pw.phylame.jem.util.JemException;
+import lombok.AllArgsConstructor;
+import lombok.NonNull;
+import pw.phylame.jem.core.Chapter;
+import pw.phylame.jem.core.Cleanable;
+import pw.phylame.ycl.io.IOUtils;
 
-/**
- * Exception for Jem Maker errors.
- */
-public class MakerException extends JemException {
+import java.io.Closeable;
 
-    public MakerException(String message) {
-        super(message);
+@AllArgsConstructor
+public class InputCleaner implements Cleanable {
+    @NonNull
+    private final Closeable in;
+
+    private final Runnable addon;
+
+    public InputCleaner(Closeable in) {
+        this(in, null);
     }
 
-    public MakerException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public MakerException(Throwable cause) {
-        super(cause);
+    @Override
+    public void clean(Chapter chapter) {
+        IOUtils.closeQuietly(in);
+        if (addon != null) {
+            addon.run();
+        }
     }
 }

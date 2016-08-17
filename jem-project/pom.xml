@@ -42,6 +42,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <ycl.version>1.0.0</ycl.version>
+        <xpp3.version>1.1.6</xpp3.version>
         <testng.version>6.9.10</testng.version>
         <lombok.version>1.16.10</lombok.version>
     </properties>
@@ -59,6 +60,11 @@
                 <artifactId>lombok</artifactId>
                 <version>${lombok.version}</version>
                 <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.ogce</groupId>
+                <artifactId>xpp3</artifactId>
+                <version>${xpp3.version}</version>
             </dependency>
             <dependency>
                 <groupId>pw.phylame.ycl</groupId>

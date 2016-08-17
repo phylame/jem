@@ -11,19 +11,15 @@
         <relativePath>../jem-project/pom.xml</relativePath>
     </parent>
 
-    <artifactId>jem-epm</artifactId>
-    <name>Jem EPM</name>
-    <description>Specification of ebook parser and maker for Jem</description>
+    <artifactId>jem-formats</artifactId>
+    <name>Jem Formats</name>
+    <description>Parser and maker implementations of epm.</description>
 
     <dependencies>
         <dependency>
             <groupId>pw.phylame.jem</groupId>
-            <artifactId>jem-core</artifactId>
+            <artifactId>jem-epm</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.ogce</groupId>
-            <artifactId>xpp3</artifactId>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>

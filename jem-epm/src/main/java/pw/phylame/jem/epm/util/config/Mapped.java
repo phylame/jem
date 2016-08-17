@@ -16,24 +16,18 @@
  * limitations under the License.
  */
 
-package pw.phylame.jem.epm.util;
+package pw.phylame.jem.epm.util.config;
 
-import pw.phylame.jem.util.JemException;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Exception for Jem Maker errors.
+ * Key in args for finding value to fields in EpmConfig.
  */
-public class MakerException extends JemException {
-
-    public MakerException(String message) {
-        super(message);
-    }
-
-    public MakerException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public MakerException(Throwable cause) {
-        super(cause);
-    }
+@Target(ElementType.FIELD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Mapped {
+    String value();
 }

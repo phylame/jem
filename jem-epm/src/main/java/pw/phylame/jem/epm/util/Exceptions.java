@@ -1,6 +1,8 @@
 /*
  * Copyright 2016 Peng Wan <phylame@163.com>
  *
+ * This file is part of Jem.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,30 +18,18 @@
 
 package pw.phylame.jem.epm.util;
 
-import lombok.AllArgsConstructor;
-import lombok.NonNull;
-import pw.phylame.jem.core.Chapter;
-import pw.phylame.jem.core.Cleanable;
-import pw.phylame.ycl.io.IOUtils;
+import pw.phylame.jem.epm.util.config.BadConfigException;
 
-import java.io.Closeable;
-
-@AllArgsConstructor
-public class SourceCleaner implements Cleanable {
-    @NonNull
-    private final Closeable in;
-
-    private final Runnable addon;
-
-    public SourceCleaner(Closeable in) {
-        this(in, null);
+public class Exceptions extends pw.phylame.ycl.util.Exceptions {
+    public static BadConfigException forBadConfig(String key, Object value, String format, Object... args) {
+        return new BadConfigException(key, value, String.format(format, args));
     }
 
-    @Override
-    public void clean(Chapter chapter) {
-        IOUtils.closeQuietly(in);
-        if (addon != null) {
-            addon.run();
-        }
+    public static ParserException forParser(String format, Object... args) {
+        return new ParserException(String.format(format, args));
+    }
+
+    public static MakerException forMaker(String format, Object... args) {
+        return new MakerException(String.format(format, args));
     }
 }

@@ -16,24 +16,13 @@
  * limitations under the License.
  */
 
-package pw.phylame.jem.epm.util;
-
-import pw.phylame.jem.util.JemException;
+package pw.phylame.jem.epm.util.config;
 
 /**
- * Exception for Jem Maker errors.
+ * Interface indicating a configuration for parser or parser.
+ * <p>Sub class should implement the interface and set all field public and with annotation <code>Mapped</code>.</p>
+ * <p>Static field with name 'SELF' for finding self in argument map.</p>
  */
-public class MakerException extends JemException {
-
-    public MakerException(String message) {
-        super(message);
-    }
-
-    public MakerException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public MakerException(Throwable cause) {
-        super(cause);
-    }
+public interface EpmConfig {
+    String SELF_FIELD_NAME = "SELF";
 }

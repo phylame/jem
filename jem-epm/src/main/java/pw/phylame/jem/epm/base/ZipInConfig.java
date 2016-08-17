@@ -1,6 +1,8 @@
 /*
  * Copyright 2016 Peng Wan <phylame@163.com>
  *
+ * This file is part of Jem.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,8 +16,9 @@
  * limitations under the License.
  */
 
-package pw.phylame.jem.epm.util.config;
+package pw.phylame.jem.epm.base;
 
-public @interface Named {
-    String value();
+import pw.phylame.jem.epm.util.config.AbstractConfig;
+
+public class ZipInConfig extends AbstractConfig {
 }

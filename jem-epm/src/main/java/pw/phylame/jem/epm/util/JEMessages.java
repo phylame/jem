@@ -20,33 +20,27 @@ package pw.phylame.jem.epm.util;
 
 import lombok.NonNull;
 import pw.phylame.ycl.util.Provider;
+import pw.phylame.ycl.util.Translator;
 import pw.phylame.ycl.value.Lazy;
 
-import java.text.MessageFormat;
-import java.util.ResourceBundle;
-
-public final class Messages {
-    private Messages() {
+public final class JEMessages {
+    private JEMessages() {
     }
 
-    private static final String BUNDLE_PATH = "pw/phylame/jem/epm/util/messages";
+    private static final String MESSAGES_PATH = "pw/phylame/jem/epm/util/messages";
 
-    private static final Lazy<ResourceBundle> bundle = new Lazy<>(new Provider<ResourceBundle>() {
+    private static final Lazy<Translator> translator = new Lazy<>(new Provider<Translator>() {
         @Override
-        public ResourceBundle provide() throws Exception {
-            return ResourceBundle.getBundle(BUNDLE_PATH);
+        public Translator provide() throws Exception {
+            return new Translator(MESSAGES_PATH, null);
         }
     });
 
-    public static ResourceBundle getBundle() {
-        return bundle.get();
-    }
-
     public static String tr(@NonNull String key) {
-        return getBundle().getString(key);
+        return translator.get().tr(key);
     }
 
     public static String tr(@NonNull String key, Object... args) {
-        return MessageFormat.format(getBundle().getString(key), args);
+        return translator.get().tr(key, args);
     }
 }

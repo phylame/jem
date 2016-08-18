@@ -41,7 +41,7 @@ public final class ZipUtils {
     public static InputStream openStream(@NonNull ZipFile zip, String name) throws IOException {
         ZipEntry entry = zip.getEntry(name);
         if (entry == null) {
-            throw new IOException(Messages.tr("err.zip.noEntry", name, zip.getName()));
+            throw new IOException(JEMessages.tr("err.zip.noEntry", name, zip.getName()));
         }
         return zip.getInputStream(entry);
     }

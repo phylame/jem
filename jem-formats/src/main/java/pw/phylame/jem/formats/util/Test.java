@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+package pw.phylame.jem.formats.util;
+
 import lombok.val;
 import pw.phylame.jem.core.Attributes;
 import pw.phylame.jem.core.Book;
@@ -38,19 +40,9 @@ public class Test {
     public static void main(String[] args) throws IOException, JemException {
         System.setProperty(Registry.AUTO_LOAD_CUSTOMIZED_KEY, "true");
         System.out.println(Arrays.toString(Registry.supportedMakers()));
-        val book = new Book("Example", "PW");
-        book.setText(Texts.forString("My name is PW\n, and your?", Text.PLAIN));
-        Attributes.setCover(book, Flobs.forURL(new URL("https://www.baidu.com/img/2016_8_17chinabetter_3fdfb7e62eab01c73e39ee3e9751a0e5.gif"), null));
-        Attributes.setPubdate(book, new Date());
-        Attributes.setLanguage(book, Locale.getDefault());
-        Attributes.setWords(book, 5000000);
-        Attributes.setIntro(book, Texts.forString("Hello world", Text.PLAIN));
-        book.append(book.clone());
-        val path = "F:\\pw\\tmp\\ex.pmab";
-        val format = "pmab";
-        Map<String, Object> arguments = MiscUtils.mapOf(
-                "pmab.make." + PmabOutConfig.VERSION, "2.0"
-        );
-        Helper.writeBook(book, new File(path), format, arguments);
+        System.out.println(Arrays.toString(Registry.supportedParsers()));
+
+        val path = "F:\\pw\\tmp\\ex3.pmab";
+        System.out.println(Helper.readBook(new File(path), "pmab", null).debug());
     }
 }

@@ -19,7 +19,7 @@
 package pw.phylame.jem.epm.base;
 
 import pw.phylame.jem.epm.util.Exceptions;
-import pw.phylame.jem.epm.util.Messages;
+import pw.phylame.jem.epm.util.JEMessages;
 import pw.phylame.jem.epm.util.ParserException;
 import pw.phylame.jem.epm.util.config.EpmConfig;
 import pw.phylame.ycl.io.BufferedRandomAccessFile;
@@ -40,7 +40,7 @@ public abstract class BinaryParser<C extends EpmConfig> extends AbstractParser<R
     }
 
     protected void onBadInput() throws ParserException {
-        throw new ParserException(Messages.tr("err.parse.badInput"));
+        throw new ParserException(JEMessages.tr("err.parse.badInput"));
     }
 
     protected byte[] readData(RandomAccessFile input, int size) throws IOException, ParserException {

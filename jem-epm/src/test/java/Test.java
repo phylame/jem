@@ -16,20 +16,10 @@
  * limitations under the License.
  */
 
-package pw.phylame.jem.epm.util;
+import pw.phylame.jem.epm.util.JEMessages;
 
-import java.io.Closeable;
-import java.io.File;
-
-public class FileDeleter extends InputCleaner {
-    public FileDeleter(Closeable in, final File file) {
-        super(in, new Runnable() {
-            @Override
-            public void run() {
-                if (!file.delete()) {
-                    throw new RuntimeException(JEMessages.tr("err.common.deleteFile", file.getPath()));
-                }
-            }
-        });
+public class Test {
+    public static void main(String[] args) {
+        System.out.println(JEMessages.tr("err.zip.noEntry", "hello", "/pwd"));
     }
 }

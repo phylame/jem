@@ -22,7 +22,7 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 import pw.phylame.jem.epm.util.Exceptions;
-import pw.phylame.jem.epm.util.Messages;
+import pw.phylame.jem.epm.util.JEMessages;
 import pw.phylame.ycl.format.Converters;
 import pw.phylame.ycl.util.Log;
 import pw.phylame.ycl.util.MiscUtils;
@@ -95,7 +95,7 @@ public final class ConfigUtils {
             }
             if (Modifier.isStatic(field.getModifiers())) {
                 throw new BadConfigException(mapped.value(), null,
-                        Messages.tr("err.config.inaccessible", field.getName(), epmConfig.getClass(), "found static field"));
+                        JEMessages.tr("err.config.inaccessible", field.getName(), epmConfig.getClass(), "found static field"));
             }
             String key = mapped.value();
             if (prefix != null) {
@@ -116,7 +116,7 @@ public final class ConfigUtils {
                 field.set(epmConfig, value);
             } catch (IllegalAccessException e) {
                 throw Exceptions.forBadConfig(key, null,
-                        Messages.tr("err.config.inaccessible", epmConfig.getClass(), field.getName(), e.getMessage()));
+                        JEMessages.tr("err.config.inaccessible", epmConfig.getClass(), field.getName(), e.getMessage()));
             }
         }
         if (fields.length > 0 && epmConfig instanceof AdjustableConfig) {

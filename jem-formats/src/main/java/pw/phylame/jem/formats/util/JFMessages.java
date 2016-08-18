@@ -24,7 +24,7 @@ public final class JFMessages {
     private JFMessages() {
     }
 
-    private static final String MESSAGES_PATH = "pw/phylame/jem/formats/messages.properties";
+    private static final String MESSAGES_PATH = "pw/phylame/jem/formats/messages";
 
     private static final Lazy<Translator> translator = new Lazy<>(new Provider<Translator>() {
         @Override

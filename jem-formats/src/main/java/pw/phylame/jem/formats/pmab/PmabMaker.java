@@ -103,7 +103,7 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
         writeXml(tuple, writer, PMAB.PBC_FILE);
     }
 
-    private void writePBMHead(String nameTag, boolean ignoreEmpty, Tuple tuple) throws IOException {
+    private void writePBMHead(String tagName, boolean ignoreEmpty, Tuple tuple) throws IOException {
         val render = tuple.render;
         val meta = tuple.config.metadata;
         if (MiscUtils.isEmpty(meta)) {
@@ -116,7 +116,7 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
         for (val e : meta.entrySet()) {
             render.startTag("meta");
             render.attribute("name", e.getKey().toString());
-            render.attribute(nameTag, e.getValue().toString());
+            render.attribute(tagName, e.getValue().toString());
             render.endTag();
         }
         render.endTag();

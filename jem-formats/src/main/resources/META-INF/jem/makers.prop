@@ -16,3 +16,5 @@
 
 # PMAB maker
 pmab=pw.phylame.jem.formats.pmab.PmabMaker
+# Jar maker
+jar=pw.phylame.jem.formats.jar.JarMaker

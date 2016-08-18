@@ -14,3 +14,4 @@
 # limitations under the License.
 #
 pmab=pw.phylame.jem.formats.pmab.PmabParser
+jar=pw.phylame.jem.formats.jar.JarParser

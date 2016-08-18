@@ -21,7 +21,7 @@ package pw.phylame.jem.epm;
 import lombok.NonNull;
 import lombok.val;
 import pw.phylame.ycl.io.IOUtils;
-import pw.phylame.ycl.util.ImplementorFactory;
+import pw.phylame.ycl.util.Implementor;
 import pw.phylame.ycl.util.Log;
 import pw.phylame.ycl.util.MiscUtils;
 
@@ -52,12 +52,12 @@ public final class Registry {
     /**
      * Holds registered <code>Parser</code> class information.
      */
-    private static final ImplementorFactory<Parser> parsers = new ImplementorFactory<>(Parser.class, true, null);
+    private static final Implementor<Parser> parsers = new Implementor<>(Parser.class, true, null);
 
     /**
      * Holds registered <code>Maker</code> class information.
      */
-    private static final ImplementorFactory<Maker> makers = new ImplementorFactory<>(Maker.class, true, null);
+    private static final Implementor<Maker> makers = new Implementor<>(Maker.class, true, null);
 
     /**
      * Mapping parser and maker name to file extension names.
@@ -123,7 +123,7 @@ public final class Registry {
      * @return sequence of format names
      */
     public static String[] supportedParsers() {
-        return parsers.getNames();
+        return parsers.names();
     }
 
     /**
@@ -194,7 +194,7 @@ public final class Registry {
      * @return sequence of format names
      */
     public static String[] supportedMakers() {
-        return makers.getNames();
+        return makers.names();
     }
 
     /**
@@ -264,7 +264,7 @@ public final class Registry {
     private static final String NAME_EXTENSION_SEPARATOR = ";";
     private static final String EXTENSION_SEPARATOR = " ";
 
-    private static <T> void loadRegisters(ClassLoader loader, String path, ImplementorFactory<T> factory) {
+    private static <T> void loadRegisters(ClassLoader loader, String path, Implementor<T> factory) {
         val urls = IOUtils.getResources(path, loader);
         if (urls == null) {
             return;

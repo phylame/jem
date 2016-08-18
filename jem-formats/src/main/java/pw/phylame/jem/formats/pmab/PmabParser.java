@@ -38,6 +38,7 @@ import pw.phylame.ycl.util.Log;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.zip.ZipFile;
 
 import static pw.phylame.jem.epm.util.xml.XmlUtils.attributeOf;
@@ -83,7 +84,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
         int version = 0;
         boolean hasText = false;
         tuple.inAttributes = false;
-        StringBuilder b = new StringBuilder();
+        val b = new StringBuilder();
         val xpp = tuple.xpp;
         try (val in = ZipUtils.openStream(tuple.zip, PMAB.PBM_FILE)) {
             xpp.setInput(in, null);
@@ -127,26 +128,21 @@ public class PmabParser extends ZipParser<PmabInConfig> {
         }
     }
 
-    private String valueOfName(String str, String name, String fallback) {
-        val value = getValueOfName(str, name, ";", true);
-        return isNotEmpty(value) ? value : fallback;
-    }
-
     private Object parseV3Item(String text, Tuple tuple) throws IOException, ParserException {
         val itemType = tuple.itemType;
         Object value;
         if (isEmpty(itemType)) { // no type specified, text as string
             value = text;
         } else {
-            val type = getFirstPartOf(itemType, ';');
+            val type = firstPartOf(itemType, ';');
             if (type.equals(Variants.STRING)) {
                 value = tuple.itemName.equals(Attributes.LANGUAGE) ? TestUtils.parseLocale(text) : text;
             } else if (type.equals(Variants.DATETIME) || type.equals("date") || type.equals("time")) {
-                value = TestUtils.parseDate(text, valueOfName(itemType, "format", tuple.config.dateFormat));
+                value = TestUtils.parseDate(text, valueOfName(itemType, "format", ";", false, tuple.config.dateFormat));
             } else if (type.startsWith("text/")) {  // text object
                 val t = type.substring(5);
                 Flob flob = Flobs.forZip(tuple.zip, text, "text/" + t);
-                value = Texts.forFile(flob, valueOfName(itemType, "encoding", tuple.config.textEncoding), t);
+                value = Texts.forFile(flob, valueOfName(itemType, "encoding", ";", false, tuple.config.textEncoding), t);
             } else if (type.equals(Variants.LOCALE)) {
                 value = TestUtils.parseLocale(text);
             } else if (type.matches("[\\w]+/[\\w\\-]+")) {   // file object
@@ -233,9 +229,8 @@ public class PmabParser extends ZipParser<PmabInConfig> {
             break;
             case "object": {
                 if (tuple.checkCount()) {
-                    val href = attributeOf(xpp, "href");
                     val mime = attributeOf(xpp, "media-type");
-                    Flob flob = Flobs.forZip(tuple.zip, href, mime);
+                    val flob = Flobs.forZip(tuple.zip, attributeOf(xpp, "href"), mime);
                     Object value = flob;
                     if (mime.startsWith("text/plain")) {
                         val encoding = xpp.getAttributeValue(null, "encoding");
@@ -324,7 +319,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
                     }
                     break;
                     case XmlPullParser.END_TAG: {
-                        String tag = xpp.getName();
+                        val tag = xpp.getName();
                         if (version == 3) {
                             endPBCv3(tag, b, tuple);
                         } else if (version == 2) {
@@ -384,8 +379,8 @@ public class PmabParser extends ZipParser<PmabInConfig> {
                 if (isEmpty(itemType)) {
                     text = Texts.forString(data, Text.PLAIN);
                 } else if (itemType.startsWith("text/")) {
-                    val flob = Flobs.forZip(tuple.zip, data, getFirstPartOf(itemType, ';'));
-                    text = Texts.forFile(flob, valueOfName(itemType, "encoding", tuple.config.textEncoding), Text.PLAIN);
+                    val flob = Flobs.forZip(tuple.zip, data, firstPartOf(itemType, ';'));
+                    text = Texts.forFile(flob, valueOfName(itemType, "encoding", ";", false, tuple.config.textEncoding), Text.PLAIN);
                 } else {
                     text = Texts.forString(data, Text.PLAIN);
                 }
@@ -424,8 +419,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
             }
             break;
             case "intro": {
-                val href = attributeOf(xpp, "href");
-                val flob = Flobs.forZip(tuple.zip, href, "text/plain");
+                val flob = Flobs.forZip(tuple.zip, attributeOf(xpp, "href"), "text/plain");
                 String encoding = xpp.getAttributeValue(null, "encoding");
                 if (isEmpty(encoding)) {
                     encoding = tuple.config.useChapterEncoding ? tuple.chapterEncoding : tuple.config.textEncoding;
@@ -472,7 +466,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
         // used for encoding of intro in chapter
         private String chapterEncoding;
 
-        private HashMap<String, Object> metadata;
+        private Map<String, Object> metadata;
 
         private boolean checkCount() {
             return count < 0 || order < count;

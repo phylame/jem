@@ -24,20 +24,20 @@ import pw.phylame.jem.epm.util.config.Mapped;
  * Config for rendering text.
  */
 public class TextConfig extends AbstractConfig {
-    public static final String SELF = "text.render.config";  // RenderConfig
-    public static final String WRITE_TITLE = "text.render.writeTitle";  // boolean
-    public static final String JOIN_TITLES = "text.render.joinTitles";  // boolean
-    public static final String PREFIX_TEXT = "text.render.prefixText";  // String
-    public static final String TITLE_SEPARATOR = "text.render.titleSeparator";  // String
-    public static final String WRITE_INTRO = "text.render.writeIntro";  // boolean
-    public static final String INTRO_SEPARATOR = "text.render.introSeparator";  // String
-    public static final String FORMAT_PARAGRAPH = "text.render.formatParagraph";    // boolean
-    public static final String PARAGRAPH_PREFIX = "text.render.paragraphPrefix";    // String
-    public static final String SKIP_EMPTY_LINE = "text.render.skipEmptyLine";   // boolean
-    public static final String LINE_SEPARATOR = "text.render.lineSeparator";    // String
-    public static final String SUFFIX_TEXT = "text.render.suffixText";  // String
-    public static final String PADDING_LINE = "text.render.paddingLine";  // String
-    public static final String TEXT_CONVERTER = "text.render.textConverter";    // TextConverter
+    public static final String SELF = "text.config";  // RenderConfig
+    public static final String WRITE_TITLE = "text.writeTitle";  // boolean
+    public static final String JOIN_TITLES = "text.joinTitles";  // boolean
+    public static final String PREFIX_TEXT = "text.prefixText";  // String
+    public static final String TITLE_SEPARATOR = "text.titleSeparator";  // String
+    public static final String WRITE_INTRO = "text.writeIntro";  // boolean
+    public static final String INTRO_SEPARATOR = "text.introSeparator";  // String
+    public static final String FORMAT_PARAGRAPH = "text.formatParagraph";    // boolean
+    public static final String PARAGRAPH_PREFIX = "text.paragraphPrefix";    // String
+    public static final String SKIP_EMPTY_LINE = "text.skipEmptyLine";   // boolean
+    public static final String LINE_SEPARATOR = "text.lineSeparator";    // String
+    public static final String SUFFIX_TEXT = "text.suffixText";  // String
+    public static final String PADDING_LINE = "text.paddingLine";  // String
+    public static final String TEXT_CONVERTER = "text.textConverter";    // TextConverter
 
     /**
      * Write chapter title before chapter text.

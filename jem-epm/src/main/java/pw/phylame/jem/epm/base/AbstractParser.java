@@ -41,7 +41,7 @@ public abstract class AbstractParser<I extends Closeable, C extends EpmConfig> e
     protected abstract I open(File file, C config) throws IOException;
 
     protected abstract Book parse(I input, C config) throws IOException, ParserException;
-
+    
     @Override
     public final Book parse(@NonNull File file, Map<String, Object> args) throws IOException, JemException {
         if (!file.exists()) {

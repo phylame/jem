@@ -13,5 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+# PMAB parser
 pmab=pw.phylame.jem.formats.pmab.PmabParser
+
+# JAR parser
 jar=pw.phylame.jem.formats.jar.JarParser
+
+# UMD parser
+umd=pw.phylame.jem.formats.umd.UmdParser
+
+# TXT parser
+txt=pw.phylame.jem.formats.txt.TxtParser
+
+# EBK2 parser
+ebk2=pw.phylame.jem.formats.ebk.Ebk2Parser

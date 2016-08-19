@@ -32,7 +32,7 @@ import java.util.Map;
  *
  * @param <C> config type
  */
-class BookWorker<C extends EpmConfig> {
+abstract class BookWorker<C extends EpmConfig> {
     /**
      * Name of the parser or maker.
      */

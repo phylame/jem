@@ -43,13 +43,25 @@ public abstract class BinaryParser<C extends EpmConfig> extends AbstractParser<R
         throw new ParserException(JEMessages.tr("err.parse.badInput"));
     }
 
+    protected void onBadInput(String key, Object... args) throws ParserException {
+        throw new ParserException(JEMessages.tr(key, args));
+    }
+
     protected byte[] readData(RandomAccessFile input, int size) throws IOException, ParserException {
+        return readData(input, size, null);
+    }
+
+    protected byte[] readData(RandomAccessFile input, int size, String key, Object... args) throws IOException, ParserException {
         if (size < 0) {
             throw Exceptions.forIllegalArgument("size(%d) < 0", size);
         }
         byte[] bytes = new byte[size];
         if (input.read(bytes) != size) {
-            onBadInput();
+            if (key != null) {
+                onBadInput(key, args);
+            } else {
+                onBadInput();
+            }
         }
         return bytes;
     }

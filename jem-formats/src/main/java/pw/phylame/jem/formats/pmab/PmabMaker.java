@@ -127,7 +127,7 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
         writeV3Attributes(book, "", tuple);
         render.startTag("extensions");
         for (val e : book.getExtensions().entries()) {
-            writeV3Item(e.getKey().toString(), e.getValue(), "", tuple);
+            writeV3Item(e.getKey(), e.getValue(), "", tuple);
         }
         render.endTag();
     }
@@ -135,7 +135,7 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
     private void writeV3Attributes(Chapter chapter, String prefix, Tuple tuple) throws IOException {
         val render = tuple.render.startTag("attributes");
         for (val e : chapter.getAttributes().entries()) {
-            writeV3Item(e.getKey().toString(), e.getValue(), prefix, tuple);
+            writeV3Item(e.getKey(), e.getValue(), prefix, tuple);
         }
         render.endTag();
     }
@@ -185,14 +185,14 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
     private void writePBMv2(Book book, Tuple tuple) throws IOException, MakerException {
         val render = tuple.render.startTag("metadata").attribute("count", Integer.toString(book.getAttributes().size()));
         for (val e : book.getAttributes().entries()) {
-            writePBMv2Attr(e.getKey().toString(), e.getValue(), tuple);
+            writePBMv2Attr(e.getKey(), e.getValue(), tuple);
         }
         render.endTag();
 
         render.startTag("extension").attribute("count", Integer.toString(book.getExtensions().size()));
         render.comment("The following data will be added to PMAB.");
         for (val e : book.getExtensions().entries()) {
-            writePBMv2Item(e.getKey().toString(), e.getValue(), tuple);
+            writePBMv2Item(e.getKey(), e.getValue(), tuple);
         }
         render.endTag();
     }

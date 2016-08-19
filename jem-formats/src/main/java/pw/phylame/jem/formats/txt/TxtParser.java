@@ -137,7 +137,7 @@ public class TxtParser extends AbstractParser<Reader, TxtInConfig> {
     }
 
     private Triple<RandomAccessFile, File, String> cacheContent(Reader reader) throws IOException {
-        val b = new StringBuffer();
+        val b = new StringBuilder();
         val cache = File.createTempFile("jem_txt_", ".tmp");
         Closeable closeable = null;
         try {

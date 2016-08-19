@@ -21,6 +21,7 @@ package pw.phylame.jem.formats.epub;
 import pw.phylame.jem.epm.base.ZipOutConfig;
 import pw.phylame.jem.epm.util.config.Mapped;
 import pw.phylame.jem.epm.util.xml.XmlConfig;
+import pw.phylame.jem.formats.util.html.HtmlConfig;
 
 /**
  * Config for making ePub book.

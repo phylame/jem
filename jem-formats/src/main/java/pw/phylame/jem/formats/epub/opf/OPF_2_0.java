@@ -16,12 +16,18 @@
 
 package pw.phylame.jem.formats.epub.opf;
 
+import pw.phylame.jem.core.Attributes;
 import pw.phylame.jem.core.Book;
-import pw.phylame.jem.formats.epub.*;
-import pw.phylame.jem.formats.util.MakerException;
-import pw.phylame.jem.formats.util.text.TextUtils;
-import pw.phylame.jem.formats.util.xml.XmlRender;
-import pw.phylame.jem.util.Text;
+import pw.phylame.jem.epm.util.MakerException;
+import pw.phylame.jem.epm.util.xml.XmlRender;
+import pw.phylame.jem.formats.epub.EpubOutConfig;
+import pw.phylame.jem.formats.epub.GuideItem;
+import pw.phylame.jem.formats.epub.Resource;
+import pw.phylame.jem.formats.epub.SpineItem;
+import pw.phylame.jem.util.text.Text;
+import pw.phylame.ycl.format.Converters;
+import pw.phylame.ycl.util.DateUtils;
+import pw.phylame.ycl.util.StringUtils;
 
 import java.io.IOException;
 import java.util.Date;
@@ -106,33 +112,33 @@ class OPF_2_0 implements OpfWriter {
         xmlRender.startTag("dc:identifier").attribute("id", BOOK_ID_NAME);
         xmlRender.attribute("opf:scheme", "uuid").text(uuid).endTag();
 
-        xmlRender.startTag("dc:title").text(book.getTitle()).endTag();
+        xmlRender.startTag("dc:title").text(Attributes.getTitle(book)).endTag();
 
-        String str = book.getAuthor();
+        String str = Attributes.getAuthor(book);
         if (!str.isEmpty()) {
             xmlRender.startTag("dc:creator");
             xmlRender.attribute("opf:role", "aut").text(str).endTag();
         }
 
-        str = book.getGenre();
+        str = Attributes.getGenre(book);
         if (!str.isEmpty()) {
             xmlRender.startTag("dc:type").text(str).endTag();
         }
 
-        str = book.getSubject();
+        str = Attributes.getKeywords(book);
         if (!str.isEmpty()) {
             xmlRender.startTag("dc:subject").text(str).endTag();
         }
 
-        Text intro = book.getIntro();
+        Text intro = Attributes.getIntro(book);
         if (intro != null) {
-            String text = TextUtils.fetchText(intro, null);
-            if (TextUtils.isValid(text)) {
+            String text = intro.getText();
+            if (StringUtils.isNotEmpty(text)) {
                 xmlRender.startTag("dc:description").text(text).endTag();
             }
         }
 
-        str = book.getPublisher();
+        str = Attributes.getPublisher(book);
         if (!str.isEmpty()) {
             xmlRender.startTag("dc:publisher").text(str).endTag();
         }
@@ -142,38 +148,38 @@ class OPF_2_0 implements OpfWriter {
             xmlRender.attribute("content", coverID).endTag();
         }
 
-        Date date = book.getDate();
+        Date date = Attributes.getDate(book);
         if (date != null) {
             xmlRender.startTag("dc:date").attribute("opf:event", "creation");
-            xmlRender.text(TextUtils.formatDate(date, epubConfig.dateFormat));
+            xmlRender.text(DateUtils.format(date, epubConfig.dateFormat));
             xmlRender.endTag();
 
             Date today = new Date();
             if (!today.equals(date)) {
                 xmlRender.startTag("dc:date").attribute("opf:event", "modification");
-                xmlRender.text(TextUtils.formatDate(today, epubConfig.dateFormat));
+                xmlRender.text(DateUtils.format(today, epubConfig.dateFormat));
                 xmlRender.endTag();
             }
         }
 
-        Locale locale = book.getLanguage();
+        Locale locale = Attributes.getLanguage(book);
         if (locale != null) {
-            xmlRender.startTag("dc:language").text(TextUtils.formatLocale(locale)).endTag();
+            xmlRender.startTag("dc:language").text(Converters.render(locale, Locale.class)).endTag();
         }
 
-        str = book.getRights();
+        str = Attributes.getRights(book);
         if (!str.isEmpty()) {
             xmlRender.startTag("dc:rights").text(str).endTag();
         }
 
-        str = book.getVendor();
+        str = Attributes.getVendor(book);
         if (!str.isEmpty()) {
             xmlRender.startTag("dc:contributor").attribute("opf:role", "bkp");
             xmlRender.text(str).endTag();
         }
 
         for (String key : OPTIONAL_METADATA) {
-            str = book.stringAttribute(key, "");
+            str = book.getAttributes().get(key, "");
             if (!str.isEmpty()) {
                 xmlRender.startTag("dc:" + key).text(str).endTag();
             }

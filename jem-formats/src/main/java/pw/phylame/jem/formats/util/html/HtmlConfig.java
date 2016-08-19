@@ -1,0 +1,75 @@
+/*
+ * Copyright 2016 Peng Wan <phylame@163.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package pw.phylame.jem.formats.util.html;
+
+import pw.phylame.jem.epm.util.config.AbstractConfig;
+import pw.phylame.jem.epm.util.config.Mapped;
+
+import java.util.Map;
+
+/**
+ * Config for rendering HTML.
+ */
+public class HtmlConfig extends AbstractConfig {
+    public static final String SELF = "html.render.config";
+    public static final String ENCODING = "html.render.encoding";
+    public static final String INDENT_STRING = "html.render.indentString";
+    public static final String META_INFO = "html.render.metaInfo";
+    public static final String STYLE_PROVIDER = "html.render.styleProvider";
+    public static final String SKIP_EMPTY_LINE = "html.render.skipEmptyLine";
+
+    /**
+     * Encoding for writing HTML.
+     */
+    @Mapped(ENCODING)
+    public String encoding = "UTF-8";
+
+    /**
+     * HTML indent string.
+     */
+    @Mapped(INDENT_STRING)
+    public String indentString = "\t";
+
+    /**
+     * Value of attribute xml:lang.
+     */
+    public String htmlLanguage;
+
+    /**
+     * Href of CSS file.
+     * <p>You need save CSS file firstly then get the href.
+     */
+    public String cssHref;
+
+    /**
+     * Addition messages to HTML head->meta element.
+     */
+    @Mapped(META_INFO)
+    public Map<String, String> metaInfo;
+
+    /**
+     * HTML CSS config.
+     */
+    @Mapped(STYLE_PROVIDER)
+    public StyleProvider style;
+
+    /**
+     * When making paragraph skip empty line of <tt>TextObject</tt>.
+     */
+    @Mapped(SKIP_EMPTY_LINE)
+    public boolean skipEmpty = true;
+}

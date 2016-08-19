@@ -16,18 +16,18 @@
 
 package pw.phylame.jem.formats.epub.writer;
 
+import pw.phylame.jem.core.Book;
+import pw.phylame.jem.epm.util.MakerException;
+import pw.phylame.jem.epm.util.ZipUtils;
+import pw.phylame.jem.epm.util.xml.XmlRender;
+import pw.phylame.jem.formats.epub.EPUB;
+import pw.phylame.jem.formats.epub.EpubOutConfig;
+import pw.phylame.jem.util.flob.Flob;
+import pw.phylame.jem.util.text.Text;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.zip.ZipOutputStream;
-
-import pw.phylame.jem.core.Book;
-import pw.phylame.jem.util.Flob;
-import pw.phylame.jem.util.Text;
-import pw.phylame.jem.formats.epub.EPUB;
-import pw.phylame.jem.formats.epub.EpubOutConfig;
-import pw.phylame.jem.formats.util.MakerException;
-import pw.phylame.jem.formats.util.ZipUtils;
-import pw.phylame.jem.formats.util.xml.XmlRender;
 
 /**
  * Common ePub writer.
@@ -47,7 +47,7 @@ public abstract class EpubWriter {
         this.book = book;
         this.config = config;
         this.zipout = zipout;
-        xmlRender = new XmlRender(config.xmlConfig);
+        xmlRender = new XmlRender(config.xmlConfig, false);
         write();
     }
 
@@ -58,15 +58,15 @@ public abstract class EpubWriter {
     }
 
     public void writeIntoOps(Flob file, String name) throws IOException {
-        ZipUtils.writeFile(file, pathInOps(name), zipout);
+        ZipUtils.writeFile(zipout, pathInOps(name), file);
     }
 
     public void writeIntoOps(String text, String name, String encoding) throws IOException {
-        ZipUtils.writeString(text, pathInOps(name), encoding, zipout);
+        ZipUtils.writeString(zipout, pathInOps(name), text, encoding);
     }
 
     public void writeIntoOps(Text text, String name, String encoding) throws IOException {
-        ZipUtils.writeText(text, pathInOps(name), encoding, zipout);
+        ZipUtils.writeText(zipout, pathInOps(name), text, encoding);
     }
 
     protected void writeContainer(String opfPath) throws IOException {
@@ -84,6 +84,6 @@ public abstract class EpubWriter {
         xmlRender.endTag();
         xmlRender.endXml();
 
-        ZipUtils.writeString(writer.toString(), EPUB.CONTAINER_FILE, config.xmlConfig.encoding, zipout);
+        ZipUtils.writeString(zipout, EPUB.CONTAINER_FILE, writer.toString(), config.xmlConfig.encoding);
     }
 }

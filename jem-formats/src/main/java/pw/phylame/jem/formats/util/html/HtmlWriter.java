@@ -16,23 +16,11 @@
  * limitations under the License.
  */
 
-package pw.phylame.jem.formats.epub.opf;
-
-import pw.phylame.jem.core.Book;
-import pw.phylame.jem.epm.util.MakerException;
-import pw.phylame.jem.epm.util.xml.XmlRender;
-import pw.phylame.jem.formats.epub.*;
-
-import java.io.IOException;
-import java.util.List;
+package pw.phylame.jem.formats.util.html;
 
 /**
- * OPF builder.
+ * Writes result of <tt>HtmlRender</tt> to device.
  */
-public interface OpfWriter {
-
-    void write(Book book, EpubOutConfig epubConfig, XmlRender xmlRender,
-               String coverID, List<Resource> resources,
-               List<SpineItem> spineItems,
-               String ncxID, List<GuideItem> guideItems) throws IOException, MakerException;
+public interface HtmlWriter {
+    void finishHtml();
 }

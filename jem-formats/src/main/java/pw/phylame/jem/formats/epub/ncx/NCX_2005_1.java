@@ -18,21 +18,22 @@
 
 package pw.phylame.jem.formats.epub.ncx;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.zip.ZipOutputStream;
-
-import pw.phylame.jem.core.Book;
+import lombok.val;
+import pw.phylame.jem.core.Attributes;
 import pw.phylame.jem.core.Jem;
 import pw.phylame.jem.epm.util.MakerException;
 import pw.phylame.jem.epm.util.xml.XmlRender;
 import pw.phylame.jem.formats.epub.*;
 import pw.phylame.jem.formats.epub.writer.EpubWriter;
+import pw.phylame.ycl.util.StringUtils;
+
+import java.io.IOException;
+import java.util.List;
 
 /**
  * NCX version 2005-1
  */
-class NCX_2005_1 implements NcxWriter, ContentsListener {
+class NCX_2005_1 implements NcxWriter, BookListener {
     public static final String DT_ID = "-//NISO//DTD ncx 2005-1//EN";
     public static final String DT_URI = "http://www.daisy.org/z3986/2005/ncx-2005-1.dtd";
 
@@ -41,31 +42,29 @@ class NCX_2005_1 implements NcxWriter, ContentsListener {
 
     private int playOrder = 1;
 
-    private XmlRender xmlRender;
-    private ContentsRender contentsRender;
+    private XmlRender render;
+    private BookRender bookRender;
 
     @Override
-    public void write(Book book, EpubOutConfig epubConfig, XmlRender render, EpubWriter writer,
-                      ZipOutputStream zipout) throws IOException, MakerException {
-        this.xmlRender = render;
+    public void write(EpubWriter writer, OutTuple tuple) throws IOException, MakerException {
+        this.render = tuple.render;
+        val book = tuple.book;
+        val config = tuple.config;
         render.startXml();
         render.docdecl("ncx", DT_ID, DT_URI);
 
         render.startTag("ncx").attribute("version", VERSION);
-        String lang = EPUB.languageOfBook(book);
-        epubConfig.htmlConfig.htmlLanguage = lang;
-        render.attribute("xml:lang", lang).attribute("xmlns", NAMESPACE);
+        render.attribute("xml:lang", config.htmlConfig.htmlLanguage = EPUB.languageOfBook(book)).attribute("xmlns", NAMESPACE);
 
-        int depth = Jem.depthOf(book);
-        writeHead(depth, epubConfig.uuid, 0, 0, render);
+        writeHead(Jem.depthOf(book), config.uuid, 0, 0, render);
 
         // docTitle
         render.startTag("docTitle");
-        render.startTag("text").text(book.getTitle()).endTag();
+        render.startTag("text").text(Attributes.getTitle(book)).endTag();
         render.endTag();
         // docAuthor
-        String author = book.getAuthor();
-        if (TextUtils.isValid(author)) {
+        val author = Attributes.getAuthor(book);
+        if (StringUtils.isNotEmpty(author)) {
             render.startTag("docAuthor");
             render.startTag("text").text(author).endTag();
             render.endTag();
@@ -74,8 +73,8 @@ class NCX_2005_1 implements NcxWriter, ContentsListener {
         // navMap
         render.startTag("navMap");
         // render contents
-        contentsRender = new ContentsRender(book, writer, epubConfig, zipout, this);
-        contentsRender.start();
+        bookRender = new BookRender(writer, this, tuple);
+        bookRender.start();
 
         render.endTag(); // navMap
         render.endTag(); // ncx
@@ -85,53 +84,52 @@ class NCX_2005_1 implements NcxWriter, ContentsListener {
 
     @Override
     public String getCoverID() {
-        return contentsRender.getCoverID();
+        return bookRender.getCoverID();
     }
 
     @Override
     public List<Resource> getResources() {
-        return contentsRender.getResources();
+        return bookRender.getResources();
     }
 
     @Override
-    public List<SpineItem> getSpineItems() {
-        return contentsRender.getSpineItems();
+    public List<Spine> getSpines() {
+        return bookRender.getSpineItems();
     }
 
     @Override
-    public List<GuideItem> getGuideItems() {
-        return contentsRender.getGuideItems();
+    public List<Guide> getGuides() {
+        return bookRender.getGuideItems();
     }
 
-    private void writeHead(int depth, String uuid, int totalPageCount, int maxPageNumber,
-                           XmlRender xmlRender) throws IOException {
-        xmlRender.startTag("head");
-        writeMeta("dtb:uid", uuid, xmlRender);
-        writeMeta("dtb:depth", Integer.toString(depth), xmlRender);
-        writeMeta("dtb:totalPageCount", Integer.toString(totalPageCount), xmlRender);
-        writeMeta("dtb:maxPageNumber", Integer.toString(maxPageNumber), xmlRender);
-        xmlRender.endTag();
+    private void writeHead(int depth, String uuid, int totalPageCount, int maxPageNumber, XmlRender render) throws IOException {
+        render.startTag("head");
+        writeMeta("dtb:uid", uuid, render);
+        writeMeta("dtb:depth", Integer.toString(depth), render);
+        writeMeta("dtb:totalPageCount", Integer.toString(totalPageCount), render);
+        writeMeta("dtb:maxPageNumber", Integer.toString(maxPageNumber), render);
+        render.endTag();
     }
 
-    private void writeMeta(String name, String value, XmlRender xmlRender) throws IOException {
-        xmlRender.startTag("meta").attribute("name", name);
-        xmlRender.attribute("content", value).endTag();
+    private void writeMeta(String name, String value, XmlRender render) throws IOException {
+        render.startTag("meta").attribute("name", name);
+        render.attribute("content", value).endTag();
     }
 
     @Override
     public void startNavPoint(String id, String href, String title) throws IOException {
-        xmlRender.startTag("navPoint").attribute("id", id);
-        xmlRender.attribute("playOrder", Integer.toString(playOrder++));
+        render.startTag("navPoint").attribute("id", id);
+        render.attribute("playOrder", Integer.toString(playOrder++));
 
-        xmlRender.startTag("navLabel");
-        xmlRender.startTag("text").text(title).endTag();
-        xmlRender.endTag(); // navLabel
+        render.startTag("navLabel");
+        render.startTag("text").text(title).endTag();
+        render.endTag(); // navLabel
 
-        xmlRender.startTag("content").attribute("src", href).endTag();
+        render.startTag("content").attribute("src", href).endTag();
     }
 
     @Override
     public void endNavPoint() throws IOException {
-        xmlRender.endTag(); // navPoint
+        render.endTag(); // navPoint
     }
 }

@@ -16,6 +16,7 @@
 
 package pw.phylame.jem.formats.epub;
 
+import lombok.val;
 import pw.phylame.jem.core.Attributes;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.core.Chapter;
@@ -39,7 +40,7 @@ import java.util.zip.ZipOutputStream;
 /**
  * Writes book HTML tree.
  */
-public class ContentsRender {
+public class BookRender {
     // for DuoKan reader full screen image
     public static final String DUOKAN_FULL_SCREEN = "duokan-page-fullscreen";
 
@@ -65,43 +66,40 @@ public class ContentsRender {
     private final EpubOutConfig epubConfig;
     private HtmlRender htmlRender;
     private final ZipOutputStream zipout;
-    private final ContentsListener contentsListener;
+    private final BookListener bookListener;
 
-    public ContentsRender(Book book, EpubWriter epubWriter,
-                          EpubOutConfig epubConfig, ZipOutputStream zipout,
-                          ContentsListener contentsListener) {
-        this.book = book;
+    public BookRender(EpubWriter epubWriter, BookListener bookListener, OutTuple tuple) {
+        this.book = tuple.book;
         this.epubWriter = epubWriter;
-        this.epubConfig = epubConfig;
-        this.zipout = zipout;
-        this.contentsListener = contentsListener;
+        this.epubConfig = tuple.config;
+        this.zipout = tuple.zipout;
+        this.bookListener = bookListener;
     }
 
     private String coverID;
     private final List<Resource> resources = new LinkedList<>();
-    private final List<SpineItem> spines = new LinkedList<>();
-    private final List<GuideItem> guides = new LinkedList<>();
+    private final List<Spine> spines = new LinkedList<>();
+    private final List<Guide> guides = new LinkedList<>();
 
     private void newResource(String id, String href, String mime) {
         resources.add(new Resource(id, href, mime));
     }
 
     private void newGuideItem(String href, String type, String title) {
-        guides.add(new GuideItem(href, type, title));
+        guides.add(new Guide(href, type, title));
     }
 
     private void newSpineItem(String id, boolean linear, String properties) {
-        spines.add(new SpineItem(id, linear, properties));
+        spines.add(new Spine(id, linear, properties));
     }
 
-    private void newNaviItem(String id, String href, String title, String properties)
-            throws IOException {
+    private void newNaviItem(String id, String href, String title, String properties) throws IOException {
         newSpineItem(id, true, properties);
-        contentsListener.startNavPoint(id, href, title);
+        bookListener.startNavPoint(id, href, title);
     }
 
     private void endNaviItem() throws IOException {
-        contentsListener.endNavPoint();
+        bookListener.endNavPoint();
     }
 
     public String getCoverID() {
@@ -112,11 +110,11 @@ public class ContentsRender {
         return resources;
     }
 
-    public List<SpineItem> getSpineItems() {
+    public List<Spine> getSpineItems() {
         return spines;
     }
 
-    public List<GuideItem> getGuideItems() {
+    public List<Guide> getGuideItems() {
         return guides;
     }
 
@@ -131,13 +129,13 @@ public class ContentsRender {
     }
 
     private void writeBookCover() throws IOException {
-        Flob cover = Attributes.getCover(book);
+        val cover = Attributes.getCover(book);
         if (cover == null) {    // no cover write intro
             writeIntroPage();
         } else {
-            String title = JFMessages.tr("epub.page.cover.title");
+            val title = JFMessages.tr("epub.page.cover.title");
             coverID = COVER_NAME + "-image";
-            String href = writeImage(cover, COVER_NAME, coverID);
+            val href = writeImage(cover, COVER_NAME, coverID);
             if (epubConfig.smallPage) {   // for phone split to cover and intro page
                 writeCoverPage(title, href);
                 writeIntroPage();
@@ -147,56 +145,54 @@ public class ContentsRender {
         }
     }
 
-    private void writeCoverPage(String title, String coverHref)
-            throws IOException {
-        StringWriter writer = new StringWriter();
+    private void writeCoverPage(String title, String coverHref) throws IOException {
+        val writer = new StringWriter();
         htmlRender.setOutput(writer);
         htmlRender.renderCover(title, coverHref, title);
-        String href = writeText(writer.toString(), COVER_NAME, hrefOfText(COVER_NAME));
+        val href = writeText(writer.toString(), COVER_NAME, hrefOfText(COVER_NAME));
         newSpineItem(COVER_NAME, true, DUOKAN_FULL_SCREEN);
         newGuideItem(href, "cover", title);
     }
 
     private void writeIntroPage() throws IOException {
-        Text intro = Attributes.getIntro(book);
+        val intro = Attributes.getIntro(book);
         if (intro == null) {    // no book intro
             return;
         }
-        String title = JFMessages.tr("epub.page.intro.title");
-        String baseName = INTRO_NAME;
-        StringWriter writer = new StringWriter();
+        val title = JFMessages.tr("epub.page.intro.title");
+        val baseName = INTRO_NAME;
+        val writer = new StringWriter();
         htmlRender.setOutput(writer);
         htmlRender.renderIntro(title, Attributes.getTitle(book), title, intro);
-        String href = writeText(writer.toString(), baseName, hrefOfText(baseName));
+        val href = writeText(writer.toString(), baseName, hrefOfText(baseName));
         newNaviItem(baseName, href, title, null);
         endNaviItem();
     }
 
     private void writeCoverIntro(String title, String coverHref) throws IOException {
-        StringWriter writer = new StringWriter();
+        val writer = new StringWriter();
         htmlRender.setOutput(writer);
         Text intro = Attributes.getIntro(book);
         if (intro != null) {
-            String bookTitle = Attributes.getTitle(book);
-            htmlRender.renderCoverIntro(title, coverHref, bookTitle, bookTitle,
-                    JFMessages.tr("epub.page.intro.title"), intro);
+            val bookTitle = Attributes.getTitle(book);
+            htmlRender.renderCoverIntro(title, coverHref, bookTitle, bookTitle, JFMessages.tr("epub.page.intro.title"), intro);
         } else {
             htmlRender.renderCover(title, coverHref, title);
         }
-        String href = writeText(writer.toString(), COVER_NAME, hrefOfText(COVER_NAME));
+        val href = writeText(writer.toString(), COVER_NAME, hrefOfText(COVER_NAME));
         newNaviItem(COVER_NAME, href, title, DUOKAN_FULL_SCREEN);
         endNaviItem();
         newGuideItem(href, "cover", title);
     }
 
     private void writeToc() throws IOException {
-        String title = JFMessages.tr("epub.page.toc.title");
-        String href = TEXT_DIR + "/" + hrefOfText(TOC_NAME);
+        val title = JFMessages.tr("epub.page.toc.title");
+        val href = TEXT_DIR + "/" + hrefOfText(TOC_NAME);
         newNaviItem(TOC_NAME, href, title, null);
         endNaviItem();
         // sections and chapters
-        List<HtmlRender.Link> links = processSection(book, "", hrefOfText(TOC_NAME));
-        StringWriter writer = new StringWriter();
+        val links = processSection(book, "", hrefOfText(TOC_NAME));
+        val writer = new StringWriter();
         htmlRender.setOutput(writer);
         htmlRender.renderToc(title, links);
         writeText(writer.toString(), TOC_NAME, hrefOfText(TOC_NAME));
@@ -204,31 +200,23 @@ public class ContentsRender {
     }
 
     // return links of sub-chapters
-    private List<HtmlRender.Link> processSection(Chapter section, String suffix,
-                                                 String myHref) throws IOException {
-        List<HtmlRender.Link> links = new LinkedList<>();
-        HtmlRender.Link link;
+    private List<HtmlRender.Link> processSection(Chapter section, String suffix, String myHref) throws IOException {
+        val links = new LinkedList<HtmlRender.Link>();
         String mySuffix;
         int count = 1;
         for (Chapter sub : section) {
             mySuffix = suffix + "-" + Integer.toString(count);
-            if (!sub.isSection()) {
-                link = writeChapter(sub, mySuffix);
-            } else {
-                link = writeSection(sub, mySuffix, myHref);
-            }
-            links.add(link);
+            links.add(!sub.isSection() ? writeChapter(sub, mySuffix) : writeSection(sub, mySuffix, myHref));
             ++count;
         }
         return links;
     }
 
-    private HtmlRender.Link writeSection(Chapter section, String suffix,
-                                         String parentHref) throws IOException {
-        String baseName = "section" + suffix;
-        String name = hrefOfText(baseName);
-        String href = TEXT_DIR + "/" + name;
-        String sectionTitle = Attributes.getTitle(section);
+    private HtmlRender.Link writeSection(Chapter section, String suffix, String parentHref) throws IOException {
+        val baseName = "section" + suffix;
+        val name = hrefOfText(baseName);
+        val href = TEXT_DIR + "/" + name;
+        val sectionTitle = Attributes.getTitle(section);
 
         String coverHref = writePartCover(section, baseName);
         if (coverHref != null && epubConfig.smallPage) {
@@ -238,17 +226,15 @@ public class ContentsRender {
         newNaviItem(baseName, href, sectionTitle, null);
 
         // sub-chapters
-        String myHref = hrefOfText("section" + suffix);
-        List<HtmlRender.Link> links = processSection(section, suffix, myHref);
+        val myHref = hrefOfText("section" + suffix);
+        val links = processSection(section, suffix, myHref);
         if (parentHref != null) {
-            String title = JFMessages.tr("epub.page.contents.gotoTop");
-            links.add(new HtmlRender.Link(title, parentHref));
+            links.add(new HtmlRender.Link(JFMessages.tr("epub.page.contents.gotoTop"), parentHref));
         }
 
-        StringWriter writer = new StringWriter();
+        val writer = new StringWriter();
         htmlRender.setOutput(writer);
-        htmlRender.renderSection(sectionTitle, coverHref, sectionTitle,
-                Attributes.getIntro(section), links);
+        htmlRender.renderSection(sectionTitle, coverHref, sectionTitle, Attributes.getIntro(section), links);
         writeText(writer.toString(), baseName, name);
         endNaviItem();
         return new HtmlRender.Link(sectionTitle, name);
@@ -263,15 +249,14 @@ public class ContentsRender {
      * @throws IOException if occur IO errors
      */
     private HtmlRender.Link writeChapter(Chapter chapter, String suffix) throws IOException {
-        String baseName = "chapter" + suffix;
-        String name = hrefOfText(baseName);
-        String href = TEXT_DIR + "/" + name;
-        String chapterTitle = Attributes.getTitle(chapter);
+        val baseName = "chapter" + suffix;
+        val name = hrefOfText(baseName);
+        val href = TEXT_DIR + "/" + name;
+        val chapterTitle = Attributes.getTitle(chapter);
 
-        Text content = chapter.getText();
-        if (content != null && content.getType().equals(Text.HTML)) {    // content already HTML
-            href = writeText(content, baseName, name);
-            newNaviItem(baseName, href, chapterTitle, null);
+        val text = chapter.getText();
+        if (text != null && text.getType().equals(Text.HTML)) {    // text already HTML
+            newNaviItem(baseName, writeText(text, baseName, name), chapterTitle, null);
             endNaviItem();
             return new HtmlRender.Link(chapterTitle, name);
         }
@@ -282,11 +267,12 @@ public class ContentsRender {
             coverHref = null;
         }
 
-        ZipEntry zipEntry = new ZipEntry(epubWriter.pathInOps(href));
+        val zipEntry = new ZipEntry(epubWriter.pathInOps(href));
         zipout.putNextEntry(zipEntry);
         htmlRender.setOutput(zipout);
-        htmlRender.renderChapter(chapterTitle, coverHref, chapterTitle,
-                Attributes.getIntro(chapter), content != null ? content : Texts.forEmpty(Text.PLAIN));
+        htmlRender.renderChapter(chapterTitle, coverHref, chapterTitle, Attributes.getIntro(chapter), text != null
+                ? text
+                : Texts.forEmpty(Text.PLAIN));
         zipout.closeEntry();
 
         newResource(baseName, href, MT_XHTML);
@@ -295,10 +281,9 @@ public class ContentsRender {
         return new HtmlRender.Link(chapterTitle, name);
     }
 
-    private void writeChapterCover(String title, String coverHref, String baseName)
-            throws IOException {
-        String id = baseName + "-" + COVER_NAME;
-        StringWriter writer = new StringWriter();
+    private void writeChapterCover(String title, String coverHref, String baseName) throws IOException {
+        val id = baseName + "-" + COVER_NAME;
+        val writer = new StringWriter();
         htmlRender.setOutput(writer);
         htmlRender.renderChapterCover(title, coverHref, title);
         writeText(writer.toString(), id, hrefOfText(id));
@@ -306,10 +291,9 @@ public class ContentsRender {
         endNaviItem();
     }
 
-    private void writeSectionCover(String title, String coverHref, String baseName)
-            throws IOException {
-        String id = baseName + "-" + COVER_NAME;
-        StringWriter writer = new StringWriter();
+    private void writeSectionCover(String title, String coverHref, String baseName) throws IOException {
+        val id = baseName + "-" + COVER_NAME;
+        val writer = new StringWriter();
         htmlRender.setOutput(writer);
         htmlRender.renderSectionCover(title, coverHref, title);
         writeText(writer.toString(), id, hrefOfText(id));
@@ -317,11 +301,11 @@ public class ContentsRender {
     }
 
     private String writePartCover(Chapter chapter, String baseName) throws IOException {
-        Flob cover = Attributes.getCover(chapter);
+        val cover = Attributes.getCover(chapter);
         if (cover == null) {
             return null;
         }
-        String name = baseName + "-" + COVER_NAME;
+        val name = baseName + "-" + COVER_NAME;
         return writeImage(cover, name, name + "-image");
     }
 
@@ -334,7 +318,7 @@ public class ContentsRender {
      * @throws IOException if occur IO errors
      */
     private String writeImage(Flob file, String name, String id) throws IOException {
-        String path = IMAGE_DIR + "/" + name + "." + PathUtils.extensionName(file.getName());
+        val path = IMAGE_DIR + "/" + name + "." + PathUtils.extensionName(file.getName());
         writeIntoEpub(file, path, id, file.getMime());
         return "../" + path;    // relative to HTML in textDir
     }
@@ -353,8 +337,8 @@ public class ContentsRender {
      * @throws IOException if occur IO errors
      */
     private String writeText(String text, String id, String name) throws IOException {
-        String path = TEXT_DIR + "/" + name;
-        epubWriter.writeIntoOps(text, path, epubConfig.htmlConfig.encoding);
+        val path = TEXT_DIR + "/" + name;
+        epubWriter.writeToOps(text, path, epubConfig.htmlConfig.encoding);
         newResource(id, path, MT_XHTML);
         return path;
     }
@@ -369,8 +353,8 @@ public class ContentsRender {
      * @throws IOException if occur IO errors
      */
     private String writeText(Text text, String id, String name) throws IOException {
-        String path = TEXT_DIR + "/" + name;
-        epubWriter.writeIntoOps(text, path, epubConfig.htmlConfig.encoding);
+        val path = TEXT_DIR + "/" + name;
+        epubWriter.writeToOps(text, path, epubConfig.htmlConfig.encoding);
         newResource(id, path, MT_XHTML);
         return path;
     }
@@ -385,7 +369,7 @@ public class ContentsRender {
         if (epubConfig.htmlConfig.style == null) {
             epubConfig.htmlConfig.style = StyleProvider.getDefaults();
         }
-        String name = STYLE_DIR + "/" + CSS_FILE;
+        val name = STYLE_DIR + "/" + CSS_FILE;
         writeIntoEpub(epubConfig.htmlConfig.style.cssFile, name, CSS_FILE_ID, MT_CSS);
         epubConfig.htmlConfig.cssHref = "../" + name;   // relative to HTML in textDir
     }
@@ -400,9 +384,8 @@ public class ContentsRender {
      *                  if <tt>null</tt> using {@link Flob#getMime()}
      * @throws IOException if occur IO errors
      */
-    private void writeIntoEpub(Flob file, String path, String id,
-                               String mediaType) throws IOException {
-        epubWriter.writeIntoOps(file, path);
+    private void writeIntoEpub(Flob file, String path, String id, String mediaType) throws IOException {
+        epubWriter.writeToOps(file, path);
         newResource(id, path, (mediaType != null) ? mediaType : file.getMime());
     }
 }

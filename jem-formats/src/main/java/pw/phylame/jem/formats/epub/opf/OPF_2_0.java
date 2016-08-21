@@ -16,15 +16,12 @@
 
 package pw.phylame.jem.formats.epub.opf;
 
+import lombok.val;
 import pw.phylame.jem.core.Attributes;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.epm.util.MakerException;
 import pw.phylame.jem.epm.util.xml.XmlRender;
-import pw.phylame.jem.formats.epub.EpubOutConfig;
-import pw.phylame.jem.formats.epub.GuideItem;
-import pw.phylame.jem.formats.epub.Resource;
-import pw.phylame.jem.formats.epub.SpineItem;
-import pw.phylame.jem.util.text.Text;
+import pw.phylame.jem.formats.epub.*;
 import pw.phylame.ycl.format.Converters;
 import pw.phylame.ycl.util.DateUtils;
 import pw.phylame.ycl.util.StringUtils;
@@ -48,140 +45,145 @@ class OPF_2_0 implements OpfWriter {
     public static final String[] OPTIONAL_METADATA = {"source", "relation", "format"};
 
 
-    private XmlRender xmlRender;
-    private EpubOutConfig epubConfig;
+    private XmlRender render;
+    private EpubOutConfig config;
 
     @Override
-    public void write(Book book, EpubOutConfig epubConfig, XmlRender xmlRender,
-                      String coverID, List<Resource> resources,
-                      List<SpineItem> spineItems, String ncxID, List<GuideItem> guideItems)
-            throws IOException, MakerException {
-        this.xmlRender = xmlRender;
-        this.epubConfig = epubConfig;
-        xmlRender.startXml();
-        xmlRender.startTag("package").attribute("version", OPF_VERSION_2);
-        xmlRender.attribute("unique-identifier", BOOK_ID_NAME);
-        xmlRender.attribute("xmlns", OPF_XML_NS);
+    public void write(String coverID,
+                      List<Resource> resources,
+                      List<Spine> spines,
+                      String ncxID,
+                      List<Guide> guides,
+                      OutTuple tuple) throws IOException, MakerException {
+        this.render = tuple.render;
+        this.config = tuple.config;
+        render.startXml();
+        render.startTag("package").attribute("version", OPF_VERSION_2);
+        render.attribute("unique-identifier", BOOK_ID_NAME);
+        render.attribute("xmlns", OPF_XML_NS);
 
-        writeMetadata(book, coverID);
+        writeMetadata(tuple.book, coverID);
 
         // manifest
-        xmlRender.startTag("manifest");
+        render.startTag("manifest");
         for (Resource resource : resources) {
-            xmlRender.startTag("item").attribute("id", resource.id);
-            xmlRender.attribute("href", resource.href);
-            xmlRender.attribute("media-type", resource.mediaType);
-            xmlRender.endTag();
+            render.startTag("item")
+                    .attribute("id", resource.id)
+                    .attribute("href", resource.href)
+                    .attribute("media-type", resource.mediaType)
+                    .endTag();
         }
-        xmlRender.endTag();
+        render.endTag();
 
         // spine
-        xmlRender.startTag("spine").attribute("toc", ncxID);
-        for (SpineItem item : spineItems) {
-            xmlRender.startTag("itemref").attribute("idref", item.idref);
+        render.startTag("spine").attribute("toc", ncxID);
+        for (val item : spines) {
+            render.startTag("itemref").attribute("idref", item.idref);
             if (!item.linear) {
-                xmlRender.attribute("linear", "no");
+                render.attribute("linear", "no");
             }
             if (item.properties != null) {
-                xmlRender.attribute("properties", item.properties);
+                render.attribute("properties", item.properties);
             }
-            xmlRender.endTag();
+            render.endTag();
         }
-        xmlRender.endTag();
+        render.endTag();
         // guide
-        xmlRender.startTag("guide");
-        for (GuideItem item : guideItems) {
-            xmlRender.startTag("reference").attribute("href", item.href);
-            xmlRender.attribute("type", item.type);
-            xmlRender.attribute("title", item.title).endTag();
+        render.startTag("guide");
+        for (val item : guides) {
+            render.startTag("reference")
+                    .attribute("href", item.href)
+                    .attribute("type", item.type)
+                    .attribute("title", item.title)
+                    .endTag();
         }
-        xmlRender.endTag();
+        render.endTag();
 
-        xmlRender.endTag(); // package
-        xmlRender.endXml();
+        render.endTag(); // package
+        render.endXml();
     }
 
     private void writeMetadata(Book book, String coverID) throws IOException, MakerException {
-        xmlRender.startTag("metadata");
-        xmlRender.attribute("xmlns:dc", DC_XML_NS).attribute("xmlns:opf", OPF_XML_NS);
-        addDcmi(book, epubConfig.uuid, coverID);
-        xmlRender.endTag();
+        render.startTag("metadata");
+        render.attribute("xmlns:dc", DC_XML_NS).attribute("xmlns:opf", OPF_XML_NS);
+        addDcmi(book, config.uuid, coverID);
+        render.endTag();
     }
 
     private void addDcmi(Book book, String uuid, String coverID) throws IOException, MakerException {
-        xmlRender.startTag("dc:identifier").attribute("id", BOOK_ID_NAME);
-        xmlRender.attribute("opf:scheme", "uuid").text(uuid).endTag();
+        render.startTag("dc:identifier").attribute("id", BOOK_ID_NAME);
+        render.attribute("opf:scheme", "uuid").text(uuid).endTag();
 
-        xmlRender.startTag("dc:title").text(Attributes.getTitle(book)).endTag();
+        render.startTag("dc:title").text(Attributes.getTitle(book)).endTag();
 
-        String str = Attributes.getAuthor(book);
-        if (!str.isEmpty()) {
-            xmlRender.startTag("dc:creator");
-            xmlRender.attribute("opf:role", "aut").text(str).endTag();
+        String value = Attributes.getAuthor(book);
+        if (StringUtils.isNotEmpty(value)) {
+            render.startTag("dc:creator");
+            render.attribute("opf:role", "aut").text(value).endTag();
         }
 
-        str = Attributes.getGenre(book);
-        if (!str.isEmpty()) {
-            xmlRender.startTag("dc:type").text(str).endTag();
+        value = Attributes.getGenre(book);
+        if (StringUtils.isNotEmpty(value)) {
+            render.startTag("dc:type").text(value).endTag();
         }
 
-        str = Attributes.getKeywords(book);
-        if (!str.isEmpty()) {
-            xmlRender.startTag("dc:subject").text(str).endTag();
+        value = Attributes.getKeywords(book);
+        if (StringUtils.isNotEmpty(value)) {
+            render.startTag("dc:subject").text(value).endTag();
         }
 
-        Text intro = Attributes.getIntro(book);
+        val intro = Attributes.getIntro(book);
         if (intro != null) {
-            String text = intro.getText();
+            val text = intro.getText();
             if (StringUtils.isNotEmpty(text)) {
-                xmlRender.startTag("dc:description").text(text).endTag();
+                render.startTag("dc:description").text(text).endTag();
             }
         }
 
-        str = Attributes.getPublisher(book);
-        if (!str.isEmpty()) {
-            xmlRender.startTag("dc:publisher").text(str).endTag();
+        value = Attributes.getPublisher(book);
+        if (StringUtils.isNotEmpty(value)) {
+            render.startTag("dc:publisher").text(value).endTag();
         }
 
         if (coverID != null) {
-            xmlRender.startTag("meta").attribute("name", "cover");
-            xmlRender.attribute("content", coverID).endTag();
+            render.startTag("meta").attribute("name", "cover").attribute("content", coverID).endTag();
         }
 
-        Date date = Attributes.getDate(book);
+        val date = Attributes.getDate(book);
         if (date != null) {
-            xmlRender.startTag("dc:date").attribute("opf:event", "creation");
-            xmlRender.text(DateUtils.format(date, epubConfig.dateFormat));
-            xmlRender.endTag();
+            render.startTag("dc:date")
+                    .attribute("opf:event", "creation")
+                    .text(DateUtils.format(date, config.dateFormat))
+                    .endTag();
 
-            Date today = new Date();
+            val today = new Date();
             if (!today.equals(date)) {
-                xmlRender.startTag("dc:date").attribute("opf:event", "modification");
-                xmlRender.text(DateUtils.format(today, epubConfig.dateFormat));
-                xmlRender.endTag();
+                render.startTag("dc:date")
+                        .attribute("opf:event", "modification")
+                        .text(DateUtils.format(today, config.dateFormat))
+                        .endTag();
             }
         }
 
-        Locale locale = Attributes.getLanguage(book);
-        if (locale != null) {
-            xmlRender.startTag("dc:language").text(Converters.render(locale, Locale.class)).endTag();
+        val language = Attributes.getLanguage(book);
+        if (language != null) {
+            render.startTag("dc:language").text(Converters.render(language, Locale.class)).endTag();
         }
 
-        str = Attributes.getRights(book);
-        if (!str.isEmpty()) {
-            xmlRender.startTag("dc:rights").text(str).endTag();
+        value = Attributes.getRights(book);
+        if (StringUtils.isNotEmpty(value)) {
+            render.startTag("dc:rights").text(value).endTag();
         }
 
-        str = Attributes.getVendor(book);
-        if (!str.isEmpty()) {
-            xmlRender.startTag("dc:contributor").attribute("opf:role", "bkp");
-            xmlRender.text(str).endTag();
+        value = Attributes.getVendor(book);
+        if (StringUtils.isNotEmpty(value)) {
+            render.startTag("dc:contributor").attribute("opf:role", "bkp").text(value).endTag();
         }
 
-        for (String key : OPTIONAL_METADATA) {
-            str = book.getAttributes().get(key, "");
-            if (!str.isEmpty()) {
-                xmlRender.startTag("dc:" + key).text(str).endTag();
+        for (val key : OPTIONAL_METADATA) {
+            value = book.getAttributes().get(key, "");
+            if (StringUtils.isNotEmpty(value)) {
+                render.startTag("dc:" + key).text(value).endTag();
             }
         }
     }

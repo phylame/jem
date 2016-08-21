@@ -18,17 +18,14 @@
 
 package pw.phylame.jem.formats.epub;
 
+import lombok.AllArgsConstructor;
+
 /**
  * Describe resource in ePub.
  */
+@AllArgsConstructor
 public class Resource {
     public final String id;
     public final String href;
     public final String mediaType;
-
-    public Resource(String id, String href, String mediaType) {
-        this.id = id;
-        this.href = href;
-        this.mediaType = mediaType;
-    }
 }

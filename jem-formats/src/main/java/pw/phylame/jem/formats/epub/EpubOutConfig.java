@@ -31,7 +31,7 @@ public class EpubOutConfig extends ZipOutConfig {
     public static final String VERSION = "version";
     public static final String XML_CONFIG = "xmlConfig";
     public static final String HTML_CONFIG = "htmlConfig";
-    public static final String UUID = ".uuid";
+    public static final String UUID = "uuid";
     public static final String DATE_FORMAT = "dateFormat";
     public static final String SMALL_PAGE = "smallPage";
 

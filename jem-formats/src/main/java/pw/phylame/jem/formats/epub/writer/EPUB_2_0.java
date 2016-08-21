@@ -18,23 +18,21 @@
 
 package pw.phylame.jem.formats.epub.writer;
 
-import java.util.List;
-import java.util.UUID;
-import java.util.zip.ZipEntry;
+import lombok.val;
+import pw.phylame.jem.core.Attributes;
+import pw.phylame.jem.core.Book;
+import pw.phylame.jem.epm.util.MakerException;
+import pw.phylame.jem.formats.epub.EPUB;
+import pw.phylame.jem.formats.epub.Resource;
+import pw.phylame.jem.formats.epub.ncx.NcxWriterFactory;
+import pw.phylame.jem.formats.epub.opf.OpfWriterFactory;
+import pw.phylame.jem.formats.util.JFMessages;
+import pw.phylame.ycl.util.StringUtils;
+
 import java.io.IOException;
 import java.io.StringWriter;
-
-import pw.phylame.jem.core.Book;
-import pw.phylame.jem.formats.epub.Resource;
-import pw.phylame.jem.formats.util.ExceptionFactory;
-import pw.phylame.jem.formats.util.MakerException;
-import pw.phylame.jem.formats.util.text.TextUtils;
-
-import pw.phylame.jem.formats.epub.EPUB;
-import pw.phylame.jem.formats.epub.ncx.NcxWriter;
-import pw.phylame.jem.formats.epub.ncx.NcxWriterFactory;
-import pw.phylame.jem.formats.epub.opf.OpfWriter;
-import pw.phylame.jem.formats.epub.opf.OpfWriterFactory;
+import java.util.UUID;
+import java.util.zip.ZipEntry;
 
 /**
  * ePub 2.0 implements.
@@ -49,34 +47,35 @@ class EPUB_2_0 extends EpubWriter {
 
     @Override
     protected void write() throws IOException, MakerException {
-        if (TextUtils.isEmpty(config.uuid)) {
-            config.uuid = getUUID(book);
+        val config = tuple.config;
+        val render = tuple.render;
+        val zipout = tuple.zipout;
+        if (StringUtils.isEmpty(config.uuid)) {
+            config.uuid = getUUID(tuple.book);
         }
         // make and write NCX document
-        NcxWriter ncxWriter = NcxWriterFactory.getWriter("2005-1");
+        val ncxWriter = NcxWriterFactory.getWriter("2005-1");
         if (ncxWriter == null) {
-            throw ExceptionFactory.makerException("epub.make.v2.noNCX_2005_1");
+            throw new MakerException(JFMessages.tr("epub.make.v2.noNCX_2005_1"));
         }
-        StringWriter writer = new StringWriter();
-        xmlRender.setOutput(writer);
-        ncxWriter.write(book, config, xmlRender, this, zipout);
-        String ncxHref = EPUB.NCX_FILE;
-        writeIntoOps(writer.toString(), ncxHref, config.xmlConfig.encoding);
+        val writer = new StringWriter();
+        render.setOutput(writer);
+        ncxWriter.write(this, tuple);
+        val ncxHref = EPUB.NCX_FILE;
+        writeToOps(writer.toString(), ncxHref, config.xmlConfig.encoding);
 
-        List<Resource> resources = ncxWriter.getResources();
+        val resources = ncxWriter.getResources();
         resources.add(new Resource(EPUB.NCX_FILE_ID, ncxHref, EPUB.MT_NCX));
 
-        OpfWriter opfWriter = OpfWriterFactory.getWriter("2.0");
+        val opfWriter = OpfWriterFactory.getWriter("2.0");
         if (opfWriter == null) {
-            throw ExceptionFactory.makerException("epub.make.v2.noOPF_2_0");
+            throw new MakerException(JFMessages.tr("epub.make.v2.noOPF_2_0"));
         }
-        String opfPath = pathInOps(OPF_FILE);
+        val opfPath = pathInOps(OPF_FILE);
         zipout.putNextEntry(new ZipEntry(opfPath));
-        xmlRender.setOutput(zipout);
-        opfWriter.write(book, config, xmlRender, ncxWriter.getCoverID(),
-                resources, ncxWriter.getSpineItems(), EPUB.NCX_FILE_ID,
-                ncxWriter.getGuideItems());
-        xmlRender.flush();
+        render.setOutput(zipout);
+        opfWriter.write(ncxWriter.getCoverID(), resources, ncxWriter.getSpines(), EPUB.NCX_FILE_ID, ncxWriter.getGuides(), tuple);
+        render.flush();
         zipout.closeEntry();
 
         writeContainer(opfPath);
@@ -84,10 +83,10 @@ class EPUB_2_0 extends EpubWriter {
 
     private String getUUID(Book book) {
         // UUID of the book
-        String uuid = book.stringAttribute("uuid", null);
-        if (TextUtils.isEmpty(uuid)) {
-            uuid = book.stringAttribute("isbn", null);
-            if (TextUtils.isEmpty(uuid)) {
+        String uuid = book.getAttributes().get("uuid", null);
+        if (StringUtils.isEmpty(uuid)) {
+            uuid = Attributes.getISBN(book);
+            if (StringUtils.isEmpty(uuid)) {
                 uuid = UUID.randomUUID().toString();
             }
         }

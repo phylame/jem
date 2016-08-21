@@ -18,10 +18,11 @@
 
 package pw.phylame.jem.formats.epub.opf;
 
-import pw.phylame.jem.core.Book;
 import pw.phylame.jem.epm.util.MakerException;
-import pw.phylame.jem.epm.util.xml.XmlRender;
-import pw.phylame.jem.formats.epub.*;
+import pw.phylame.jem.formats.epub.Guide;
+import pw.phylame.jem.formats.epub.OutTuple;
+import pw.phylame.jem.formats.epub.Resource;
+import pw.phylame.jem.formats.epub.Spine;
 
 import java.io.IOException;
 import java.util.List;
@@ -31,8 +32,10 @@ import java.util.List;
  */
 public interface OpfWriter {
 
-    void write(Book book, EpubOutConfig epubConfig, XmlRender xmlRender,
-               String coverID, List<Resource> resources,
-               List<SpineItem> spineItems,
-               String ncxID, List<GuideItem> guideItems) throws IOException, MakerException;
+    void write(String coverID,
+               List<Resource> resources,
+               List<Spine> spines,
+               String ncxID,
+               List<Guide> guides,
+               OutTuple tuple) throws IOException, MakerException;
 }

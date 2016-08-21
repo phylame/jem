@@ -18,17 +18,14 @@
 
 package pw.phylame.jem.formats.epub;
 
-/**
- * An item in <guide> of OPF.
- */
-public class GuideItem {
-    public final String href;
-    public final String type;
-    public final String title;
+import lombok.AllArgsConstructor;
 
-    public GuideItem(String href, String type, String title) {
-        this.type = type;
-        this.href = href;
-        this.title = title;
-    }
+/**
+ * An item in <spine> of OPF.
+ */
+@AllArgsConstructor
+public class Spine {
+    public final String idref;
+    public final boolean linear;
+    public final String properties;
 }

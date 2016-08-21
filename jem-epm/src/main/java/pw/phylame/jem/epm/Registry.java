@@ -265,7 +265,7 @@ public final class Registry {
     private static final String EXTENSION_SEPARATOR = " ";
 
     private static <T> void loadRegisters(ClassLoader loader, String path, Implementor<T> factory) {
-        val urls = IOUtils.getResources(path, loader);
+        val urls = IOUtils.resourcesFor(path, loader);
         if (urls == null) {
             return;
         }

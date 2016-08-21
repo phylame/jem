@@ -305,7 +305,8 @@ public class UmdMaker extends AbstractMaker<UmdOutConfig> {
                 {0x1, 0x10, 0xB0},
                 {0x5, 0x0A, 0xA6}
         };
-        val buf6 = new byte[6], buf12 = new byte[12];
+        val buf6 = new byte[6];
+        val buf12 = new byte[12];
         long rand;
         for (val page : pages) {
             buf6[0] = (byte) page[1];

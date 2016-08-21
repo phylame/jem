@@ -16,12 +16,14 @@
 
 package pw.phylame.jem.formats.epub.writer;
 
+import lombok.val;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.epm.util.MakerException;
 import pw.phylame.jem.epm.util.ZipUtils;
 import pw.phylame.jem.epm.util.xml.XmlRender;
 import pw.phylame.jem.formats.epub.EPUB;
 import pw.phylame.jem.formats.epub.EpubOutConfig;
+import pw.phylame.jem.formats.epub.OutTuple;
 import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.jem.util.text.Text;
 
@@ -37,17 +39,10 @@ public abstract class EpubWriter {
     public static final String CONTAINER_VERSION = "1.0";
     public static final String OPS_DIR = "OEBPS";
 
-    protected Book book;
-    protected EpubOutConfig config;
-    protected ZipOutputStream zipout;
-    protected XmlRender xmlRender;
+    protected OutTuple tuple;
 
-    public void write(Book book, EpubOutConfig config, ZipOutputStream zipout) throws IOException,
-            MakerException {
-        this.book = book;
-        this.config = config;
-        this.zipout = zipout;
-        xmlRender = new XmlRender(config.xmlConfig, false);
+    public void write(Book book, EpubOutConfig config, ZipOutputStream zipout) throws IOException, MakerException {
+        tuple = new OutTuple(book, new XmlRender(config.xmlConfig, false), config, zipout);
         write();
     }
 
@@ -57,33 +52,33 @@ public abstract class EpubWriter {
         return OPS_DIR + "/" + name;
     }
 
-    public void writeIntoOps(Flob file, String name) throws IOException {
-        ZipUtils.writeFile(zipout, pathInOps(name), file);
+    public void writeToOps(Flob file, String name) throws IOException {
+        ZipUtils.writeFile(tuple.zipout, pathInOps(name), file);
     }
 
-    public void writeIntoOps(String text, String name, String encoding) throws IOException {
-        ZipUtils.writeString(zipout, pathInOps(name), text, encoding);
+    public void writeToOps(String text, String name, String encoding) throws IOException {
+        ZipUtils.writeString(tuple.zipout, pathInOps(name), text, encoding);
     }
 
-    public void writeIntoOps(Text text, String name, String encoding) throws IOException {
-        ZipUtils.writeText(zipout, pathInOps(name), text, encoding);
+    public void writeToOps(Text text, String name, String encoding) throws IOException {
+        ZipUtils.writeText(tuple.zipout, pathInOps(name), text, encoding);
     }
 
     protected void writeContainer(String opfPath) throws IOException {
-        StringWriter writer = new StringWriter();
-        xmlRender.setOutput(writer);
-        xmlRender.startXml();
-        xmlRender.startTag("container").attribute("version", CONTAINER_VERSION);
-        xmlRender.attribute("xmlns", CONTAINER_XML_NS);
+        val render = tuple.render;
+        val writer = new StringWriter();
+        render.setOutput(writer);
+        render.startXml();
+        render.startTag("container").attribute("version", CONTAINER_VERSION);
+        render.attribute("xmlns", CONTAINER_XML_NS);
 
-        xmlRender.startTag("rootfiles");
-        xmlRender.startTag("rootfile").attribute("full-path", opfPath);
-        xmlRender.attribute("media-type", EPUB.MT_OPF).endTag();
-        xmlRender.endTag();
+        render.startTag("rootfiles");
+        render.startTag("rootfile").attribute("full-path", opfPath).attribute("media-type", EPUB.MT_OPF).endTag();
+        render.endTag();
 
-        xmlRender.endTag();
-        xmlRender.endXml();
+        render.endTag();
+        render.endXml();
 
-        ZipUtils.writeString(zipout, EPUB.CONTAINER_FILE, writer.toString(), config.xmlConfig.encoding);
+        ZipUtils.writeString(tuple.zipout, EPUB.CONTAINER_FILE, writer.toString(), tuple.config.xmlConfig.encoding);
     }
 }

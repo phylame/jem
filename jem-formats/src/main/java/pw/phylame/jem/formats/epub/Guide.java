@@ -16,29 +16,16 @@
  * limitations under the License.
  */
 
-package pw.phylame.jem.formats.epub.ncx;
+package pw.phylame.jem.formats.epub;
 
-import pw.phylame.jem.epm.util.MakerException;
-import pw.phylame.jem.formats.epub.Guide;
-import pw.phylame.jem.formats.epub.OutTuple;
-import pw.phylame.jem.formats.epub.Resource;
-import pw.phylame.jem.formats.epub.Spine;
-import pw.phylame.jem.formats.epub.writer.EpubWriter;
-
-import java.io.IOException;
-import java.util.List;
+import lombok.AllArgsConstructor;
 
 /**
- * NCX builder.
+ * An item in <guide> of OPF.
  */
-public interface NcxWriter {
-    void write(EpubWriter writer, OutTuple tuple) throws IOException, MakerException;
-
-    String getCoverID();
-
-    List<Resource> getResources();
-
-    List<Spine> getSpines();
-
-    List<Guide> getGuides();
+@AllArgsConstructor
+public class Guide {
+    public final String href;
+    public final String type;
+    public final String title;
 }

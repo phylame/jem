@@ -21,9 +21,9 @@ package pw.phylame.jem.formats.epub;
 import java.io.IOException;
 
 /**
- * Listener for <tt>ContentsRender</tt>.
+ * Listener for <tt>BookRender</tt>.
  */
-public interface ContentsListener {
+public interface BookListener {
     void startNavPoint(String id, String href, String title) throws IOException;
 
     void endNavPoint() throws IOException;

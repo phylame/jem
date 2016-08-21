@@ -1,7 +1,5 @@
 /*
- * Copyright 2014-2015 Peng Wan <phylame@163.com>
- *
- * This file is part of Jem.
+ * Copyright 2016 Peng Wan <phylame@163.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,17 +16,17 @@
 
 package pw.phylame.jem.formats.epub;
 
-/**
- * An item in <spine> of OPF.
- */
-public class SpineItem {
-    public final String idref;
-    public final boolean linear;
-    public final String properties;
 
-    public SpineItem(String idref, boolean linear, String properties) {
-        this.idref = idref;
-        this.linear = linear;
-        this.properties = properties;
-    }
+import lombok.AllArgsConstructor;
+import pw.phylame.jem.core.Book;
+import pw.phylame.jem.epm.util.xml.XmlRender;
+
+import java.util.zip.ZipOutputStream;
+
+@AllArgsConstructor
+public class OutTuple {
+    public final Book book;
+    public final XmlRender render;
+    public final EpubOutConfig config;
+    public final ZipOutputStream zipout;
 }

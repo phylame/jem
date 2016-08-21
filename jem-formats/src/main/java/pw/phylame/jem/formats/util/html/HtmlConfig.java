@@ -25,12 +25,12 @@ import java.util.Map;
  * Config for rendering HTML.
  */
 public class HtmlConfig extends AbstractConfig {
-    public static final String SELF = "html.render.config";
-    public static final String ENCODING = "html.render.encoding";
-    public static final String INDENT_STRING = "html.render.indentString";
-    public static final String META_INFO = "html.render.metaInfo";
-    public static final String STYLE_PROVIDER = "html.render.styleProvider";
-    public static final String SKIP_EMPTY_LINE = "html.render.skipEmptyLine";
+    public static final String SELF = "html.config";
+    public static final String ENCODING = "html.encoding";
+    public static final String INDENT_STRING = "html.indentString";
+    public static final String META_INFO = "html.metaInfo";
+    public static final String STYLE_PROVIDER = "html.styleProvider";
+    public static final String SKIP_EMPTY_LINE = "html.skipEmptyLine";
 
     /**
      * Encoding for writing HTML.

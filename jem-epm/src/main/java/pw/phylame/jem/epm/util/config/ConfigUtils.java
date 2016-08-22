@@ -38,7 +38,7 @@ public final class ConfigUtils {
     private ConfigUtils() {
     }
 
-    public static final String TAG = "CFK";
+    public static final String TAG = "CFG";
 
     @SneakyThrows({InstantiationException.class, IllegalAccessException.class})
     public static <C extends EpmConfig> C defaultConfig(@NonNull Class<C> clazz) {
@@ -57,7 +57,7 @@ public final class ConfigUtils {
                 config = fetchObject(m, (prefix != null ? prefix : "") + field.get(null), clazz, null); // find the config object by key
             }
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            Log.e(TAG, e);
+            Log.d(TAG, "cannot get config by {0} field", EpmConfig.SELF_FIELD_NAME);
         }
         if (config != null) {
             return config;
@@ -86,26 +86,29 @@ public final class ConfigUtils {
     }
 
     @SuppressWarnings("unchecked")
-    private static void fetchFields(EpmConfig epmConfig, Map<String, Object> m, String prefix) throws BadConfigException {
-        Field[] fields = epmConfig.getClass().getFields();
+    private static void fetchFields(EpmConfig config, Map<String, Object> m, String prefix) throws BadConfigException {
+        Field[] fields = config.getClass().getFields();
         for (Field field : fields) {
             val mapped = field.getAnnotation(Mapped.class);
             if (mapped == null) {
+                Log.i(TAG, "field {0} is not mapped", field.getName());
                 continue;
             }
             if (Modifier.isStatic(field.getModifiers())) {
+                Log.i(TAG, "field {0} is static", field.getName());
                 throw new BadConfigException(mapped.value(), null,
-                        JEMessages.tr("err.config.inaccessible", field.getName(), epmConfig.getClass(), "found static field"));
+                        JEMessages.tr("err.config.inaccessible", field.getName(), config.getClass(), "static field is not permitted with Mapped"));
             }
             String key = mapped.value();
             if (prefix != null) {
                 key = prefix + key;
             }
+            Log.i(TAG, "key for field {0} is {1}", field.getName(), key);
             Class<?> type = field.getType();
             try {
                 Object value = fetchObject(m, key, type, null);
                 if (value == null) {    // not found in m
-                    Object initial = field.get(epmConfig);
+                    Object initial = field.get(config);
                     if (EpmConfig.class.isAssignableFrom(type)) {   // field is EpmConfig
                         fetchFields(initial != null
                                 ? (EpmConfig) initial
@@ -113,14 +116,14 @@ public final class ConfigUtils {
                     }
                     value = initial;
                 }
-                field.set(epmConfig, value);
+                field.set(config, value);
             } catch (IllegalAccessException e) {
                 throw Exceptions.forBadConfig(key, null,
-                        JEMessages.tr("err.config.inaccessible", epmConfig.getClass(), field.getName(), e.getMessage()));
+                        JEMessages.tr("err.config.inaccessible", config.getClass(), field.getName(), e.getMessage()));
             }
         }
-        if (fields.length > 0 && epmConfig instanceof AdjustableConfig) {
-            ((AdjustableConfig) epmConfig).adjust();
+        if (fields.length > 0 && config instanceof AdjustableConfig) {
+            ((AdjustableConfig) config).adjust();
         }
     }
 }

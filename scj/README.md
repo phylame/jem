@@ -4,6 +4,7 @@ Console tool for processing e-books.
 ## Required
 * jem-core
 * jem-epm
+* jem-formats
 * qaf-cli
 
 ## Command line examples

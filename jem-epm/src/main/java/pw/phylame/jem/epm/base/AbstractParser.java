@@ -41,7 +41,7 @@ public abstract class AbstractParser<I extends Closeable, C extends EpmConfig> e
     protected abstract I open(File file, C config) throws IOException;
 
     protected abstract Book parse(I input, C config) throws IOException, ParserException;
-    
+
     @Override
     public final Book parse(@NonNull File file, Map<String, Object> args) throws IOException, JemException {
         if (!file.exists()) {
@@ -50,13 +50,13 @@ public abstract class AbstractParser<I extends Closeable, C extends EpmConfig> e
         val config = fetchConfig(args);
         val input = open(file, config);
         if (input == null) {
-            throw Exceptions.forParser("open(File, C) of '%s' returned null", getClass().getName());
+            throw Exceptions.forParser("'open(File, C)' of '%s' returned null", getClass().getName());
         }
         Book book;
         try {
             book = parse(input, config);
             if (book == null) {
-                throw Exceptions.forParser("parse(I, C) of '%s' returned null", getClass().getName());
+                throw Exceptions.forParser("'parse(I, C)' of '%s' returned null", getClass().getName());
             }
         } catch (IOException | JemException | RuntimeException e) {
             input.close();

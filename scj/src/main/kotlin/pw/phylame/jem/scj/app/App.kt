@@ -77,12 +77,12 @@ object AppConfig : Settings() {
         super.reset()
         comment = "Configurations of PW's SCJ v$VERSION\nUpdated: ${DateUtils.toISO(Date())}"
 
-        appLocale = appLocale
-        pluginEnable = pluginEnable
-        debugLevel = debugLevel
-        outputFormat = outputFormat
-        viewKeys = viewKeys
-        tocIndent = tocIndent
+//        appLocale = appLocale
+//        pluginEnable = pluginEnable
+//        debugLevel = debugLevel
+//        outputFormat = outputFormat
+//        viewKeys = viewKeys
+//        tocIndent = tocIndent
     }
 
     var appLocale by delegated(Locale.getDefault(), "app.locale")

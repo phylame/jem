@@ -26,6 +26,7 @@ import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.Settings
 import pw.phylame.qaf.core.Translator
 import pw.phylame.qaf.core.tr
+import pw.phylame.ycl.io.IOUtils
 import pw.phylame.ycl.io.PathUtils
 import pw.phylame.ycl.util.DateUtils
 import java.io.File
@@ -75,17 +76,17 @@ const val OPTION_LIST_NOVELS_LONG = "novels"
 object AppConfig : Settings() {
     override fun reset() {
         super.reset()
-        comment = "Configurations of PW's SCJ v$VERSION\nUpdated: ${DateUtils.toISO(Date())}"
-
-//        appLocale = appLocale
-//        pluginEnable = pluginEnable
-//        debugLevel = debugLevel
-//        outputFormat = outputFormat
-//        viewKeys = viewKeys
-//        tocIndent = tocIndent
+        comment = "Configurations of PW's SCJ v$VERSION\nLast updated: ${DateUtils.toISO(Date())}"
+        val input = IOUtils.openResource("!pw/phylame/jem/scj/res/settings.tpl", null)
+        if (input != null) {
+            val prop = Properties()
+            prop.load(input)
+            @Suppress("unchecked_cast")
+            update(prop as Map<String, String>)
+        }
     }
 
-    var appLocale by delegated(Locale.getDefault(), "app.locale")
+    var appLocale: Locale by delegated(Locale.getDefault(), "app.locale")
 
     var pluginEnable by delegated(true, "app.plugin.enable")
 
@@ -93,9 +94,21 @@ object AppConfig : Settings() {
 
     var outputFormat by delegated(Helper.PMAB, "jem.output.defaultFormat")
 
-    var viewKeys by delegated(arrayOf(VIEW_ALL), "sci.view.defaultKey")
+    var viewKeys by delegated(VIEW_ALL, "sci.view.defaultKey")
 
     var tocIndent by delegated("  ", "sci.view.tocIndent")
+
+    var termWidth by delegated(80, "sci.term.width")
+
+    val inArguments = HashMap<String, Any>()
+
+    val outAttributes = HashMap<String, Any>()
+
+    val outExtensions = HashMap<String, Any>()
+
+    var output = "."
+
+    val outArguments = HashMap<String, Any>()
 }
 
 fun checkInputFormat(format: String): Boolean =
@@ -145,13 +158,7 @@ object SCI : CLIDelegate() {
         addOption(Option(OPTION_HELP, tr("help.description"))) {
             val formatter = HelpFormatter()
             formatter.syntaxPrefix = ""
-            formatter.printHelp(
-                    System.getProperty("sci.term.width")?.toInt() ?: 100,
-                    tr("sci.syntax", App.assembly.name),
-                    tr("help.prefix"),
-                    options,
-                    tr("help.feedback")
-            )
+            formatter.printHelp(AppConfig.termWidth, tr("sci.syntax", App.assembly.name), tr("help.prefix"), options, tr("help.feedback"))
             0
         }
         // version
@@ -316,21 +323,21 @@ object SCI : CLIDelegate() {
 
     val inFormat: String? by managed { null }
 
-    val inArguments by managed { emptyMap<String, String>() }
+    val inArguments by managed { AppConfig.inArguments }
 
-    val outAttributes by managed { emptyMap<String, Any>() }
+    val outAttributes by managed { AppConfig.outAttributes }
 
-    val outExtensions by managed { emptyMap<String, Any>() }
+    val outExtensions by managed { AppConfig.outExtensions }
 
-    val output: String by managed { "." }
+    val output: String by managed { AppConfig.output }
 
     val outFormat by managed { AppConfig.outputFormat }
 
-    val outArguments by managed { emptyMap<String, Any>() }
+    val outArguments by managed { AppConfig.outArguments }
 
     val chapterIndices by managed { emptyArray<String>() }
 
-    val viewKeys by managed { AppConfig.viewKeys }
+    val viewKeys by managed { AppConfig.viewKeys.split(",".toRegex()).toTypedArray() }
 
     fun consumeInputs(consumer: Consumer): Int {
         if (inputs.isEmpty()) {

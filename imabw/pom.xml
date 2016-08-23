@@ -10,9 +10,9 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>scj</artifactId>
-    <name>SCJ</name>
-    <description>Console tool for ebook processing</description>
+    <artifactId>imabw</artifactId>
+    <name>Imabw</name>
+    <description>The imabw ebook editor</description>
 
     <properties>
         <kotlin.version>1.0.3</kotlin.version>
@@ -32,7 +32,7 @@
         </dependency>
         <dependency>
             <groupId>pw.phylame.qaf</groupId>
-            <artifactId>qaf-cli</artifactId>
+            <artifactId>qaf-ixin</artifactId>
             <version>${qaf.version}</version>
         </dependency>
     </dependencies>

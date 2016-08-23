@@ -47,12 +47,13 @@
         <lombok.version>1.16.10</lombok.version>
     </properties>
 
-	<modules>
-			<module>../jem-core</module>
-			<module>../jem-epm</module>
-			<module>../jem-formats</module>
-			<module>../scj</module>
-	</modules>
+    <modules>
+        <module>jem-core</module>
+        <module>jem-epm</module>
+        <module>jem-formats</module>
+        <module>scj</module>
+        <module>imabw</module>
+    </modules>
 
     <dependencyManagement>
         <dependencies>

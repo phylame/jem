@@ -1,0 +1,29 @@
+<assembly>
+    <id>bin</id>
+    <formats>
+        <format>zip</format>
+    </formats>
+    <dependencySets>
+        <dependencySet>
+            <useProjectArtifact>true</useProjectArtifact>
+            <outputDirectory>lib</outputDirectory>
+        </dependencySet>
+    </dependencySets>
+    <fileSets>
+        <fileSet>
+            <outputDirectory>./</outputDirectory>
+            <includes>
+                <include>README.md</include>
+                <include>LICENSE</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <outputDirectory>./bin</outputDirectory>
+            <directory>src/main/scripts</directory>
+            <includes>
+                <include>imabw.sh</include>
+                <include>imabw.bat</include>
+            </includes>
+        </fileSet>
+    </fileSets>
+</assembly>

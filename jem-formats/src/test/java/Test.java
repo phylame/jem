@@ -55,6 +55,6 @@ public class Test {
                 "jar.make." + JarOutConfig.JAR_TEMPLATE, "D:\\code\\java\\pw-books\\jem-formats\\src\\main\\resources\\pw\\phylame\\jem\\formats\\jar\\book.jar"
         );
 //        Helper.writeBook(book, new File(path), format, arguments);
-        System.out.println(Helper.readBook(new File("D:\\tmp\\ex.pmab"), "jar", null));
+        System.out.println(Helper.readBook(new File("E:\\books\\小说\\武侠\\凤歌\\沧海（新版）.pmab"), "pmab", null));
     }
 }

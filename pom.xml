@@ -53,6 +53,7 @@
         <module>jem-formats</module>
         <module>scj</module>
         <module>imabw</module>
+        <module>scj-addons</module>
     </modules>
 
     <dependencyManagement>

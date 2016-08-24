@@ -23,7 +23,7 @@ import pw.phylame.jem.core.Book;
 import pw.phylame.jem.util.JemException;
 import pw.phylame.jem.util.UnsupportedFormatException;
 import pw.phylame.ycl.io.PathUtils;
-import pw.phylame.ycl.util.Log;
+import pw.phylame.ycl.log.Log;
 
 import java.io.File;
 import java.io.IOException;

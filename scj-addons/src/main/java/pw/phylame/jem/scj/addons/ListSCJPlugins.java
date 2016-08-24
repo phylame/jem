@@ -1,17 +1,17 @@
 package pw.phylame.jem.scj.addons;
 
-import org.apache.commons.cli.Option;
-
 import lombok.val;
+import org.apache.commons.cli.Option;
 import pw.phylame.qaf.cli.CLIDelegate;
 import pw.phylame.qaf.cli.Command;
 import pw.phylame.qaf.core.App;
 import pw.phylame.qaf.core.Plugin;
-import pw.phylame.ycl.util.Log;
 
 public class ListSCJPlugins extends AbstractPlugin implements Command {
     private static final String TAG = "LSP";
     private static final String ITEM_PATTERN = "%8s: %s";
+    private static final String OPTION = "U";
+    private static final String OPTION_LONG = "list-plugins";
 
     public ListSCJPlugins() {
         super(new Metadata("List SCJ Plugins", "1.0", "PW"));
@@ -19,8 +19,11 @@ public class ListSCJPlugins extends AbstractPlugin implements Command {
 
     @Override
     public void init() {
-        Log.i(TAG, "adding -U option to SCJ...");
-        sci.addOption(Option.builder("U").longOpt("plugins").desc(AddonsMessages.tr("help.lsp")).build(), this);
+        sci.addOption(Option.builder(OPTION)
+                .longOpt(OPTION_LONG)
+                .desc(AddonsMessages.tr("help.lsp"))
+                .build(), this
+        );
     }
 
     @Override

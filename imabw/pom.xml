@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>imabw</artifactId>
-    <name>Imabw</name>
+    <name>Imabw Editor</name>
     <description>The imabw ebook editor</description>
 
     <properties>

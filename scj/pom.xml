@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>scj</artifactId>
-    <name>SCJ</name>
+    <name>SCJ Console</name>
     <description>Console tool for ebook processing</description>
 
     <properties>

@@ -30,7 +30,7 @@ import pw.phylame.jem.util.text.Text;
 import pw.phylame.jem.util.text.Texts;
 import pw.phylame.ycl.io.BufferedRandomAccessFile;
 import pw.phylame.ycl.io.IOUtils;
-import pw.phylame.ycl.util.Log;
+import pw.phylame.ycl.log.Log;
 import pw.phylame.ycl.util.StringUtils;
 import pw.phylame.ycl.value.Triple;
 

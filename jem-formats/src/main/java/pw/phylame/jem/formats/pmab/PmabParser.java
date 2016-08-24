@@ -34,7 +34,7 @@ import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.jem.util.flob.Flobs;
 import pw.phylame.jem.util.text.Text;
 import pw.phylame.jem.util.text.Texts;
-import pw.phylame.ycl.util.Log;
+import pw.phylame.ycl.log.Log;
 
 import java.io.IOException;
 import java.util.HashMap;

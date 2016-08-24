@@ -1,15 +1,15 @@
 package pw.phylame.jem.scj.addons;
 
-import org.apache.commons.cli.Option;
-
 import lombok.val;
+import org.apache.commons.cli.Option;
 import pw.phylame.qaf.cli.CLIDelegate;
 import pw.phylame.qaf.cli.Command;
 import pw.phylame.qaf.core.App;
-import pw.phylame.ycl.util.Log;
 
 public class ListUCNovels extends AbstractPlugin implements Command {
     private static final String TAG = "LUN";
+    private static final String OPTION = "N";
+    private static final String OPTION_LONG = "list-novels";
 
     public ListUCNovels() {
         super(new Metadata("List UC Novels", "1.0", "PW"));
@@ -17,8 +17,11 @@ public class ListUCNovels extends AbstractPlugin implements Command {
 
     @Override
     public void init() {
-        Log.i(TAG, "adding... -N option to SCJ");
-        sci.addOption(Option.builder("N").longOpt("novels").desc(AddonsMessages.tr("help.lun")).build(), this);
+        sci.addOption(Option.builder(OPTION)
+                .longOpt(OPTION_LONG)
+                .desc(AddonsMessages.tr("help.lun"))
+                .build(), this
+        );
     }
 
     @Override
@@ -29,7 +32,7 @@ public class ListUCNovels extends AbstractPlugin implements Command {
             app.error(app.tr("error.input.empty"));
             return -1;
         }
-        app.echo("under development");
+        app.echo("LCN is under development");
         return 0;
     }
 

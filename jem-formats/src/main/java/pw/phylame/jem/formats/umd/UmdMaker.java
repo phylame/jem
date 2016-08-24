@@ -30,7 +30,7 @@ import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.ycl.io.BufferedRandomAccessFile;
 import pw.phylame.ycl.io.PathUtils;
 import pw.phylame.ycl.io.ZLibUtils;
-import pw.phylame.ycl.util.Log;
+import pw.phylame.ycl.log.Log;
 import pw.phylame.ycl.util.MiscUtils;
 import pw.phylame.ycl.util.StringUtils;
 

@@ -29,7 +29,7 @@ import pw.phylame.qaf.core.tr
 import pw.phylame.ycl.io.IOUtils
 import pw.phylame.ycl.io.PathUtils
 import pw.phylame.ycl.util.DateUtils
-import pw.phylame.ycl.util.Log
+import pw.phylame.ycl.log.Log
 import java.io.File
 import java.util.*
 
@@ -178,7 +178,7 @@ object SCI : CLIDelegate() {
             0
         }
         // debug level
-        addOption("debug",
+        addOption("debugLevel",
                 Option.builder(OPTION_DEBUG_LEVEL)
                         .argName(tr("help.debug.argName"))
                         .hasArg()
@@ -186,7 +186,7 @@ object SCI : CLIDelegate() {
                         .build(),
                 fetcherOf(OPTION_DEBUG_LEVEL, String::class.java, ::checkDebugLevel)
         )
-        // input format
+        // input m
         addOption("inFormat",
                 Option.builder(OPTION_INPUT_FORMAT)
                         .argName(tr("help.formatName"))

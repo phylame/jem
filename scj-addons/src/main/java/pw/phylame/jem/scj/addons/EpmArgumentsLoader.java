@@ -1,15 +1,14 @@
 package pw.phylame.jem.scj.addons;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.Properties;
-
 import lombok.SneakyThrows;
 import lombok.val;
 import pw.phylame.jem.scj.app.AppConfig;
 import pw.phylame.qaf.core.App;
 import pw.phylame.ycl.io.IOUtils;
-import pw.phylame.ycl.util.Log;
+
+import java.io.IOException;
+import java.util.Map;
+import java.util.Properties;
 
 public class EpmArgumentsLoader extends AbstractPlugin {
 
@@ -23,7 +22,6 @@ public class EpmArgumentsLoader extends AbstractPlugin {
 
     @Override
     public void init() {
-        Log.i(TAG, "setting default arguments for maker and parser...");
         val cfg = AppConfig.INSTANCE;
         update("in-args", cfg.getInArguments());
         update("out-attrs", cfg.getOutAttributes());

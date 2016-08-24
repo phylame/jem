@@ -44,6 +44,8 @@ import java.lang.System.lineSeparator
 import java.text.ParseException
 import java.util.*
 
+private const val TAG = "SUP"
+
 fun printJemError(e: JemException, file: File, format: String) {
     if (e is ParserException) {
         App.error(tr("error.jem.parse", file, format), e)
@@ -307,7 +309,7 @@ private fun viewAttribute(chapter: Chapter, keys: Array<String>, sep: String, sh
                 lines.add(tr("sci.view.attributeFormat", key, str))
             }
         } else {
-            val value = chapter.attributes.get(key, null)
+            val value = chapter.attributes.get(key, null as Any?)
             val str = if (value != null) Variants.format(value) else ""
             if (!str.isEmpty() || !ignoreEmpty) {
                 lines.add(tr("sci.view.attributeFormat", key, str))

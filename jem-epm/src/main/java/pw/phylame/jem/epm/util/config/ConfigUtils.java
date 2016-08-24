@@ -24,7 +24,7 @@ import lombok.val;
 import pw.phylame.jem.epm.util.Exceptions;
 import pw.phylame.jem.epm.util.JEMessages;
 import pw.phylame.ycl.format.Converters;
-import pw.phylame.ycl.util.Log;
+import pw.phylame.ycl.log.Log;
 import pw.phylame.ycl.util.MiscUtils;
 
 import java.lang.reflect.Field;

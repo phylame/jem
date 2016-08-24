@@ -29,6 +29,7 @@ import pw.phylame.qaf.core.tr
 import pw.phylame.ycl.io.IOUtils
 import pw.phylame.ycl.io.PathUtils
 import pw.phylame.ycl.util.DateUtils
+import pw.phylame.ycl.util.Log
 import java.io.File
 import java.util.*
 
@@ -69,8 +70,6 @@ const val OPTION_ATTRIBUTES = "a"
 const val OPTION_EXTENSIONS = "e"
 const val OPTION_PARSE_ARGUMENTS = "p"
 const val OPTION_MAKE_ARGUMENTS = "m"
-const val OPTION_LIST_NOVELS = "N"
-const val OPTION_LIST_NOVELS_LONG = "novels"
 
 
 object AppConfig : Settings() {
@@ -139,6 +138,8 @@ fun checkDebugLevel(level: String): Boolean {
 }
 
 object SCI : CLIDelegate() {
+    const val TAG = "SCI"
+
     override fun onStart() {
         System.setProperty(Registry.AUTO_LOAD_CUSTOMIZED_KEY, "true")
         App.ensureHomeExisted()
@@ -150,6 +151,8 @@ object SCI : CLIDelegate() {
         super.onStart()
         if (AppConfig.pluginEnable) {
             App.loadPlugins()
+        } else {
+            Log.i(TAG, "plugin is not enable")
         }
     }
 
@@ -292,14 +295,6 @@ object SCI : CLIDelegate() {
         )
 
         addOptionGroup(group)
-
-        // list uc novels
-        addOption(Option.builder(OPTION_LIST_NOVELS)
-                .longOpt(OPTION_LIST_NOVELS_LONG)
-                .desc(tr("help.ucnovels"))
-                .build(),
-                ListUCNovels()
-        )
     }
 
     override fun onOptionError(e: ParseException) {
@@ -398,12 +393,6 @@ class ExtractBook(option: String) : ListFetcher(option), ConsumerCommand {
 
 class ViewBook(option: String) : ListFetcher(option), ConsumerCommand {
     override fun consume(tuple: InTuple): Boolean = @Suppress("unchecked_cast") viewBook(tuple, OutTuple(), SCI.viewKeys)
-}
-
-class ListUCNovels : Command {
-    override fun execute(delegate: CLIDelegate): Int {
-        TODO("under development")
-    }
 }
 
 fun main(args: Array<String>) {

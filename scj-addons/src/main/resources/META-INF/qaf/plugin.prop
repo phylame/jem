@@ -1,0 +1,13 @@
+# SCJ Addons configurations
+
+# set default arguments for maker and parser
+pw.phylame.jem.scj.addons.EpmArgumentsLoader
+
+# list novels in UC novel db
+pw.phylame.jem.scj.addons.ListUCNovels
+
+# list all plugins for SCJ
+pw.phylame.jem.scj.addons.ListSCJPlugins
+
+# Set log level in SCJ
+pw.phylame.jem.scj.addons.SetLogLevel

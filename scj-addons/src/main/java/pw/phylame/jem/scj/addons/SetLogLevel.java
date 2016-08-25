@@ -1,8 +1,9 @@
 package pw.phylame.jem.scj.addons;
 
-import lombok.val;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+
+import lombok.val;
 import pw.phylame.jem.scj.app.AppConfig;
 import pw.phylame.qaf.cli.CLIDelegate;
 import pw.phylame.qaf.cli.Initializer;
@@ -11,13 +12,12 @@ import pw.phylame.ycl.log.Log;
 import pw.phylame.ycl.util.StringUtils;
 
 public class SetLogLevel extends AbstractPlugin implements Initializer {
-    private static final String TAG = "SLL";
     private static final String OPTION = "L";
     private static final String OPTION_LONG = "log-level";
     private static final String CONFIG_KEY = "app.log.level";
 
     public SetLogLevel() {
-        super(new Metadata("Set Log Level", "1.0", "PW"));
+        super(new Metadata("367928f7-c47e-43bc-8c10-adcf51301c44", "Log Level Setter", "1.0", "PW"));
     }
 
     @Override
@@ -29,11 +29,20 @@ public class SetLogLevel extends AbstractPlugin implements Initializer {
     @Override
     public void perform(CLIDelegate delegate, CommandLine cmd) {
         val level = Level.forName(cmd.getOptionValue(OPTION), Level.DEFAULT_LEVEL);
-        sci.getContext().put("logLevel", level);
+        sci.getContext().put(OPTION, level);
         Log.setLevel(level);
     }
 
     private void addLogOption() {
+        sci.addOption(
+                Option.builder(OPTION).longOpt(OPTION_LONG)
+                        .hasArg().argName(AddonsMessages.tr("logSetter.argName")).desc(AddonsMessages
+                                .tr("help.setLogLevel", makeLevelList(), AppConfig.INSTANCE.get(CONFIG_KEY)))
+                        .build(),
+                this);
+    }
+
+    public static String makeLevelList() {
         val b = new StringBuilder(36);
         int i = 1, end = Level.values().length;
         for (val level : Level.values()) {
@@ -42,23 +51,13 @@ public class SetLogLevel extends AbstractPlugin implements Initializer {
                 b.append(", ");
             }
         }
-        sci.addOption("logLevel",
-                Option.builder(OPTION)
-                        .longOpt(OPTION_LONG)
-                        .hasArg()
-                        .argName(AddonsMessages.tr("sll.argName"))
-                        .desc(AddonsMessages.tr("help.sll", b.toString(), AppConfig.INSTANCE.get(CONFIG_KEY)))
-                        .build(),
-                this);
+        return b.toString();
     }
 
     private void setByConfig() {
-        val cfg = AppConfig.INSTANCE;
-        String level = cfg.get(CONFIG_KEY);
+        val level = AppConfig.INSTANCE.get(CONFIG_KEY);
         if (StringUtils.isNotEmpty(level)) {
             Log.setLevel(Level.forName(level, Level.DEFAULT_LEVEL));
-        } else {
-            cfg.set(CONFIG_KEY, Level.DEFAULT_LEVEL.getName(), String.class);
         }
     }
 }

@@ -28,7 +28,6 @@ import pw.phylame.qaf.core.Translator
 import pw.phylame.qaf.core.tr
 import pw.phylame.ycl.io.IOUtils
 import pw.phylame.ycl.io.PathUtils
-import pw.phylame.ycl.util.DateUtils
 import pw.phylame.ycl.log.Log
 import java.io.File
 import java.util.*
@@ -56,9 +55,13 @@ const val DEBUG_TRACE = "trace"
 
 // CLI inTuple
 const val OPTION_HELP = "h"
+const val OPTION_HELP_LONG = "help"
 const val OPTION_VERSION = "v"
+const val OPTION_VERSION_LONG = "version"
 const val OPTION_LIST = "l"
+const val OPTION_LIST_LONG = "list-formats"
 const val OPTION_DEBUG_LEVEL = "d"
+const val OPTION_DEBUG_LEVEL_LONG = "debug-level"
 const val OPTION_INPUT_FORMAT = "f"
 const val OPTION_OUTPUT_FORMAT = "t"
 const val OPTION_OUTPUT = "o"
@@ -66,16 +69,16 @@ const val OPTION_EXTRACT = "x"
 const val OPTION_VIEW = "w"
 const val OPTION_JOIN = "j"
 const val OPTION_CONVERT = "c"
-const val OPTION_ATTRIBUTES = "a"
-const val OPTION_EXTENSIONS = "e"
-const val OPTION_PARSE_ARGUMENTS = "p"
-const val OPTION_MAKE_ARGUMENTS = "m"
+const val OPTION_OUT_ATTRIBUTES = "a"
+const val OPTION_OUT_EXTENSIONS = "e"
+const val OPTION_IN_ARGUMENTS = "p"
+const val OPTION_OUT_ARGUMENTS = "m"
 
 
 object AppConfig : Settings() {
     override fun reset() {
         super.reset()
-        comment = "Configurations of PW's SCJ v$VERSION\nLast updated: ${DateUtils.toISO(Date())}"
+        comment = "Configurations of PW's SCJ v$VERSION"
         val input = IOUtils.openResource("!pw/phylame/jem/scj/res/settings.tpl", null)
         if (input != null) {
             val prop = Properties()
@@ -113,14 +116,14 @@ object AppConfig : Settings() {
 fun checkInputFormat(format: String): Boolean =
         if (!Registry.hasParser(format)) {
             App.error(tr("error.input.unsupported", format))
-            println(tr("tip.unsupportedFormat"))
+            println(tr("tip.unsupportedFormat", OPTION_LIST, OPTION_LIST_LONG))
             false
         } else true
 
 fun checkOutputFormat(format: String): Boolean =
         if (!Registry.hasMaker(format)) {
             App.error(tr("error.output.unsupported", format))
-            println(tr("tip.unsupportedFormat"))
+            println(tr("tip.unsupportedFormat", OPTION_LIST, OPTION_LIST_LONG))
             false
         } else true
 
@@ -158,100 +161,93 @@ object SCI : CLIDelegate() {
 
     override fun createOptions() {
         // help
-        addOption(Option(OPTION_HELP, tr("help.description"))) {
+        addOption(Option(OPTION_HELP, OPTION_HELP_LONG, false, tr("help.description"))) {
             val formatter = HelpFormatter()
             formatter.syntaxPrefix = ""
             formatter.printHelp(AppConfig.termWidth, tr("sci.syntax", App.assembly.name), tr("help.prefix"), options, tr("help.feedback"))
             0
         }
         // version
-        addOption(Option(OPTION_VERSION, tr("help.version"))) {
+        addOption(Option(OPTION_VERSION, OPTION_VERSION_LONG, false, tr("help.version"))) {
             println("SCI for Jem v$VERSION on ${System.getProperty("os.name")} (${System.getProperty("os.arch")})")
             println(tr("app.copyrights", Calendar.getInstance()[Calendar.YEAR].toString()))
             0
         }
         // list
-        addOption(Option(OPTION_LIST, tr("help.list"))) {
+        addOption(Option(OPTION_LIST, OPTION_LIST_LONG, false, tr("help.list"))) {
             println(tr("list.title"))
             println(" ${tr("list.input")} ${Registry.supportedParsers().joinToString(" ")}")
             println(" ${tr("list.output")} ${Registry.supportedMakers().joinToString(" ")}")
             0
         }
         // debug level
-        addOption("debugLevel",
-                Option.builder(OPTION_DEBUG_LEVEL)
-                        .argName(tr("help.debug.argName"))
-                        .hasArg()
-                        .desc(tr("help.debug", AppConfig.debugLevel))
-                        .build(),
+        addOption(Option.builder(OPTION_DEBUG_LEVEL)
+                .longOpt(OPTION_DEBUG_LEVEL_LONG)
+                .argName(tr("help.debug.argName"))
+                .hasArg()
+                .desc(tr("help.debug", AppConfig.debugLevel))
+                .build(),
                 fetcherOf(OPTION_DEBUG_LEVEL, String::class.java, ::checkDebugLevel)
         )
         // input m
-        addOption("inFormat",
-                Option.builder(OPTION_INPUT_FORMAT)
-                        .argName(tr("help.formatName"))
-                        .hasArg()
-                        .desc(tr("help.inputFormat"))
-                        .build(),
+        addOption(Option.builder(OPTION_INPUT_FORMAT)
+                .argName(tr("help.formatName"))
+                .hasArg()
+                .desc(tr("help.inputFormat"))
+                .build(),
                 fetcherOf(OPTION_INPUT_FORMAT, String::class.java, ::checkInputFormat)
         )
         // parser arguments
-        addOption("inArguments",
-                Option.builder(OPTION_PARSE_ARGUMENTS)
-                        .argName(tr("help.kvName"))
-                        .numberOfArgs(2)
-                        .valueSeparator()
-                        .desc(tr("help.parserArgs"))
-                        .build(),
-                PropertiesFetcher(OPTION_PARSE_ARGUMENTS)
+        addOption(Option.builder(OPTION_IN_ARGUMENTS)
+                .argName(tr("help.kvName"))
+                .numberOfArgs(2)
+                .valueSeparator()
+                .desc(tr("help.parserArgs"))
+                .build(),
+                PropertiesFetcher(OPTION_IN_ARGUMENTS)
         )
         // output attributes
-        addOption("outAttributes",
-                Option.builder(OPTION_ATTRIBUTES)
-                        .argName(tr("help.kvName"))
-                        .numberOfArgs(2)
-                        .valueSeparator()
-                        .desc(tr("help.attribute"))
-                        .build(),
-                PropertiesFetcher(OPTION_ATTRIBUTES)
+        addOption(Option.builder(OPTION_OUT_ATTRIBUTES)
+                .argName(tr("help.kvName"))
+                .numberOfArgs(2)
+                .valueSeparator()
+                .desc(tr("help.attribute"))
+                .build(),
+                PropertiesFetcher(OPTION_OUT_ATTRIBUTES)
         )
         // output extensions
-        addOption("outExtensions",
-                Option.builder(OPTION_EXTENSIONS)
-                        .argName(tr("help.kvName"))
-                        .numberOfArgs(2)
-                        .valueSeparator()
-                        .desc(tr("help.extension"))
-                        .build(),
-                PropertiesFetcher(OPTION_EXTENSIONS)
+        addOption(Option.builder(OPTION_OUT_EXTENSIONS)
+                .argName(tr("help.kvName"))
+                .numberOfArgs(2)
+                .valueSeparator()
+                .desc(tr("help.extension"))
+                .build(),
+                PropertiesFetcher(OPTION_OUT_EXTENSIONS)
         )
         // output path
-        addOption("output",
-                Option.builder(OPTION_OUTPUT)
-                        .argName(tr("help.output.argName"))
-                        .hasArg()
-                        .desc(tr("help.output.path"))
-                        .build(),
+        addOption(Option.builder(OPTION_OUTPUT)
+                .argName(tr("help.output.argName"))
+                .hasArg()
+                .desc(tr("help.output.path"))
+                .build(),
                 fetcherOf<String>(OPTION_OUTPUT)
         )
         // output format
-        addOption("outFormat",
-                Option.builder(OPTION_OUTPUT_FORMAT)
-                        .argName(tr("help.formatName"))
-                        .hasArg()
-                        .desc(tr("help.outputFormat", AppConfig.outputFormat))
-                        .build(),
+        addOption(Option.builder(OPTION_OUTPUT_FORMAT)
+                .argName(tr("help.formatName"))
+                .hasArg()
+                .desc(tr("help.outputFormat", AppConfig.outputFormat))
+                .build(),
                 fetcherOf(OPTION_OUTPUT_FORMAT, String::class.java, ::checkOutputFormat)
         )
         // maker arguments
-        addOption("outArguments",
-                Option.builder(OPTION_MAKE_ARGUMENTS)
-                        .argName(tr("help.kvName"))
-                        .numberOfArgs(2)
-                        .valueSeparator()
-                        .desc(tr("help.makerArgs"))
-                        .build(),
-                PropertiesFetcher(OPTION_MAKE_ARGUMENTS)
+        addOption(Option.builder(OPTION_OUT_ARGUMENTS)
+                .argName(tr("help.kvName"))
+                .numberOfArgs(2)
+                .valueSeparator()
+                .desc(tr("help.makerArgs"))
+                .build(),
+                PropertiesFetcher(OPTION_OUT_ARGUMENTS)
         )
 
         val group = OptionGroup()
@@ -279,18 +275,17 @@ object SCI : CLIDelegate() {
         // extract and indices
         option = Option.builder(OPTION_EXTRACT).argName(tr("help.extract.argName")).hasArg().desc(tr("help.extract")).build()
         group.addOption(option)
-        addOption("chapterIndices", option, ExtractBook(OPTION_EXTRACT))
+        addOption(option, ExtractBook(OPTION_EXTRACT))
 
         // view and names
         val viewBook = ViewBook(OPTION_VIEW)
         defaultCommand = viewBook
-        addOption("viewKeys",
-                Option.builder(OPTION_VIEW)
-                        .argName(tr("help.view.argName"))
-                        .hasArg()
-                        .valueSeparator()
-                        .desc(tr("help.view"))
-                        .build(),
+        addOption(Option.builder(OPTION_VIEW)
+                .argName(tr("help.view.argName"))
+                .hasArg()
+                .valueSeparator()
+                .desc(tr("help.view"))
+                .build(),
                 viewBook
         )
 
@@ -316,23 +311,23 @@ object SCI : CLIDelegate() {
         App.exit(-1)
     }
 
-    val inFormat: String? by managed { null }
+    val inFormat: String? by managed(OPTION_INPUT_FORMAT) { null }
 
-    val inArguments by managed { AppConfig.inArguments }
+    val inArguments by managed(OPTION_IN_ARGUMENTS) { AppConfig.inArguments }
 
-    val outAttributes by managed { AppConfig.outAttributes }
+    val outAttributes by managed(OPTION_OUT_ATTRIBUTES) { AppConfig.outAttributes }
 
-    val outExtensions by managed { AppConfig.outExtensions }
+    val outExtensions by managed(OPTION_OUT_EXTENSIONS) { AppConfig.outExtensions }
 
-    val output: String by managed { AppConfig.output }
+    val output: String by managed(OPTION_OUTPUT) { AppConfig.output }
 
-    val outFormat by managed { AppConfig.outputFormat }
+    val outFormat by managed(OPTION_OUTPUT_FORMAT) { AppConfig.outputFormat }
 
-    val outArguments by managed { AppConfig.outArguments }
+    val outArguments by managed(OPTION_OUT_ARGUMENTS) { AppConfig.outArguments }
 
-    val chapterIndices by managed { emptyArray<String>() }
+    val chapterIndices by managed(OPTION_EXTRACT) { emptyArray<String>() }
 
-    val viewKeys by managed { AppConfig.viewKeys.split(",".toRegex()).toTypedArray() }
+    val viewKeys by managed(OPTION_VIEW) { AppConfig.viewKeys.split(",".toRegex()).toTypedArray() }
 
     fun consumeInputs(consumer: Consumer): Int {
         if (inputs.isEmpty()) {

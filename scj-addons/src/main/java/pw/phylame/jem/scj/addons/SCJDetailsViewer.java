@@ -43,7 +43,7 @@ public class SCJDetailsViewer extends AbstractPlugin {
         sci.addOption(new Option("U", "list-plugins", false, AddonsMessages.tr("help.listPlugins")), new Command() {
             @Override
             public int execute(CLIDelegate arg0) {
-                val plugins = app.getPlugins();
+                val plugins = app.getPlugins().values();
                 System.out.println(AddonsMessages.tr("listPlugins.tip", plugins.size()));
                 for (val plugin : plugins) {
                     printPlugin(plugin);
@@ -69,7 +69,7 @@ public class SCJDetailsViewer extends AbstractPlugin {
     }
 
     private void printPlugin(Plugin plugin) {
-        String pattern = "%" + AppConfig.INSTANCE.get("app.plugin.nameWidth", 8, Integer.class) + "s: %s";
+        val pattern = "%" + AppConfig.INSTANCE.get("app.plugin.nameWidth", 8, Integer.class) + "s: %s";
         String text = formatItem(pattern, "id", plugin.getId());
         int width = text.length();
         System.out.println(text);

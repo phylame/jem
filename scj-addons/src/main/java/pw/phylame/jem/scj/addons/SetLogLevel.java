@@ -37,7 +37,7 @@ public class SetLogLevel extends AbstractPlugin implements Initializer {
         sci.addOption(
                 Option.builder(OPTION).longOpt(OPTION_LONG)
                         .hasArg().argName(AddonsMessages.tr("logSetter.argName")).desc(AddonsMessages
-                                .tr("help.setLogLevel", makeLevelList(), AppConfig.INSTANCE.get(CONFIG_KEY)))
+                                .tr("help.setLogLevel", makeLevelList(), AppConfig.INSTANCE.rawFor(CONFIG_KEY)))
                         .build(),
                 this);
     }
@@ -55,7 +55,7 @@ public class SetLogLevel extends AbstractPlugin implements Initializer {
     }
 
     private void setByConfig() {
-        val level = AppConfig.INSTANCE.get(CONFIG_KEY);
+        val level = AppConfig.INSTANCE.rawFor(CONFIG_KEY);
         if (StringUtils.isNotEmpty(level)) {
             Log.setLevel(Level.forName(level, Level.DEFAULT_LEVEL));
         }

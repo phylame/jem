@@ -2,7 +2,7 @@
 :: ----------------------------------------------------------------------------
 :: Copyright 2014-2016 Peng Wan <phylame@163.com>
 ::
-:: This file is part of IMABW.
+:: This file is part of Imabw.
 ::
 :: Licensed under the Apache License, Version 2.0 (the "License");
 :: you may not use this file except in compliance with the License.
@@ -31,6 +31,6 @@ for %%i in ("%IMABW_HOME%"\lib\ext\*.jar) do set IMABW_CLASS_PATH=!IMABW_CLASS_P
 set IMABW_CLASS_PATH=%IMABW_CLASS_PATH:~1%
 
 :: -- Run Jem SCI
-java -cp %IMABW_CLASS_PATH% %IMABW_CLASS% %*
+javaw -cp %IMABW_CLASS_PATH% %IMABW_CLASS% %*
 
 endlocal

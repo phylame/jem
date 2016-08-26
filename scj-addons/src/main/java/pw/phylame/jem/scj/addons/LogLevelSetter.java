@@ -11,12 +11,12 @@ import pw.phylame.ycl.log.Level;
 import pw.phylame.ycl.log.Log;
 import pw.phylame.ycl.util.StringUtils;
 
-public class SetLogLevel extends AbstractPlugin implements Initializer {
+public class LogLevelSetter extends AbstractPlugin implements Initializer {
     private static final String OPTION = "L";
     private static final String OPTION_LONG = "log-level";
     private static final String CONFIG_KEY = "app.log.level";
 
-    public SetLogLevel() {
+    public LogLevelSetter() {
         super(new Metadata("367928f7-c47e-43bc-8c10-adcf51301c44", "Log Level Setter", "1.0", "PW"));
     }
 

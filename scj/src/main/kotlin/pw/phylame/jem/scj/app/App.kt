@@ -26,9 +26,9 @@ import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.Settings
 import pw.phylame.qaf.core.Translator
 import pw.phylame.qaf.core.tr
-import pw.phylame.ycl.io.IOUtils
 import pw.phylame.ycl.io.PathUtils
 import pw.phylame.ycl.log.Log
+import pw.phylame.ycl.util.MiscUtils
 import java.io.File
 import java.util.*
 
@@ -76,13 +76,13 @@ const val OPTION_OUT_ARGUMENTS = "m"
 
 
 object AppConfig : Settings() {
+    const val SETTING_TEMPLATE_PATH = "!pw/phylame/jem/scj/res/settings.tpl"
+
     override fun reset() {
         super.reset()
         comment = "Configurations of PW's SCJ v$VERSION"
-        val input = IOUtils.openResource("!pw/phylame/jem/scj/res/settings.tpl", null)
-        if (input != null) {
-            val prop = Properties()
-            prop.load(input)
+        val prop = MiscUtils.propertiesFor(SETTING_TEMPLATE_PATH, AppConfig.javaClass.classLoader)
+        if (prop != null) {
             @Suppress("unchecked_cast")
             update(prop as Map<String, String>)
         }
@@ -113,19 +113,17 @@ object AppConfig : Settings() {
     val outArguments = HashMap<String, Any>()
 }
 
-fun checkInputFormat(format: String): Boolean =
-        if (!Registry.hasParser(format)) {
-            App.error(tr("error.input.unsupported", format))
-            println(tr("tip.unsupportedFormat", OPTION_LIST, OPTION_LIST_LONG))
-            false
-        } else true
+fun checkInputFormat(format: String): Boolean = if (!Registry.hasParser(format)) {
+    App.error(tr("error.input.unsupported", format))
+    println(tr("tip.unsupportedFormat", OPTION_LIST, OPTION_LIST_LONG))
+    false
+} else true
 
-fun checkOutputFormat(format: String): Boolean =
-        if (!Registry.hasMaker(format)) {
-            App.error(tr("error.output.unsupported", format))
-            println(tr("tip.unsupportedFormat", OPTION_LIST, OPTION_LIST_LONG))
-            false
-        } else true
+fun checkOutputFormat(format: String): Boolean = if (!Registry.hasMaker(format)) {
+    App.error(tr("error.output.unsupported", format))
+    println(tr("tip.unsupportedFormat", OPTION_LIST, OPTION_LIST_LONG))
+    false
+} else true
 
 fun checkDebugLevel(level: String): Boolean {
     when (level) {
@@ -141,7 +139,7 @@ fun checkDebugLevel(level: String): Boolean {
 }
 
 object SCI : CLIDelegate() {
-    const val TAG = "SCI"
+    private const val TAG = "SCI"
 
     override fun onStart() {
         System.setProperty(Registry.AUTO_LOAD_CUSTOMIZED_KEY, "true")

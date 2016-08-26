@@ -6,6 +6,7 @@ import java.util.Map;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.val;
+import pw.phylame.qaf.core.Plugin;
 
 @Value
 public class Metadata {

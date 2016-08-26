@@ -73,6 +73,9 @@ public class SCJDetailsViewer extends AbstractPlugin {
         String text = formatItem(pattern, "id", plugin.getId());
         int width = text.length();
         System.out.println(text);
+        text = formatItem(pattern, "path", plugin.getClass().getName());
+        width = Math.max(width, text.length());
+        System.out.println(text);
         for (val e : plugin.getMeta().entrySet()) {
             text = formatItem(pattern, e.getKey(), e.getValue());
             width = Math.max(width, text.length());
@@ -111,7 +114,7 @@ public class SCJDetailsViewer extends AbstractPlugin {
                     }
                 } else if (key.equals("app.log.level")) {
                     if (Level.forName(value, null) == null) {
-                        app.error(AddonsMessages.tr("logSetter.invalidLevel", value, SetLogLevel.makeLevelList()));
+                        app.error(AddonsMessages.tr("logSetter.invalidLevel", value, LogLevelSetter.makeLevelList()));
                         continue;
                     }
                 }

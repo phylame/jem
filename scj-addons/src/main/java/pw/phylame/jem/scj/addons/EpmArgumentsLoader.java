@@ -2,12 +2,11 @@ package pw.phylame.jem.scj.addons;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.Properties;
 
 import lombok.SneakyThrows;
 import lombok.val;
 import pw.phylame.jem.scj.app.AppConfig;
-import pw.phylame.ycl.io.IOUtils;
+import pw.phylame.ycl.util.MiscUtils;
 
 public class EpmArgumentsLoader extends AbstractPlugin {
 
@@ -28,15 +27,11 @@ public class EpmArgumentsLoader extends AbstractPlugin {
 
     @SneakyThrows(IOException.class)
     private void update(String name, Map<String, Object> m) {
-        val in = IOUtils.openResource(app.pathInHome(name + NAME_SUFFIX), null);
-        if (in != null) {
-            val prop = new Properties();
-            prop.load(in);
+        val prop = MiscUtils.propertiesFor(app.pathOf(name + NAME_SUFFIX), getClass().getClassLoader());
+        if (prop != null) {
             for (val e : prop.entrySet()) {
                 m.put(e.getKey().toString(), e.getValue());
             }
-            in.close();
         }
     }
-
 }

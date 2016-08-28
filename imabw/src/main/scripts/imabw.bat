@@ -21,7 +21,7 @@
 if "%IMABW_HOME%" == "" set "IMABW_HOME=%~dp0.."
 
 :: -- IMABW main class
-set IMABW_CLASS=pw.phylame.jem.imabw.app.AppKt
+set IMABW_CLASS=pw.phylame.jem.imabw.app.ImabwKt
 
 :: -- Set extension JAR
 setlocal EnableDelayedExpansion

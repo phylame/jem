@@ -1,0 +1,145 @@
+/*
+ * Copyright 2014-2016 Peng Wan <phylame@163.com>
+ *
+ * This file is part of Imabw.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package pw.phylame.jem.imabw.app.ui
+
+import pw.phylame.jem.imabw.app.*
+import pw.phylame.qaf.core.Settings
+import pw.phylame.qaf.core.tr
+import pw.phylame.qaf.ixin.*
+import java.awt.BorderLayout
+import java.awt.event.WindowAdapter
+import java.awt.event.WindowEvent
+import javax.swing.*
+
+object Performer : Form(tr("app.name"), Settings("$SETTINGS_HOME/snap")) {
+    private const val DIVIDER_SIZE = "form.divider.size"
+    private const val DIVIDER_LOCATION = "form.divider.location"
+    private const val SIDE_BAR_VISIBLE = "form.sidebar.visible"
+
+    val dividerSize = 7
+    val dividerLocation = 171
+
+
+    private lateinit var splitPane: JSplitPane
+
+    override fun init() {
+        defaultCloseOperation = WindowConstants.DO_NOTHING_ON_CLOSE
+        addWindowListener(object : WindowAdapter() {
+            override fun windowClosing(e: WindowEvent) {
+                Imabw.performed(EXIT_APP)
+            }
+        })
+        iconImage = Imabw.resource.imageFor(tr("app.icon"))
+        createComponents(JSONDesigner(DESIGNER_NAME), Imabw)
+        createContent()
+        super.init()
+        prepare()
+        isVisible = true
+    }
+
+    private fun createContent() {
+        splitPane = JSplitPane()
+
+        contentPane.add(splitPane, BorderLayout.CENTER)
+    }
+
+    private fun prepare() {
+        val toolbar = toolBar
+        if (toolbar != null) {
+            toolbar.componentPopupMenu = JPopupMenu(title).addItems(arrayOf(
+                    Item(LOCK_TOOL_BAR, selected = snap?.get(TOOL_BAR_LOCKED) ?: true, style = Style.CHECK),
+                    Item(HIDE_TOOL_BAR_TEXT, selected = snap?.get(TOOL_BAR_TEXT_HIDDEN) ?: true, style = Style.CHECK)),
+                    actions, Imabw, form = this)
+            actions[SHOW_TOOL_BAR]?.isSelected = toolbar.isVisible
+            actions[LOCK_TOOL_BAR]?.isSelected = toolbar.isLocked
+        }
+        val statusbar = statusBar
+        if (statusbar != null) {
+            statusbar.add(JSeparator(), BorderLayout.PAGE_START)
+            statusbar.border = BorderFactory.createEmptyBorder(0, 0, 1, 0)
+            actions[SHOW_STATUS_BAR]?.isSelected = statusbar.isVisible
+        }
+    }
+
+    var isSidebarVisible: Boolean get() = true
+        set(value) {
+            snap?.set(SIDE_BAR_VISIBLE, value)
+            if (value && snap != null) {
+                splitPane.dividerSize = snap[DIVIDER_SIZE] ?: dividerSize
+                splitPane.dividerLocation = snap[DIVIDER_LOCATION] ?: dividerLocation
+            } else {
+                snap?.set(DIVIDER_SIZE, splitPane.dividerSize)
+                snap?.set(DIVIDER_LOCATION, splitPane.dividerLocation)
+                splitPane.dividerSize = 0
+                splitPane.dividerLocation = 0
+            }
+        }
+
+    override fun restoreStatus() {
+        super.restoreStatus()
+        if (snap != null) {
+            splitPane.dividerSize = snap[DIVIDER_SIZE] ?: dividerSize
+            splitPane.dividerLocation = snap[DIVIDER_LOCATION] ?: dividerLocation
+        }
+    }
+
+    override fun saveStatus() {
+        super.saveStatus()
+        if (snap != null) {
+
+        }
+    }
+
+    @Command(SHOW_TOOL_BAR)
+    fun toggleToolbar() {
+        val toolbar = toolBar
+        if (toolbar != null) {
+            toolbar.isVisible = !toolbar.isVisible
+        }
+    }
+
+    @Command(LOCK_TOOL_BAR)
+    fun lockToolbar() {
+        val toolbar = toolBar
+        if (toolbar != null) {
+            toolbar.isLocked = !toolbar.isLocked
+        }
+    }
+
+    @Command(HIDE_TOOL_BAR_TEXT)
+    fun hideToolbarText() {
+        val toolbar = toolBar
+        if (toolbar != null) {
+            toolbar.isTextHidden = !toolbar.isTextHidden
+        }
+    }
+
+    @Command(SHOW_STATUS_BAR)
+    fun toggleStatusbar() {
+        val statusbar = statusBar
+        if (statusbar != null) {
+            statusbar.isVisible = !statusbar.isVisible
+        }
+    }
+
+    @Command(SHOW_SIDE_BAR)
+    fun toggleSidebar() {
+
+    }
+}

@@ -31,6 +31,6 @@ for %%i in ("%IMABW_HOME%"\lib\ext\*.jar) do set IMABW_CLASS_PATH=!IMABW_CLASS_P
 set IMABW_CLASS_PATH=%IMABW_CLASS_PATH:~1%
 
 :: -- Run Jem SCI
-javaw -cp %IMABW_CLASS_PATH% %IMABW_CLASS% %*
+java -cp %IMABW_CLASS_PATH% %IMABW_CLASS% %*
 
 endlocal

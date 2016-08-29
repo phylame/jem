@@ -16,6 +16,7 @@
 
     <properties>
         <kotlin.version>1.0.3</kotlin.version>
+        <swingx.version>1.6.1</swingx.version>
         <qaf.version>1.0.0</qaf.version>
     </properties>
 
@@ -34,6 +35,11 @@
             <groupId>pw.phylame.qaf</groupId>
             <artifactId>qaf-ixin</artifactId>
             <version>${qaf.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.swinglabs</groupId>
+            <artifactId>swingx</artifactId>
+            <version>${swingx.version}</version>
         </dependency>
     </dependencies>
 

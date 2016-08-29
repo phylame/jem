@@ -21,8 +21,8 @@ package pw.phylame.jem.imabw.app
 import pw.phylame.qaf.ixin.Ixin
 
 // meta data
-const val NAME = "imabwx"
-const val VERSION = "3.0.0"
+val NAME = System.getProperty("app.name") ?: "imabw"
+val VERSION = System.getProperty("app.version") ?: "3.0.0"
 const val DOCUMENT = "https://github.com/phylame/jem"
 
 const val SETTINGS_HOME = "config/"

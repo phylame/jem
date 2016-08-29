@@ -19,13 +19,16 @@
 package pw.phylame.jem.imabw.app.ui
 
 import pw.phylame.jem.imabw.app.*
+import pw.phylame.jem.imabw.app.ui.tree.ContentsTree
 import pw.phylame.qaf.core.Settings
 import pw.phylame.qaf.core.tr
 import pw.phylame.qaf.ixin.*
 import java.awt.BorderLayout
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
-import javax.swing.*
+import javax.swing.JPopupMenu
+import javax.swing.JSplitPane
+import javax.swing.WindowConstants
 
 object Performer : Form(tr("app.name"), Settings("$SETTINGS_HOME/snap")) {
     private const val DIVIDER_SIZE = "form.divider.size"
@@ -34,7 +37,6 @@ object Performer : Form(tr("app.name"), Settings("$SETTINGS_HOME/snap")) {
 
     val dividerSize = 7
     val dividerLocation = 171
-
 
     private lateinit var splitPane: JSplitPane
 
@@ -45,7 +47,7 @@ object Performer : Form(tr("app.name"), Settings("$SETTINGS_HOME/snap")) {
                 Imabw.performed(EXIT_APP)
             }
         })
-        iconImage = Imabw.resource.imageFor(tr("app.icon"))
+        iconImage = imageFor(tr("app.icon"))
         createComponents(JSONDesigner(DESIGNER_NAME), Imabw)
         createContent()
         super.init()
@@ -55,6 +57,8 @@ object Performer : Form(tr("app.name"), Settings("$SETTINGS_HOME/snap")) {
 
     private fun createContent() {
         splitPane = JSplitPane()
+        ContentsTree.init(this)
+        splitPane.leftComponent = ContentsTree
 
         contentPane.add(splitPane, BorderLayout.CENTER)
     }
@@ -62,17 +66,14 @@ object Performer : Form(tr("app.name"), Settings("$SETTINGS_HOME/snap")) {
     private fun prepare() {
         val toolbar = toolBar
         if (toolbar != null) {
-            toolbar.componentPopupMenu = JPopupMenu(title).addItems(arrayOf(
+            toolbar.componentPopupMenu = createPopupMenu(arrayOf(
                     Item(LOCK_TOOL_BAR, selected = snap?.get(TOOL_BAR_LOCKED) ?: true, style = Style.CHECK),
-                    Item(HIDE_TOOL_BAR_TEXT, selected = snap?.get(TOOL_BAR_TEXT_HIDDEN) ?: true, style = Style.CHECK)),
-                    actions, Imabw, form = this)
-            actions[SHOW_TOOL_BAR]?.isSelected = toolbar.isVisible
+                    Item(HIDE_TOOL_BAR_TEXT, selected = snap?.get(TOOL_BAR_TEXT_HIDDEN) ?: true, style = Style.CHECK)), title)
+            actions [SHOW_TOOL_BAR]?.isSelected = toolbar.isVisible
             actions[LOCK_TOOL_BAR]?.isSelected = toolbar.isLocked
         }
         val statusbar = statusBar
         if (statusbar != null) {
-            statusbar.add(JSeparator(), BorderLayout.PAGE_START)
-            statusbar.border = BorderFactory.createEmptyBorder(0, 0, 1, 0)
             actions[SHOW_STATUS_BAR]?.isSelected = statusbar.isVisible
         }
     }
@@ -105,6 +106,9 @@ object Performer : Form(tr("app.name"), Settings("$SETTINGS_HOME/snap")) {
 
         }
     }
+
+    fun createPopupMenu(items: Array<Item>, label: String = ""): JPopupMenu =
+            JPopupMenu(label).addItems(items, actions, Imabw, form = this)
 
     @Command(SHOW_TOOL_BAR)
     fun toggleToolbar() {

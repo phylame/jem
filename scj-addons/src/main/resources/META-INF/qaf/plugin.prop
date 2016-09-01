@@ -26,3 +26,6 @@ pw.phylame.jem.scj.addons.LogLevelSetter
 
 # view details of SCJ
 pw.phylame.jem.scj.addons.SCJDetailsViewer
+
+# run customized script in SCJ context
+pw.phylame.jem.scj.addons.CustomizedScriptRunner

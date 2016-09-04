@@ -46,16 +46,21 @@ public class LogLevelSetter extends AbstractPlugin implements Initializer {
 
     @Override
     public void perform(CLIDelegate delegate, CommandLine cmd) {
-        val level = Level.forName(cmd.getOptionValue(OPTION), Level.DEFAULT_LEVEL);
+        val level = Level.forName(cmd.getOptionValue(OPTION), Log.getLevel());
         sci.getContext().put(OPTION, level);
         Log.setLevel(level);
     }
 
     private void addLogOption() {
+        String level = AppConfig.INSTANCE.rawFor(CONFIG_KEY);
+        if (level == null) {
+            level = Log.getLevel().getName();
+        }
         sci.addOption(
                 Option.builder(OPTION).longOpt(OPTION_LONG)
-                        .hasArg().argName(AddonsMessages.tr("logSetter.argName")).desc(AddonsMessages
-                                .tr("help.setLogLevel", makeLevelList(), AppConfig.INSTANCE.rawFor(CONFIG_KEY)))
+                        .hasArg()
+                        .argName(AddonsMessages.tr("logSetter.argName"))
+                        .desc(AddonsMessages.tr("help.setLogLevel", makeLevelList(), level))
                         .build(),
                 this);
     }

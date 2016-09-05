@@ -39,7 +39,11 @@ public class CustomizedScriptRunner extends AbstractPlugin {
             if (StringUtils.isEmpty(engine)) {
                 engine = "JavaScript";
             }
-            return clazz.getMethod("getEngineByName", String.class).invoke(clazz.newInstance(), engine);
+            val runner = clazz.getMethod("getEngineByName", String.class).invoke(clazz.newInstance(), engine);
+            if (runner == null) {
+                app.error(Messages.tr("runScript.noSuchEngine", engine));
+            }
+            return runner;
         } catch (Exception e) {
             Log.e(TAG, e);
             app.error(Messages.tr("runScript.unsupported", System.getProperty("java.version")));

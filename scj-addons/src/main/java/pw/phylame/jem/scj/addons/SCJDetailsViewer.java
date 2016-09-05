@@ -18,6 +18,9 @@
 
 package pw.phylame.jem.scj.addons;
 
+import static java.lang.System.out;
+import static pw.phylame.jem.scj.addons.Messages.tr;
+
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -27,7 +30,6 @@ import org.apache.commons.cli.Option;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 import lombok.val;
-import pw.phylame.jem.scj.app.AppConfig;
 import pw.phylame.jem.scj.app.AppKt;
 import pw.phylame.qaf.cli.CLIDelegate;
 import pw.phylame.qaf.cli.Command;
@@ -43,63 +45,67 @@ public class SCJDetailsViewer extends AbstractPlugin {
 
     @Override
     public void init() {
-        sci.addOption(new Option("V", "view-context", false, AddonsMessages.tr("help.listContext")), new Command() {
+        sci.addOption(new Option("V", "view-context", false, tr("help.listContext")), new Command() {
             @Override
-            public int execute(CLIDelegate arg0) {
+            public int execute(CLIDelegate delegate) {
                 val ctx = sci.getContext();
                 if (ctx.isEmpty()) {
-                    app.echo(AddonsMessages.tr("listContext.emptyContext"));
+                    app.echo(tr("listContext.emptyContext"));
                 } else {
                     for (val e : ctx.entrySet()) {
-                        System.out.printf("%s[%s]=%s\n", e.getKey(), e.getValue().getClass().getSimpleName(),
-                                e.getValue());
+                        out.printf("%s[%s]=%s\n", e.getKey(), e.getValue().getClass().getSimpleName(), e.getValue());
                     }
                 }
                 return 0;
             }
         });
-        sci.addOption(new Option("U", "list-plugins", false, AddonsMessages.tr("help.listPlugins")), new Command() {
+        sci.addOption(new Option("U", "list-plugins", false, tr("help.listPlugins")), new Command() {
             @Override
-            public int execute(CLIDelegate arg0) {
+            public int execute(CLIDelegate delegate) {
                 val plugins = app.getPlugins().values();
-                System.out.println(AddonsMessages.tr("listPlugins.tip", plugins.size()));
+                out.println(tr("listPlugins.tip", plugins.size()));
                 for (val plugin : plugins) {
                     printPlugin(plugin);
                 }
                 return 0;
             }
         });
-        sci.addOption(new Option("C", "list-config", false, AddonsMessages.tr("help.listConfig")), new Command() {
+        sci.addOption(new Option("C", "list-config", false, tr("help.listConfig")), new Command() {
             @Override
-            public int execute(CLIDelegate arg0) {
-                AppConfig.INSTANCE.forEach(new Function1<Map.Entry<String, String>, Unit>() {
+            public int execute(CLIDelegate delegate) {
+                config.forEach(new Function1<Map.Entry<String, String>, Unit>() {
                     @Override
                     public Unit invoke(Entry<String, String> e) {
-                        System.out.println(e.getKey() + '=' + e.getValue());
+                        out.println(e.getKey() + '=' + e.getValue());
                         return null;
                     }
                 });
                 return 0;
             }
         });
-        sci.addOption(Option.builder("S").argName(app.tr("help.kvName")).numberOfArgs(2).valueSeparator()
-                .desc(AddonsMessages.tr("help.setConfig")).build(), new ConfigSetter());
+        sci.addOption(Option.builder("S")
+                .argName(app.tr("help.kvName"))
+                .numberOfArgs(2)
+                .valueSeparator()
+                .desc(tr("help.setConfig"))
+                .build(),
+                new ConfigSetter());
     }
 
     private void printPlugin(Plugin plugin) {
-        val pattern = "%" + AppConfig.INSTANCE.get("app.plugin.nameWidth", 8, Integer.class) + "s: %s";
+        val pattern = "%" + config.get("app.plugin.nameWidth", 8, Integer.class) + "s: %s";
         String text = formatItem(pattern, "id", plugin.getId());
         int width = text.length();
-        System.out.println(text);
+        out.println(text);
         text = formatItem(pattern, "path", plugin.getClass().getName());
         width = Math.max(width, text.length());
-        System.out.println(text);
+        out.println(text);
         for (val e : plugin.getMeta().entrySet()) {
             text = formatItem(pattern, e.getKey(), e.getValue());
             width = Math.max(width, text.length());
-            System.out.println(text);
+            out.println(text);
         }
-        System.out.println(multiplyOf("-", width));
+        out.println(multiplyOf("-", width));
     }
 
     private String formatItem(String pattern, String name, Object value) {
@@ -122,7 +128,6 @@ public class SCJDetailsViewer extends AbstractPlugin {
         @Override
         public int execute(CLIDelegate delegate) {
             val prop = (Properties) delegate.getContext().get("S");
-            val cfg = AppConfig.INSTANCE;
             for (val e : prop.entrySet()) {
                 val key = e.getKey().toString();
                 val value = e.getValue().toString();
@@ -132,11 +137,11 @@ public class SCJDetailsViewer extends AbstractPlugin {
                     }
                 } else if (key.equals("app.log.level")) {
                     if (Level.forName(value, null) == null) {
-                        app.error(AddonsMessages.tr("logSetter.invalidLevel", value, LogLevelSetter.makeLevelList()));
+                        app.error(tr("logSetter.invalidLevel", value, LogLevelSetter.makeLevelList()));
                         continue;
                     }
                 }
-                cfg.set(key, value, String.class);
+                config.set(key, value, String.class);
             }
             return 0;
         }

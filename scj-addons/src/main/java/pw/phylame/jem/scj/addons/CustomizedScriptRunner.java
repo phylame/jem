@@ -2,7 +2,6 @@ package pw.phylame.jem.scj.addons;
 
 import java.io.File;
 import java.io.FileReader;
-import java.lang.reflect.InvocationTargetException;
 import java.util.UUID;
 
 import javax.script.ScriptEngine;
@@ -24,18 +23,21 @@ public class CustomizedScriptRunner extends AbstractPlugin {
 
     @Override
     public void init() {
-        sci.addOption(Option.builder("R").hasArg().argName(AddonsMessages.tr("runScript.file")).longOpt("run-script")
-                .desc(AddonsMessages.tr("help.runScript")).build(), new RunnerCommand());
+        sci.addOption(Option.builder("R")
+                .hasArg()
+                .argName(Messages.tr("runScript.file"))
+                .longOpt("run-script")
+                .desc(Messages.tr("help.runScript"))
+                .build(), new RunnerCommand());
     }
 
     private Object detectScriptEngineManager() {
         try {
             val clazz = Class.forName("javax.script.ScriptEngineManager");
             return clazz.getMethod("getEngineByName", String.class).invoke(clazz.newInstance(), "JavaScript");
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException
-                | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+        } catch (Exception e) {
             Log.e(TAG, e);
-            app.error(AddonsMessages.tr("runScript.unsupported", System.getProperty("java.version")));
+            app.error(Messages.tr("runScript.unsupported", System.getProperty("java.version")));
             return null;
         }
     }
@@ -61,9 +63,10 @@ public class CustomizedScriptRunner extends AbstractPlugin {
                 val engine = (ScriptEngine) result;
                 engine.put("app", app);
                 engine.put("sci", sci);
+                engine.put("config", config);
                 engine.eval(reader);
             } catch (Exception e) {
-                app.error(AddonsMessages.tr("runScript.error"), e);
+                app.error(Messages.tr("runScript.error"), e);
                 return -1;
             }
             return 0;

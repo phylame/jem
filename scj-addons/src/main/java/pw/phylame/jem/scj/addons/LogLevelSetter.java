@@ -22,7 +22,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 
 import lombok.val;
-import pw.phylame.jem.scj.app.AppConfig;
 import pw.phylame.qaf.cli.CLIDelegate;
 import pw.phylame.qaf.cli.Initializer;
 import pw.phylame.ycl.log.Level;
@@ -52,16 +51,16 @@ public class LogLevelSetter extends AbstractPlugin implements Initializer {
     }
 
     private void addLogOption() {
-        String level = AppConfig.INSTANCE.rawFor(CONFIG_KEY);
+        String level = config.rawFor(CONFIG_KEY);
         if (level == null) {
             level = Log.getLevel().getName();
         }
-        sci.addOption(
-                Option.builder(OPTION).longOpt(OPTION_LONG)
-                        .hasArg()
-                        .argName(AddonsMessages.tr("logSetter.argName"))
-                        .desc(AddonsMessages.tr("help.setLogLevel", makeLevelList(), level))
-                        .build(),
+        sci.addOption(Option.builder(OPTION)
+                .longOpt(OPTION_LONG)
+                .hasArg()
+                .argName(Messages.tr("logSetter.argName"))
+                .desc(Messages.tr("help.setLogLevel", makeLevelList(), level))
+                .build(),
                 this);
     }
 
@@ -78,7 +77,7 @@ public class LogLevelSetter extends AbstractPlugin implements Initializer {
     }
 
     private void setByConfig() {
-        val level = AppConfig.INSTANCE.rawFor(CONFIG_KEY);
+        val level = config.rawFor(CONFIG_KEY);
         if (StringUtils.isNotEmpty(level)) {
             Log.setLevel(Level.forName(level, Level.DEFAULT_LEVEL));
         }

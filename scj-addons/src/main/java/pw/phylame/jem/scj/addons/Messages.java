@@ -18,29 +18,18 @@
 
 package pw.phylame.jem.scj.addons;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import pw.phylame.ycl.util.Linguist;
 
-import lombok.NonNull;
-import lombok.Value;
-import lombok.val;
+public final class Messages {
+    public static final String MESSAGES_PATH = "pw/phylame/jem/scj/addons/messages";
 
-@Value
-public class Metadata {
-    @NonNull
-    private String id;
-    @NonNull
-    private String name;
-    @NonNull
-    private String version;
-    @NonNull
-    private String vendor;
+    private static final Linguist linguist = new Linguist(MESSAGES_PATH);
 
-    public Map<String, Object> toMap() {
-        val map = new LinkedHashMap<String, Object>();
-        map.put("name", name);
-        map.put("version", version);
-        map.put("vendor", vendor);
-        return map;
+    public static String tr(String key) {
+        return linguist.tr(key);
+    }
+
+    public static String tr(String key, Object... args) {
+        return linguist.tr(key, args);
     }
 }

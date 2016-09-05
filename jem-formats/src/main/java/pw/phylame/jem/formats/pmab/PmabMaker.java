@@ -267,7 +267,7 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
         // text
         val text = chapter.getText();
         if (text != null) {
-            render.startTag("text").text(writeV3Text(text, tuple.config.textDir, base, tuple)).endTag();
+            render.startTag("content").text(writeV3Text(text, tuple.config.textDir, base, tuple)).endTag();
         }
 
         int count = 1;

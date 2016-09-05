@@ -42,21 +42,13 @@ public class Test {
         System.setProperty(Registry.AUTO_LOAD_CUSTOMIZED_KEY, "true");
         System.out.println(Arrays.toString(Registry.supportedMakers()));
         System.out.println(Arrays.toString(Registry.supportedParsers()));
-        val book = new Book("Example", "PW");
-        book.setText(Texts.forString("My name is PW\n, and your?", Text.PLAIN));
-        Attributes.setCover(book, Flobs.forURL(new URL("https://www.baidu.com/img/2016_8_17chinabetter_3fdfb7e62eab01c73e39ee3e9751a0e5.gif"), null));
-        Attributes.setPubdate(book, new Date());
-        Attributes.setLanguage(book, Locale.getDefault());
-        Attributes.setWords(book, 5000000);
-        Attributes.setIntro(book, Texts.forString("Hello world", Text.PLAIN));
-        book.append(book.clone());
-        val path = "d:\\tmp\\ex.pmab";
-        val format = "jar";
+        val path = "D:\\downloads\\qiyu\\气御千年\\气御千年.zip";
+        val format = "pmab";
         Map<String, Object> arguments = MiscUtils.mapOf(
                 "pmab.make." + PmabOutConfig.VERSION, "2.0",
                 "jar.make." + JarOutConfig.JAR_TEMPLATE, "D:\\code\\java\\pw-books\\jem-formats\\src\\main\\resources\\pw\\phylame\\jem\\formats\\jar\\book.jar"
         );
-//        Helper.writeBook(book, new File(path), format, arguments);
-        System.out.println(Helper.readBook(new File("E:\\books\\小说\\武侠\\凤歌\\沧海（新版）.pmab"), "pmab", null));
+        val book = Helper.readBook(new File(path), format, arguments);
+        System.out.println(book.chapterAt(0).getText());
     }
 }

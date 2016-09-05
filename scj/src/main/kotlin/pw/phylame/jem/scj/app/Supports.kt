@@ -44,8 +44,6 @@ import java.lang.System.lineSeparator
 import java.text.ParseException
 import java.util.*
 
-private const val TAG = "SUP"
-
 fun printJemError(e: JemException, file: File, format: String) {
     if (e is ParserException) {
         App.error(tr("error.jem.parse", file, format), e)
@@ -86,7 +84,7 @@ fun setAttributes(chapter: Chapter, attributes: Map<String, Any>): Boolean {
                     return false
                 }
             }
-            Attributes.DATE -> {
+            Attributes.PUBDATE, Attributes.DATE -> {
                 try {
                     value = DateUtils.parse(str, DATE_FORMAT)
                 } catch (e: ParseException) {
@@ -131,12 +129,10 @@ fun prepareBook(book: Book, tuple: OutTuple): Book? =
         } else null
 
 fun saveBook(book: Book, tuple: OutTuple): String? {
+    prepareBook(book, tuple) ?: return null
     val output = tuple.output.iif(tuple.output.isDirectory) { File(it, "${Attributes.getTitle(book)}.${tuple.format}") }
     try {
-        Helper.writeBook(prepareBook(book, tuple) ?: return null,
-                output,
-                tuple.format,
-                prepareArguments(HashMap(tuple.arguments))
+        Helper.writeBook(book, output, tuple.format, prepareArguments(HashMap(tuple.arguments))
         )
         return output.path
     } catch (e: IOException) {
@@ -341,7 +337,7 @@ private fun viewExtension(book: Book, names: Array<String>): Boolean {
 }
 
 private fun viewChapter(book: Book, name: String): Boolean {
-    val parts = name.replaceFirst("chapter".toRegex(), "").split("\\$".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+    val parts = name.replaceFirst("chapter", "").split("$").dropLastWhile { it.isEmpty() }.toTypedArray()
     val index = parts[0]
     val key = if (parts.size > 1) parts[1] else VIEW_TEXT
     val indexes = parseIndexes(index) ?: return false

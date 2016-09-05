@@ -311,17 +311,17 @@ object SCI : CLIDelegate() {
 
     val inFormat: String? by managed(OPTION_INPUT_FORMAT) { null }
 
-    val inArguments by managed(OPTION_IN_ARGUMENTS) { AppConfig.inArguments }
+    val inArguments: Map<String, Any> by managed(OPTION_IN_ARGUMENTS) { AppConfig.inArguments }
 
-    val outAttributes by managed(OPTION_OUT_ATTRIBUTES) { AppConfig.outAttributes }
+    val outAttributes: Map<String, Any> by managed(OPTION_OUT_ATTRIBUTES) { AppConfig.outAttributes }
 
-    val outExtensions by managed(OPTION_OUT_EXTENSIONS) { AppConfig.outExtensions }
+    val outExtensions: Map<String, Any>by managed(OPTION_OUT_EXTENSIONS) { AppConfig.outExtensions }
 
     val output: String by managed(OPTION_OUTPUT) { AppConfig.output }
 
     val outFormat by managed(OPTION_OUTPUT_FORMAT) { AppConfig.outputFormat }
 
-    val outArguments by managed(OPTION_OUT_ARGUMENTS) { AppConfig.outArguments }
+    val outArguments: Map<String, Any>by managed(OPTION_OUT_ARGUMENTS) { AppConfig.outArguments }
 
     val chapterIndices by managed(OPTION_EXTRACT) { emptyArray<String>() }
 

@@ -13,6 +13,7 @@ import pw.phylame.qaf.cli.CLIDelegate;
 import pw.phylame.qaf.cli.Command;
 import pw.phylame.qaf.cli.TypedFetcher;
 import pw.phylame.ycl.log.Log;
+import pw.phylame.ycl.util.StringUtils;
 
 public class CustomizedScriptRunner extends AbstractPlugin {
     private static final String TAG = "CSR";
@@ -34,7 +35,11 @@ public class CustomizedScriptRunner extends AbstractPlugin {
     private Object detectScriptEngineManager() {
         try {
             val clazz = Class.forName("javax.script.ScriptEngineManager");
-            return clazz.getMethod("getEngineByName", String.class).invoke(clazz.newInstance(), "JavaScript");
+            String engine = config.rawFor("csr.engine.name");
+            if (StringUtils.isEmpty(engine)) {
+                engine = "JavaScript";
+            }
+            return clazz.getMethod("getEngineByName", String.class).invoke(clazz.newInstance(), engine);
         } catch (Exception e) {
             Log.e(TAG, e);
             app.error(Messages.tr("runScript.unsupported", System.getProperty("java.version")));

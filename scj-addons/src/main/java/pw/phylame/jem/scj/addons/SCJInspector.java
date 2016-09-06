@@ -19,8 +19,9 @@
 package pw.phylame.jem.scj.addons;
 
 import static java.lang.System.out;
-import static pw.phylame.jem.scj.addons.Messages.tr;
+import static pw.phylame.jem.scj.addons.M.tr;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -36,11 +37,15 @@ import pw.phylame.qaf.cli.Command;
 import pw.phylame.qaf.cli.PropertiesFetcher;
 import pw.phylame.qaf.core.Plugin;
 import pw.phylame.ycl.log.Level;
+import pw.phylame.ycl.util.Function;
+import pw.phylame.ycl.util.Provicer;
+import pw.phylame.ycl.util.StringUtils;
+import pw.phylame.ycl.value.Lazy;
 
-public class SCJDetailsViewer extends AbstractPlugin {
+public class SCJInspector extends AbstractPlugin {
 
-    public SCJDetailsViewer() {
-        super(new Metadata("45fd7ef3-aa4a-40a9-bf79-416fbc44aeab", "SCJ Details Viewer", "1.0", "PW"));
+    public SCJInspector() {
+        super(new Metadata("45fd7ef3-aa4a-40a9-bf79-416fbc44aeab", "SCJ Inspector", "1.0", "PW"));
     }
 
     @Override
@@ -48,11 +53,11 @@ public class SCJDetailsViewer extends AbstractPlugin {
         sci.addOption(new Option("V", "view-context", false, tr("help.listContext")), new Command() {
             @Override
             public int execute(CLIDelegate delegate) {
-                val ctx = sci.getContext();
-                if (ctx.isEmpty()) {
+                val context = sci.getContext();
+                if (context.isEmpty()) {
                     app.echo(tr("listContext.emptyContext"));
                 } else {
-                    for (val e : ctx.entrySet()) {
+                    for (val e : context.entrySet()) {
                         out.printf("%s[%s]=%s\n", e.getKey(), e.getValue().getClass().getSimpleName(), e.getValue());
                     }
                 }
@@ -84,12 +89,11 @@ public class SCJDetailsViewer extends AbstractPlugin {
             }
         });
         sci.addOption(Option.builder("S")
-                .argName(app.tr("help.kvName"))
                 .numberOfArgs(2)
+                .argName(app.tr("help.kvName"))
                 .valueSeparator()
                 .desc(tr("help.setConfig"))
-                .build(),
-                new ConfigSetter());
+                .build(), new ConfigSetter());
     }
 
     private void printPlugin(Plugin plugin) {
@@ -105,22 +109,39 @@ public class SCJDetailsViewer extends AbstractPlugin {
             width = Math.max(width, text.length());
             out.println(text);
         }
-        out.println(multiplyOf("-", width));
+        out.println(StringUtils.multiplyOf("-", width));
     }
 
     private String formatItem(String pattern, String name, Object value) {
         return String.format(pattern, name, value);
     }
 
-    private String multiplyOf(String str, int count) {
-        val b = new StringBuffer();
-        for (int i = 0; i < count; i++) {
-            b.append(str);
-        }
-        return b.toString();
-    }
-
     private class ConfigSetter extends PropertiesFetcher implements Command {
+        private final Lazy<Map<String, Function<String, Boolean>>> validators = new Lazy<>(
+                new Provicer<Map<String, Function<String, Boolean>>>() {
+                    @Override
+                    public Map<String, Function<String, Boolean>> provide() throws Exception {
+                        val map = new HashMap<String, Function<String, Boolean>>();
+                        map.put("app.debug.level", new Function<String, Boolean>() {
+                            @Override
+                            public Boolean apply(String i) {
+                                return AppKt.checkDebugLevel(i);
+                            }
+                        });
+                        map.put("app.log.level", new Function<String, Boolean>() {
+                            @Override
+                            public Boolean apply(String i) {
+                                if (Level.forName(i, null) == null) {
+                                    app.error(tr("logSetter.invalidLevel", i, LogSetter.makeLevelList()));
+                                    return false;
+                                }
+                                return true;
+                            }
+                        });
+                        return map;
+                    }
+                });
+
         private ConfigSetter() {
             super("S");
         }
@@ -131,16 +152,12 @@ public class SCJDetailsViewer extends AbstractPlugin {
             for (val e : prop.entrySet()) {
                 val key = e.getKey().toString();
                 val value = e.getValue().toString();
-                if (key.equals("app.debug.level")) {
-                    if (!AppKt.checkDebugLevel(value)) {
-                        continue;
-                    }
-                } else if (key.equals("app.log.level")) {
-                    if (Level.forName(value, null) == null) {
-                        app.error(tr("logSetter.invalidLevel", value, LogLevelSetter.makeLevelList()));
-                        continue;
-                    }
+
+                val fun = validators.get().get(key);
+                if (fun != null && !fun.apply(value)) {
+                    continue;
                 }
+
                 config.set(key, value, String.class);
             }
             return 0;

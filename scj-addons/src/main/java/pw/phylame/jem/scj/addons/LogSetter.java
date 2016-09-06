@@ -28,19 +28,19 @@ import pw.phylame.ycl.log.Level;
 import pw.phylame.ycl.log.Log;
 import pw.phylame.ycl.util.StringUtils;
 
-public class LogLevelSetter extends AbstractPlugin implements Initializer {
+public class LogSetter extends AbstractPlugin implements Initializer {
     private static final String OPTION = "L";
     private static final String OPTION_LONG = "log-level";
     private static final String CONFIG_KEY = "app.log.level";
 
-    public LogLevelSetter() {
-        super(new Metadata("367928f7-c47e-43bc-8c10-adcf51301c44", "Log Level Setter", "1.0", "PW"));
+    public LogSetter() {
+        super(new Metadata("367928f7-c47e-43bc-8c10-adcf51301c44", "Log Setter", "1.0", "PW"));
     }
 
     @Override
     public void init() {
         setByConfig();
-        addLogOption();
+        addSetOption();
     }
 
     @Override
@@ -50,18 +50,17 @@ public class LogLevelSetter extends AbstractPlugin implements Initializer {
         Log.setLevel(level);
     }
 
-    private void addLogOption() {
+    private void addSetOption() {
         String level = config.rawFor(CONFIG_KEY);
-        if (level == null) {
+        if (StringUtils.isEmpty(level)) {
             level = Log.getLevel().getName();
         }
         sci.addOption(Option.builder(OPTION)
                 .longOpt(OPTION_LONG)
                 .hasArg()
-                .argName(Messages.tr("logSetter.argName"))
-                .desc(Messages.tr("help.setLogLevel", makeLevelList(), level))
-                .build(),
-                this);
+                .argName(M.tr("logSetter.argName"))
+                .desc(M.tr("help.setLogLevel", makeLevelList(), level))
+                .build(), this);
     }
 
     public static String makeLevelList() {

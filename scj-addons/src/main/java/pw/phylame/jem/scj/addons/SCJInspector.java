@@ -38,7 +38,7 @@ import pw.phylame.qaf.cli.PropertiesFetcher;
 import pw.phylame.qaf.core.Plugin;
 import pw.phylame.ycl.log.Level;
 import pw.phylame.ycl.util.Function;
-import pw.phylame.ycl.util.Provicer;
+import pw.phylame.ycl.util.Provider;
 import pw.phylame.ycl.util.StringUtils;
 import pw.phylame.ycl.value.Lazy;
 
@@ -118,7 +118,7 @@ public class SCJInspector extends AbstractPlugin {
 
     private class ConfigSetter extends PropertiesFetcher implements Command {
         private final Lazy<Map<String, Function<String, Boolean>>> validators = new Lazy<>(
-                new Provicer<Map<String, Function<String, Boolean>>>() {
+                new Provider<Map<String, Function<String, Boolean>>>() {
                     @Override
                     public Map<String, Function<String, Boolean>> provide() throws Exception {
                         val map = new HashMap<String, Function<String, Boolean>>();

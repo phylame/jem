@@ -34,7 +34,7 @@ import pw.phylame.jem.util.text.Text;
 import pw.phylame.ycl.format.Converters;
 import pw.phylame.ycl.io.PathUtils;
 import pw.phylame.ycl.util.DateUtils;
-import pw.phylame.ycl.util.MiscUtils;
+import pw.phylame.ycl.util.CollectionUtils;
 import pw.phylame.ycl.util.StringUtils;
 
 import java.io.IOException;
@@ -108,7 +108,7 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
     private void writePBMHead(String tagName, boolean ignoreEmpty, Tuple tuple) throws IOException {
         val render = tuple.render;
         val meta = tuple.config.metadata;
-        if (MiscUtils.isEmpty(meta)) {
+        if (CollectionUtils.isEmpty(meta)) {
             if (!ignoreEmpty) {
                 render.startTag("head").endTag();
             }

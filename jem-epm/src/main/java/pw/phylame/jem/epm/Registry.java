@@ -23,7 +23,7 @@ import lombok.val;
 import pw.phylame.ycl.io.IOUtils;
 import pw.phylame.ycl.log.Log;
 import pw.phylame.ycl.util.Implementor;
-import pw.phylame.ycl.util.MiscUtils;
+import pw.phylame.ycl.util.CollectionUtils;
 
 import java.io.IOException;
 import java.util.*;
@@ -224,7 +224,7 @@ public final class Registry {
         if (current == null) {
             Registry.extensions.put(name, current = new HashSet<>());
         }
-        if (MiscUtils.isEmpty(extensions)) {
+        if (CollectionUtils.isEmpty(extensions)) {
             current.add(name);
         } else {
             current.addAll(extensions);
@@ -278,7 +278,7 @@ public final class Registry {
                     String[] parts = e.getValue().toString().split(NAME_EXTENSION_SEPARATOR, 2);
                     factory.register(name, parts[0]);
                     if (parts.length > 1) {
-                        mapExtensions(name, MiscUtils.setOf(parts[1].toLowerCase().split(EXTENSION_SEPARATOR)));
+                        mapExtensions(name, CollectionUtils.setOf(parts[1].toLowerCase().split(EXTENSION_SEPARATOR)));
                     } else {
                         mapExtensions(name, null);
                     }

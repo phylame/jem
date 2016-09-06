@@ -26,9 +26,10 @@ import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.Settings
 import pw.phylame.qaf.core.Translator
 import pw.phylame.qaf.core.tr
+import pw.phylame.ycl.io.IOUtils
 import pw.phylame.ycl.io.PathUtils
 import pw.phylame.ycl.log.Log
-import pw.phylame.ycl.util.MiscUtils
+import pw.phylame.ycl.util.CollectionUtils
 import java.io.File
 import java.util.*
 
@@ -81,7 +82,7 @@ object AppConfig : Settings() {
     override fun reset() {
         super.reset()
         comment = "Configurations of PW's SCJ v$VERSION"
-        val prop = MiscUtils.propertiesFor(SETTING_TEMPLATE_PATH, AppConfig.javaClass.classLoader)
+        val prop = CollectionUtils.propertiesFor(SETTING_TEMPLATE_PATH, AppConfig.javaClass.classLoader)
         if (prop != null) {
             @Suppress("unchecked_cast")
             update(prop as Map<String, String>)
@@ -101,6 +102,8 @@ object AppConfig : Settings() {
     var tocIndent by delegated("  ", "sci.view.tocIndent")
 
     var termWidth by delegated(80, "sci.term.width")
+
+    var blacklist by delegated("", "app.plugin.blacklist")
 
     val inArguments = HashMap<String, Any>()
 
@@ -150,8 +153,12 @@ object SCI : CLIDelegate() {
             App.exit(-1)
         }
         super.onStart()
+        val path = AppConfig.blacklist
+        val blacklist = if (path.isNotBlank()) {
+            IOUtils.openResource(path, SCI.javaClass.classLoader)?.bufferedReader()?.lineSequence()?.toSet() ?: emptySet()
+        } else emptySet()
         if (AppConfig.pluginEnable) {
-            App.loadPlugins()
+            App.loadPlugins(blacklist)
         } else {
             Log.i(TAG, "plugin is not enable")
         }

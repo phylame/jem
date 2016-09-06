@@ -27,7 +27,7 @@ import pw.phylame.jem.util.JemException;
 import pw.phylame.jem.util.flob.Flobs;
 import pw.phylame.jem.util.text.Text;
 import pw.phylame.jem.util.text.Texts;
-import pw.phylame.ycl.util.MiscUtils;
+import pw.phylame.ycl.util.CollectionUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,7 +44,7 @@ public class Test {
         System.out.println(Arrays.toString(Registry.supportedParsers()));
         val path = "D:\\downloads\\qiyu\\气御千年\\气御千年.zip";
         val format = "pmab";
-        Map<String, Object> arguments = MiscUtils.mapOf(
+        Map<String, Object> arguments = CollectionUtils.mapOf(
                 "pmab.make." + PmabOutConfig.VERSION, "2.0",
                 "jar.make." + JarOutConfig.JAR_TEMPLATE, "D:\\code\\java\\pw-books\\jem-formats\\src\\main\\resources\\pw\\phylame\\jem\\formats\\jar\\book.jar"
         );

@@ -17,6 +17,25 @@
 # limitations under the License.
 # ------------------------------------------------------------------------------
 
+message()
+{
+  TITLE="Cannot start PW Imabw"
+  if [ -n "`which zenity`" ]; then
+    zenity --error --title="$TITLE" --text="$1"
+  elif [ -n "`which kdialog`" ]; then
+    kdialog --error --title "$TITLE" "$1"
+  elif [ -n "`which xmessage`" ]; then
+    xmessage -center "ERROR: $TITLE: $1"
+  elif [ -n "`which notify-send`" ]; then
+    notify-send "ERROR: $TITLE: $1"
+  else
+    echo "ERROR: $TITLE\n$1"
+  fi
+}
+
+GREP=`which egrep`
+CAT=`which cat`
+
 # Get the IMABW home
 if [ -z "$IMABW_HOME" -o ! -d "$IMABW_HOME" ]; then
   PRG="$0"
@@ -35,6 +54,27 @@ if [ -z "$IMABW_HOME" -o ! -d "$IMABW_HOME" ]; then
 
   # make it fully qualified
   IMABW_HOME=`cd "$IMABW_HOME" > /dev/null && pwd`
+fi
+
+VM_OPTIONS_FILE=""
+if [ -n "$IMABW_VM_OPTIONS" -a -r "$IMABW_VM_OPTIONS" ]; then
+  # explicit
+  VM_OPTIONS_FILE="$IMABW_VM_OPTIONS"
+elif [ -r "$HOME/.imabw/imabw.vmoptions" ]; then
+  # user-overridden
+  VM_OPTIONS_FILE="$HOME/.imabw/imabw.vmoptions"
+elif [ -r "$IMABW_HOME/bin/imabw.vmoptions" ]; then
+  # default, standard installation
+  VM_OPTIONS_FILE="$IMABW_HOME/bin/imabw.vmoptions"
+else
+  VM_OPTIONS_FILE="$IMABW_HOME/imabw.vmoptions"
+fi
+
+VM_OPTIONS=""
+if [ -r "$VM_OPTIONS_FILE" ]; then
+  VM_OPTIONS=`"$CAT" "$VM_OPTIONS_FILE" | "$GREP" -v "^#.*"`
+else
+  message "Cannot find VM options file"
 fi
 
 # IMABW main class
@@ -61,4 +101,4 @@ find_jars ${LIB_DIR}
 find_jars ${EXT_DIR}
 
 # Run Jem SCI
-java -cp "${IMABW_CLASS_PATH}" ${IMABW_CLASS} "$@"
+java $VM_OPTIONS -cp "${IMABW_CLASS_PATH}" ${IMABW_CLASS} "$@"

@@ -18,42 +18,61 @@
 
 package pw.phylame.jem.imabw.app
 
-import pw.phylame.jem.imabw.app.ui.Performer
+import pw.phylame.jem.imabw.app.ui.Viewer
 import pw.phylame.qaf.core.App
+import pw.phylame.qaf.core.lines
 import pw.phylame.qaf.core.tr
 import pw.phylame.qaf.ixin.*
+import pw.phylame.ycl.io.IOUtils
 import pw.phylame.ycl.log.Level
 import pw.phylame.ycl.log.Log
 import java.awt.Desktop
 import java.net.URI
 import java.util.*
 
-object Imabw : IxinDelegate<Performer>() {
+object Imabw : IxinDelegate<Viewer>() {
     override fun onStart() {
         super.onStart()
-        Log.setLevel(Level.forName(AppConfig.logLevel, Level.INFO))
         App.ensureHomeExisted()
-        Locale.setDefault(AppConfig.locale)
-        resource = Resource(RESOURCE_DIR, IMAGE_DIR + '/' + UIConfig.iconSets, I18N_DIR, Imabw.javaClass.classLoader)
+        proxy = CommandDispatcher(arrayOf(this))
+
+        Log.setLevel(Level.forName(AppSettings.logLevel, Level.INFO))
+        App.debug = App.Debug.valueOf(AppSettings.debugLevel)
+        Locale.setDefault(AppSettings.appLocale)
+        resource = Resource(RESOURCE_DIR, "$IMAGE_DIR/${UISettings.iconSets}", I18N_DIR, Imabw.javaClass.classLoader)
         App.translator = resource.translatorFor(I18N_NAME)
-        if (AppConfig.pluginEnable) {
-            App.loadPlugins(AppConfig.pluginBlacklist)
+
+        if (PluginSettings.enable) {
+            val blacklist = if (PluginSettings.blacklist.isNotBlank())
+                IOUtils.resourceFor(PluginSettings.blacklist, Imabw.javaClass.classLoader)
+                        ?.lines()
+                        ?.toSet()
+                        ?: emptySet<String>()
+            else emptySet<String>()
+            App.loadPlugins(blacklist)
         }
+
+        addProxy(Manager)
     }
 
-    override fun createForm(): Performer {
-        Ixin.mnemonicEnable = UIConfig.isMnemonicEnable
-        Ixin.setAntiAliasing(UIConfig.isAntiAliasing)
-        if (UIConfig.isWindowDecorated) {
+    override fun createForm(): Viewer {
+        Ixin.mnemonicEnable = UISettings.mnemonicEnable
+        Ixin.setAntiAliasing(UISettings.antiAliasing)
+        if (UISettings.windowDecorated) {
             Ixin.setWindowDecorated(true)
         }
-        Ixin.setLafTheme(UIConfig.lafTheme)
-        if (UIConfig.globalFont != null) {
-            Ixin.setGlobalFont(UIConfig.globalFont!!)
+        Ixin.setLafTheme(UISettings.lafTheme)
+        if (UISettings.globalFont != null) {
+            Ixin.setGlobalFont(UISettings.globalFont!!)
         }
-        proxy = CommandDispatcher(arrayOf(this, Manager, Performer))
-        Performer.statusText = tr("viewer.status.ready")
-        return Performer
+        val viewer = Viewer()
+        viewer.statusText = tr("viewer.status.ready")
+        viewer.isVisible = true
+        return viewer
+    }
+
+    fun addProxy(proxy: Any) {
+        (this.proxy as CommandDispatcher).addProxy(proxy)
     }
 
     @Command(HELP_CONTENTS)

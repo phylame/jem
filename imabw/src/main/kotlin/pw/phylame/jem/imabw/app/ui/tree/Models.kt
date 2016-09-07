@@ -39,7 +39,7 @@ fun Chapter.pathToRoot(): Array<Chapter> {
     return paths.toTypedArray()
 }
 
-val TreePath.myChapter: Chapter get() = lastPathComponent as Chapter
+val TreePath.myChapter: Chapter? get() = lastPathComponent as? Chapter
 
 class BookModel(var book: Chapter? = null) : TreeModel {
     private val listeners = EventListenerList()

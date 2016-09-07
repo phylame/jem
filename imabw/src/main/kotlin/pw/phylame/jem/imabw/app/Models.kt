@@ -18,10 +18,25 @@
 
 package pw.phylame.jem.imabw.app
 
+import pw.phylame.jem.core.Book
+import pw.phylame.jem.core.Chapter
 import pw.phylame.qaf.core.App
 import pw.phylame.qaf.ixin.Command
 
 object Manager {
+    @Command
+    fun openFile() {
+        val book = Book("Example")
+        for (i in 1..10) {
+            val ch = Chapter("Chapter $i")
+            if (i % 3 == 0) {
+                ch.append(Chapter("Chapter $i.1"))
+            }
+            book.append(ch)
+        }
+        Imabw.form.tree.updateBook(book)
+    }
+
     @Command
     fun exitApp() {
         App.exit(0)

@@ -38,6 +38,7 @@ const val MAX_HISTORY_LIMITS = 28
 const val DEFAULT_HISTORY_LIMITS = 18
 const val DEFAULT_LAF_THEME = Ixin.DEFAULT_THEME_NAME
 const val DEFAULT_ICON_SET = "default"
+const val DEFAULT_KEY_BINDINGS = "defalut"
 
 // viewer operations
 const val SHOW_TOOL_BAR = "showToolbar"
@@ -55,18 +56,18 @@ const val FILE_DETAILS = "fileDetails"
 const val CLEAR_HISTORY = "clearHistory"
 
 // edit operations
-const val EDIT_UNDO = "editUndo"
-const val EDIT_REDO = "editRedo"
-const val EDIT_CUT = "editCut"
-const val EDIT_COPY = "editCopy"
-const val EDIT_PASTE = "editPaste"
-const val EDIT_DELETE = "editDelete"
-const val EDIT_SELECT_ALL = "editSelectAll"
+const val EDIT_UNDO = "undo"
+const val EDIT_REDO = "redo"
+const val EDIT_CUT = "cut"
+const val EDIT_COPY = "copy"
+const val EDIT_PASTE = "paste"
+const val EDIT_DELETE = "delete"
+const val EDIT_SELECT_ALL = "selectAll"
 
 val EDIT_COMMANDS = arrayOf(EDIT_UNDO, EDIT_REDO, EDIT_CUT, EDIT_COPY, EDIT_PASTE, EDIT_DELETE, EDIT_SELECT_ALL)
 
 // find operations
-const val FIND_CONTENT = "findContent"
+const val FIND_CONTENT = "find"
 const val FIND_NEXT = "findNext"
 const val FIND_PREVIOUS = "findPrevious"
 const val GOTO_POSITION = "gotoPosition"
@@ -83,6 +84,8 @@ const val JOIN_LINES = "joinLines"
 
 val TEXT_COMMANDS = arrayOf(REPLACE_TEXT, TO_LOWER, TO_UPPER, TO_TITLED, TO_CAPITALIZED, JOIN_LINES)
 
+const val moreTools = "moreTools"
+
 // book operations
 const val NEW_CHAPTER = "newChapter"
 const val INSERT_CHAPTER = "insertChapter"
@@ -91,10 +94,10 @@ const val EXPORT_CHAPTER = "exportChapter"
 const val RENAME_CHAPTER = "renameChapter"
 const val MERGE_CHAPTER = "mergeChapter"
 const val LOCK_CONTENTS = "lockContents"
-const val CHAPTER_PROPERTIES = "chapterProperties"
-const val BOOK_EXTENSIONS = "bookExtensions"
+const val EDIT_ATTRIBUTES = "editAttributes"
+const val EDIT_EXTENSIONS = "editExtensions"
 
-val TREE_COMMANDS = arrayOf(NEW_CHAPTER, INSERT_CHAPTER, IMPORT_CHAPTER, EXPORT_CHAPTER, RENAME_CHAPTER, MERGE_CHAPTER, LOCK_CONTENTS, CHAPTER_PROPERTIES, BOOK_EXTENSIONS)
+val TREE_COMMANDS = arrayOf(NEW_CHAPTER, INSERT_CHAPTER, IMPORT_CHAPTER, EXPORT_CHAPTER, RENAME_CHAPTER, MERGE_CHAPTER, LOCK_CONTENTS, EDIT_ATTRIBUTES, EDIT_EXTENSIONS)
 
 // tab operations
 const val GOTO_NEXT_TAB = "nextTab"

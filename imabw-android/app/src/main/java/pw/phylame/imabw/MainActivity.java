@@ -9,6 +9,9 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 public class MainActivity extends AppCompatActivity {
 
     @Override
@@ -26,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+        Supplier<String> s = () -> "";
     }
 
     @Override

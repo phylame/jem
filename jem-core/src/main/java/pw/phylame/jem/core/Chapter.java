@@ -22,11 +22,12 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
+import pw.phylame.jem.util.VariantMap;
 import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.jem.util.text.Text;
-import pw.phylame.jem.util.VariantMap;
 import pw.phylame.ycl.util.Validate;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -144,7 +145,7 @@ public class Chapter implements Iterable<Chapter>, Cloneable {
     /**
      * Parent of current chapter.
      */
-    private Chapter parent = null;
+    private WeakReference<Chapter> parent = null;
 
     /**
      * Returns parent chapter of current chapter.
@@ -152,7 +153,11 @@ public class Chapter implements Iterable<Chapter>, Cloneable {
      * @return the parent or <code>null</code> if not present
      */
     public final Chapter getParent() {
-        return parent;
+        return parent != null ? parent.get() : null;
+    }
+
+    private void setParent(Chapter parent) {
+        this.parent = new WeakReference<>(parent);
     }
 
     /**
@@ -161,9 +166,9 @@ public class Chapter implements Iterable<Chapter>, Cloneable {
     protected List<Chapter> children = new ArrayList<>();
 
     private Chapter checkChapter(@NonNull Chapter chapter) {
-        Validate.require(chapter.parent == null, "Chapter already in a certain section: " + chapter);
+        Validate.require(chapter.getParent() == null, "Chapter already in a certain section: " + chapter);
         Validate.require(chapter != this, "Cannot add self to sub chapter list " + chapter);
-        Validate.require(chapter != parent, "Cannot add parent chapter to its sub chapter list: " + chapter);
+        Validate.require(chapter != getParent(), "Cannot add parent chapter to its sub chapter list: " + chapter);
         return chapter;
     }
 
@@ -175,7 +180,7 @@ public class Chapter implements Iterable<Chapter>, Cloneable {
      */
     public final void append(Chapter chapter) {
         children.add(checkChapter(chapter));
-        chapter.parent = this;
+        chapter.setParent(this);
     }
 
     /**
@@ -189,7 +194,7 @@ public class Chapter implements Iterable<Chapter>, Cloneable {
      */
     public final void insert(int index, Chapter chapter) {
         children.add(index, checkChapter(chapter));
-        chapter.parent = this;
+        chapter.setParent(this);
     }
 
     /**
@@ -201,7 +206,7 @@ public class Chapter implements Iterable<Chapter>, Cloneable {
      * @throws NullPointerException if the <code>chapter</code> is <code>null</code>
      */
     public final int indexOf(@NonNull Chapter chapter) {
-        return chapter.parent != this ? -1 : children.indexOf(chapter);
+        return chapter.getParent() != this ? -1 : children.indexOf(chapter);
     }
 
     /**
@@ -227,7 +232,7 @@ public class Chapter implements Iterable<Chapter>, Cloneable {
      */
     public final boolean remove(@NonNull Chapter chapter) {
         // not contained in children list
-        if (chapter.parent != this) {  // to be faster
+        if (chapter.getParent() != this) {  // to be faster
             return false;
         }
         if (children.remove(chapter)) { // contained in list
@@ -248,7 +253,7 @@ public class Chapter implements Iterable<Chapter>, Cloneable {
      */
     public final Chapter replace(int index, Chapter chapter) {
         Chapter previous = children.set(index, checkChapter(chapter));
-        chapter.parent = this;
+        chapter.setParent(this);
         previous.parent = null;
         return previous;
     }

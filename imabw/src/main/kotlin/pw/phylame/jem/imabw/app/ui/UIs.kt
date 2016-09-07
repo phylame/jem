@@ -18,27 +18,81 @@
 
 package pw.phylame.jem.imabw.app.ui
 
+import pw.phylame.jem.core.Chapter
 import pw.phylame.jem.imabw.app.*
+import pw.phylame.jem.imabw.app.ui.editor.TabbedEditor
 import pw.phylame.jem.imabw.app.ui.tree.ContentsTree
 import pw.phylame.qaf.core.Settings
 import pw.phylame.qaf.core.tr
 import pw.phylame.qaf.ixin.*
 import java.awt.BorderLayout
+import java.awt.event.ActionEvent
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
-import javax.swing.JPopupMenu
+import javax.swing.JComponent
 import javax.swing.JSplitPane
 import javax.swing.WindowConstants
 
-object Performer : Form(tr("app.name"), Settings("$SETTINGS_HOME/snap")) {
-    private const val DIVIDER_SIZE = "form.divider.size"
-    private const val DIVIDER_LOCATION = "form.divider.location"
-    private const val SIDE_BAR_VISIBLE = "form.sidebar.visible"
+interface Editable {
+    val viewer: Viewer
 
-    val dividerSize = 7
-    val dividerLocation = 171
+    fun undo()
 
-    private lateinit var splitPane: JSplitPane
+    fun redo()
+
+    fun cut()
+
+    fun copy()
+
+    fun paste()
+
+    fun delete()
+
+    fun selectAll()
+
+    fun find()
+
+    fun findNext()
+
+    fun findPrevious()
+
+    fun gotoPosition()
+
+    fun updateEditActions(enable: Boolean) {
+        val viewer = viewer
+        for (command in EDIT_COMMANDS) {
+            viewer.actions[command]?.isEnabled = enable
+        }
+    }
+
+    fun updateFindActions(enable: Boolean) {
+        val viewer = viewer
+        for (command in FIND_COMMANDS) {
+            viewer.actions[command]?.isEnabled = enable
+        }
+    }
+}
+
+class Viewer() : Form(tr("app.name"), Settings("$SETTINGS_HOME/snap")) {
+    companion object {
+        private const val DIVIDER_SIZE = "form.divider.size"
+        private const val DIVIDER_LOCATION = "form.divider.location"
+        private const val SIDE_BAR_VISIBLE = "form.sidebar.visible"
+
+        private const val dividerSize = 7
+        private const val dividerLocation = 171
+    }
+
+    lateinit var splitPane: JSplitPane
+        private set
+
+    lateinit var tree: ContentsTree
+        private set
+
+    lateinit var editor: TabbedEditor
+        private set
+
+    private var activeComponent: JComponent? = null
 
     override fun init() {
         defaultCloseOperation = WindowConstants.DO_NOTHING_ON_CLOSE
@@ -48,18 +102,32 @@ object Performer : Form(tr("app.name"), Settings("$SETTINGS_HOME/snap")) {
             }
         })
         iconImage = imageFor(tr("app.icon"))
+        createActions()
         createComponents(JSONDesigner(DESIGNER_NAME), Imabw)
         createContent()
         super.init()
         prepare()
-        isVisible = true
+        Imabw.addProxy(this)
+    }
+
+    private fun createActions() {
+        for (cmd in EDIT_COMMANDS) {
+            +EditAction(cmd)
+        }
+        for (cmd in FIND_COMMANDS) {
+            +EditAction(cmd)
+        }
     }
 
     private fun createContent() {
         splitPane = JSplitPane()
-        ContentsTree.init(this)
-        splitPane.leftComponent = ContentsTree
+        splitPane.dividerSize = snap?.get(DIVIDER_SIZE) ?: dividerSize
+        splitPane.dividerLocation = snap?.get(DIVIDER_LOCATION) ?: dividerLocation
 
+        tree = ContentsTree(this)
+        editor = TabbedEditor(this)
+
+        splitPane.leftComponent = tree
         contentPane.add(splitPane, BorderLayout.CENTER)
     }
 
@@ -68,14 +136,19 @@ object Performer : Form(tr("app.name"), Settings("$SETTINGS_HOME/snap")) {
         if (toolbar != null) {
             toolbar.componentPopupMenu = createPopupMenu(arrayOf(
                     Item(LOCK_TOOL_BAR, selected = snap?.get(TOOL_BAR_LOCKED) ?: true, style = Style.CHECK),
-                    Item(HIDE_TOOL_BAR_TEXT, selected = snap?.get(TOOL_BAR_TEXT_HIDDEN) ?: true, style = Style.CHECK)), title)
-            actions [SHOW_TOOL_BAR]?.isSelected = toolbar.isVisible
+                    Item(HIDE_TOOL_BAR_TEXT, selected = snap?.get(TOOL_BAR_TEXT_HIDDEN) ?: true, style = Style.CHECK)),
+                    title)
+
+            actions[SHOW_TOOL_BAR]?.isSelected = toolbar.isVisible
             actions[LOCK_TOOL_BAR]?.isSelected = toolbar.isLocked
         }
         val statusbar = statusBar
         if (statusbar != null) {
             actions[SHOW_STATUS_BAR]?.isSelected = statusbar.isVisible
         }
+
+        isSidebarVisible = snap?.get(SIDE_BAR_VISIBLE) ?: true
+        actions[SIDE_BAR_VISIBLE]?.isSelected = tree.isVisible
     }
 
     var isSidebarVisible: Boolean get() = true
@@ -107,8 +180,14 @@ object Performer : Form(tr("app.name"), Settings("$SETTINGS_HOME/snap")) {
         }
     }
 
-    fun createPopupMenu(items: Array<Item>, label: String = ""): JPopupMenu =
-            JPopupMenu(label).addItems(items, actions, Imabw, form = this)
+    fun updateBook(chapter: Chapter) {
+        tree.updateBook(chapter)
+        updateTiele()
+    }
+
+    fun updateTiele() {
+
+    }
 
     @Command(SHOW_TOOL_BAR)
     fun toggleToolbar() {
@@ -145,5 +224,15 @@ object Performer : Form(tr("app.name"), Settings("$SETTINGS_HOME/snap")) {
     @Command(SHOW_SIDE_BAR)
     fun toggleSidebar() {
 
+    }
+
+    private inner class EditAction(val id: String) : IAction(id) {
+        override fun actionPerformed(e: ActionEvent) {
+            println(id)
+            val comp = activeComponent
+            if (comp == null || comp !is Editable) {
+                return
+            }
+        }
     }
 }

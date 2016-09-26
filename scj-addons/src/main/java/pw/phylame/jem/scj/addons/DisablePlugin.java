@@ -22,8 +22,8 @@ public class DisablePlugin extends AbstractPlugin implements Initializer, Comman
         sci.addOption(Option.builder(OPTION)
                 .longOpt("disable-plugin")
                 .hasArg()
-                .argName(M.tr("disablePlugin.argName"))
-                .desc(M.tr("disablePlugin.tip"))
+                .argName(M._("disablePlugin.argName"))
+                .desc(M._("disablePlugin.tip"))
                 .build(), this);
     }
 

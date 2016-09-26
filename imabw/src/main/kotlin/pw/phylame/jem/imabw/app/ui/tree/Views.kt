@@ -38,7 +38,6 @@ import javax.swing.tree.TreePath
 
 class ContentsTree(override val viewer: Viewer) : JXPanel(BorderLayout()), Editable {
 
-
     private var model = BookModel()
 
     lateinit var tree: JXTree

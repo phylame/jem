@@ -58,8 +58,8 @@ public class LogSetter extends AbstractPlugin implements Initializer {
         sci.addOption(Option.builder(OPTION)
                 .longOpt(OPTION_LONG)
                 .hasArg()
-                .argName(M.tr("logSetter.argName"))
-                .desc(M.tr("help.setLogLevel", makeLevelList(), level))
+                .argName(M._("logSetter.argName"))
+                .desc(M._("help.setLogLevel", makeLevelList(), level))
                 .build(), this);
     }
 

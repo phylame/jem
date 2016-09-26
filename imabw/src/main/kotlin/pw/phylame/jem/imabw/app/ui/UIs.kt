@@ -108,6 +108,7 @@ class Viewer() : Form(tr("app.name"), Settings("$SETTINGS_HOME/snap")) {
         super.init()
         prepare()
         Imabw.addProxy(this)
+        activeComponent = tree
     }
 
     private fun createActions() {
@@ -228,11 +229,11 @@ class Viewer() : Form(tr("app.name"), Settings("$SETTINGS_HOME/snap")) {
 
     private inner class EditAction(val id: String) : IAction(id) {
         override fun actionPerformed(e: ActionEvent) {
-            println(id)
             val comp = activeComponent
             if (comp == null || comp !is Editable) {
                 return
             }
+            comp.javaClass.getMethod(id).invoke(comp)
         }
     }
 }

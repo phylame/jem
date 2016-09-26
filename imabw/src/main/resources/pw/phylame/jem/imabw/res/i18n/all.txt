@@ -1,0 +1,5 @@
+# List all supported languages, UTF-8 requested.
+# Comment line starts with "#"
+
+zh-CN
+en-US

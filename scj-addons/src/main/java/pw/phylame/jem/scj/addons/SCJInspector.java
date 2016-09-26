@@ -19,7 +19,7 @@
 package pw.phylame.jem.scj.addons;
 
 import static java.lang.System.out;
-import static pw.phylame.jem.scj.addons.M.tr;
+import static pw.phylame.jem.scj.addons.M._;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -50,12 +50,12 @@ public class SCJInspector extends AbstractPlugin {
 
     @Override
     public void init() {
-        sci.addOption(new Option("V", "view-context", false, tr("help.listContext")), new Command() {
+        sci.addOption(new Option("V", "view-context", false, _("help.listContext")), new Command() {
             @Override
             public int execute(CLIDelegate delegate) {
                 val context = sci.getContext();
                 if (context.isEmpty()) {
-                    app.echo(tr("listContext.emptyContext"));
+                    app.echo(_("listContext.emptyContext"));
                 } else {
                     for (val e : context.entrySet()) {
                         out.printf("%s[%s]=%s\n", e.getKey(), e.getValue().getClass().getSimpleName(), e.getValue());
@@ -64,18 +64,18 @@ public class SCJInspector extends AbstractPlugin {
                 return 0;
             }
         });
-        sci.addOption(new Option("U", "list-plugins", false, tr("help.listPlugins")), new Command() {
+        sci.addOption(new Option("U", "list-plugins", false, _("help.listPlugins")), new Command() {
             @Override
             public int execute(CLIDelegate delegate) {
                 val plugins = app.getPlugins().values();
-                out.println(tr("listPlugins.tip", plugins.size()));
+                out.println(_("listPlugins.tip", plugins.size()));
                 for (val plugin : plugins) {
                     printPlugin(plugin);
                 }
                 return 0;
             }
         });
-        sci.addOption(new Option("C", "list-config", false, tr("help.listConfig")), new Command() {
+        sci.addOption(new Option("C", "list-config", false, _("help.listConfig")), new Command() {
             @Override
             public int execute(CLIDelegate delegate) {
                 config.forEach(new Function1<Map.Entry<String, String>, Unit>() {
@@ -92,7 +92,7 @@ public class SCJInspector extends AbstractPlugin {
                 .numberOfArgs(2)
                 .argName(app.tr("help.kvName"))
                 .valueSeparator()
-                .desc(tr("help.setConfig"))
+                .desc(_("help.setConfig"))
                 .build(), new ConfigSetter());
     }
 
@@ -132,7 +132,7 @@ public class SCJInspector extends AbstractPlugin {
                             @Override
                             public Boolean apply(String i) {
                                 if (Level.forName(i, null) == null) {
-                                    app.error(tr("logSetter.invalidLevel", i, LogSetter.makeLevelList()));
+                                    app.error(_("logSetter.invalidLevel", i, LogSetter.makeLevelList()));
                                     return false;
                                 }
                                 return true;

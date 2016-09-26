@@ -81,7 +81,7 @@
           "style": "check"
         },
         null,
-        "editAttributes", "viewExtensions"
+        "editAttributes", "editExtensions"
       ]
     },
     {

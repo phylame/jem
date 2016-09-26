@@ -19,7 +19,7 @@
 package pw.phylame.jem.formats.jar;
 
 import pw.phylame.jem.epm.base.ZipOutConfig;
-import pw.phylame.jem.epm.util.config.Mapped;
+import pw.phylame.jem.epm.util.config.Configured;
 import pw.phylame.jem.epm.util.text.TextConfig;
 import pw.phylame.jem.util.Build;
 
@@ -32,7 +32,7 @@ public class JarOutConfig extends ZipOutConfig {
     public static final String TEXT_CONFIG = "textConfig";
     public static final String VENDOR = "vendor";
 
-    @Mapped(JAR_TEMPLATE)
+    @Configured(JAR_TEMPLATE)
     public String jarTemplate = JAR.JAR_TEMPLATE;
 
     /**
@@ -40,12 +40,12 @@ public class JarOutConfig extends ZipOutConfig {
      *
      * @see TextConfig
      */
-    @Mapped(TEXT_CONFIG)
+    @Configured(TEXT_CONFIG)
     public TextConfig textConfig = new TextConfig();
 
     /**
      * Vendor message of the JAR.
      */
-    @Mapped(VENDOR)
+    @Configured(VENDOR)
     public String vendor = Build.VENDOR;
 }

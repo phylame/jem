@@ -26,7 +26,7 @@ import pw.phylame.jem.core.Chapter;
 import pw.phylame.jem.epm.base.AbstractParser;
 import pw.phylame.jem.epm.util.FileDeleter;
 import pw.phylame.jem.epm.util.ParserException;
-import pw.phylame.jem.formats.util.JFMessages;
+import pw.phylame.jem.formats.util.M;
 import pw.phylame.jem.util.flob.Flobs;
 import pw.phylame.jem.util.text.Text;
 import pw.phylame.jem.util.text.Texts;
@@ -77,7 +77,7 @@ public class TxtParser extends AbstractParser<Reader, TxtInConfig> {
         try {
             pattern = Pattern.compile(config.pattern, config.patternFlags);
         } catch (PatternSyntaxException e) {
-            throw new ParserException(JFMessages.tr("txt.parse.invalidPattern", config.pattern), e);
+            throw new ParserException(M.tr("txt.parse.invalidPattern", config.pattern), e);
         }
 
         val triple = cacheContent(reader);

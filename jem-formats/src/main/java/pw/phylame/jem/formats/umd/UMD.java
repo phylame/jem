@@ -19,7 +19,7 @@
 package pw.phylame.jem.formats.umd;
 
 
-import pw.phylame.jem.formats.util.JFMessages;
+import pw.phylame.jem.formats.util.M;
 
 /**
  * Defines constants and methods.
@@ -52,7 +52,7 @@ public final class UMD {
                 key = "comic";
                 break;
         }
-        return JFMessages.tr("umd.info." + key);
+        return M.tr("umd.info." + key);
     }
 
     // content type

@@ -28,7 +28,7 @@ import pw.phylame.jem.core.Chapter;
 import pw.phylame.jem.epm.base.BinaryParser;
 import pw.phylame.jem.epm.util.ParserException;
 import pw.phylame.jem.epm.util.config.NonConfig;
-import pw.phylame.jem.formats.util.JFMessages;
+import pw.phylame.jem.formats.util.M;
 import pw.phylame.jem.util.flob.Flobs;
 import pw.phylame.jem.util.text.AbstractText;
 import pw.phylame.ycl.io.PathUtils;
@@ -56,12 +56,12 @@ public class UmdParser extends BinaryParser<NonConfig> {
 
     @Override
     protected void onBadInput() throws ParserException {
-        throw new ParserException(JFMessages.tr("umd.parse.invalidFile"));
+        throw new ParserException(M.tr("umd.parse.invalidFile"));
     }
 
     @Override
     protected void onBadInput(String key, Object... args) throws ParserException {
-        throw new ParserException(JFMessages.tr(key, args));
+        throw new ParserException(M.tr(key, args));
     }
 
     public Book parse(@NonNull RandomAccessFile file) throws IOException, ParserException {

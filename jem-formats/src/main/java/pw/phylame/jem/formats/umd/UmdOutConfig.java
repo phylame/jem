@@ -20,7 +20,7 @@ package pw.phylame.jem.formats.umd;
 
 
 import pw.phylame.jem.epm.util.config.AbstractConfig;
-import pw.phylame.jem.epm.util.config.Mapped;
+import pw.phylame.jem.epm.util.config.Configured;
 import pw.phylame.jem.epm.util.text.TextConfig;
 import pw.phylame.jem.util.flob.Flob;
 
@@ -41,13 +41,13 @@ public class UmdOutConfig extends AbstractConfig {
      *
      * @see TextConfig
      */
-    @Mapped(TEXT_CONFIG)
+    @Configured(TEXT_CONFIG)
     public TextConfig textConfig = new TextConfig();
 
     /**
      * Output UMD type, may be {@link UMD#TEXT}, {@link UMD#CARTOON}, {@link UMD#COMIC}
      */
-    @Mapped(UMD_TYPE)
+    @Configured(UMD_TYPE)
     public int umdType = UMD.TEXT;
 
     /**
@@ -57,13 +57,13 @@ public class UmdOutConfig extends AbstractConfig {
      * <p><strong>NOTE:</strong> this value will be available when <tt>umdType</tt>
      * is {@link UMD#CARTOON}.
      */
-    @Mapped(CARTOON_IMAGES)
+    @Configured(CARTOON_IMAGES)
     public List<Flob> cartoonImages = null;
 
     /**
      * Format of image in <tt>cartoonImages</tt>, ex: jpg, png, bmp..
      */
-    @Mapped(IMAGE_FORMAT)
+    @Configured(IMAGE_FORMAT)
     public String imageFormat = "jpg";
 
     @Override

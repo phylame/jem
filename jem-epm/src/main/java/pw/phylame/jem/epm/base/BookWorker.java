@@ -34,6 +34,11 @@ import java.util.Map;
  */
 abstract class BookWorker<C extends EpmConfig> {
     /**
+     * Key for storing meta data of book in extensions.
+     */
+    public static final String META_KEY = "book.ext.meta";
+
+    /**
      * Name of the parser or maker.
      */
     @Getter

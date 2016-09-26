@@ -32,14 +32,14 @@ public final class TestUtils {
         try {
             return DateUtils.parse(str, format);
         } catch (ParseException e) {
-            throw new ParserException(JFMessages.tr("err.text.invalidDate", str, format), e);
+            throw new ParserException(M.tr("err.text.invalidDate", str, format), e);
         }
     }
 
     public static Locale parseLocale(String str) throws ParserException {
         val locale = Converters.parse(str, Locale.class);
         if (locale == null) {
-            throw new ParserException(JFMessages.tr("err.text.invalidLocale", str));
+            throw new ParserException(M.tr("err.text.invalidLocale", str));
         } else {
             return locale;
         }

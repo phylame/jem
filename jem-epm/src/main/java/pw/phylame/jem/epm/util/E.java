@@ -16,23 +16,20 @@
  * limitations under the License.
  */
 
-package pw.phylame.jem.formats.util;
+package pw.phylame.jem.epm.util;
 
-import pw.phylame.ycl.util.Linguist;
+import pw.phylame.jem.epm.util.config.BadConfigException;
 
-public final class JFMessages {
-    private JFMessages() {
+public class E extends pw.phylame.ycl.util.Exceptions {
+    public static BadConfigException forBadConfig(String key, Object value, String format, Object... args) {
+        return new BadConfigException(key, value, String.format(format, args));
     }
 
-    private static final String MESSAGES_PATH = "pw/phylame/jem/formats/messages";
-
-    private static final Linguist linguist = new Linguist(MESSAGES_PATH);
-
-    public static String tr(String key) {
-        return linguist.tr(key);
+    public static ParserException forParser(String format, Object... args) {
+        return new ParserException(String.format(format, args));
     }
 
-    public static String tr(String key, Object... args) {
-        return linguist.tr(key, args);
+    public static MakerException forMaker(String format, Object... args) {
+        return new MakerException(String.format(format, args));
     }
 }

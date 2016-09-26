@@ -25,7 +25,7 @@ import pw.phylame.jem.epm.base.ZipMaker;
 import pw.phylame.jem.epm.util.MakerException;
 import pw.phylame.jem.epm.util.ZipUtils;
 import pw.phylame.jem.formats.epub.writer.EpubWriterFactory;
-import pw.phylame.jem.formats.util.JFMessages;
+import pw.phylame.jem.formats.util.M;
 
 import java.io.IOException;
 import java.util.zip.ZipOutputStream;
@@ -45,7 +45,7 @@ public class EpubMaker extends ZipMaker<EpubOutConfig> {
         }
         val writer = EpubWriterFactory.getWriter(config.version);
         if (writer == null) {
-            throw new MakerException(JFMessages.tr("epub.make.unsupportedVersion", config.version));
+            throw new MakerException(M.tr("epub.make.unsupportedVersion", config.version));
         }
         writeMIME(zipout);
         writer.write(book, config, zipout);

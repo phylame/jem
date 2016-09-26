@@ -28,7 +28,7 @@ import pw.phylame.jem.core.Chapter;
 import pw.phylame.jem.epm.base.BinaryParser;
 import pw.phylame.jem.epm.util.ParserException;
 import pw.phylame.jem.epm.util.config.NonConfig;
-import pw.phylame.jem.formats.util.JFMessages;
+import pw.phylame.jem.formats.util.M;
 import pw.phylame.jem.util.text.AbstractText;
 import pw.phylame.ycl.io.ByteUtils;
 import pw.phylame.ycl.io.ZLibUtils;
@@ -48,12 +48,12 @@ public class Ebk2Parser extends BinaryParser<NonConfig> {
 
     @Override
     protected void onBadInput() throws ParserException {
-        throw new ParserException(JFMessages.tr("ebk.parse.invalidFile"));
+        throw new ParserException(M.tr("ebk.parse.invalidFile"));
     }
 
     @Override
     protected void onBadInput(String key, Object... args) throws ParserException {
-        throw new ParserException(JFMessages.tr(key, args));
+        throw new ParserException(M.tr(key, args));
     }
 
     @Override

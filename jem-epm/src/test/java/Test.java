@@ -16,10 +16,10 @@
  * limitations under the License.
  */
 
-import pw.phylame.jem.epm.util.JEMessages;
+import pw.phylame.jem.epm.util.M;
 
 public class Test {
     public static void main(String[] args) {
-        System.out.println(JEMessages.tr("err.zip.noEntry", "hello", "/pwd"));
+        System.out.println(M.tr("err.zip.noEntry", "hello", "/pwd"));
     }
 }

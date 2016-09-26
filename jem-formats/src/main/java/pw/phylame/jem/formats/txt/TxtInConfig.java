@@ -19,8 +19,8 @@
 package pw.phylame.jem.formats.txt;
 
 import pw.phylame.jem.epm.util.config.AbstractConfig;
-import pw.phylame.jem.epm.util.config.Mapped;
-import pw.phylame.jem.formats.util.JFMessages;
+import pw.phylame.jem.epm.util.config.Configured;
+import pw.phylame.jem.formats.util.M;
 
 import java.util.regex.Pattern;
 
@@ -38,30 +38,30 @@ public class TxtInConfig extends AbstractConfig {
     /**
      * Text encoding of input file
      */
-    @Mapped(ENCODING)
+    @Configured(ENCODING)
     public String encoding = TXT.defaultEncoding;
 
     /**
      * Chapter title regex pattern
      */
-    @Mapped(PATTERN)
-    public String pattern = JFMessages.tr("txt.parse.pattern");
+    @Configured(PATTERN)
+    public String pattern = M.tr("txt.parse.pattern");
 
     /**
      * Regex pattern flag.
      */
-    @Mapped(PATTERN_FLAGS)
+    @Configured(PATTERN_FLAGS)
     public int patternFlags = Pattern.MULTILINE;
 
     /**
      * Remove leading and tailing space of chapter title.
      */
-    @Mapped(TRIM_CHAPTER_TITLE)
+    @Configured(TRIM_CHAPTER_TITLE)
     public boolean trimChapterTitle = true;
 
     /**
      * Title for new book(title of book cannot be parsed from TXT file)
      */
-    @Mapped(BOOK_TITLE)
+    @Configured(BOOK_TITLE)
     public String title = "";
 }

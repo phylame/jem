@@ -24,10 +24,11 @@ import pw.phylame.jem.core.Attributes;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.core.Chapter;
 import pw.phylame.jem.epm.base.AbstractMaker;
+import pw.phylame.jem.epm.util.E;
 import pw.phylame.jem.epm.util.MakerException;
 import pw.phylame.jem.epm.util.NumberUtils;
 import pw.phylame.jem.epm.util.text.TextRender;
-import pw.phylame.jem.formats.util.JFMessages;
+import pw.phylame.jem.formats.util.M;
 import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.ycl.io.BufferedRandomAccessFile;
 import pw.phylame.ycl.io.PathUtils;
@@ -71,7 +72,7 @@ public class UmdMaker extends AbstractMaker<UmdOutConfig> {
                 makeComic(tuple);
                 break;
             default:
-                throw new MakerException(JFMessages.tr("umd.make.invalidType", config.umdType));
+                throw new MakerException(M.tr("umd.make.invalidType", config.umdType));
         }
     }
 
@@ -144,7 +145,7 @@ public class UmdMaker extends AbstractMaker<UmdOutConfig> {
     }
 
     private void makeComic(Tuple tuple) throws MakerException {
-        throw new MakerException(JFMessages.tr("umd.make.unsupportedType", UMD.COMIC));
+        throw new MakerException(M.tr("umd.make.unsupportedType", UMD.COMIC));
     }
 
     private void writeChunk(int id, boolean hasAddition, byte[] data, Tuple tuple) throws IOException {

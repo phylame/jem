@@ -19,7 +19,7 @@
 package pw.phylame.jem.formats.pmab;
 
 import pw.phylame.jem.epm.base.ZipInConfig;
-import pw.phylame.jem.epm.util.config.Mapped;
+import pw.phylame.jem.epm.util.config.Configured;
 
 /**
  * Config for parse PMAB file.
@@ -33,18 +33,18 @@ public class PmabInConfig extends ZipInConfig {
     /**
      * default encoding for chapter and intro text
      */
-    @Mapped(TEXT_ENCODING)
+    @Configured(TEXT_ENCODING)
     public String textEncoding = PMAB.defaultEncoding;
 
     /**
      * PMAB 2: when intro encoding is not existed, use chapter encoding
      */
-    @Mapped(USE_CHAPTER_ENCODING)
+    @Configured(USE_CHAPTER_ENCODING)
     public boolean useChapterEncoding = true;
 
     /**
      * default date format if the format in PMAB is unknown
      **/
-    @Mapped(DATE_FORMAT)
+    @Configured(DATE_FORMAT)
     public String dateFormat = "yyyy-M-d H:m:S";
 }

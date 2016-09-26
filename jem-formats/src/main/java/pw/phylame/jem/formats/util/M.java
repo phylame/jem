@@ -16,24 +16,23 @@
  * limitations under the License.
  */
 
-package pw.phylame.jem.epm.util;
+package pw.phylame.jem.formats.util;
 
-import lombok.NonNull;
 import pw.phylame.ycl.util.Linguist;
 
-public final class JEMessages {
-    private JEMessages() {
+public final class M {
+    private M() {
     }
 
-    private static final String MESSAGES_PATH = "pw/phylame/jem/epm/util/messages";
+    private static final String MESSAGES_PATH = "pw/phylame/jem/formats/messages";
 
     private static final Linguist linguist = new Linguist(MESSAGES_PATH);
 
-    public static String tr(@NonNull String key) {
+    public static String tr(String key) {
         return linguist.tr(key);
     }
 
-    public static String tr(@NonNull String key, Object... args) {
+    public static String tr(String key, Object... args) {
         return linguist.tr(key, args);
     }
 }

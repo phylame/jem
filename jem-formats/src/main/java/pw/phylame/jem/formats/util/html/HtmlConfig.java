@@ -19,7 +19,7 @@
 package pw.phylame.jem.formats.util.html;
 
 import pw.phylame.jem.epm.util.config.AbstractConfig;
-import pw.phylame.jem.epm.util.config.Mapped;
+import pw.phylame.jem.epm.util.config.Configured;
 
 import java.util.Map;
 
@@ -37,13 +37,13 @@ public class HtmlConfig extends AbstractConfig {
     /**
      * Encoding for writing HTML.
      */
-    @Mapped(ENCODING)
+    @Configured(ENCODING)
     public String encoding = "UTF-8";
 
     /**
      * HTML indent string.
      */
-    @Mapped(INDENT_STRING)
+    @Configured(INDENT_STRING)
     public String indentString = "\t";
 
     /**
@@ -60,18 +60,18 @@ public class HtmlConfig extends AbstractConfig {
     /**
      * Addition messages to HTML head->meta element.
      */
-    @Mapped(META_INFO)
+    @Configured(META_INFO)
     public Map<String, String> metaInfo;
 
     /**
      * HTML CSS config.
      */
-    @Mapped(STYLE_PROVIDER)
+    @Configured(STYLE_PROVIDER)
     public StyleProvider style;
 
     /**
      * When making paragraph skip empty line of <tt>TextObject</tt>.
      */
-    @Mapped(SKIP_EMPTY_LINE)
+    @Configured(SKIP_EMPTY_LINE)
     public boolean skipEmpty = true;
 }

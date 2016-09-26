@@ -24,7 +24,7 @@ import pw.phylame.jem.core.Book;
 import pw.phylame.jem.core.Chapter;
 import pw.phylame.jem.epm.util.MakerException;
 import pw.phylame.jem.formats.epub.writer.EpubWriter;
-import pw.phylame.jem.formats.util.JFMessages;
+import pw.phylame.jem.formats.util.M;
 import pw.phylame.jem.formats.util.html.HtmlRender;
 import pw.phylame.jem.formats.util.html.StyleProvider;
 import pw.phylame.jem.util.flob.Flob;
@@ -135,7 +135,7 @@ public class BookRender {
         if (cover == null) {    // no cover write intro
             writeIntroPage();
         } else {
-            val title = JFMessages.tr("epub.page.cover.title");
+            val title = M.tr("epub.page.cover.title");
             coverID = COVER_NAME + "-image";
             val href = writeImage(cover, COVER_NAME, coverID);
             if (epubConfig.smallPage) {   // for phone split to cover and intro page
@@ -161,7 +161,7 @@ public class BookRender {
         if (intro == null) {    // no book intro
             return;
         }
-        val title = JFMessages.tr("epub.page.intro.title");
+        val title = M.tr("epub.page.intro.title");
         val baseName = INTRO_NAME;
         val writer = new StringWriter();
         htmlRender.setOutput(writer);
@@ -177,7 +177,7 @@ public class BookRender {
         Text intro = Attributes.getIntro(book);
         if (intro != null) {
             val bookTitle = Attributes.getTitle(book);
-            htmlRender.renderCoverIntro(title, coverHref, bookTitle, bookTitle, JFMessages.tr("epub.page.intro.title"), intro);
+            htmlRender.renderCoverIntro(title, coverHref, bookTitle, bookTitle, M.tr("epub.page.intro.title"), intro);
         } else {
             htmlRender.renderCover(title, coverHref, title);
         }
@@ -188,7 +188,7 @@ public class BookRender {
     }
 
     private void writeToc() throws IOException {
-        val title = JFMessages.tr("epub.page.toc.title");
+        val title = M.tr("epub.page.toc.title");
         val href = TEXT_DIR + "/" + hrefOfText(TOC_NAME);
         newNaviItem(TOC_NAME, href, title, null);
         endNaviItem();
@@ -231,7 +231,7 @@ public class BookRender {
         val myHref = hrefOfText("section" + suffix);
         val links = processSection(section, suffix, myHref);
         if (parentHref != null) {
-            links.add(new HtmlRender.Link(JFMessages.tr("epub.page.contents.gotoTop"), parentHref));
+            links.add(new HtmlRender.Link(M.tr("epub.page.contents.gotoTop"), parentHref));
         }
 
         val writer = new StringWriter();

@@ -18,18 +18,22 @@
 
 package pw.phylame.jem.epm.util;
 
-import pw.phylame.jem.epm.util.config.BadConfigException;
+import lombok.NonNull;
+import pw.phylame.ycl.util.Linguist;
 
-public class Exceptions extends pw.phylame.ycl.util.Exceptions {
-    public static BadConfigException forBadConfig(String key, Object value, String format, Object... args) {
-        return new BadConfigException(key, value, String.format(format, args));
+public final class M {
+    private M() {
     }
 
-    public static ParserException forParser(String format, Object... args) {
-        return new ParserException(String.format(format, args));
+    private static final String MESSAGES_PATH = "pw/phylame/jem/epm/util/messages";
+
+    private static final Linguist linguist = new Linguist(MESSAGES_PATH);
+
+    public static String tr(@NonNull String key) {
+        return linguist.tr(key);
     }
 
-    public static MakerException forMaker(String format, Object... args) {
-        return new MakerException(String.format(format, args));
+    public static String tr(@NonNull String key, Object... args) {
+        return linguist.tr(key, args);
     }
 }

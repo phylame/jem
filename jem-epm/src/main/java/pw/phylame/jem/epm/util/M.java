@@ -21,8 +21,8 @@ package pw.phylame.jem.epm.util;
 import lombok.NonNull;
 import pw.phylame.ycl.util.Linguist;
 
-public final class JEMessages {
-    private JEMessages() {
+public final class M {
+    private M() {
     }
 
     private static final String MESSAGES_PATH = "pw/phylame/jem/epm/util/messages";

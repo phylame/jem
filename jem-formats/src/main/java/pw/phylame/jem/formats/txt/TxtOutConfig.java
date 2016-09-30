@@ -20,7 +20,7 @@ package pw.phylame.jem.formats.txt;
 
 
 import pw.phylame.jem.epm.util.config.AbstractConfig;
-import pw.phylame.jem.epm.util.config.Mapped;
+import pw.phylame.jem.epm.util.config.Configured;
 import pw.phylame.jem.epm.util.text.TextConfig;
 
 /**
@@ -39,30 +39,30 @@ public class TxtOutConfig extends AbstractConfig {
      *
      * @see TextConfig
      */
-    @Mapped(TEXT_CONFIG)
+    @Configured(TEXT_CONFIG)
     public TextConfig textConfig = new TextConfig();
 
     /**
      * Encoding for converting book text.
      */
-    @Mapped(ENCODING)
+    @Configured(ENCODING)
     public String encoding = TXT.defaultEncoding;
 
     /**
      * Text appended to header of TXT file.
      */
-    @Mapped(HEADER)
+    @Configured(HEADER)
     public String header = null;
 
     /**
      * Add addition end line separator for each chapter
      */
-    @Mapped(ADDITION_LINE)
+    @Configured(ADDITION_LINE)
     public boolean additionLine = true;
 
     /**
      * Text appended to footer of TXT file.
      */
-    @Mapped(FOOTER)
+    @Configured(FOOTER)
     public String footer = null;
 }

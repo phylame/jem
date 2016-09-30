@@ -21,8 +21,8 @@ package pw.phylame.jem.epm.util.config;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
-import pw.phylame.jem.epm.util.Exceptions;
-import pw.phylame.jem.epm.util.JEMessages;
+import pw.phylame.jem.epm.util.E;
+import pw.phylame.jem.epm.util.M;
 import pw.phylame.ycl.format.Converters;
 import pw.phylame.ycl.log.Log;
 import pw.phylame.ycl.util.CollectUtils;
@@ -82,24 +82,24 @@ public final class ConfigUtils {
                 return value;
             }
         }
-        throw Exceptions.forBadConfig(key, o, type.getName());
+        throw E.forBadConfig(key, o, type.getName());
     }
 
     @SuppressWarnings("unchecked")
     private static void fetchFields(EpmConfig config, Map<String, Object> m, String prefix) throws BadConfigException {
         Field[] fields = config.getClass().getFields();
         for (Field field : fields) {
-            val mapped = field.getAnnotation(Mapped.class);
-            if (mapped == null) {
-                Log.i(TAG, "field {0} is not mapped", field.getName());
+            val configured = field.getAnnotation(Configured.class);
+            if (configured == null) {
+                Log.i(TAG, "field {0} is not configured", field.getName());
                 continue;
             }
             if (Modifier.isStatic(field.getModifiers())) {
                 Log.i(TAG, "field {0} is static", field.getName());
-                throw new BadConfigException(mapped.value(), null,
-                        JEMessages.tr("err.config.inaccessible", field.getName(), config.getClass(), "static field is not permitted with Mapped"));
+                throw E.forBadConfig(configured.value(), null,
+                        M.tr("err.config.inaccessible", field.getName(), config.getClass(), "static field is not permitted with Configured"));
             }
-            String key = mapped.value();
+            String key = configured.value();
             if (prefix != null) {
                 key = prefix + key;
             }
@@ -118,8 +118,8 @@ public final class ConfigUtils {
                 }
                 field.set(config, value);
             } catch (IllegalAccessException e) {
-                throw Exceptions.forBadConfig(key, null,
-                        JEMessages.tr("err.config.inaccessible", config.getClass(), field.getName(), e.getMessage()));
+                throw E.forBadConfig(key, null,
+                        M.tr("err.config.inaccessible", config.getClass(), field.getName(), e.getMessage()));
             }
         }
         if (fields.length > 0 && config instanceof AdjustableConfig) {

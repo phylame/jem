@@ -19,7 +19,7 @@
 package pw.phylame.jem.formats.pmab;
 
 import pw.phylame.jem.epm.base.ZipOutConfig;
-import pw.phylame.jem.epm.util.config.Mapped;
+import pw.phylame.jem.epm.util.config.Configured;
 import pw.phylame.jem.epm.util.xml.XmlConfig;
 
 import java.util.Map;
@@ -42,50 +42,50 @@ public class PmabOutConfig extends ZipOutConfig {
     /**
      * Output PMAB version
      */
-    @Mapped(VERSION)
+    @Configured(VERSION)
     public String version = "3.0";
 
     /**
      * Directory in PMAB for storing text.
      */
-    @Mapped(TEXT_DIR)
+    @Configured(TEXT_DIR)
     public String textDir = "text";
 
     /**
      * Directory in PMAB for storing images.
      */
-    @Mapped(IMAGE_DIR)
+    @Configured(IMAGE_DIR)
     public String imageDir = "images";
 
     /**
      * Directory in PMAB for storing extra file(s).
      */
-    @Mapped(EXTRA_DIR)
+    @Configured(EXTRA_DIR)
     public String extraDir = "extras";
 
     /**
      * XML render config.
      */
-    @Mapped(XML_CONFIG)
+    @Configured(XML_CONFIG)
     public XmlConfig xmlConfig = new XmlConfig();
 
     /**
      * Encoding for converting all text in PMAB.
      */
-    @Mapped(TEXT_ENCODING)
+    @Configured(TEXT_ENCODING)
     public String textEncoding = PMAB.defaultEncoding;
 
     /**
      * Format for storing <tt>Date</tt> value.
      */
-    @Mapped(DATE_FORMAT)
+    @Configured(DATE_FORMAT)
     public String dateFormat = "yyyy-M-d";
 
     /**
      * Addition information to PMAB archive.
      * <p><strong>NOTE:</strong> The key and value stored as String.
      */
-    @Mapped(META_INFO)
+    @Configured(META_INFO)
     public Map<Object, Object> metadata = null;
 
     @Override

@@ -18,9 +18,9 @@
 
 package pw.phylame.jem.epm.util.text;
 
-import pw.phylame.jem.epm.util.JEMessages;
+import pw.phylame.jem.epm.util.M;
 import pw.phylame.jem.epm.util.config.AbstractConfig;
-import pw.phylame.jem.epm.util.config.Mapped;
+import pw.phylame.jem.epm.util.config.Configured;
 
 /**
  * Config for rendering text.
@@ -44,73 +44,73 @@ public class TextConfig extends AbstractConfig {
     /**
      * Write chapter title before chapter text.
      */
-    @Mapped(WRITE_TITLE)
+    @Configured(WRITE_TITLE)
     public boolean writeTitle = true;
 
     /**
      * Join chapter title chain with next specified separator.
      */
-    @Mapped(JOIN_TITLES)
+    @Configured(JOIN_TITLES)
     public boolean joinTitles = false;
 
     /**
      * Separator for joining title chain.
      */
-    @Mapped(TITLE_SEPARATOR)
+    @Configured(TITLE_SEPARATOR)
     public String titleSeparator = " ";
 
     /**
      * Text added before chapter text and behind of chapter title.
      */
-    @Mapped(PREFIX_TEXT)
+    @Configured(PREFIX_TEXT)
     public String prefixText = null;
 
     /**
      * Write intro text before chapter text.
      */
-    @Mapped(WRITE_INTRO)
+    @Configured(WRITE_INTRO)
     public boolean writeIntro = true;
 
     /**
      * Separator between intro text and chapter text.
      */
-    @Mapped(INTRO_SEPARATOR)
+    @Configured(INTRO_SEPARATOR)
     public String introSeparator = "-------";
 
     /**
      * Process lines in text (prepend paragraph prefix to line).
      */
-    @Mapped(FORMAT_PARAGRAPH)
+    @Configured(FORMAT_PARAGRAPH)
     public boolean formatParagraph = false;
 
     /**
      * Paragraph prefix used when formatParagraph is enable.
      */
-    @Mapped(PARAGRAPH_PREFIX)
-    public String paragraphPrefix = JEMessages.tr("text.render.paragraphPrefix");
+    @Configured(PARAGRAPH_PREFIX)
+    public String paragraphPrefix = M.tr("text.render.paragraphPrefix");
 
     /**
      * Skip empty line, (enable when formatParagraph is enable).
      */
-    @Mapped(SKIP_EMPTY_LINE)
+    @Configured(SKIP_EMPTY_LINE)
     public boolean skipEmptyLine = true;
 
     /**
      * Line separator.
      */
-    @Mapped(LINE_SEPARATOR)
+    @Configured(LINE_SEPARATOR)
     public String lineSeparator = System.getProperty("line.separator");
 
     /**
      * Text added at end of chapter text (before paddingLine),
      * append line separator to chapter text.
      */
-    @Mapped(SUFFIX_TEXT)
+    @Configured(SUFFIX_TEXT)
     public String suffixText = null;
 
     /**
      * Add a addition line separator after chapter text.
      */
-    @Mapped(PADDING_LINE)
+    @Configured(PADDING_LINE)
     public boolean paddingLine = true;
 }

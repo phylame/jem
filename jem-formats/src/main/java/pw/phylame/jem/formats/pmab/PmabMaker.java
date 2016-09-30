@@ -24,6 +24,7 @@ import pw.phylame.jem.core.Book;
 import pw.phylame.jem.core.Chapter;
 import pw.phylame.jem.core.Jem;
 import pw.phylame.jem.epm.base.ZipMaker;
+import pw.phylame.jem.epm.util.E;
 import pw.phylame.jem.epm.util.MakerException;
 import pw.phylame.jem.epm.util.ZipUtils;
 import pw.phylame.jem.epm.util.xml.XmlRender;
@@ -128,8 +129,12 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
         val render = tuple.render;
         writeV3Attributes(book, "", tuple);
         render.startTag("extensions");
+        String key;
         for (val e : book.getExtensions().entries()) {
-            writeV3Item(e.getKey(), e.getValue(), "", tuple);
+            key = e.getKey();
+            if (!META_KEY.equals(key)) {
+                writeV3Item(key, e.getValue(), "", tuple);
+            }
         }
         render.endTag();
     }
@@ -193,8 +198,12 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
 
         render.startTag("extension").attribute("count", Integer.toString(book.getExtensions().size()));
         render.comment("The following data will be added to PMAB.");
+        String key;
         for (val e : book.getExtensions().entries()) {
-            writePBMv2Item(e.getKey(), e.getValue(), tuple);
+            key = e.getKey();
+            if (!META_KEY.equals(key)) {
+                writePBMv2Item(e.getKey(), e.getValue(), tuple);
+            }
         }
         render.endTag();
     }

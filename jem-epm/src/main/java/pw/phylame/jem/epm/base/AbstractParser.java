@@ -22,7 +22,7 @@ import lombok.NonNull;
 import lombok.val;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.epm.Parser;
-import pw.phylame.jem.epm.util.Exceptions;
+import pw.phylame.jem.epm.util.E;
 import pw.phylame.jem.epm.util.InputCleaner;
 import pw.phylame.jem.epm.util.ParserException;
 import pw.phylame.jem.epm.util.config.EpmConfig;
@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.util.Map;
 
 public abstract class AbstractParser<I extends Closeable, C extends EpmConfig> extends BookWorker<C> implements Parser {
+
     protected AbstractParser(String name, Class<C> clazz) {
         super(name, clazz);
     }
@@ -45,18 +46,18 @@ public abstract class AbstractParser<I extends Closeable, C extends EpmConfig> e
     @Override
     public final Book parse(@NonNull File file, Map<String, Object> args) throws IOException, JemException {
         if (!file.exists()) {
-            throw Exceptions.forFileNotFound("No such file: %s", file.getPath());
+            throw E.forFileNotFound("No such file: %s", file.getPath());
         }
         val config = fetchConfig(args);
         val input = open(file, config);
         if (input == null) {
-            throw Exceptions.forParser("'open(File, C)' of '%s' returned null", getClass().getName());
+            throw E.forParser("'open(File, C)' of '%s' returned null", getClass().getName());
         }
         Book book;
         try {
             book = parse(input, config);
             if (book == null) {
-                throw Exceptions.forParser("'parse(I, C)' of '%s' returned null", getClass().getName());
+                throw E.forParser("'parse(I, C)' of '%s' returned null", getClass().getName());
             }
         } catch (IOException | JemException | RuntimeException e) {
             input.close();

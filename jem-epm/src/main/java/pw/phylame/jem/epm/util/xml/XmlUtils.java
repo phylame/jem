@@ -24,7 +24,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 import org.xmlpull.v1.XmlSerializer;
 import pw.phylame.jem.epm.util.MakerException;
-import pw.phylame.jem.epm.util.JEMessages;
+import pw.phylame.jem.epm.util.M;
 import pw.phylame.jem.epm.util.ParserException;
 
 /**
@@ -40,7 +40,7 @@ public final class XmlUtils {
             factory.setNamespaceAware(awareness);
             return factory.newPullParser();
         } catch (XmlPullParserException e) {
-            throw new ParserException(JEMessages.tr("err.xml.noPullParser"), e);
+            throw new ParserException(M.tr("err.xml.noPullParser"), e);
         }
     }
 
@@ -50,14 +50,14 @@ public final class XmlUtils {
             factory.setNamespaceAware(awareness);
             return factory.newSerializer();
         } catch (XmlPullParserException e) {
-            throw new MakerException(JEMessages.tr("err.xml.noSerializer"), e);
+            throw new MakerException(M.tr("err.xml.noSerializer"), e);
         }
     }
 
     public static String attributeOf(XmlPullParser xpp, String name) throws ParserException {
         String value = xpp.getAttributeValue(null, name);
         if (value == null) {
-            throw new ParserException(JEMessages.tr("err.xml.noAttribute", name, xpp.getName()));
+            throw new ParserException(M.tr("err.xml.noAttribute", name, xpp.getName()));
         }
         return value;
     }

@@ -21,6 +21,7 @@ package pw.phylame.jem.formats.epub.writer;
 import lombok.val;
 import pw.phylame.jem.core.Attributes;
 import pw.phylame.jem.core.Book;
+import pw.phylame.jem.epm.util.E;
 import pw.phylame.jem.epm.util.MakerException;
 import pw.phylame.jem.formats.epub.EPUB;
 import pw.phylame.jem.formats.epub.Resource;

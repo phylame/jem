@@ -19,7 +19,7 @@
 package pw.phylame.jem.formats.epub;
 
 import pw.phylame.jem.epm.base.ZipOutConfig;
-import pw.phylame.jem.epm.util.config.Mapped;
+import pw.phylame.jem.epm.util.config.Configured;
 import pw.phylame.jem.epm.util.xml.XmlConfig;
 import pw.phylame.jem.formats.util.html.HtmlConfig;
 
@@ -38,25 +38,25 @@ public class EpubOutConfig extends ZipOutConfig {
     /**
      * Output ePub version.
      */
-    @Mapped(VERSION)
+    @Configured(VERSION)
     public String version = "2.0";
 
-    @Mapped(XML_CONFIG)
+    @Configured(XML_CONFIG)
     public XmlConfig xmlConfig = new XmlConfig();
 
-    @Mapped(HTML_CONFIG)
+    @Configured(HTML_CONFIG)
     public HtmlConfig htmlConfig = new HtmlConfig();
 
-    @Mapped(UUID)
+    @Configured(UUID)
     public String uuid = null;
 
-    @Mapped(DATE_FORMAT)
+    @Configured(DATE_FORMAT)
     public String dateFormat = EPUB.dateFormat;
 
     /**
      * If <tt>smallPage</tt> is <tt>true</tt>, each HTML page will be smaller.
      */
-    @Mapped(SMALL_PAGE)
+    @Configured(SMALL_PAGE)
     public boolean smallPage = true;
 
     @Override

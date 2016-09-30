@@ -19,7 +19,7 @@
 package pw.phylame.jem.epm.util.xml;
 
 import pw.phylame.jem.epm.util.config.AbstractConfig;
-import pw.phylame.jem.epm.util.config.Mapped;
+import pw.phylame.jem.epm.util.config.Configured;
 
 /**
  * Config for rendering XML.
@@ -31,15 +31,15 @@ public class XmlConfig extends AbstractConfig {
     public static final String LINE_SEPARATOR = "xml.lineSeparator";
     public static final String INDENT_STRING = "xml.indentString";
 
-    @Mapped(ENCODING)
+    @Configured(ENCODING)
     public String encoding = "UTF-8";
 
-    @Mapped(STANDALONE)
+    @Configured(STANDALONE)
     public boolean standalone = true;
 
-    @Mapped(LINE_SEPARATOR)
+    @Configured(LINE_SEPARATOR)
     public String lineSeparator = "\n";
 
-    @Mapped(INDENT_STRING)
+    @Configured(INDENT_STRING)
     public String indentString = "\t";
 }

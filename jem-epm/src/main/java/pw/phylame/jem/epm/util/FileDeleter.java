@@ -27,7 +27,7 @@ public class FileDeleter extends InputCleaner {
             @Override
             public void run() {
                 if (!file.delete()) {
-                    throw new RuntimeException(JEMessages.tr("err.common.deleteFile", file.getPath()));
+                    throw new RuntimeException(M.tr("err.common.deleteFile", file.getPath()));
                 }
             }
         });

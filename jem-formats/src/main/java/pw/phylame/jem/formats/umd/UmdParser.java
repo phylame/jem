@@ -28,18 +28,19 @@ import pw.phylame.jem.core.Chapter;
 import pw.phylame.jem.epm.base.BinaryParser;
 import pw.phylame.jem.epm.util.ParserException;
 import pw.phylame.jem.epm.util.config.NonConfig;
-import pw.phylame.jem.formats.util.JFMessages;
+import pw.phylame.jem.formats.util.M;
 import pw.phylame.jem.util.flob.Flobs;
 import pw.phylame.jem.util.text.AbstractText;
 import pw.phylame.ycl.io.PathUtils;
 import pw.phylame.ycl.io.ZLibUtils;
-import pw.phylame.ycl.util.CollectionUtils;
+import pw.phylame.ycl.util.CollectUtils;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.zip.DataFormatException;
 
 /**
  * <tt>Parser</tt> implement for UMD book.
@@ -56,12 +57,12 @@ public class UmdParser extends BinaryParser<NonConfig> {
 
     @Override
     protected void onBadInput() throws ParserException {
-        throw new ParserException(JFMessages.tr("umd.parse.invalidFile"));
+        throw new ParserException(M.tr("umd.parse.invalidFile"));
     }
 
     @Override
     protected void onBadInput(String key, Object... args) throws ParserException {
-        throw new ParserException(JFMessages.tr(key, args));
+        throw new ParserException(M.tr(key, args));
     }
 
     public Book parse(@NonNull RandomAccessFile file) throws IOException, ParserException {
@@ -332,7 +333,7 @@ public class UmdParser extends BinaryParser<NonConfig> {
             this.blocks = blocks;
         }
 
-        private String rawText() throws IOException {
+        private String rawText() throws IOException, DataFormatException {
             int index = (int) (offset >> 15);   // div 0x8000
             val start = (int) (offset & 0x7FFF);    // mod 0x8000
             int length = -start;
@@ -350,16 +351,16 @@ public class UmdParser extends BinaryParser<NonConfig> {
             } while (true);
         }
 
-        @SneakyThrows(IOException.class)
+        @SneakyThrows({IOException.class, DataFormatException.class})
         @Override
         public String getText() {
             return rawText().replaceAll(UMD.UMD_LINE_FEED, System.lineSeparator());
         }
 
-        @SneakyThrows(IOException.class)
+        @SneakyThrows({IOException.class, DataFormatException.class})
         @Override
         public List<String> getLines(boolean skipEmpty) {
-            return CollectionUtils.listOf(rawText().split(UMD.UMD_LINE_FEED));
+            return CollectUtils.listOf(rawText().split(UMD.UMD_LINE_FEED));
         }
     }
 }

@@ -171,7 +171,7 @@ public final class Flobs {
         }
 
         @Override
-        public int writeTo(OutputStream out) throws IOException {
+        public long writeTo(OutputStream out) throws IOException {
             file.seek(offset);
             return IOUtils.copy(file, out, (int) size);
         }
@@ -240,7 +240,7 @@ public final class Flobs {
         }
 
         @Override
-        public int writeTo(OutputStream out) throws IOException {
+        public long writeTo(OutputStream out) throws IOException {
             out.write(buf);
             return buf.length;
         }

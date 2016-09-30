@@ -25,7 +25,7 @@ import pw.phylame.jem.epm.util.Exceptions;
 import pw.phylame.jem.epm.util.JEMessages;
 import pw.phylame.ycl.format.Converters;
 import pw.phylame.ycl.log.Log;
-import pw.phylame.ycl.util.CollectionUtils;
+import pw.phylame.ycl.util.CollectUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -46,7 +46,7 @@ public final class ConfigUtils {
     }
 
     public static <C extends EpmConfig> C fetchConfig(Map<String, Object> m, String prefix, @NonNull Class<C> clazz) throws BadConfigException {
-        if (CollectionUtils.isEmpty(m)) {
+        if (CollectUtils.isEmpty(m)) {
             return defaultConfig(clazz);
         }
         C config = null;

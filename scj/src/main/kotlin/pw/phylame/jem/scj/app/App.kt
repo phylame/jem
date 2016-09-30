@@ -29,7 +29,7 @@ import pw.phylame.qaf.core.tr
 import pw.phylame.ycl.io.IOUtils
 import pw.phylame.ycl.io.PathUtils
 import pw.phylame.ycl.log.Log
-import pw.phylame.ycl.util.CollectionUtils
+import pw.phylame.ycl.util.CollectUtils
 import java.io.File
 import java.util.*
 
@@ -82,7 +82,7 @@ object AppConfig : Settings() {
     override fun reset() {
         super.reset()
         comment = "Configurations of PW's SCJ v$VERSION"
-        val prop = CollectionUtils.propertiesFor(SETTING_TEMPLATE_PATH, AppConfig.javaClass.classLoader)
+        val prop = CollectUtils.propertiesFor(SETTING_TEMPLATE_PATH, AppConfig.javaClass.classLoader)
         if (prop != null) {
             @Suppress("unchecked_cast")
             update(prop as Map<String, String>)

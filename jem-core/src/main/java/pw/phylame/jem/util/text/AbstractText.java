@@ -44,7 +44,7 @@ public abstract class AbstractText implements Text {
     }
 
     @Override
-    public int writeTo(@NonNull Writer writer) throws IOException {
+    public long writeTo(@NonNull Writer writer) throws IOException {
         String text = getText();
         writer.append(text).flush();
         return text.length();

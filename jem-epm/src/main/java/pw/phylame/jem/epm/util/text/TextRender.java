@@ -24,7 +24,7 @@ import pw.phylame.jem.core.Attributes;
 import pw.phylame.jem.core.Chapter;
 import pw.phylame.jem.util.text.Text;
 import pw.phylame.jem.util.text.Texts;
-import pw.phylame.ycl.util.CollectionUtils;
+import pw.phylame.ycl.util.CollectUtils;
 
 import java.util.LinkedList;
 
@@ -64,7 +64,7 @@ public final class TextRender {
 
     private static int renderLines(Text text, TextWriter writer, TextConfig config, boolean prependNL) throws Exception {
         val lines = text.getLines(config.skipEmptyLine);
-        if (CollectionUtils.isEmpty(lines)) {
+        if (CollectUtils.isEmpty(lines)) {
             return 0;
         }
         int ix = 1, size = lines.size();

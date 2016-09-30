@@ -99,7 +99,7 @@ public final class Texts {
         }
 
         @Override
-        public int writeTo(Writer writer) throws IOException {
+        public long writeTo(Writer writer) throws IOException {
             try (Reader reader = IOUtils.openReader(file.openStream(), encoding)) {
                 return IOUtils.copy(reader, writer, -1);
             }

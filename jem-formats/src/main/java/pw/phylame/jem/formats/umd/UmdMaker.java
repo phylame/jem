@@ -27,13 +27,13 @@ import pw.phylame.jem.epm.base.AbstractMaker;
 import pw.phylame.jem.epm.util.MakerException;
 import pw.phylame.jem.epm.util.NumberUtils;
 import pw.phylame.jem.epm.util.text.TextRender;
-import pw.phylame.jem.formats.util.JFMessages;
+import pw.phylame.jem.formats.util.M;
 import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.ycl.io.BufferedRandomAccessFile;
 import pw.phylame.ycl.io.PathUtils;
 import pw.phylame.ycl.io.ZLibUtils;
 import pw.phylame.ycl.log.Log;
-import pw.phylame.ycl.util.CollectionUtils;
+import pw.phylame.ycl.util.CollectUtils;
 import pw.phylame.ycl.util.StringUtils;
 
 import java.io.*;
@@ -71,7 +71,7 @@ public class UmdMaker extends AbstractMaker<UmdOutConfig> {
                 makeComic(tuple);
                 break;
             default:
-                throw new MakerException(JFMessages.tr("umd.make.invalidType", config.umdType));
+                throw new MakerException(M.tr("umd.make.invalidType", config.umdType));
         }
     }
 
@@ -119,7 +119,7 @@ public class UmdMaker extends AbstractMaker<UmdOutConfig> {
         String imageFormat = "jpg";
 
         // get cartoon images
-        if (CollectionUtils.isNotEmpty(tuple.config.cartoonImages)) {
+        if (CollectUtils.isNotEmpty(tuple.config.cartoonImages)) {
             images = tuple.config.cartoonImages;
             imageFormat = tuple.config.imageFormat;
         } else {
@@ -144,7 +144,7 @@ public class UmdMaker extends AbstractMaker<UmdOutConfig> {
     }
 
     private void makeComic(Tuple tuple) throws MakerException {
-        throw new MakerException(JFMessages.tr("umd.make.unsupportedType", UMD.COMIC));
+        throw new MakerException(M.tr("umd.make.unsupportedType", UMD.COMIC));
     }
 
     private void writeChunk(int id, boolean hasAddition, byte[] data, Tuple tuple) throws IOException {
@@ -214,7 +214,7 @@ public class UmdMaker extends AbstractMaker<UmdOutConfig> {
         val rand = NumberUtils.randInteger(0x3000, 0x3FFF);
         writeChunk(UMD.CDT_CHAPTER_OFFSET, true, littleRender.putUInt32(rand), tuple);
         byte[] data;
-        if (CollectionUtils.isNotEmpty(offsets)) {
+        if (CollectUtils.isNotEmpty(offsets)) {
             val out = new ByteArrayOutputStream();
             for (val offset : offsets) {
                 out.write(littleRender.putUInt32(offset));
@@ -231,7 +231,7 @@ public class UmdMaker extends AbstractMaker<UmdOutConfig> {
         val rand = NumberUtils.randInteger(0x4000, 0x4FFF);
         writeChunk(UMD.CDT_CHAPTER_TITLE, true, littleRender.putUInt32(rand), tuple);
         byte[] data;
-        if (CollectionUtils.isNotEmpty(titles)) {
+        if (CollectUtils.isNotEmpty(titles)) {
             val out = new ByteArrayOutputStream();
             byte[] bytes;
             for (val title : titles) {

@@ -63,5 +63,5 @@ public interface Flob {
      * @return number of written bytes
      * @throws IOException if occurs I/O errors
      */
-    int writeTo(OutputStream out) throws IOException;
+    long writeTo(OutputStream out) throws IOException;
 }

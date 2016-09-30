@@ -29,7 +29,7 @@ import pw.phylame.jem.epm.base.ZipParser;
 import pw.phylame.jem.epm.util.NumberUtils;
 import pw.phylame.jem.epm.util.ParserException;
 import pw.phylame.jem.epm.util.ZipUtils;
-import pw.phylame.jem.formats.util.JFMessages;
+import pw.phylame.jem.formats.util.M;
 import pw.phylame.jem.formats.util.TestUtils;
 import pw.phylame.jem.util.Variants;
 import pw.phylame.jem.util.flob.Flob;
@@ -59,7 +59,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
     @Override
     public Book parse(@NonNull ZipFile zip, PmabInConfig config) throws IOException, ParserException {
         if (!PMAB.MT_PMAB.equals(ZipUtils.readString(zip, PMAB.MIME_FILE, "ASCII"))) {
-            throw new ParserException(JFMessages.tr("pmab.parse.invalidMT", PMAB.MIME_FILE, PMAB.MT_PMAB));
+            throw new ParserException(M.tr("pmab.parse.invalidMT", PMAB.MIME_FILE, PMAB.MT_PMAB));
         }
         if (config == null) {
             config = new PmabInConfig();
@@ -78,7 +78,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
             case "2.0":
                 return 2;
             default:
-                throw new ParserException(JFMessages.tr(error));
+                throw new ParserException(M.tr(error));
         }
     }
 
@@ -126,7 +126,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
                 event = xpp.next();
             } while (event != XmlPullParser.END_DOCUMENT);
         } catch (XmlPullParserException e) {
-            throw new ParserException(JFMessages.tr("pmab.parse.invalidPBM", e.getLocalizedMessage()), e);
+            throw new ParserException(M.tr("pmab.parse.invalidPBM", e.getLocalizedMessage()), e);
         }
     }
 
@@ -224,7 +224,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
                     } else if (type.equals(Variants.FLOB)) {    // file will be processed in <object>
                         tuple.attrName = name;
                     } else {
-                        throw new ParserException(JFMessages.tr("pmab.parse.2.unknownItemType", type));
+                        throw new ParserException(M.tr("pmab.parse.2.unknownItemType", type));
                     }
                 }
             }
@@ -338,7 +338,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
                 event = xpp.next();
             } while (event != XmlPullParser.END_DOCUMENT);
         } catch (XmlPullParserException e) {
-            throw new ParserException(JFMessages.tr("pmab.parse.invalidPBC", e.getLocalizedMessage()), e);
+            throw new ParserException(M.tr("pmab.parse.invalidPBC", e.getLocalizedMessage()), e);
         }
     }
 

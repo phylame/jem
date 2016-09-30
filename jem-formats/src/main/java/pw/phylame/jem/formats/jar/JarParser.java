@@ -25,7 +25,7 @@ import pw.phylame.jem.core.Chapter;
 import pw.phylame.jem.epm.base.ZipParser;
 import pw.phylame.jem.epm.util.ParserException;
 import pw.phylame.jem.epm.util.ZipUtils;
-import pw.phylame.jem.formats.util.JFMessages;
+import pw.phylame.jem.formats.util.M;
 import pw.phylame.jem.util.flob.Flobs;
 import pw.phylame.jem.util.text.Text;
 import pw.phylame.jem.util.text.Texts;
@@ -59,7 +59,7 @@ public class JarParser extends ZipParser<JarInConfig> {
         try (val in = new BufferedInputStream(ZipUtils.openStream(zip, "0"))) {
             val input = new DataInputStream(in);
             if (input.readInt() != JAR.MAGIC_NUMBER) {
-                throw new ParserException(JFMessages.tr("jar.parse.badMetadata", zip.getName()));
+                throw new ParserException(M.tr("jar.parse.badMetadata", zip.getName()));
             }
             Attributes.setTitle(book, readString(input, 1));
 
@@ -67,7 +67,7 @@ public class JarParser extends ZipParser<JarInConfig> {
             for (int i = 0; i < count; ++i) {
                 val items = readString(input, 2).split(",");
                 if (items.length < 3) {
-                    throw new ParserException(JFMessages.tr("jar.parse.badMetadata", zip.getName()));
+                    throw new ParserException(M.tr("jar.parse.badMetadata", zip.getName()));
                 }
                 val flob = Flobs.forZip(zip, items[0], "text/plain");
                 book.append(new Chapter(items[2], Texts.forFile(flob, JAR.TEXT_ENCODING, Text.PLAIN)));

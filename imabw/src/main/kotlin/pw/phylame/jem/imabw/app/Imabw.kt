@@ -27,6 +27,7 @@ import pw.phylame.ycl.io.IOUtils
 import pw.phylame.ycl.log.Level
 import pw.phylame.ycl.log.Log
 import java.awt.Desktop
+import java.io.ByteArrayInputStream
 import java.net.URI
 import java.util.*
 
@@ -87,5 +88,6 @@ object Imabw : IxinDelegate<Viewer>() {
 }
 
 fun main(args: Array<String>) {
+    ByteArrayInputStream(byteArrayOf()).reader().useLines {  }
     App.run(NAME, VERSION, args, Imabw)
 }

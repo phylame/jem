@@ -20,7 +20,7 @@ package pw.phylame.jem.formats.txt;
 
 import pw.phylame.jem.epm.util.config.AbstractConfig;
 import pw.phylame.jem.epm.util.config.Mapped;
-import pw.phylame.jem.formats.util.JFMessages;
+import pw.phylame.jem.formats.util.M;
 
 import java.util.regex.Pattern;
 
@@ -45,7 +45,7 @@ public class TxtInConfig extends AbstractConfig {
      * Chapter title regex pattern
      */
     @Mapped(PATTERN)
-    public String pattern = JFMessages.tr("txt.parse.pattern");
+    public String pattern = M.tr("txt.parse.pattern");
 
     /**
      * Regex pattern flag.

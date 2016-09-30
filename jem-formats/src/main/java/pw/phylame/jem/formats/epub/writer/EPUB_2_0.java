@@ -26,7 +26,7 @@ import pw.phylame.jem.formats.epub.EPUB;
 import pw.phylame.jem.formats.epub.Resource;
 import pw.phylame.jem.formats.epub.ncx.NcxWriterFactory;
 import pw.phylame.jem.formats.epub.opf.OpfWriterFactory;
-import pw.phylame.jem.formats.util.JFMessages;
+import pw.phylame.jem.formats.util.M;
 import pw.phylame.ycl.util.StringUtils;
 
 import java.io.IOException;
@@ -56,7 +56,7 @@ class EPUB_2_0 extends EpubWriter {
         // make and write NCX document
         val ncxWriter = NcxWriterFactory.getWriter("2005-1");
         if (ncxWriter == null) {
-            throw new MakerException(JFMessages.tr("epub.make.v2.noNCX_2005_1"));
+            throw new MakerException(M.tr("epub.make.v2.noNCX_2005_1"));
         }
         val writer = new StringWriter();
         render.setOutput(writer);
@@ -69,7 +69,7 @@ class EPUB_2_0 extends EpubWriter {
 
         val opfWriter = OpfWriterFactory.getWriter("2.0");
         if (opfWriter == null) {
-            throw new MakerException(JFMessages.tr("epub.make.v2.noOPF_2_0"));
+            throw new MakerException(M.tr("epub.make.v2.noOPF_2_0"));
         }
         val opfPath = pathInOps(OPF_FILE);
         zipout.putNextEntry(new ZipEntry(opfPath));

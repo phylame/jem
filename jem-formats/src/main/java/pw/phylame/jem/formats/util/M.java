@@ -20,8 +20,8 @@ package pw.phylame.jem.formats.util;
 
 import pw.phylame.ycl.util.Linguist;
 
-public final class JFMessages {
-    private JFMessages() {
+public final class M {
+    private M() {
     }
 
     private static final String MESSAGES_PATH = "pw/phylame/jem/formats/messages";

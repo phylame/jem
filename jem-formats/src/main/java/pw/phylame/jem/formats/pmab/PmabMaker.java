@@ -27,14 +27,14 @@ import pw.phylame.jem.epm.base.ZipMaker;
 import pw.phylame.jem.epm.util.MakerException;
 import pw.phylame.jem.epm.util.ZipUtils;
 import pw.phylame.jem.epm.util.xml.XmlRender;
-import pw.phylame.jem.formats.util.JFMessages;
+import pw.phylame.jem.formats.util.M;
 import pw.phylame.jem.util.Variants;
 import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.jem.util.text.Text;
 import pw.phylame.ycl.format.Converters;
 import pw.phylame.ycl.io.PathUtils;
 import pw.phylame.ycl.util.DateUtils;
-import pw.phylame.ycl.util.CollectionUtils;
+import pw.phylame.ycl.util.CollectUtils;
 import pw.phylame.ycl.util.StringUtils;
 
 import java.io.IOException;
@@ -64,7 +64,7 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
             } else if (ch == '2') {
                 version = 2;
             } else {
-                throw new MakerException(JFMessages.tr("pmab.make.unsupportedVersion", config.version));
+                throw new MakerException(M.tr("pmab.make.unsupportedVersion", config.version));
             }
         }
         val tuple = new Tuple(zipout, config, version);
@@ -108,7 +108,7 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
     private void writePBMHead(String tagName, boolean ignoreEmpty, Tuple tuple) throws IOException {
         val render = tuple.render;
         val meta = tuple.config.metadata;
-        if (CollectionUtils.isEmpty(meta)) {
+        if (CollectUtils.isEmpty(meta)) {
             if (!ignoreEmpty) {
                 render.startTag("head").endTag();
             }

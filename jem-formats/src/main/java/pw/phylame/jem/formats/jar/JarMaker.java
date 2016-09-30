@@ -25,7 +25,7 @@ import pw.phylame.jem.epm.base.ZipMaker;
 import pw.phylame.jem.epm.util.MakerException;
 import pw.phylame.jem.epm.util.ZipUtils;
 import pw.phylame.jem.epm.util.text.TextRender;
-import pw.phylame.jem.formats.util.JFMessages;
+import pw.phylame.jem.formats.util.M;
 import pw.phylame.jem.util.Build;
 import pw.phylame.ycl.io.IOUtils;
 
@@ -77,7 +77,7 @@ public class JarMaker extends ZipMaker<JarOutConfig> {
     private void copyTemplate(ZipOutputStream zipout, String path) throws IOException, MakerException {
         val in = IOUtils.openResource(path, JarMaker.class.getClassLoader());
         if (in == null) {
-            throw new MakerException(JFMessages.tr("jar.make.noTemplate", path));
+            throw new MakerException(M.tr("jar.make.noTemplate", path));
         }
         try (val zip = new ZipInputStream(in)) {
             ZipEntry entry;

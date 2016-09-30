@@ -53,7 +53,7 @@ public abstract class AbstractFlob implements Flob {
     }
 
     @Override
-    public int writeTo(@NonNull OutputStream out) throws IOException {
+    public long writeTo(@NonNull OutputStream out) throws IOException {
         try (InputStream in = openStream()) {
             return IOUtils.copy(in, out, -1);
         }

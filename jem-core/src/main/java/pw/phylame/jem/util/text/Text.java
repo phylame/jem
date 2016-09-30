@@ -65,5 +65,5 @@ public interface Text extends Iterable<String> {
      * @return number of written characters
      * @throws IOException if occur I/O errors
      */
-    int writeTo(Writer writer) throws IOException;
+    long writeTo(Writer writer) throws IOException;
 }

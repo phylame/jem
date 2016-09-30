@@ -19,7 +19,7 @@
 package pw.phylame.jem.formats.util.html;
 
 import lombok.val;
-import pw.phylame.jem.formats.util.JFMessages;
+import pw.phylame.jem.formats.util.M;
 import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.jem.util.flob.Flobs;
 
@@ -68,7 +68,7 @@ public class StyleProvider {
         defaultInstance = new StyleProvider();
         val in = StyleProvider.class.getResourceAsStream(CONFIG_FILE);
         if (in == null) {
-            throw new IOException(JFMessages.tr("err.html.loadStyle", CONFIG_FILE));
+            throw new IOException(M.tr("err.html.loadStyle", CONFIG_FILE));
         }
         val prop = new Properties();
         try {

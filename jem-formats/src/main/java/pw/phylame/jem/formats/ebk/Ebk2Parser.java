@@ -28,7 +28,7 @@ import pw.phylame.jem.core.Chapter;
 import pw.phylame.jem.epm.base.BinaryParser;
 import pw.phylame.jem.epm.util.ParserException;
 import pw.phylame.jem.epm.util.config.NonConfig;
-import pw.phylame.jem.formats.util.JFMessages;
+import pw.phylame.jem.formats.util.M;
 import pw.phylame.jem.util.text.AbstractText;
 import pw.phylame.ycl.io.ByteUtils;
 import pw.phylame.ycl.io.ZLibUtils;
@@ -40,6 +40,7 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.DataFormatException;
 
 public class Ebk2Parser extends BinaryParser<NonConfig> {
     public Ebk2Parser() {
@@ -48,12 +49,12 @@ public class Ebk2Parser extends BinaryParser<NonConfig> {
 
     @Override
     protected void onBadInput() throws ParserException {
-        throw new ParserException(JFMessages.tr("ebk.parse.invalidFile"));
+        throw new ParserException(M.tr("ebk.parse.invalidFile"));
     }
 
     @Override
     protected void onBadInput(String key, Object... args) throws ParserException {
-        throw new ParserException(JFMessages.tr(key, args));
+        throw new ParserException(M.tr(key, args));
     }
 
     @Override
@@ -87,7 +88,13 @@ public class Ebk2Parser extends BinaryParser<NonConfig> {
     }
 
     private void readIndexes(Tuple data) throws IOException, ParserException {
-        val in = new ByteArrayInputStream(ZLibUtils.decompress(readData(data.file, (int) data.indexesSize)));
+        final InputStream in;
+        try {
+            in = new ByteArrayInputStream(ZLibUtils.decompress(readData(data.file, (int) data.indexesSize)));
+        } catch (DataFormatException e) {
+            onBadInput("ebk.parse.invalidFile");
+            return;
+        }
         readChapters(data, in);
         readBlocks(data, in);
     }
@@ -178,7 +185,7 @@ public class Ebk2Parser extends BinaryParser<NonConfig> {
             this.size = size;
         }
 
-        private String rawText() throws IOException {
+        private String rawText() throws IOException, DataFormatException {
             int index = (int) (offset >> 16);   // div 0x10000
             val start = (int) (offset & 0x9999);  // mod 0x10000
             int length = -start;
@@ -196,7 +203,7 @@ public class Ebk2Parser extends BinaryParser<NonConfig> {
             } while (true);
         }
 
-        @SneakyThrows(IOException.class)
+        @SneakyThrows({IOException.class, DataFormatException.class})
         @Override
         public String getText() {
             return rawText();

@@ -18,9 +18,9 @@
 
 package pw.phylame.jem.scj.addons;
 
-import java.util.Map;
+import pw.phylame.ycl.util.CollectUtils;
 
-import pw.phylame.ycl.util.CollectionUtils;
+import java.util.Map;
 
 public class ArgumentsLoader extends AbstractPlugin {
 
@@ -39,6 +39,6 @@ public class ArgumentsLoader extends AbstractPlugin {
     }
 
     private void update(String name, Map<String, Object> m) {
-        CollectionUtils.updateByProperties(m, app.pathOf(name + NAME_SUFFIX), getClass().getClassLoader());
+        CollectUtils.updateByProperties(m, app.pathOf(name + NAME_SUFFIX), getClass().getClassLoader());
     }
 }

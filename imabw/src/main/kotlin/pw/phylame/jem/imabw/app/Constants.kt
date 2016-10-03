@@ -38,7 +38,7 @@ const val MAX_HISTORY_LIMITS = 28
 const val DEFAULT_HISTORY_LIMITS = 18
 const val DEFAULT_LAF_THEME = Ixin.DEFAULT_THEME_NAME
 const val DEFAULT_ICON_SET = "default"
-const val DEFAULT_KEY_BINDINGS = "defalut"
+const val DEFAULT_KEY_BINDINGS = "default"
 
 // viewer operations
 const val SHOW_TOOL_BAR = "showToolbar"

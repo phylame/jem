@@ -30,8 +30,8 @@ public class ScriptRunner extends AbstractPlugin {
         sci.addOption(Option.builder(OPTION)
                 .longOpt("run-script")
                 .hasArg()
-                .argName(M._("runScript.file"))
-                .desc(M._("help.runScript"))
+                .argName(M.tr("runScript.file"))
+                .desc(M.tr("help.runScript"))
                 .build(), new RunnerCommand());
     }
 
@@ -44,12 +44,12 @@ public class ScriptRunner extends AbstractPlugin {
             }
             val engine = clazz.getMethod("getEngineByName", String.class).invoke(clazz.newInstance(), name);
             if (engine == null) {
-                app.error(M._("runScript.noSuchEngine", name));
+                app.error(M.tr("runScript.noSuchEngine", name));
             }
             return engine;
         } catch (Exception e) {
             Log.e(TAG, e);
-            app.error(M._("runScript.unsupported", System.getProperty("java.version")));
+            app.error(M.tr("runScript.unsupported", System.getProperty("java.version")));
             return null;
         }
     }
@@ -78,7 +78,7 @@ public class ScriptRunner extends AbstractPlugin {
                 engine.put("config", config);
                 engine.eval(reader);
             } catch (Exception e) {
-                app.error(M._("runScript.error"), e);
+                app.error(M.tr("runScript.error"), e);
                 return -1;
             }
             return 0;

@@ -58,8 +58,8 @@ public class LogSetter extends AbstractPlugin implements Initializer {
         sci.addOption(Option.builder(OPTION)
                 .longOpt(OPTION_LONG)
                 .hasArg()
-                .argName(M._("logSetter.argName"))
-                .desc(M._("help.setLogLevel", makeLevelList(), level))
+                .argName(M.tr("logSetter.argName"))
+                .desc(M.tr("help.setLogLevel", makeLevelList(), level))
                 .build(), this);
     }
 
@@ -78,7 +78,7 @@ public class LogSetter extends AbstractPlugin implements Initializer {
     private void setByConfig() {
         val level = config.rawFor(CONFIG_KEY);
         if (StringUtils.isNotEmpty(level)) {
-            Log.setLevel(Level.forName(level, Level.DEFAULT_LEVEL));
+            Log.setLevel(Level.forName(level, Level.DEFAULT));
         }
     }
 }

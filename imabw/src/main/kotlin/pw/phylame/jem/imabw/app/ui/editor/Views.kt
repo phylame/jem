@@ -20,7 +20,7 @@ package pw.phylame.jem.imabw.app.ui.editor
 
 import org.jdesktop.swingx.JXPanel
 import pw.phylame.jem.imabw.app.Imabw
-import pw.phylame.jem.imabw.app.REPLACE_TEXT
+import pw.phylame.jem.imabw.app.REPLACE
 import pw.phylame.jem.imabw.app.ui.Editable
 import pw.phylame.jem.imabw.app.ui.Viewer
 import pw.phylame.qaf.ixin.Command
@@ -61,11 +61,11 @@ class TabbedEditor(override val viewer: Viewer) : JXPanel(), Editable {
 
     }
 
-    override fun gotoPosition() {
+    override fun goto() {
 
     }
 
-    @Command(REPLACE_TEXT)
+    @Command(REPLACE)
     fun replace() {
 
     }

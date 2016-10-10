@@ -169,7 +169,7 @@ class ContentsTree(override val viewer: Viewer) : JXPanel(BorderLayout()), Edita
 
     }
 
-    override fun gotoPosition() {
+    override fun goto() {
 
     }
 

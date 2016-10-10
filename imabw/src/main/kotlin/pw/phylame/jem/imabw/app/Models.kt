@@ -42,3 +42,7 @@ object Manager {
         App.exit(0)
     }
 }
+
+object Worker {
+
+}

@@ -21,16 +21,16 @@ package pw.phylame.jem.imabw.app
 import pw.phylame.qaf.ixin.Ixin
 
 // meta data
-val NAME = System.getProperty("app.name") ?: "imabw"
-val VERSION = System.getProperty("app.version") ?: "3.0.0"
-const val DOCUMENT = "https://github.com/phylame/jem"
+val APP_NAME = System.getProperty("app.name") ?: "imabw"
+val APP_VERSION = System.getProperty("app.version") ?: "3.0.0"
+const val DOCUMENT_URL = "https://github.com/phylame/jem"
 
-const val SETTINGS_HOME = "config/"
+const val SETTINGS_DIR = "config/"
 
 const val RESOURCE_DIR = "!pw/phylame/jem/imabw/res/"
 const val IMAGE_DIR = "gfx"
 const val I18N_DIR = "i18n"
-const val I18N_NAME = "messages"
+const val TRANSLATOR_NAME = "messages"
 const val DESIGNER_NAME = "ui/designer.json"
 
 // default config
@@ -40,7 +40,7 @@ const val DEFAULT_LAF_THEME = Ixin.DEFAULT_THEME_NAME
 const val DEFAULT_ICON_SET = "default"
 const val DEFAULT_KEY_BINDINGS = "default"
 
-// viewer operations
+// view operations
 const val SHOW_TOOL_BAR = "showToolbar"
 const val LOCK_TOOL_BAR = "lockToolbar"
 const val HIDE_TOOL_BAR_TEXT = "hideToolbarText"
@@ -52,37 +52,40 @@ const val NEW_FILE = "newFile"
 const val OPEN_FILE = "openFile"
 const val SAVE_FILE = "saveFile"
 const val SAVE_AS_FILE = "saveAsFile"
-const val FILE_DETAILS = "fileDetails"
+const val FILE_DETAILS = "viewDetails"
+
+val FILE_COMMANDS = arrayOf(NEW_FILE, OPEN_FILE, SAVE_FILE, SAVE_AS_FILE, FILE_DETAILS)
+
 const val CLEAR_HISTORY = "clearHistory"
 
 // edit operations
-const val EDIT_UNDO = "undo"
-const val EDIT_REDO = "redo"
-const val EDIT_CUT = "cut"
-const val EDIT_COPY = "copy"
-const val EDIT_PASTE = "paste"
-const val EDIT_DELETE = "delete"
-const val EDIT_SELECT_ALL = "selectAll"
+const val UNDO = "undo"
+const val REDO = "redo"
+const val CUT = "cut"
+const val COPY = "copy"
+const val PASTE = "paste"
+const val DELETE = "delete"
+const val SELECT_ALL = "selectAll"
 
-val EDIT_COMMANDS = arrayOf(EDIT_UNDO, EDIT_REDO, EDIT_CUT, EDIT_COPY, EDIT_PASTE, EDIT_DELETE, EDIT_SELECT_ALL)
+val EDIT_COMMANDS = arrayOf(UNDO, REDO, CUT, COPY, PASTE, DELETE, SELECT_ALL)
 
 // find operations
-const val FIND_CONTENT = "find"
+const val GOTO = "goto"
+const val FIND = "find"
 const val FIND_NEXT = "findNext"
 const val FIND_PREVIOUS = "findPrevious"
-const val GOTO_POSITION = "gotoPosition"
 
-val FIND_COMMANDS = arrayOf(FIND_CONTENT, FIND_NEXT, FIND_PREVIOUS, GOTO_POSITION)
+val FIND_COMMANDS = arrayOf(FIND, FIND_NEXT, FIND_PREVIOUS, GOTO)
 
 // text edit operations
-const val REPLACE_TEXT = "replaceText"
-const val TO_LOWER = "lowerText"
-const val TO_UPPER = "upperText"
-const val TO_TITLED = "titleText"
-const val TO_CAPITALIZED = "capitalizeText"
+const val REPLACE = "replace"
+const val TO_LOWER = "toLower"
+const val TO_UPPER = "toUpper"
+const val TO_TITLED = "toTitled"
+const val TO_CAPITALIZED = "toCapitalized"
 const val JOIN_LINES = "joinLines"
 
-val TEXT_COMMANDS = arrayOf(REPLACE_TEXT, TO_LOWER, TO_UPPER, TO_TITLED, TO_CAPITALIZED, JOIN_LINES)
+val TEXT_COMMANDS = arrayOf(REPLACE, TO_LOWER, TO_UPPER, TO_TITLED, TO_CAPITALIZED, JOIN_LINES)
 
 const val moreTools = "moreTools"
 
@@ -112,5 +115,5 @@ val TAB_COMMANDS = arrayOf(GOTO_NEXT_TAB, GOTO_PREVIOUS_TAB, CLOSE_ACTIVE_TAB, C
 // application operations
 const val ABOUT_APP = "aboutApp"
 const val HELP_CONTENTS = "helpContents"
-const val APP_SETTINGS = "appSettings"
+const val EDIT_SETTINGS = "editSettings"
 const val EXIT_APP = "exitApp"

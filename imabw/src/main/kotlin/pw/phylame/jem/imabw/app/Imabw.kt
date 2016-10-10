@@ -27,7 +27,6 @@ import pw.phylame.ycl.io.IOUtils
 import pw.phylame.ycl.log.Level
 import pw.phylame.ycl.log.Log
 import java.awt.Desktop
-import java.io.ByteArrayInputStream
 import java.net.URI
 import java.util.*
 
@@ -41,7 +40,7 @@ object Imabw : IxinDelegate<Viewer>() {
         App.debug = App.Debug.valueOf(AppSettings.debugLevel)
         Locale.setDefault(AppSettings.appLocale)
         resource = Resource(RESOURCE_DIR, "$IMAGE_DIR/${UISettings.iconSets}", I18N_DIR, Imabw.javaClass.classLoader)
-        App.translator = resource.translatorFor(I18N_NAME)
+        App.translator = resource.translatorFor(TRANSLATOR_NAME)
 
         if (PluginSettings.enable) {
             val blacklist = if (PluginSettings.blacklist.isNotBlank())
@@ -57,6 +56,7 @@ object Imabw : IxinDelegate<Viewer>() {
     }
 
     override fun createForm(): Viewer {
+        // init global swing environment
         Ixin.mnemonicEnable = UISettings.mnemonicEnable
         Ixin.setAntiAliasing(UISettings.antiAliasing)
         if (UISettings.windowDecorated) {
@@ -66,6 +66,7 @@ object Imabw : IxinDelegate<Viewer>() {
         if (UISettings.globalFont != null) {
             Ixin.setGlobalFont(UISettings.globalFont!!)
         }
+        // create viewer
         val viewer = Viewer()
         viewer.statusText = tr("viewer.status.ready")
         viewer.isVisible = true
@@ -76,18 +77,22 @@ object Imabw : IxinDelegate<Viewer>() {
         (this.proxy as CommandDispatcher).addProxy(proxy)
     }
 
-    @Command(HELP_CONTENTS)
-    fun showHelp() {
-        Desktop.getDesktop().browse(URI(DOCUMENT))
+    @Command(EDIT_SETTINGS)
+    fun editSettings() {
+
     }
 
-    @Command
-    fun aboutApp() {
+    @Command(HELP_CONTENTS)
+    fun showHelp() {
+        Desktop.getDesktop().browse(URI(DOCUMENT_URL))
+    }
 
+    @Command(ABOUT_APP)
+    fun aboutApp() {
+        println(AppSettings.supportedLocales)
     }
 }
 
 fun main(args: Array<String>) {
-    ByteArrayInputStream(byteArrayOf()).reader().useLines {  }
-    App.run(NAME, VERSION, args, Imabw)
+    App.run(APP_NAME, APP_VERSION, args, Imabw)
 }

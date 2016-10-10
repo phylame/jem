@@ -17,6 +17,8 @@
     <properties>
         <kotlin.version>1.0.3</kotlin.version>
         <swingx.version>1.6.1</swingx.version>
+        <rxjava.version>1.2.1</rxjava.version>
+        <rxswing.version>0.27.0</rxswing.version>
         <qaf.version>1.0.0</qaf.version>
     </properties>
 
@@ -42,8 +44,20 @@
             <version>${swingx.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
+            <groupId>io.reactivex</groupId>
+            <artifactId>rxjava</artifactId>
+            <version>${rxjava.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.reactivex</groupId>
+            <artifactId>rxswing</artifactId>
+            <version>${rxswing.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.reactivex</groupId>
+                    <artifactId>rxjava</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 

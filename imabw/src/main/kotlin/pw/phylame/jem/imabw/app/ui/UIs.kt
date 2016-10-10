@@ -26,10 +26,12 @@ import pw.phylame.qaf.core.Settings
 import pw.phylame.qaf.core.tr
 import pw.phylame.qaf.ixin.*
 import java.awt.BorderLayout
+import java.awt.Component
 import java.awt.event.ActionEvent
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import javax.swing.JComponent
+import javax.swing.JSeparator
 import javax.swing.JSplitPane
 import javax.swing.WindowConstants
 
@@ -56,7 +58,7 @@ interface Editable {
 
     fun findPrevious()
 
-    fun gotoPosition()
+    fun goto()
 
     fun updateEditActions(enable: Boolean) {
         val viewer = viewer
@@ -73,11 +75,11 @@ interface Editable {
     }
 }
 
-class Viewer() : Form(tr("app.name"), Settings("$SETTINGS_HOME/snap")) {
+class Viewer() : Form(tr("app.name"), Settings("$SETTINGS_DIR/snap")) {
     companion object {
-        private const val DIVIDER_SIZE = "form.divider.size"
-        private const val DIVIDER_LOCATION = "form.divider.location"
-        private const val SIDE_BAR_VISIBLE = "form.sidebar.visible"
+        private const val DIVIDER_SIZE_KEY = "form.divider.size"
+        private const val DIVIDER_LOCATION_KEY = "form.divider.location"
+        private const val SIDE_BAR_VISIBLE_KEY = "form.sidebar.visible"
 
         private const val dividerSize = 7
         private const val dividerLocation = 171
@@ -90,6 +92,12 @@ class Viewer() : Form(tr("app.name"), Settings("$SETTINGS_HOME/snap")) {
         private set
 
     lateinit var editor: TabbedEditor
+        private set
+
+    lateinit var dashboard: Dashboard
+        private set
+
+    lateinit var indicator: StatusIndicator
         private set
 
     private var activeComponent: JComponent? = null
@@ -108,7 +116,7 @@ class Viewer() : Form(tr("app.name"), Settings("$SETTINGS_HOME/snap")) {
         super.init()
         prepare()
         Imabw.addProxy(this)
-        activeComponent = tree
+        showDashboard()
     }
 
     private fun createActions() {
@@ -122,22 +130,42 @@ class Viewer() : Form(tr("app.name"), Settings("$SETTINGS_HOME/snap")) {
 
     private fun createContent() {
         splitPane = JSplitPane()
-        splitPane.dividerSize = snap?.get(DIVIDER_SIZE) ?: dividerSize
-        splitPane.dividerLocation = snap?.get(DIVIDER_LOCATION) ?: dividerLocation
+        splitPane.dividerSize = snap?.get(DIVIDER_SIZE_KEY) ?: dividerSize
+        splitPane.dividerLocation = snap?.get(DIVIDER_LOCATION_KEY) ?: dividerLocation
 
         tree = ContentsTree(this)
         editor = TabbedEditor(this)
+        dashboard = Dashboard(this)
 
         splitPane.leftComponent = tree
+        splitPane.rightComponent = dashboard
         contentPane.add(splitPane, BorderLayout.CENTER)
+    }
+
+    private fun setRightComponent(com: Component) {
+        if (com === splitPane.rightComponent) {
+            return
+        }
+        val size = splitPane.dividerSize
+        val location = splitPane.dividerLocation
+        splitPane.rightComponent = com
+        splitPane.dividerSize = size
+        splitPane.dividerLocation = location
+    }
+
+    fun showDashboard() {
+        setRightComponent(dashboard)
+        activeComponent = tree
     }
 
     private fun prepare() {
         val toolbar = toolBar
         if (toolbar != null) {
-            toolbar.componentPopupMenu = createPopupMenu(arrayOf(
-                    Item(LOCK_TOOL_BAR, selected = snap?.get(TOOL_BAR_LOCKED) ?: true, style = Style.CHECK),
-                    Item(HIDE_TOOL_BAR_TEXT, selected = snap?.get(TOOL_BAR_TEXT_HIDDEN) ?: true, style = Style.CHECK)),
+            toolbar.componentPopupMenu = createPopupMenu(
+                    arrayOf(
+                            Item(LOCK_TOOL_BAR, selected = snap?.get(TOOL_BAR_LOCKED) ?: true, style = Style.CHECK),
+                            Item(HIDE_TOOL_BAR_TEXT, selected = snap?.get(TOOL_BAR_TEXT_HIDDEN) ?: true, style = Style.CHECK)
+                    ),
                     title)
 
             actions[SHOW_TOOL_BAR]?.isSelected = toolbar.isVisible
@@ -146,31 +174,34 @@ class Viewer() : Form(tr("app.name"), Settings("$SETTINGS_HOME/snap")) {
         val statusbar = statusBar
         if (statusbar != null) {
             actions[SHOW_STATUS_BAR]?.isSelected = statusbar.isVisible
+            indicator = StatusIndicator(this)
+            statusbar.add(indicator, BorderLayout.LINE_END)
         }
 
-        isSidebarVisible = snap?.get(SIDE_BAR_VISIBLE) ?: true
-        actions[SIDE_BAR_VISIBLE]?.isSelected = tree.isVisible
+        isSidebarVisible = snap?.get(SIDE_BAR_VISIBLE_KEY) ?: true
+        actions[SHOW_SIDE_BAR]?.isSelected = tree.isVisible
     }
 
-    var isSidebarVisible: Boolean get() = true
+    var isSidebarVisible: Boolean get() = tree.isVisible
         set(value) {
-            snap?.set(SIDE_BAR_VISIBLE, value)
+            snap?.set(SIDE_BAR_VISIBLE_KEY, value)
             if (value && snap != null) {
-                splitPane.dividerSize = snap[DIVIDER_SIZE] ?: dividerSize
-                splitPane.dividerLocation = snap[DIVIDER_LOCATION] ?: dividerLocation
+                splitPane.dividerSize = snap[DIVIDER_SIZE_KEY] ?: dividerSize
+                splitPane.dividerLocation = snap[DIVIDER_LOCATION_KEY] ?: dividerLocation
             } else {
-                snap?.set(DIVIDER_SIZE, splitPane.dividerSize)
-                snap?.set(DIVIDER_LOCATION, splitPane.dividerLocation)
+                snap?.set(DIVIDER_SIZE_KEY, splitPane.dividerSize)
+                snap?.set(DIVIDER_LOCATION_KEY, splitPane.dividerLocation)
                 splitPane.dividerSize = 0
                 splitPane.dividerLocation = 0
             }
+            tree.isVisible = value
         }
 
     override fun restoreStatus() {
         super.restoreStatus()
         if (snap != null) {
-            splitPane.dividerSize = snap[DIVIDER_SIZE] ?: dividerSize
-            splitPane.dividerLocation = snap[DIVIDER_LOCATION] ?: dividerLocation
+            splitPane.dividerSize = snap[DIVIDER_SIZE_KEY] ?: dividerSize
+            splitPane.dividerLocation = snap[DIVIDER_LOCATION_KEY] ?: dividerLocation
         }
     }
 
@@ -183,10 +214,10 @@ class Viewer() : Form(tr("app.name"), Settings("$SETTINGS_HOME/snap")) {
 
     fun updateBook(chapter: Chapter) {
         tree.updateBook(chapter)
-        updateTiele()
+        updateTitle()
     }
 
-    fun updateTiele() {
+    fun updateTitle() {
 
     }
 
@@ -224,7 +255,7 @@ class Viewer() : Form(tr("app.name"), Settings("$SETTINGS_HOME/snap")) {
 
     @Command(SHOW_SIDE_BAR)
     fun toggleSidebar() {
-
+        isSidebarVisible = !isSidebarVisible
     }
 
     private inner class EditAction(val id: String) : IAction(id) {

@@ -21,6 +21,7 @@ package pw.phylame.jem.util;
 /**
  * Exception for unsupported book format.
  */
+@SuppressWarnings("serial")
 public class UnsupportedFormatException extends JemException {
     /**
      * The unsupported format name.

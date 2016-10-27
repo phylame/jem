@@ -21,6 +21,7 @@ package pw.phylame.jem.util;
 /**
  * The base exception class for Jem errors.
  */
+@SuppressWarnings("serial")
 public class JemException extends Exception {
     public JemException() {
         super();

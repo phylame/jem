@@ -67,7 +67,7 @@ public final class Flobs {
 
         private final File file;
 
-        private NormalFlob(File file, String mime) throws IOException {
+        private NormalFlob(@NonNull File file, String mime) throws IOException {
             super(mime);
             if (!file.exists()) {
                 throw Exceptions.forFileNotFound("No such file: %s", file);
@@ -97,7 +97,7 @@ public final class Flobs {
         private final ZipFile zip;
         private final String entry;
 
-        private EntryFlob(ZipFile zipFile, String entry, String mime) throws IOException {
+        private EntryFlob(@NonNull ZipFile zipFile, @NonNull String entry, String mime) throws IOException {
             super(mime);
             if (zipFile.getEntry(entry) == null) {
                 throw Exceptions.forIO("No such entry in ZIP: %s", entry);
@@ -135,7 +135,7 @@ public final class Flobs {
 
         public long offset, size;
 
-        private BlockFlob(String name, RandomAccessFile file, long offset, long size, String mime)
+        private BlockFlob(@NonNull String name, @NonNull RandomAccessFile file, long offset, long size, String mime)
                 throws IOException {
             super(mime);
             if (size > (file.length() - offset)) {

@@ -20,14 +20,15 @@ package pw.phylame.jem.util.text;
 
 import lombok.NonNull;
 import lombok.SneakyThrows;
+import lombok.val;
 import pw.phylame.jem.util.Variants;
 import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.ycl.io.IOUtils;
+import pw.phylame.ycl.util.StringUtils;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
 import java.io.Writer;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -46,7 +47,7 @@ public final class Texts {
     }
 
     public static Text forEmpty(String type) {
-        return forString("", type);
+        return forString(StringUtils.EMPTY_TEXT, type);
     }
 
     private static class RawText extends AbstractText {
@@ -56,7 +57,7 @@ public final class Texts {
 
         private final CharSequence text;
 
-        private RawText(CharSequence cs, String type) {
+        private RawText(@NonNull CharSequence cs, String type) {
             super(type);
             this.text = cs;
         }
@@ -75,7 +76,7 @@ public final class Texts {
         private final Flob file;
         private final String encoding;
 
-        private FlobText(Flob file, String encoding, String type) {
+        private FlobText(@NonNull Flob file, String encoding, String type) {
             super(type);
             this.file = file;
             this.encoding = encoding;
@@ -84,23 +85,30 @@ public final class Texts {
         @SneakyThrows(IOException.class)
         @Override
         public String getText() {
-            try (InputStream stream = file.openStream()) {
-                return IOUtils.toString(stream, encoding);
-
+            try (val in = file.openStream()) {
+                return IOUtils.toString(in, encoding);
             }
         }
 
+        @Override
         @SneakyThrows(IOException.class)
-        @Override
         public List<String> getLines(boolean skipEmpty) {
-            try (InputStream stream = file.openStream()) {
-                return IOUtils.toLines(stream, encoding, skipEmpty);
+            try (val in = file.openStream()) {
+                return IOUtils.toLines(in, encoding, skipEmpty);
             }
         }
 
         @Override
-        public long writeTo(Writer writer) throws IOException {
-            try (Reader reader = IOUtils.openReader(file.openStream(), encoding)) {
+        @SneakyThrows(IOException.class)
+        public Iterator<String> iterator() {
+            try (val reader = IOUtils.readerFor(file.openStream(), encoding)) {
+                return IOUtils.linesOf(reader, false);
+            }
+        }
+
+        @Override
+        public long writeTo(@NonNull Writer writer) throws IOException {
+            try (val reader = IOUtils.readerFor(file.openStream(), encoding)) {
                 return IOUtils.copy(reader, writer, -1);
             }
         }

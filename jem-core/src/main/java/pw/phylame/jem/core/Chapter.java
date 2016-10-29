@@ -25,6 +25,7 @@ import lombok.val;
 import pw.phylame.jem.util.VariantMap;
 import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.jem.util.text.Text;
+import pw.phylame.ycl.util.StringUtils;
 import pw.phylame.ycl.util.Validate;
 
 import java.lang.ref.WeakReference;
@@ -55,7 +56,7 @@ public class Chapter implements Iterable<Chapter>, Cloneable {
      * Constructs chapter with empty title.
      */
     public Chapter() {
-        Attributes.setTitle(this, "");
+        Attributes.setTitle(this, StringUtils.EMPTY_TEXT);
     }
 
     /**

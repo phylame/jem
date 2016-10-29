@@ -21,6 +21,7 @@ package pw.phylame.jem.core;
 import lombok.NonNull;
 import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.jem.util.text.Text;
+import pw.phylame.ycl.util.StringUtils;
 
 import java.util.Date;
 import java.util.Locale;
@@ -54,7 +55,7 @@ public final class Attributes {
     public static final String WORDS = "words";
 
     public static String getTitle(@NonNull Chapter chapter) {
-        return chapter.getAttributes().get(TITLE, "");
+        return chapter.getAttributes().get(TITLE, StringUtils.EMPTY_TEXT);
     }
 
     public static void setTitle(@NonNull Chapter chapter, String title) {
@@ -62,7 +63,7 @@ public final class Attributes {
     }
 
     public static Flob getCover(@NonNull Chapter chapter) {
-        return chapter.getAttributes().get(COVER, null, Flob.class);
+        return chapter.getAttributes().get(COVER, Flob.class, null);
     }
 
     public static void setCover(@NonNull Chapter chapter, Flob cover) {
@@ -70,7 +71,7 @@ public final class Attributes {
     }
 
     public static Text getIntro(@NonNull Chapter chapter) {
-        return chapter.getAttributes().get(INTRO, null, Text.class);
+        return chapter.getAttributes().get(INTRO, Text.class, null);
     }
 
     public static void setIntro(@NonNull Chapter chapter, Text intro) {
@@ -78,7 +79,7 @@ public final class Attributes {
     }
 
     public static Integer getWords(@NonNull Chapter chapter) {
-        return chapter.getAttributes().get(WORDS, 0, Integer.class);
+        return chapter.getAttributes().get(WORDS, Integer.class, 0);
     }
 
     public static void setWords(@NonNull Chapter chapter, int words) {
@@ -86,7 +87,7 @@ public final class Attributes {
     }
 
     public static String getAuthor(@NonNull Chapter chapter) {
-        return chapter.getAttributes().get(AUTHOR, "");
+        return chapter.getAttributes().get(AUTHOR, StringUtils.EMPTY_TEXT);
     }
 
     public static void setAuthor(@NonNull Chapter chapter, String author) {
@@ -94,7 +95,7 @@ public final class Attributes {
     }
 
     public static Date getDate(@NonNull Chapter chapter) {
-        return chapter.getAttributes().get(DATE, null, Date.class);
+        return chapter.getAttributes().get(DATE, Date.class, null);
     }
 
     public static void setDate(@NonNull Chapter chapter, Date date) {
@@ -102,7 +103,7 @@ public final class Attributes {
     }
 
     public static Date getPubdate(@NonNull Chapter chapter) {
-        return chapter.getAttributes().get(PUBDATE, null, Date.class);
+        return chapter.getAttributes().get(PUBDATE, Date.class, null);
     }
 
     public static void setPubdate(@NonNull Chapter chapter, Date pubdate) {
@@ -110,7 +111,7 @@ public final class Attributes {
     }
 
     public static String getGenre(@NonNull Chapter chapter) {
-        return chapter.getAttributes().get(GENRE, "");
+        return chapter.getAttributes().get(GENRE, StringUtils.EMPTY_TEXT);
     }
 
     public static void setGenre(@NonNull Chapter chapter, String genre) {
@@ -118,7 +119,7 @@ public final class Attributes {
     }
 
     public static Locale getLanguage(@NonNull Chapter chapter) {
-        return chapter.getAttributes().get(LANGUAGE, null, Locale.class);
+        return chapter.getAttributes().get(LANGUAGE, Locale.class, null);
     }
 
     public static void setLanguage(@NonNull Chapter chapter, Locale language) {
@@ -126,7 +127,7 @@ public final class Attributes {
     }
 
     public static String getPublisher(@NonNull Chapter chapter) {
-        return chapter.getAttributes().get(PUBLISHER, "");
+        return chapter.getAttributes().get(PUBLISHER, StringUtils.EMPTY_TEXT);
     }
 
     public static void setPublisher(@NonNull Chapter chapter, String publisher) {
@@ -134,7 +135,7 @@ public final class Attributes {
     }
 
     public static String getRights(@NonNull Chapter chapter) {
-        return chapter.getAttributes().get(RIGHTS, "");
+        return chapter.getAttributes().get(RIGHTS, StringUtils.EMPTY_TEXT);
     }
 
     public static void setRights(@NonNull Chapter chapter, String rights) {
@@ -142,7 +143,7 @@ public final class Attributes {
     }
 
     public static String getState(@NonNull Chapter chapter) {
-        return chapter.getAttributes().get(STATE, "");
+        return chapter.getAttributes().get(STATE, StringUtils.EMPTY_TEXT);
     }
 
     public static void setState(@NonNull Chapter chapter, String state) {
@@ -150,7 +151,7 @@ public final class Attributes {
     }
 
     public static String getKeywords(@NonNull Chapter chapter) {
-        return chapter.getAttributes().get(KEYWORDS, "");
+        return chapter.getAttributes().get(KEYWORDS, StringUtils.EMPTY_TEXT);
     }
 
     public static void setKeywords(@NonNull Chapter chapter, String subject) {
@@ -158,7 +159,7 @@ public final class Attributes {
     }
 
     public static String getVendor(@NonNull Chapter chapter) {
-        return chapter.getAttributes().get(VENDOR, "");
+        return chapter.getAttributes().get(VENDOR, StringUtils.EMPTY_TEXT);
     }
 
     public static void setVendor(@NonNull Chapter chapter, String vendor) {
@@ -166,7 +167,7 @@ public final class Attributes {
     }
 
     public static String getISBN(@NonNull Chapter chapter) {
-        return chapter.getAttributes().get(ISBN, "");
+        return chapter.getAttributes().get(ISBN, StringUtils.EMPTY_TEXT);
     }
 
     public static void setISBN(@NonNull Chapter chapter, String isbn) {

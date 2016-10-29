@@ -18,10 +18,7 @@
 
 package pw.phylame.jem.util.text;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NonNull;
+import lombok.*;
 import pw.phylame.ycl.util.StringUtils;
 
 import java.io.IOException;
@@ -45,7 +42,7 @@ public abstract class AbstractText implements Text {
 
     @Override
     public long writeTo(@NonNull Writer writer) throws IOException {
-        String text = getText();
+        val text = getText();
         writer.append(text).flush();
         return text.length();
     }

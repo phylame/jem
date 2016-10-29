@@ -27,6 +27,7 @@ import pw.phylame.jem.util.text.Text;
 import pw.phylame.jem.util.text.Texts;
 import pw.phylame.ycl.io.PathUtils;
 import pw.phylame.ycl.util.Provider;
+import pw.phylame.ycl.util.StringUtils;
 import pw.phylame.ycl.value.Lazy;
 
 import java.text.DateFormat;
@@ -51,7 +52,7 @@ public final class Variants {
     public static final String BOOLEAN = "bool";
 
     /**
-     * Returns supported types by Jem.
+     * Returns supported type by Jem.
      *
      * @return array of type names
      */
@@ -59,24 +60,24 @@ public final class Variants {
         return new String[]{FLOB, TEXT, STRING, INTEGER, REAL, LOCALE, DATETIME, BOOLEAN};
     }
 
-    private static final Map<Class<?>, String> variantTypes = new HashMap<>();
+    private static final Map<Class<?>, String> typeNames = new HashMap<>();
 
     static {
-        variantTypes.put(Character.class, STRING);
-        variantTypes.put(String.class, STRING);
-        variantTypes.put(Date.class, DATETIME);
-        variantTypes.put(Locale.class, LOCALE);
-        variantTypes.put(Byte.class, INTEGER);
-        variantTypes.put(Short.class, INTEGER);
-        variantTypes.put(Integer.class, INTEGER);
-        variantTypes.put(Long.class, INTEGER);
-        variantTypes.put(Boolean.class, BOOLEAN);
-        variantTypes.put(Float.class, REAL);
-        variantTypes.put(Double.class, REAL);
+        typeNames.put(Character.class, STRING);
+        typeNames.put(String.class, STRING);
+        typeNames.put(Date.class, DATETIME);
+        typeNames.put(Locale.class, LOCALE);
+        typeNames.put(Byte.class, INTEGER);
+        typeNames.put(Short.class, INTEGER);
+        typeNames.put(Integer.class, INTEGER);
+        typeNames.put(Long.class, INTEGER);
+        typeNames.put(Boolean.class, BOOLEAN);
+        typeNames.put(Float.class, REAL);
+        typeNames.put(Double.class, REAL);
     }
 
     public static void mapType(@NonNull Class<?> clazz, @NonNull String type) {
-        variantTypes.put(clazz, type);
+        typeNames.put(clazz, type);
     }
 
     /**
@@ -87,7 +88,7 @@ public final class Variants {
      * @throws NullPointerException if the obj is <code>null</code>
      */
     public static String typeOf(@NonNull Object o) {
-        val type = variantTypes.get(o.getClass());
+        val type = typeNames.get(o.getClass());
         if (type != null) {
             return type;
         }
@@ -115,7 +116,7 @@ public final class Variants {
     public static Object defaultFor(String type) {
         switch (type) {
             case STRING:
-                return "";
+                return StringUtils.EMPTY_TEXT;
             case TEXT:
                 return Texts.forEmpty(Text.PLAIN);
             case FLOB:
@@ -129,9 +130,9 @@ public final class Variants {
             case REAL:
                 return 0.0D;
             case BOOLEAN:
-                return false;
+                return Boolean.FALSE;
             default:
-                return "";
+                return StringUtils.EMPTY_TEXT;
         }
     }
 

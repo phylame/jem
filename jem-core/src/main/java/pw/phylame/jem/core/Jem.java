@@ -19,6 +19,7 @@
 package pw.phylame.jem.core;
 
 import lombok.NonNull;
+import lombok.val;
 import pw.phylame.jem.util.Filter;
 
 import java.util.List;
@@ -60,7 +61,7 @@ public final class Jem {
         }
 
         int depth = 0;
-        for (Chapter sub : chapter) {
+        for (val sub : chapter) {
             int d = depthOf(sub);
             if (d > depth) {
                 depth = d;
@@ -112,7 +113,7 @@ public final class Jem {
             return 0;
         }
         int count = 0;
-        for (Chapter sub : chapter) {
+        for (val sub : chapter) {
             if (count++ == limit) {
                 break;
             } else if (filter.accept(sub)) {

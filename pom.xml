@@ -4,7 +4,7 @@
 
     <groupId>pw.phylame.jem</groupId>
     <artifactId>jem-project</artifactId>
-    <version>3.0.0</version>
+    <version>3.1.0</version>
     <packaging>pom</packaging>
 
     <name>Project Jem</name>
@@ -41,7 +41,7 @@
         <maven.compiler.optimize>true</maven.compiler.optimize>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <ycl.version>1.0.0</ycl.version>
+        <ycl.version>1.1.0</ycl.version>
         <xpp3.version>1.1.4c</xpp3.version>
         <testng.version>6.9.10</testng.version>
         <lombok.version>1.16.10</lombok.version>
@@ -76,7 +76,7 @@
                 <version>${xpp3.version}</version>
             </dependency>
             <dependency>
-                <groupId>pw.phylame.ycl</groupId>
+                <groupId>pw.phylame.util</groupId>
                 <artifactId>ycl</artifactId>
                 <version>${ycl.version}</version>
             </dependency>

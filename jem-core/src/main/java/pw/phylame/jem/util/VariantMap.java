@@ -19,6 +19,7 @@
 package pw.phylame.jem.util;
 
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.val;
 
 import java.util.HashMap;
@@ -27,6 +28,10 @@ import java.util.Set;
 
 public class VariantMap implements Cloneable {
     private Map<String, Object> map;
+
+    public interface Validator {
+        void validate(CharSequence name, Object value) throws RuntimeException;
+    }
 
     private Validator validator = null;
 
@@ -61,7 +66,7 @@ public class VariantMap implements Cloneable {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T get(String key, T fallback, Class<T> type) {
+    public <T> T get(String key, Class<T> type, T fallback) {
         Object v = map.get(key);
         return v != null && type.isInstance(v) ? (T) v : fallback;
     }
@@ -107,8 +112,10 @@ public class VariantMap implements Cloneable {
      * @return a shallow copy of this map
      */
     @Override
+    @SneakyThrows(CloneNotSupportedException.class)
     public VariantMap clone() {
-        val dump = new VariantMap(new HashMap<String, Object>(), validator);
+        VariantMap dump = (VariantMap) super.clone();
+        dump.validator = validator;
         dump.update(this.map);
         return dump;
     }

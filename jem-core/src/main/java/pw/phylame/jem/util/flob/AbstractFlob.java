@@ -20,11 +20,11 @@ package pw.phylame.jem.util.flob;
 
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.val;
 import pw.phylame.ycl.io.IOUtils;
 import pw.phylame.ycl.io.PathUtils;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
@@ -47,14 +47,14 @@ public abstract class AbstractFlob implements Flob {
 
     @Override
     public byte[] readAll() throws IOException {
-        try (InputStream in = openStream()) {
+        try (val in = openStream()) {
             return IOUtils.toBytes(in);
         }
     }
 
     @Override
     public long writeTo(@NonNull OutputStream out) throws IOException {
-        try (InputStream in = openStream()) {
+        try (val in = openStream()) {
             return IOUtils.copy(in, out, -1);
         }
     }

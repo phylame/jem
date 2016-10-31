@@ -18,9 +18,7 @@
 
 package pw.phylame.jem.util;
 
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
+import lombok.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,6 +31,8 @@ public class VariantMap implements Cloneable {
         void validate(CharSequence name, Object value) throws RuntimeException;
     }
 
+    @Getter
+    @Setter
     private Validator validator = null;
 
     public VariantMap() {

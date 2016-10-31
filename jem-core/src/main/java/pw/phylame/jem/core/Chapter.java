@@ -18,10 +18,7 @@
 
 package pw.phylame.jem.core;
 
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
+import lombok.*;
 import pw.phylame.jem.util.VariantMap;
 import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.jem.util.text.Text;
@@ -102,42 +99,19 @@ public class Chapter implements Iterable<Chapter>, Cloneable {
         chapter.dumpTo(this);
     }
 
-    // ************************
-    // ** Attributes support **
-    // ************************
-
+    /**
+     * Attributes of the chapter.
+     */
     @Getter
     private VariantMap attributes = new VariantMap();
 
-    // **************************
-    // ** Text text support **
-    // **************************
-
     /**
-     * Text text
+     * Content of the chapter.
      */
+    @Getter
+    @Setter
+    @NonNull
     private Text text;
-
-    /**
-     * Returns the current text.
-     *
-     * @return the Text, or <code>null</code> if not present
-     * @since 2.3.1
-     */
-    public final Text getText() {
-        return text;
-    }
-
-    /**
-     * Replaces text with specified text.
-     *
-     * @param content text
-     * @throws NullPointerException if the <code>text</code> is <code>null</code>
-     * @since 2.3.1
-     */
-    public final void setText(@NonNull Text content) {
-        this.text = content;
-    }
 
     // ****************************
     // ** Sub-chapter operations **
@@ -219,7 +193,7 @@ public class Chapter implements Iterable<Chapter>, Cloneable {
      * @throws IndexOutOfBoundsException if the index is out of range (index &lt; 0 || index &ge; size())
      */
     public final Chapter removeAt(int index) {
-        Chapter chapter = children.remove(index);
+        val chapter = children.remove(index);
         chapter.parent = null;
         return chapter;
     }
@@ -253,7 +227,7 @@ public class Chapter implements Iterable<Chapter>, Cloneable {
      * @throws IndexOutOfBoundsException if the index is out of range (index &lt; 0 || index &ge; size())
      */
     public final Chapter replace(int index, Chapter chapter) {
-        Chapter previous = children.set(index, checkChapter(chapter));
+        val previous = children.set(index, checkChapter(chapter));
         chapter.setParent(this);
         previous.parent = null;
         return previous;
@@ -275,7 +249,7 @@ public class Chapter implements Iterable<Chapter>, Cloneable {
      * Removes all chapters from sub-chapter list.
      */
     public final void clear() {
-        for (Chapter chapter : children) {
+        for (val chapter : children) {
             chapter.parent = null;
         }
         children.clear();
@@ -348,7 +322,7 @@ public class Chapter implements Iterable<Chapter>, Cloneable {
      * sub-chapter list and attribute map will also be cleared.</p>
      */
     public void cleanup() {
-        for (Cleanable work : cleaners) {
+        for (val work : cleaners) {
             work.clean(this);
         }
         cleaners.clear();
@@ -356,7 +330,7 @@ public class Chapter implements Iterable<Chapter>, Cloneable {
         attributes.clear();
 
         // clean all sub chapters
-        for (Chapter sub : children) {
+        for (val sub : children) {
             sub.cleanup();
             sub.parent = null;
         }
@@ -375,23 +349,23 @@ public class Chapter implements Iterable<Chapter>, Cloneable {
         }
     }
 
+    protected void dumpTo(Chapter chapter) {
+        chapter.attributes = attributes.clone();
+        chapter.children = new ArrayList<>(children);
+        chapter.text = text;
+    }
+
     /**
      * Returns a shallow copy of this <code>Chapter</code> instance.
      *
      * @return a shallow copy of this chapter
      */
-    @SneakyThrows(CloneNotSupportedException.class)
     @Override
+    @SneakyThrows(CloneNotSupportedException.class)
     public Chapter clone() {
         val result = (Chapter) super.clone();
         dumpTo(result);
         return result;
-    }
-
-    protected void dumpTo(Chapter chapter) {
-        chapter.attributes = attributes.clone();
-        chapter.children = new ArrayList<>(children);
-        chapter.text = text;
     }
 
     /**

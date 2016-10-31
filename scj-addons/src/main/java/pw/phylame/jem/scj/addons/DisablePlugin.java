@@ -1,5 +1,8 @@
 package pw.phylame.jem.scj.addons;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.UUID;
 
 import org.apache.commons.cli.CommandLine;
@@ -9,8 +12,13 @@ import lombok.val;
 import pw.phylame.qaf.cli.CLIDelegate;
 import pw.phylame.qaf.cli.Command;
 import pw.phylame.qaf.cli.Initializer;
+import pw.phylame.ycl.io.IOUtils;
+import pw.phylame.ycl.log.Log;
+import pw.phylame.ycl.util.CollectUtils;
 
 public class DisablePlugin extends AbstractPlugin implements Initializer, Command {
+    private static final String TAG = DisablePlugin.class.getSimpleName();
+
     private static final String OPTION = "D";
 
     public DisablePlugin() {
@@ -31,8 +39,15 @@ public class DisablePlugin extends AbstractPlugin implements Initializer, Comman
     public int execute(CLIDelegate delegate) {
         val paths = (String[]) sci.getContext().get(OPTION);
         if (paths != null && paths.length > 0) {
-            for (String path : paths) {
-
+            try (val reader = new FileReader(config.getBlacklist())) {
+                val set = CollectUtils.setOf(IOUtils.linesOf(reader, true));
+                for (val path : paths) {
+                    set.add(path);
+                }
+            } catch (FileNotFoundException e) {
+                Log.d(TAG, "not found blacklist file: %s", config.getBlacklist());
+            } catch (IOException e) {
+                Log.d(TAG, e);
             }
         }
         return 0;

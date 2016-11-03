@@ -22,7 +22,7 @@ import pw.phylame.qaf.ixin.Ixin
 
 // meta data
 val APP_NAME = System.getProperty("app.name") ?: "imabw"
-val APP_VERSION = System.getProperty("app.version") ?: "3.0.0"
+val APP_VERSION = System.getProperty("app.version") ?: "3.1.0"
 const val DOCUMENT_URL = "https://github.com/phylame/jem"
 
 const val SETTINGS_DIR = "config/"
@@ -87,7 +87,7 @@ const val JOIN_LINES = "joinLines"
 
 val TEXT_COMMANDS = arrayOf(REPLACE, TO_LOWER, TO_UPPER, TO_TITLED, TO_CAPITALIZED, JOIN_LINES)
 
-const val moreTools = "moreTools"
+const val MORE_TOOLS = "moreTools"
 
 // book operations
 const val NEW_CHAPTER = "newChapter"

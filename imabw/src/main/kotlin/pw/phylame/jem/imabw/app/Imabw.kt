@@ -58,14 +58,7 @@ object Imabw : IxinDelegate<Viewer>() {
     override fun createForm(): Viewer {
         // init global swing environment
         Ixin.mnemonicEnable = UISettings.mnemonicEnable
-        Ixin.setAntiAliasing(UISettings.antiAliasing)
-        if (UISettings.windowDecorated) {
-            Ixin.setWindowDecorated(true)
-        }
-        Ixin.setLafTheme(UISettings.lafTheme)
-        if (UISettings.globalFont != null) {
-            Ixin.setGlobalFont(UISettings.globalFont!!)
-        }
+        Ixin.init(UISettings.antiAliasing, UISettings.windowDecorated, UISettings.lafTheme, UISettings.globalFont)
         // create viewer
         val viewer = Viewer()
         viewer.statusText = tr("viewer.status.ready")

@@ -79,7 +79,7 @@ object Imabw : IxinDelegate<Viewer>() {
 
     @Command(EDIT_SETTINGS)
     fun editSettings() {
-
+        // todo show preferences dialog
     }
 
     @Command(HELP_CONTENTS)
@@ -89,7 +89,7 @@ object Imabw : IxinDelegate<Viewer>() {
 
     @Command(ABOUT_APP)
     fun aboutApp() {
-        println(AppSettings.supportedLocales)
+        // todo show dialog for imabw information
     }
 }
 

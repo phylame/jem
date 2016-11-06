@@ -19,6 +19,8 @@
         <swingx.version>1.6.1</swingx.version>
         <rxjava.version>1.2.1</rxjava.version>
         <rxswing.version>0.27.0</rxswing.version>
+        <jcalendar.version>1.4</jcalendar.version>
+        <jfontchooser.version>1.0.5</jfontchooser.version>
         <qaf.version>1.0.0</qaf.version>
     </properties>
 
@@ -42,6 +44,16 @@
             <groupId>org.swinglabs</groupId>
             <artifactId>swingx</artifactId>
             <version>${swingx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>say.swing</groupId>
+            <artifactId>jfontchooser</artifactId>
+            <version>${jfontchooser.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.toedter</groupId>
+            <artifactId>jcalendar</artifactId>
+            <version>${jcalendar.version}</version>
         </dependency>
         <dependency>
             <groupId>io.reactivex</groupId>

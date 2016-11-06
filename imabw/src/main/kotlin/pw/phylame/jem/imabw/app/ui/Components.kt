@@ -23,7 +23,6 @@ import org.jdesktop.swingx.JXPanel
 import pw.phylame.jem.imabw.app.GOTO
 import pw.phylame.jem.imabw.app.Imabw
 import pw.phylame.qaf.core.tr
-import pw.phylame.qaf.ixin.Ixin
 import pw.phylame.qaf.ixin.iconFor
 import java.awt.BorderLayout
 import java.awt.Component

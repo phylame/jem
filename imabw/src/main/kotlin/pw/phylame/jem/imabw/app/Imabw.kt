@@ -18,6 +18,7 @@
 
 package pw.phylame.jem.imabw.app
 
+import pw.phylame.jem.imabw.app.ui.Dialogs
 import pw.phylame.jem.imabw.app.ui.Viewer
 import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.lines
@@ -26,11 +27,9 @@ import pw.phylame.qaf.ixin.*
 import pw.phylame.ycl.io.IOUtils
 import pw.phylame.ycl.log.Level
 import pw.phylame.ycl.log.Log
-import java.awt.Desktop
-import java.net.URI
 import java.util.*
 
-object Imabw : IxinDelegate<Viewer>() {
+object Imabw : IDelegate<Viewer>() {
     override fun onStart() {
         super.onStart()
         App.ensureHomeExisted()
@@ -57,7 +56,7 @@ object Imabw : IxinDelegate<Viewer>() {
 
     override fun createForm(): Viewer {
         // init global swing environment
-        Ixin.mnemonicEnable = UISettings.mnemonicEnable
+        Ixin.isMnemonicEnable = UISettings.mnemonicEnable
         Ixin.init(UISettings.antiAliasing, UISettings.windowDecorated, UISettings.lafTheme, UISettings.globalFont)
         // create viewer
         val viewer = Viewer()
@@ -72,17 +71,17 @@ object Imabw : IxinDelegate<Viewer>() {
 
     @Command(EDIT_SETTINGS)
     fun editSettings() {
-        // todo show preferences dialog
+        Dialogs.editSettings(Imabw.form)
     }
 
     @Command(HELP_CONTENTS)
     fun showHelp() {
-        Desktop.getDesktop().browse(URI(DOCUMENT_URL))
+        Dialogs.browse(DOCUMENT_URL)
     }
 
     @Command(ABOUT_APP)
     fun aboutApp() {
-        // todo show dialog for imabw information
+        Dialogs.showAbout(Imabw.form)
     }
 }
 

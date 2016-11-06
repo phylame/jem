@@ -31,7 +31,6 @@ import java.awt.event.ActionEvent
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import javax.swing.JComponent
-import javax.swing.JSeparator
 import javax.swing.JSplitPane
 import javax.swing.WindowConstants
 
@@ -75,7 +74,7 @@ interface Editable {
     }
 }
 
-class Viewer() : Form(tr("app.name"), Settings("$SETTINGS_DIR/snap")) {
+class Viewer() : IForm(tr("app.name"), Settings("$SETTINGS_DIR/snap")) {
     companion object {
         private const val DIVIDER_SIZE_KEY = "form.divider.size"
         private const val DIVIDER_LOCATION_KEY = "form.divider.location"
@@ -102,19 +101,18 @@ class Viewer() : Form(tr("app.name"), Settings("$SETTINGS_DIR/snap")) {
 
     private var activeComponent: JComponent? = null
 
-    override fun init() {
+    init {
         defaultCloseOperation = WindowConstants.DO_NOTHING_ON_CLOSE
         addWindowListener(object : WindowAdapter() {
             override fun windowClosing(e: WindowEvent) {
                 Imabw.performed(EXIT_APP)
             }
         })
-        iconImage = imageFor(tr("app.icon"))
+        iconImage = localizedImageFor("app.icon")
         createActions()
         createComponents(JSONDesigner(DESIGNER_NAME), Imabw)
         createContent()
-        super.init()
-        prepare()
+        restoreStatus()
         Imabw.addProxy(this)
         showDashboard()
     }
@@ -158,7 +156,28 @@ class Viewer() : Form(tr("app.name"), Settings("$SETTINGS_DIR/snap")) {
         activeComponent = tree
     }
 
-    private fun prepare() {
+    var isSidebarVisible: Boolean get() = tree.isVisible
+        set(value) {
+            snap?.set(SIDE_BAR_VISIBLE_KEY, value)
+            if (value && snap != null) {
+                splitPane.dividerSize = snap[DIVIDER_SIZE_KEY] ?: dividerSize
+                splitPane.dividerLocation = snap[DIVIDER_LOCATION_KEY] ?: dividerLocation
+            } else {
+                snap?.set(DIVIDER_SIZE_KEY, splitPane.dividerSize)
+                snap?.set(DIVIDER_LOCATION_KEY, splitPane.dividerLocation)
+                splitPane.dividerSize = 0
+                splitPane.dividerLocation = 0
+            }
+            tree.isVisible = value
+        }
+
+    override fun restoreStatus() {
+        super.restoreStatus()
+        val snap = snap
+        if (snap != null) {
+            splitPane.dividerSize = snap[DIVIDER_SIZE_KEY] ?: dividerSize
+            splitPane.dividerLocation = snap[DIVIDER_LOCATION_KEY] ?: dividerLocation
+        }
         val toolbar = toolBar
         if (toolbar != null) {
             toolbar.componentPopupMenu = createPopupMenu(
@@ -180,29 +199,6 @@ class Viewer() : Form(tr("app.name"), Settings("$SETTINGS_DIR/snap")) {
 
         isSidebarVisible = snap?.get(SIDE_BAR_VISIBLE_KEY) ?: true
         actions[SHOW_SIDE_BAR]?.isSelected = tree.isVisible
-    }
-
-    var isSidebarVisible: Boolean get() = tree.isVisible
-        set(value) {
-            snap?.set(SIDE_BAR_VISIBLE_KEY, value)
-            if (value && snap != null) {
-                splitPane.dividerSize = snap[DIVIDER_SIZE_KEY] ?: dividerSize
-                splitPane.dividerLocation = snap[DIVIDER_LOCATION_KEY] ?: dividerLocation
-            } else {
-                snap?.set(DIVIDER_SIZE_KEY, splitPane.dividerSize)
-                snap?.set(DIVIDER_LOCATION_KEY, splitPane.dividerLocation)
-                splitPane.dividerSize = 0
-                splitPane.dividerLocation = 0
-            }
-            tree.isVisible = value
-        }
-
-    override fun restoreStatus() {
-        super.restoreStatus()
-        if (snap != null) {
-            splitPane.dividerSize = snap[DIVIDER_SIZE_KEY] ?: dividerSize
-            splitPane.dividerLocation = snap[DIVIDER_LOCATION_KEY] ?: dividerLocation
-        }
     }
 
     override fun saveStatus() {

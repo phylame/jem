@@ -21,7 +21,7 @@ package pw.phylame.jem.imabw.app
 import pw.phylame.qaf.ixin.Ixin
 
 // meta data
-val APP_NAME = System.getProperty("app.name") ?: "imabw"
+val APP_NAME = System.getProperty("app.icon") ?: "imabw"
 val APP_VERSION = System.getProperty("app.version") ?: "3.1.0"
 const val DOCUMENT_URL = "https://github.com/phylame/jem"
 
@@ -36,7 +36,7 @@ const val DESIGNER_NAME = "ui/designer.json"
 // default config
 const val MAX_HISTORY_LIMITS = 28
 const val DEFAULT_HISTORY_LIMITS = 18
-const val DEFAULT_LAF_THEME = Ixin.DEFAULT_THEME_NAME
+const val DEFAULT_LAF_THEME = Ixin.DEFAULT_THEME
 const val DEFAULT_ICON_SET = "default"
 const val DEFAULT_KEY_BINDINGS = "default"
 

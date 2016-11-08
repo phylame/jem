@@ -3,17 +3,14 @@
  *
  * This file is part of Jem.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  */
 
 package pw.phylame.jem.epm.util;
@@ -68,12 +65,18 @@ public final class ZipUtils {
     /**
      * Writes text content in TextObject to PMAB archive.
      *
-     * @param zipout   PMAB archive stream
-     * @param name     name of entry to store text content
-     * @param text     the TextObject
-     * @param encoding encoding to encode text, if <tt>null</tt> use platform encoding
-     * @throws NullPointerException if arguments contain <tt>null</tt>
-     * @throws IOException          if occurs IO errors when writing text
+     * @param zipout
+     *            PMAB archive stream
+     * @param name
+     *            name of entry to store text content
+     * @param text
+     *            the TextObject
+     * @param encoding
+     *            encoding to encode text, if <tt>null</tt> use platform encoding
+     * @throws NullPointerException
+     *             if arguments contain <tt>null</tt>
+     * @throws IOException
+     *             if occurs IO errors when writing text
      */
     public static void writeText(@NonNull ZipOutputStream zipout, String name, @NonNull Text text, String encoding)
             throws IOException {

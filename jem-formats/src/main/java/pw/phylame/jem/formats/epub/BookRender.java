@@ -257,7 +257,7 @@ public class BookRender {
         val chapterTitle = Attributes.getTitle(chapter);
 
         val text = chapter.getText();
-        if (text != null && text.getType().equals(Text.HTML)) {    // text already HTML
+        if (text != null && text.getType().equals(Texts.HTML)) {    // text already HTML
             newNaviItem(baseName, writeText(text, baseName, name), chapterTitle, null);
             endNaviItem();
             return new HtmlRender.Link(chapterTitle, name);
@@ -274,7 +274,7 @@ public class BookRender {
         htmlRender.setOutput(zipout);
         htmlRender.renderChapter(chapterTitle, coverHref, chapterTitle, Attributes.getIntro(chapter), text != null
                 ? text
-                : Texts.forEmpty(Text.PLAIN));
+                : Texts.forEmpty(Texts.PLAIN));
         zipout.closeEntry();
 
         newResource(baseName, href, MT_XHTML);

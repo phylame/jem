@@ -20,19 +20,20 @@ package pw.phylame.jem.imabw.app
 
 import pw.phylame.jem.core.Book
 import pw.phylame.jem.core.Chapter
-import pw.phylame.jem.epm.Helper
+import pw.phylame.jem.epm.Registry
 import pw.phylame.jem.imabw.app.ui.Dialogs
 import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.tr
 import pw.phylame.qaf.ixin.Command
 import java.io.File
 import java.nio.charset.Charset
-import java.util.*
+import java.util.IdentityHashMap
+import java.util.LinkedList
 
 class Task(val updater: (Task) -> Unit,
            val book: Book,
            val source: File? = null,
-           val format: String = Helper.PMAB,
+           val format: String = Registry.PMAB,
            val arguments: Map<String, Any> = emptyMap()) {
 
     constructor(updater: (Task) -> Unit, book: Book) : this(updater, book, null)
@@ -255,16 +256,23 @@ object Manager {
     }
 
     @Command(OPEN_FILE)
-    fun openFile(file: File? = null) {
+    fun openFile() {
+        openFile(null)
+    }
+    
+    fun openFile(file:File?) {
         val title = tr("d.openBook.title")
         if (!maybeSaving(title)) {
             return
         }
-
     }
 
     @Command(NEW_FILE)
-    fun newFile(name: String? = null) {
+    fun newFile() {
+        newFile(null)
+    }
+    
+    fun newFile(name:String?) {
         val title = tr("d.newBook.title")
         if (!maybeSaving(title)) {
             return
@@ -316,4 +324,3 @@ object Manager {
         App.exit(0)
     }
 }
-

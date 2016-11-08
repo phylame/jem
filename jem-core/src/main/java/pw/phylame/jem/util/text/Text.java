@@ -3,17 +3,14 @@
  *
  * This file is part of Jem.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  */
 
 package pw.phylame.jem.util.text;
@@ -27,19 +24,9 @@ import java.util.List;
  */
 public interface Text extends Iterable<String> {
     /**
-     * Type for plain text.
-     */
-    String PLAIN = "plain";
-
-    /**
-     * Type for html text.
-     */
-    String HTML = "html";
-
-    /**
-     * Returns the type of text.
+     * Returns the type of content.
      *
-     * @return the type
+     * @return the type string
      */
     String getType();
 
@@ -53,7 +40,8 @@ public interface Text extends Iterable<String> {
     /**
      * Returns list of string of text split by line separator.
      *
-     * @param skipEmpty <code>true</code> to skip empty lines
+     * @param skipEmpty
+     *            <code>true</code> to skip empty lines
      * @return list of string, may be empty list
      */
     List<String> getLines(boolean skipEmpty);
@@ -61,9 +49,13 @@ public interface Text extends Iterable<String> {
     /**
      * Writes text of this object to output writer.
      *
-     * @param writer output to store text text
+     * @param writer
+     *            output to store text text
      * @return number of written characters
-     * @throws IOException if occur I/O errors
+     * @throws NullPointerException
+     *             if the writer is {@literal null}
+     * @throws IOException
+     *             if occur I/O errors
      */
     long writeTo(Writer writer) throws IOException;
 }

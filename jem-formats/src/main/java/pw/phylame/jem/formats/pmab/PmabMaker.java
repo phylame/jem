@@ -18,13 +18,18 @@
 
 package pw.phylame.jem.formats.pmab;
 
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.Date;
+import java.util.Locale;
+import java.util.zip.ZipOutputStream;
+
 import lombok.val;
 import pw.phylame.jem.core.Attributes;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.core.Chapter;
 import pw.phylame.jem.core.Jem;
 import pw.phylame.jem.epm.base.ZipMaker;
-import pw.phylame.jem.epm.util.E;
 import pw.phylame.jem.epm.util.MakerException;
 import pw.phylame.jem.epm.util.ZipUtils;
 import pw.phylame.jem.epm.util.xml.XmlRender;
@@ -32,17 +37,12 @@ import pw.phylame.jem.formats.util.M;
 import pw.phylame.jem.util.Variants;
 import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.jem.util.text.Text;
+import pw.phylame.jem.util.text.Texts;
 import pw.phylame.ycl.format.Converters;
 import pw.phylame.ycl.io.PathUtils;
-import pw.phylame.ycl.util.DateUtils;
 import pw.phylame.ycl.util.CollectUtils;
+import pw.phylame.ycl.util.DateUtils;
 import pw.phylame.ycl.util.StringUtils;
-
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.Date;
-import java.util.Locale;
-import java.util.zip.ZipOutputStream;
 
 /**
  * PMAB e-book maker.
@@ -338,7 +338,7 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
     private String[] writeText(Text text, String dir, String baseName, Tuple tuple) throws IOException {
         val encoding = tuple.config.textEncoding != null ? tuple.config.textEncoding : PMAB.defaultEncoding;
         val type = text.getType();
-        val href = dir + "/" + (type.equals(Text.PLAIN) ? baseName + ".txt" : baseName + "." + type);
+        val href = dir + "/" + (type.equals(Texts.PLAIN) ? baseName + ".txt" : baseName + "." + type);
         ZipUtils.writeText(tuple.zipout, href, text, encoding);
         return new String[]{href, encoding};
     }

@@ -31,6 +31,7 @@ import pw.phylame.jem.epm.util.config.NonConfig;
 import pw.phylame.jem.formats.util.M;
 import pw.phylame.jem.util.flob.Flobs;
 import pw.phylame.jem.util.text.AbstractText;
+import pw.phylame.jem.util.text.Texts;
 import pw.phylame.ycl.io.PathUtils;
 import pw.phylame.ycl.io.ZLibUtils;
 import pw.phylame.ycl.util.CollectUtils;
@@ -166,17 +167,17 @@ public class UmdParser extends BinaryParser<NonConfig> {
             }
             break;
             case UMD.CDT_CONTENT_ID: {
-                book.getAttributes().put("book_id", readUInt32(file));
+                book.getAttributes().set("book_id", readUInt32(file));
             }
             break;
             case UMD.CDT_CDS_KEY: {
                 val bytes = readData(file, length, "umd.parse.badCDSKey");
-                book.getAttributes().put("cds_key", Flobs.forBytes("cds_key", bytes, PathUtils.UNKNOWN_MIME));
+                book.getAttributes().set("cds_key", Flobs.forBytes("cds_key", bytes, PathUtils.UNKNOWN_MIME));
             }
             break;
             case UMD.CDT_LICENSE_KEY: {
                 val bytes = readData(file, length, "umd.parse.badLicenseKey");
-                book.getAttributes().put("license_key", Flobs.forBytes("license_key", bytes, PathUtils.UNKNOWN_MIME));
+                book.getAttributes().set("license_key", Flobs.forBytes("license_key", bytes, PathUtils.UNKNOWN_MIME));
             }
             break;
             case UMD.CDT_COVER_IMAGE: {
@@ -326,7 +327,7 @@ public class UmdParser extends BinaryParser<NonConfig> {
         private final List<TextBlock> blocks;
 
         private UmdText(RandomAccessFile file, long offset, long size, List<TextBlock> blocks) {
-            super(PLAIN);
+            super(Texts.PLAIN);
             this.file = file;
             this.offset = offset;
             this.size = size;

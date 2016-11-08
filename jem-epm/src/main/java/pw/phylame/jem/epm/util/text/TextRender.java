@@ -3,17 +3,14 @@
  *
  * This file is part of Jem.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  */
 
 package pw.phylame.jem.epm.util.text;
@@ -51,18 +48,22 @@ public final class TextRender {
     /**
      * Renders lines of text in <tt>Text</tt> to specified writer.
      *
-     * @param text   the text source
-     * @param writer the destination writer
-     * @param config render config
+     * @param text
+     *            the text source
+     * @param writer
+     *            the destination writer
+     * @param config
+     *            render config
      * @return number of written lines
-     * @throws Exception if occurs error while rendering text
+     * @throws Exception
+     *             if occurs error while rendering text
      */
-    public static int renderLines(@NonNull Text text, @NonNull TextWriter writer, @NonNull TextConfig config)
-            throws Exception {
+    public static int renderLines(Text text, TextWriter writer, TextConfig config) throws Exception {
         return renderLines(text, writer, config, false);
     }
 
-    private static int renderLines(Text text, TextWriter writer, TextConfig config, boolean prependNL) throws Exception {
+    private static int renderLines(Text text, TextWriter writer, TextConfig config, boolean prependNL)
+            throws Exception {
         val lines = text.getLines(config.skipEmptyLine);
         if (CollectUtils.isEmpty(lines)) {
             return 0;
@@ -90,11 +91,15 @@ public final class TextRender {
     /**
      * Renders text in <tt>Text</tt> to specified writer.
      *
-     * @param text   the text source
-     * @param writer the destination writer
-     * @param config render config
+     * @param text
+     *            the text source
+     * @param writer
+     *            the destination writer
+     * @param config
+     *            render config
      * @return written state, <tt>true</tt> if has text written, otherwise not
-     * @throws Exception if occurs error while rendering text
+     * @throws Exception
+     *             if occurs error while rendering text
      */
     public static boolean renderText(@NonNull Text text, @NonNull TextWriter writer, @NonNull TextConfig config)
             throws Exception {
@@ -102,7 +107,7 @@ public final class TextRender {
     }
 
     private static boolean renderText(Text text, TextWriter writer, TextConfig config,
-                                      boolean prependLF) throws Exception {
+            boolean prependLF) throws Exception {
         if (config.formatParagraph) {
             return renderLines(text, writer, config, prependLF) > 0;
         } else {
@@ -203,7 +208,7 @@ public final class TextRender {
             }
             // text
             val text = chapter.getText();
-            renderText(text != null ? text : Texts.forEmpty(Text.PLAIN), writer, config, true);
+            renderText(text != null ? text : Texts.forEmpty(Texts.PLAIN), writer, config, true);
             // suffix
             if (isNotEmpty(config.suffixText)) {
                 writer.writeText(lineSeparator + config.suffixText);

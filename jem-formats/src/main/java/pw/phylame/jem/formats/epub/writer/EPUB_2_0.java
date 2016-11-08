@@ -18,10 +18,14 @@
 
 package pw.phylame.jem.formats.epub.writer;
 
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.UUID;
+import java.util.zip.ZipEntry;
+
 import lombok.val;
 import pw.phylame.jem.core.Attributes;
 import pw.phylame.jem.core.Book;
-import pw.phylame.jem.epm.util.E;
 import pw.phylame.jem.epm.util.MakerException;
 import pw.phylame.jem.formats.epub.EPUB;
 import pw.phylame.jem.formats.epub.Resource;
@@ -29,11 +33,6 @@ import pw.phylame.jem.formats.epub.ncx.NcxWriterFactory;
 import pw.phylame.jem.formats.epub.opf.OpfWriterFactory;
 import pw.phylame.jem.formats.util.M;
 import pw.phylame.ycl.util.StringUtils;
-
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.UUID;
-import java.util.zip.ZipEntry;
 
 /**
  * ePub 2.0 implements.

@@ -18,24 +18,22 @@
 
 package pw.phylame.jem.formats.jar;
 
-import lombok.val;
-import pw.phylame.jem.core.Attributes;
-import pw.phylame.jem.core.Book;
-import pw.phylame.jem.core.Chapter;
-import pw.phylame.jem.epm.base.ZipParser;
-import pw.phylame.jem.epm.util.E;
-import pw.phylame.jem.epm.util.ParserException;
-import pw.phylame.jem.epm.util.ZipUtils;
-import pw.phylame.jem.formats.util.M;
-import pw.phylame.jem.util.flob.Flobs;
-import pw.phylame.jem.util.text.Text;
-import pw.phylame.jem.util.text.Texts;
-
 import java.io.BufferedInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.zip.ZipFile;
+
+import lombok.val;
+import pw.phylame.jem.core.Attributes;
+import pw.phylame.jem.core.Book;
+import pw.phylame.jem.core.Chapter;
+import pw.phylame.jem.epm.base.ZipParser;
+import pw.phylame.jem.epm.util.ParserException;
+import pw.phylame.jem.epm.util.ZipUtils;
+import pw.phylame.jem.formats.util.M;
+import pw.phylame.jem.util.flob.Flobs;
+import pw.phylame.jem.util.text.Texts;
 
 /**
  * <tt>Parser</tt> implement for JAR book.
@@ -71,13 +69,13 @@ public class JarParser extends ZipParser<JarInConfig> {
                     throw new ParserException(M.tr("jar.parse.badMetadata", zip.getName()));
                 }
                 val flob = Flobs.forZip(zip, items[0], "text/plain");
-                book.append(new Chapter(items[2], Texts.forFile(flob, JAR.TEXT_ENCODING, Text.PLAIN)));
+                book.append(new Chapter(items[2], Texts.forFlob(flob, JAR.TEXT_ENCODING, Texts.PLAIN)));
             }
 
             input.skipBytes(2); // what ?
             val str = readString(input, 2);
             if (!str.isEmpty()) {
-                Attributes.setIntro(book, Texts.forString(str, Text.PLAIN));
+                Attributes.setIntro(book, Texts.forString(str, Texts.PLAIN));
             }
         }
     }

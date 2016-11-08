@@ -144,7 +144,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
             } else if (type.startsWith("text/")) {  // text object
                 val t = type.substring(5);
                 Flob flob = Flobs.forZip(tuple.zip, text, "text/" + t);
-                value = Texts.forFile(flob, valueOfName(itemType, "encoding", ";", false, tuple.config.textEncoding), t);
+                value = Texts.forFlob(flob, valueOfName(itemType, "encoding", ";", false, tuple.config.textEncoding), t);
             } else if (type.equals(Variants.LOCALE)) {
                 value = TestUtils.parseLocale(text);
             } else if (type.matches("[\\w]+/[\\w\\-]+")) {   // file object
@@ -192,9 +192,9 @@ public class PmabParser extends ZipParser<PmabInConfig> {
         if (tag.equals("item")) {
             val value = parseV3Item(b.toString().trim(), tuple);
             if (tuple.inAttributes) {
-                tuple.book.getAttributes().put(tuple.itemName, value);
+                tuple.book.getAttributes().set(tuple.itemName, value);
             } else {
-                tuple.book.getExtensions().put(tuple.itemName, value);
+                tuple.book.getExtensions().set(tuple.itemName, value);
             }
         } else if (tag.equals("attributes")) {
             tuple.inAttributes = false;
@@ -218,9 +218,9 @@ public class PmabParser extends ZipParser<PmabInConfig> {
                     val name = attributeOf(xpp, "name");
                     val type = xpp.getAttributeValue(null, "type");
                     if (isEmpty(type) || type.equals(Variants.TEXT)) {
-                        tuple.book.getExtensions().put(name, attributeOf(xpp, "value"));
+                        tuple.book.getExtensions().set(name, attributeOf(xpp, "value"));
                     } else if (type.equals("number")) {
-                        tuple.book.getExtensions().put(name, NumberUtils.parseNumber(attributeOf(xpp, "value")));
+                        tuple.book.getExtensions().set(name, NumberUtils.parseNumber(attributeOf(xpp, "value")));
                     } else if (type.equals(Variants.FLOB)) {    // file will be processed in <object>
                         tuple.attrName = name;
                     } else {
@@ -237,10 +237,10 @@ public class PmabParser extends ZipParser<PmabInConfig> {
                     if (mime.startsWith("text/plain")) {
                         val encoding = xpp.getAttributeValue(null, "encoding");
                         value = isEmpty(encoding)
-                                ? Texts.forFile(flob, tuple.config.textEncoding, Text.PLAIN)
-                                : Texts.forFile(flob, encoding, Text.PLAIN);
+                                ? Texts.forFlob(flob, tuple.config.textEncoding, Texts.PLAIN)
+                                : Texts.forFlob(flob, encoding, Texts.PLAIN);
                     }
-                    tuple.book.getExtensions().put(tuple.attrName, value);
+                    tuple.book.getExtensions().set(tuple.attrName, value);
                 }
             }
             break;
@@ -275,7 +275,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
                 if (tuple.attrName.equals(Attributes.DATE)) {
                     value = TestUtils.parseDate(text, tuple.config.dateFormat);
                 } else if (attrName.equals(Attributes.INTRO)) {
-                    value = Texts.forString(text, Text.PLAIN);
+                    value = Texts.forString(text, Texts.PLAIN);
                 } else if (attrName.equals(Attributes.LANGUAGE)) {
                     value = TestUtils.parseLocale(text);
                 } else if (isNotEmpty(tuple.mediaType)) {
@@ -283,7 +283,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
                 } else {
                     value = text;
                 }
-                tuple.book.getAttributes().put(attrName, value);
+                tuple.book.getAttributes().set(attrName, value);
             }
             ++tuple.order;
         } else if (tag.equals("item")) {
@@ -372,19 +372,19 @@ public class PmabParser extends ZipParser<PmabInConfig> {
                 break;
             case "item": {
                 String text = b.toString().trim();
-                tuple.currentChapter.getAttributes().put(tuple.itemName, parseV3Item(text, tuple));
+                tuple.currentChapter.getAttributes().set(tuple.itemName, parseV3Item(text, tuple));
             }
             break;
             case "content": {
                 Text text;
                 val data = b.toString().trim();
                 if (isEmpty(itemType)) {
-                    text = Texts.forString(data, Text.PLAIN);
+                    text = Texts.forString(data, Texts.PLAIN);
                 } else if (itemType.startsWith("text/")) {
                     val flob = Flobs.forZip(tuple.zip, data, firstPartOf(itemType, ';'));
-                    text = Texts.forFile(flob, valueOfName(itemType, "encoding", ";", false, tuple.config.textEncoding), Text.PLAIN);
+                    text = Texts.forFlob(flob, valueOfName(itemType, "encoding", ";", false, tuple.config.textEncoding), Texts.PLAIN);
                 } else {
-                    text = Texts.forString(data, Text.PLAIN);
+                    text = Texts.forString(data, Texts.PLAIN);
                 }
                 tuple.currentChapter.setText(text);
             }
@@ -407,7 +407,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
                         tuple.chapterEncoding = tuple.config.textEncoding;
                     }
                     tuple.appendChapter();
-                    tuple.currentChapter.setText(Texts.forFile(flob, tuple.chapterEncoding, Text.PLAIN));
+                    tuple.currentChapter.setText(Texts.forFlob(flob, tuple.chapterEncoding, Texts.PLAIN));
                 }
             }
             break;
@@ -426,7 +426,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
                 if (isEmpty(encoding)) {
                     encoding = tuple.config.useChapterEncoding ? tuple.chapterEncoding : tuple.config.textEncoding;
                 }
-                Attributes.setIntro(tuple.currentChapter, Texts.forFile(flob, encoding, Text.PLAIN));
+                Attributes.setIntro(tuple.currentChapter, Texts.forFlob(flob, encoding, Texts.PLAIN));
             }
             break;
         }

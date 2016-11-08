@@ -18,24 +18,23 @@
 
 package pw.phylame.jem.formats.jar;
 
-import lombok.val;
-import pw.phylame.jem.core.Attributes;
-import pw.phylame.jem.core.Book;
-import pw.phylame.jem.epm.base.ZipMaker;
-import pw.phylame.jem.epm.util.E;
-import pw.phylame.jem.epm.util.MakerException;
-import pw.phylame.jem.epm.util.ZipUtils;
-import pw.phylame.jem.epm.util.text.TextRender;
-import pw.phylame.jem.formats.util.M;
-import pw.phylame.jem.util.Build;
-import pw.phylame.ycl.io.IOUtils;
-
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+
+import lombok.val;
+import pw.phylame.jem.core.Attributes;
+import pw.phylame.jem.core.Book;
+import pw.phylame.jem.epm.base.ZipMaker;
+import pw.phylame.jem.epm.util.MakerException;
+import pw.phylame.jem.epm.util.ZipUtils;
+import pw.phylame.jem.epm.util.text.TextRender;
+import pw.phylame.jem.formats.util.M;
+import pw.phylame.jem.util.Build;
+import pw.phylame.ycl.io.IOUtils;
 
 /**
  * <tt>Maker</tt> implement for JAR book.

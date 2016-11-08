@@ -1,7 +1,7 @@
 <assembly>
     <id>bin</id>
     <formats>
-        <extension>zip</extension>
+        <format>zip</format>
     </formats>
     <dependencySets>
         <dependencySet>

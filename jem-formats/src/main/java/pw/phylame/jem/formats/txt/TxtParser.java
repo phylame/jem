@@ -28,7 +28,6 @@ import pw.phylame.jem.epm.util.FileDeleter;
 import pw.phylame.jem.epm.util.ParserException;
 import pw.phylame.jem.formats.util.M;
 import pw.phylame.jem.util.flob.Flobs;
-import pw.phylame.jem.util.text.Text;
 import pw.phylame.jem.util.text.Texts;
 import pw.phylame.ycl.io.BufferedRandomAccessFile;
 import pw.phylame.ycl.io.IOUtils;
@@ -99,7 +98,7 @@ public class TxtParser extends AbstractParser<Reader, TxtInConfig> {
                     prevOffset += title.length();
                 }
                 flob = Flobs.forBlock("0.txt", source, prevOffset << 1, 0, TXT.MIME_PLAIN_TEXT);
-                book.append(new Chapter(StringUtils.trimmed(title), Texts.forFile(flob, CACHE_ENCODING, Text.PLAIN)));
+                book.append(new Chapter(StringUtils.trimmed(title), Texts.forFlob(flob, CACHE_ENCODING, Texts.PLAIN)));
             } else {
                 source.close();
                 if (!cache.delete()) {
@@ -118,13 +117,13 @@ public class TxtParser extends AbstractParser<Reader, TxtInConfig> {
 
                 flob = Flobs.forBlock(book.size() + ".txt", source, offset << 1, 0, TXT.MIME_PLAIN_TEXT);
                 prevOffset = offset;
-                book.append(new Chapter(StringUtils.trimmed(title), Texts.forFile(flob, CACHE_ENCODING, Text.PLAIN)));
+                book.append(new Chapter(StringUtils.trimmed(title), Texts.forFlob(flob, CACHE_ENCODING, Texts.PLAIN)));
             }
             flob.size = (triple.getThird().length() - prevOffset) << 1;
 
             if (firstOffset > 0) {    // no formatted head store as intro
                 flob = Flobs.forBlock("head.txt", source, 0, firstOffset << 1, TXT.MIME_PLAIN_TEXT);
-                Attributes.setIntro(book, Texts.forFile(flob, CACHE_ENCODING, Text.PLAIN));
+                Attributes.setIntro(book, Texts.forFlob(flob, CACHE_ENCODING, Texts.PLAIN));
             }
         } catch (IOException e) {
             source.close();
@@ -138,6 +137,7 @@ public class TxtParser extends AbstractParser<Reader, TxtInConfig> {
         return book;
     }
 
+    @SuppressWarnings("resource")
     private Triple<RandomAccessFile, File, String> cacheContent(Reader reader) throws IOException {
         val b = new StringBuilder();
         val cache = File.createTempFile("jem_txt_", ".tmp");

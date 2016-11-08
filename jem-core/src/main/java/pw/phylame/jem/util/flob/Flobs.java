@@ -3,20 +3,28 @@
  *
  * This file is part of Jem.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  */
 
 package pw.phylame.jem.util.flob;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.RandomAccessFile;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.zip.ZipFile;
 
 import lombok.NonNull;
 import pw.phylame.jem.util.Variants;
@@ -24,16 +32,15 @@ import pw.phylame.ycl.io.IOUtils;
 import pw.phylame.ycl.io.RAFInputStream;
 import pw.phylame.ycl.util.Exceptions;
 
-import java.io.*;
-import java.net.URL;
-import java.util.Arrays;
-import java.util.zip.ZipFile;
-
 /**
  * Factory class for creating <code>Flob</code> instance.
  */
 public final class Flobs {
     private Flobs() {
+    }
+
+    public static Flob forEmpty(String name, String mime) {
+        return forBytes(name, null, mime);
     }
 
     public static Flob forFile(@NonNull File file, String mime) throws IOException {
@@ -44,7 +51,8 @@ public final class Flobs {
         return new EntryFlob(zipFile, entry, mime);
     }
 
-    public static BlockFlob forBlock(@NonNull String name, @NonNull RandomAccessFile file, long offset, long size, String mime) throws IOException {
+    public static BlockFlob forBlock(@NonNull String name, @NonNull RandomAccessFile file, long offset, long size,
+            String mime) throws IOException {
         return new BlockFlob(name, file, offset, size, mime);
     }
 
@@ -54,10 +62,6 @@ public final class Flobs {
 
     public static Flob forBytes(@NonNull String name, byte[] bytes, String mime) {
         return new ByteFlob(name, bytes, mime);
-    }
-
-    public static Flob forEmpty(String name, String mime) {
-        return forBytes(name, null, mime);
     }
 
     private static class NormalFlob extends AbstractFlob {

@@ -18,13 +18,23 @@
 
 package pw.phylame.jem.formats.umd;
 
+import static pw.phylame.ycl.io.ByteUtils.littleRender;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.RandomAccessFile;
+import java.util.Calendar;
+import java.util.LinkedList;
+import java.util.List;
+
 import lombok.NonNull;
 import lombok.val;
 import pw.phylame.jem.core.Attributes;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.core.Chapter;
 import pw.phylame.jem.epm.base.AbstractMaker;
-import pw.phylame.jem.epm.util.E;
 import pw.phylame.jem.epm.util.MakerException;
 import pw.phylame.jem.epm.util.NumberUtils;
 import pw.phylame.jem.epm.util.text.TextRender;
@@ -36,13 +46,6 @@ import pw.phylame.ycl.io.ZLibUtils;
 import pw.phylame.ycl.log.Log;
 import pw.phylame.ycl.util.CollectUtils;
 import pw.phylame.ycl.util.StringUtils;
-
-import java.io.*;
-import java.util.Calendar;
-import java.util.LinkedList;
-import java.util.List;
-
-import static pw.phylame.ycl.io.ByteUtils.littleRender;
 
 /**
  * <tt>Maker</tt> implement for UMD book.

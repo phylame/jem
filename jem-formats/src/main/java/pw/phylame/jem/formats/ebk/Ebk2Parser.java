@@ -30,6 +30,7 @@ import pw.phylame.jem.epm.util.ParserException;
 import pw.phylame.jem.epm.util.config.NonConfig;
 import pw.phylame.jem.formats.util.M;
 import pw.phylame.jem.util.text.AbstractText;
+import pw.phylame.jem.util.text.Texts;
 import pw.phylame.ycl.io.ByteUtils;
 import pw.phylame.ycl.io.ZLibUtils;
 import pw.phylame.ycl.util.StringUtils;
@@ -69,7 +70,7 @@ public class Ebk2Parser extends BinaryParser<NonConfig> {
         val file = tuple.file;
         val book = tuple.book;
 
-        book.getAttributes().put("book_id", readUInt32(file));
+        book.getAttributes().set("book_id", readUInt32(file));
         tuple.headerSize = readUInt16(file);
         int version = readUInt16(file);
         if (version != 2) {
@@ -178,7 +179,7 @@ public class Ebk2Parser extends BinaryParser<NonConfig> {
         private long indexSize;
 
         private EbkText(RandomAccessFile file, List<TextBlock> blocks, long offset, long size) {
-            super(PLAIN);
+            super(Texts.PLAIN);
             this.file = file;
             this.blocks = blocks;
             this.offset = offset;

@@ -19,7 +19,6 @@
 package pw.phylame.jem.imabw.app
 
 import pw.phylame.jem.core.Book
-import pw.phylame.jem.epm.Helper
 import pw.phylame.jem.epm.Registry
 import pw.phylame.jem.imabw.app.ui.Dialogs
 import pw.phylame.jem.imabw.app.ui.OpenResult
@@ -67,7 +66,7 @@ object Books {
     private val parserExtensions: Array<Any> by lazy {
         val results = HashSet<Any>()
         for (name in Registry.supportedParsers()) {
-            val extensions = Registry.extensionsForName(name)
+            val extensions = Registry.extensionsOfName(name)
             if (extensions.size == 1) {
                 results.add(extensions[0])
             } else {
@@ -80,7 +79,7 @@ object Books {
     private val makerExtensions: Array<Any> by lazy {
         val results = HashSet<Any>()
         for (name in Registry.supportedMakers()) {
-            val extensions = Registry.extensionsForName(name)
+            val extensions = Registry.extensionsOfName(name)
             if (extensions.size == 1) {
                 results.add(extensions[0])
             } else {
@@ -102,10 +101,10 @@ object Books {
             if (initFile != null) {
                 _format = PathUtils.extensionName(initFile.path)
                 if (_format.isEmpty()) {
-                    _format = Helper.PMAB
+                    _format = Registry.PMAB
                 }
             } else {
-                _format = Helper.PMAB
+                _format = Registry.PMAB
             }
         }
         return if (forOpen) {

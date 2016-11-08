@@ -19,7 +19,6 @@
 package pw.phylame.jem.scj.app
 
 import org.apache.commons.cli.*
-import pw.phylame.jem.epm.Helper
 import pw.phylame.jem.epm.Registry
 import pw.phylame.qaf.cli.*
 import pw.phylame.qaf.core.App
@@ -34,7 +33,7 @@ import java.io.File
 import java.util.*
 
 const val NAME = "scj"
-const val VERSION = "3.0.0"
+const val VERSION = "3.1.1"
 
 const val I18N_NAME = "pw/phylame/jem/scj/res/i18n/scj"
 const val DATE_FORMAT = "yyyy-M-d"
@@ -95,7 +94,7 @@ object AppConfig : Settings() {
 
     var debugLevel by delegated(DEBUG_ECHO, "app.debug.level")
 
-    var outputFormat by delegated(Helper.PMAB, "jem.output.defaultFormat")
+    var outputFormat by delegated(Registry.PMAB, "jem.output.defaultFormat")
 
     var viewKeys by delegated(VIEW_ALL, "sci.view.defaultKey")
 
@@ -347,7 +346,7 @@ object SCI : CLIDelegate() {
                 status = -1
                 continue
             }
-            val format = inFormat ?: Helper.formatOfExtension(input) ?: PathUtils.extensionName(input)
+            val format = inFormat ?: Registry.formatOfFile(input) ?: PathUtils.extensionName(input)
             if (!checkInputFormat(format)) {
                 status = -1
                 continue

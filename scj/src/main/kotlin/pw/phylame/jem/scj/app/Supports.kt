@@ -22,7 +22,7 @@ import pw.phylame.jem.core.Attributes
 import pw.phylame.jem.core.Book
 import pw.phylame.jem.core.Chapter
 import pw.phylame.jem.core.Jem
-import pw.phylame.jem.epm.Helper
+import pw.phylame.jem.epm.Registry
 import pw.phylame.jem.epm.util.MakerException
 import pw.phylame.jem.epm.util.ParserException
 import pw.phylame.jem.formats.pmab.PmabOutConfig
@@ -42,7 +42,10 @@ import java.io.File
 import java.io.IOException
 import java.lang.System.lineSeparator
 import java.text.ParseException
-import java.util.*
+import java.util.Collections
+import java.util.HashMap
+import java.util.LinkedList
+import java.util.Locale
 
 fun printJemError(e: JemException, file: File, format: String) {
     if (e is ParserException) {
@@ -58,7 +61,7 @@ fun printJemError(e: JemException, file: File, format: String) {
 
 fun openBook(tuple: InTuple): Book? {
     try {
-        return Helper.readBook(tuple.file, tuple.format, tuple.arguments)
+        return Registry.readBook(tuple.file, tuple.format, tuple.arguments)
     } catch (e: IOException) {
         App.error(tr("error.loadFile", tuple.file), e)
     } catch (e: JemException) {
@@ -97,7 +100,7 @@ fun setAttributes(chapter: Chapter, attributes: Map<String, Any>): Boolean {
             else -> value = str
         }
         if (value != null) {
-            chapter.attributes.put(k, value)
+            chapter.attributes.set(k, value)
         }
     }
     return true
@@ -109,7 +112,7 @@ fun setExtension(book: Book, extensions: Map<String, Any>) {
         if (str.isEmpty()) {
             book.extensions.remove(k)
         } else {
-            book.extensions.put(k, str)
+            book.extensions.set(k, str)
         }
     }
 }
@@ -132,8 +135,7 @@ fun saveBook(book: Book, tuple: OutTuple): String? {
     prepareBook(book, tuple) ?: return null
     val output = tuple.output.iif(tuple.output.isDirectory) { File(it, "${Attributes.getTitle(book)}.${tuple.format}") }
     try {
-        Helper.writeBook(book, output, tuple.format, prepareArguments(HashMap(tuple.arguments))
-        )
+        Registry.writeBook(book, output, tuple.format, prepareArguments(HashMap(tuple.arguments)))
         return output.path
     } catch (e: IOException) {
         App.error(tr("error.saveFile", tuple.output), e)
@@ -234,7 +236,7 @@ fun viewBook(inTuple: InTuple, outTuple: OutTuple, keys: Array<String>): Boolean
     var state = true
     for (key in keys) {
         if (key == VIEW_EXTENSION) {
-            state = viewExtension(book, book.extensions.keys()) && state
+            state = viewExtension(book, book.extensions.names()) && state
         } else if (key.matches(VIEW_CHAPTER.toRegex())) {
             state = viewChapter(book, key) && state
         } else if (key.matches(VIEW_ITEM.toRegex())) {
@@ -278,7 +280,7 @@ private fun viewAttribute(chapter: Chapter, keys: Array<String>, sep: String, sh
     val lines = LinkedList<String>()
     for (key in keys) {
         if (key == VIEW_ALL) {
-            viewAttribute(chapter, chapter.attributes.keys(), sep, showBrackets, true)
+            viewAttribute(chapter, chapter.attributes.names(), sep, showBrackets, true)
         } else if (key == VIEW_TOC) {
             viewToc(chapter, arrayOf(Attributes.TITLE, Attributes.COVER), AppConfig.tocIndent, true, true)
         } else if (key == VIEW_TEXT) {
@@ -290,7 +292,7 @@ private fun viewAttribute(chapter: Chapter, keys: Array<String>, sep: String, sh
             println(text.text)
         } else if (key == VIEW_NAMES) {
             val names = LinkedList<String>()
-            Collections.addAll(names, *chapter.attributes.keys())
+            Collections.addAll(names, *chapter.attributes.names())
             Collections.addAll(names, VIEW_TEXT, VIEW_SIZE, VIEW_ALL)
             if (chapter.isSection) {
                 names.add(VIEW_TOC)
@@ -306,7 +308,7 @@ private fun viewAttribute(chapter: Chapter, keys: Array<String>, sep: String, sh
             }
         } else {
             val value = chapter.attributes.get(key, null as Any?)
-            val str = if (value != null) Variants.format(value) else ""
+            val str = if (value != null) Variants.printable(value) else ""
             if (!str.isEmpty() || !ignoreEmpty) {
                 lines.add(tr("sci.view.attributeFormat", key, str))
             }
@@ -330,7 +332,7 @@ private fun viewExtension(book: Book, names: Array<String>): Boolean {
             App.error(tr("error.view.notFoundItem", name))
             state = false
         } else {
-            println(tr("sci.view.extensionFormat", name, Variants.typeOf(value), Variants.format(value)))
+            println(tr("sci.view.extensionFormat", name, Variants.typeOf(value), Variants.printable(value)))
         }
     }
     return state

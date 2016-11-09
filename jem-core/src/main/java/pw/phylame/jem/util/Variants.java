@@ -23,14 +23,11 @@ import pw.phylame.jem.util.text.Texts;
 import pw.phylame.ycl.io.PathUtils;
 import pw.phylame.ycl.log.Log;
 import pw.phylame.ycl.util.CollectUtils;
+import pw.phylame.ycl.util.DateUtils;
 import pw.phylame.ycl.util.Exceptions;
-import pw.phylame.ycl.util.Provider;
+import pw.phylame.ycl.util.Function;
 import pw.phylame.ycl.util.StringUtils;
-import pw.phylame.ycl.value.Lazy;
-
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -48,25 +45,24 @@ public final class Variants {
     public static final String DATETIME = "datetime";
     public static final String BOOLEAN = "bool";
 
-    private static Collection<String> typeNames = new LinkedHashSet<>();
+    private static final Collection<String> typeNames = new LinkedHashSet<>();
 
-    private static final Map<Class<?>, String> typeMap = new ConcurrentHashMap<>();
-
-    private static final String TYPE_MAP_PATH = "!pw/phylame/jem/util/variants.properties";
+    private static final Map<Class<?>, String> typeMapping = new ConcurrentHashMap<>();
 
     static {
         try {
-            val prop = CollectUtils.propertiesFor(TYPE_MAP_PATH);
+            val prop = CollectUtils.propertiesFor("!pw/phylame/jem/util/variants.properties");
             if (prop != null) {
+                String type;
                 for (val e : prop.entrySet()) {
-                    typeMap.put(Class.forName(e.getKey().toString()), e.getValue().toString());
+                    type = e.getValue().toString();
+                    typeMapping.put(Class.forName(e.getKey().toString()), type);
+                    typeNames.add(type);
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
             Log.e("Variants", e);
         }
-
-        typeNames.addAll(typeMap.values());
     }
 
     /**
@@ -81,7 +77,8 @@ public final class Variants {
     /**
      * Registers user's type.
      *
-     * @param type name of type
+     * @param type
+     *            name of type
      */
     public static void registerType(String type) {
         if (StringUtils.isEmpty(type)) {
@@ -93,90 +90,92 @@ public final class Variants {
         typeNames.add(type);
     }
 
-    private static void checkTypeName(String type) {
+    public static String checkTypeName(String type) {
         if (StringUtils.isEmpty(type)) {
             throw new IllegalArgumentException("type cannot be null or empty");
         }
         if (!typeNames.contains(type)) {
             throw Exceptions.forIllegalArgument("type %s in unsupported", type);
         }
+        return type;
     }
 
     /**
      * Maps specified type for class.
      *
-     * @param clazz the class
-     * @param type  name of type
-     * @throws NullPointerException     if the class is {@literal null}
-     * @throws IllegalArgumentException if the name of type is empty
+     * @param clazz
+     *            the class
+     * @param type
+     *            name of type
+     * @throws NullPointerException
+     *             if the class is {@literal null}
+     * @throws IllegalArgumentException
+     *             if the name of type is empty
      */
     public static void mapType(@NonNull Class<?> clazz, String type) {
-        checkTypeName(type);
-        typeMap.put(clazz, type);
+        typeMapping.put(clazz, checkTypeName(type));
     }
 
     /**
      * Returns type name of specified object.
      *
-     * @param obj the object
+     * @param obj
+     *            the object
      * @return the type name or {@literal null} if unknown
-     * @throws NullPointerException if the object is {@literal null}
+     * @throws NullPointerException
+     *             if the object is {@literal null}
      */
-    public static String typeOf(@NonNull Object obj) {
-        val type = typeMap.get(obj.getClass());
-        if (type != null) {
-            return type;
-        }
-        for (val e : typeMap.entrySet()) {
-            if (e.getKey().isInstance(obj)) {
-                return e.getValue();
+    public static String typeOf(@NonNull final Object obj) {
+        return CollectUtils.getOrPut(typeMapping, obj.getClass(), false, new Function<Class<?>, String>() {
+            @Override
+            public String apply(Class<?> clazz) {
+                for (val e : typeMapping.entrySet()) {
+                    if (e.getKey().isAssignableFrom(clazz)) {
+                        return e.getValue();
+                    }
+                }
+                return null;
             }
-        }
-        return null;
+        });
     }
 
     /**
      * Returns default value of specified type.
      *
-     * @param type name of type
+     * @param type
+     *            name of type
      * @return the value or {@literal null} if the type not in jem built-in types
-     * @throws IllegalArgumentException if the name of type is empty
+     * @throws IllegalArgumentException
+     *             if the name of type is empty
      */
     public static Object defaultFor(String type) {
-        checkTypeName(type);
-        switch (type) {
-            case STRING:
-                return StringUtils.EMPTY_TEXT;
-            case TEXT:
-                return Texts.forEmpty(Texts.PLAIN);
-            case FLOB:
-                return Flobs.forEmpty("_empty_", PathUtils.UNKNOWN_MIME);
-            case DATETIME:
-                return new Date();
-            case LOCALE:
-                return Locale.getDefault();
-            case INTEGER:
-                return 0;
-            case REAL:
-                return 0.0D;
-            case BOOLEAN:
-                return Boolean.FALSE;
-            default:
-                return null;
+        switch (checkTypeName(type)) {
+        case STRING:
+            return StringUtils.EMPTY_TEXT;
+        case TEXT:
+            return Texts.forEmpty(Texts.PLAIN);
+        case FLOB:
+            return Flobs.forEmpty("_empty_", PathUtils.UNKNOWN_MIME);
+        case DATETIME:
+            return new Date();
+        case LOCALE:
+            return Locale.getDefault();
+        case INTEGER:
+            return 0;
+        case REAL:
+            return 0.0D;
+        case BOOLEAN:
+            return Boolean.FALSE;
+        default:
+            return null;
         }
     }
-
-    private static final Lazy<DateFormat> shortDateFormatter = new Lazy<>(new Provider<DateFormat>() {
-        @Override
-        public DateFormat provide() throws Exception {
-            return new SimpleDateFormat("yy-M-d");
-        }
-    });
 
     /**
      * Converts specified object to string for printing.
      *
-     * @param obj the object or {@literal null} if the type of object is unknown
+     * @param obj
+     *            the object or {@literal null} if the type of object is unknown
      * @return a string represent the object
      */
     public static String printable(@NonNull Object obj) {
@@ -185,17 +184,11 @@ public final class Variants {
         } else if (obj instanceof Text) {
             return ((Text) obj).getText();
         } else if (obj instanceof Date) {
-            return shortDateFormatter.get().format((Date) obj);
+            return DateUtils.format((Date) obj, "yy-M-d");
         } else if (obj instanceof Locale) {
             return ((Locale) obj).getDisplayName();
         } else {
             return null;
-        }
-    }
-
-    public static void main(String[] args) throws ClassNotFoundException {
-        for (Map.Entry<Class<?>, String> entry : typeMap.entrySet()) {
-            System.out.println(entry.getKey().getName() + '=' + entry.getValue());
         }
     }
 }

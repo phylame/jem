@@ -3,17 +3,14 @@
  *
  * This file is part of Jem.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  */
 
 package pw.phylame.jem.formats.pmab;
@@ -28,7 +25,6 @@ import lombok.val;
 import pw.phylame.jem.core.Attributes;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.core.Chapter;
-import pw.phylame.jem.core.Jem;
 import pw.phylame.jem.epm.base.ZipMaker;
 import pw.phylame.jem.epm.util.MakerException;
 import pw.phylame.jem.epm.util.ZipUtils;
@@ -42,6 +38,7 @@ import pw.phylame.ycl.format.Converters;
 import pw.phylame.ycl.io.PathUtils;
 import pw.phylame.ycl.util.CollectUtils;
 import pw.phylame.ycl.util.DateUtils;
+import pw.phylame.ycl.util.MiscUtils;
 import pw.phylame.ycl.util.StringUtils;
 
 /**
@@ -75,20 +72,20 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
     }
 
     private void writeMIME(Tuple tuple) throws IOException {
-        ZipUtils.writeString(tuple.zipout, PMAB.MIME_FILE, PMAB.MT_PMAB, "ASCII");
+        ZipUtils.write(tuple.zipout, PMAB.MIME_FILE, PMAB.MT_PMAB, "ASCII");
     }
 
     private void writePBM(Book book, Tuple tuple) throws IOException, MakerException {
         val writer = prepareXml("pbm", PMAB.PBM_XML_NS, tuple);
         switch (tuple.version) {
-            case 3:
-                writePBMHead("value", true, tuple);
-                writePBMv3(book, tuple);
-                break;
-            case 2:
-                writePBMHead("content", false, tuple);
-                writePBMv2(book, tuple);
-                break;
+        case 3:
+            writePBMHead("value", true, tuple);
+            writePBMv3(book, tuple);
+        break;
+        case 2:
+            writePBMHead("content", false, tuple);
+            writePBMv2(book, tuple);
+        break;
         }
         writeXml(tuple, writer, PMAB.PBM_FILE);
     }
@@ -96,12 +93,12 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
     private void writePBC(Book book, Tuple tuple) throws IOException {
         val writer = prepareXml("pbc", PMAB.PBC_XML_NS, tuple);
         switch (tuple.version) {
-            case 3:
-                writePBCv3(book, tuple);
-                break;
-            case 2:
-                writePBCv2(book, tuple);
-                break;
+        case 3:
+            writePBCv3(book, tuple);
+        break;
+        case 2:
+            writePBCv2(book, tuple);
+        break;
         }
         writeXml(tuple, writer, PMAB.PBC_FILE);
     }
@@ -154,25 +151,25 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
         String type = Variants.typeOf(value);
         if (!type.equals(Variants.STRING)) {
             switch (type) {
-                case Variants.TEXT:
-                    val dir = name.equals(Attributes.INTRO) ? config.textDir : config.extraDir;
-                    data = writeV3Text((Text) value, dir, prefix + name, tuple);
-                    type = null;
-                    break;
-                case Variants.FLOB:
-                    data = writeFile((Flob) value, prefix + name, "type", tuple);
-                    type = null;
-                    break;
-                case Variants.DATETIME:
-                    data = DateUtils.format((Date) value, config.dateFormat);
-                    type = type + ";format=" + config.dateFormat;
-                    break;
-                case Variants.LOCALE:
-                    data = Converters.render((Locale) value, Locale.class);
-                    break;
-                default:
-                    data = value.toString();
-                    break;
+            case Variants.TEXT:
+                val dir = name.equals(Attributes.INTRO) ? config.textDir : config.extraDir;
+                data = writeV3Text((Text) value, dir, prefix + name, tuple);
+                type = null;
+            break;
+            case Variants.FLOB:
+                data = writeFile((Flob) value, prefix + name, "type", tuple);
+                type = null;
+            break;
+            case Variants.DATETIME:
+                data = DateUtils.format((Date) value, config.dateFormat);
+                type = type + ";format=" + config.dateFormat;
+            break;
+            case Variants.LOCALE:
+                data = Converters.render((Locale) value, Locale.class);
+            break;
+            default:
+                data = value.toString();
+            break;
             }
         } else {
             data = value.toString();
@@ -190,7 +187,8 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
     }
 
     private void writePBMv2(Book book, Tuple tuple) throws IOException, MakerException {
-        val render = tuple.render.startTag("metadata").attribute("count", Integer.toString(book.getAttributes().size()));
+        val render = tuple.render.startTag("metadata").attribute("count",
+                Integer.toString(book.getAttributes().size()));
         for (val e : book.getAttributes().entries()) {
             writePBMv2Attr(e.getKey(), e.getValue(), tuple);
         }
@@ -288,7 +286,9 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
     }
 
     private void writePBCv2(Book book, Tuple tuple) throws IOException {
-        val render = tuple.render.startTag("contents").attribute("depth", Integer.toString(Jem.depthOf(book)));
+        val render = tuple.render
+                .startTag("contents")
+                .attribute("depth", Integer.toString(MiscUtils.depthOf((Chapter) book)));
         int count = 1;
         for (val sub : book) {
             writeV2Chapter(sub, Integer.toString(count), tuple);
@@ -339,7 +339,7 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
         val encoding = tuple.config.textEncoding != null ? tuple.config.textEncoding : PMAB.defaultEncoding;
         val type = text.getType();
         val href = dir + "/" + (type.equals(Texts.PLAIN) ? baseName + ".txt" : baseName + "." + type);
-        ZipUtils.writeText(tuple.zipout, href, text, encoding);
+        ZipUtils.write(tuple.zipout, href, text, encoding);
         return new String[]{href, encoding};
     }
 
@@ -351,7 +351,7 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
 
     private String writeFile(Flob file, String dir, String name, String mimeKey, Tuple tuple) throws IOException {
         val href = dir + "/" + name;
-        ZipUtils.writeFile(tuple.zipout, href, file);
+        ZipUtils.write(tuple.zipout, href, file);
         tuple.render.attribute(mimeKey, file.getMime());
         return href;
     }
@@ -366,7 +366,7 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
 
     private void writeXml(Tuple tuple, StringWriter writer, String name) throws IOException {
         tuple.render.endTag().endXml();
-        ZipUtils.writeString(tuple.zipout, name, writer.toString(), tuple.config.xmlConfig.encoding);
+        ZipUtils.write(tuple.zipout, name, writer.toString(), tuple.config.xmlConfig.encoding);
     }
 
     private class Tuple {

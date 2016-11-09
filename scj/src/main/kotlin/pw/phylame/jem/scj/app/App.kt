@@ -19,7 +19,7 @@
 package pw.phylame.jem.scj.app
 
 import org.apache.commons.cli.*
-import pw.phylame.jem.epm.Registry
+import pw.phylame.jem.epm.EpmManager
 import pw.phylame.qaf.cli.*
 import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.Settings
@@ -94,7 +94,7 @@ object AppConfig : Settings() {
 
     var debugLevel by delegated(DEBUG_ECHO, "app.debug.level")
 
-    var outputFormat by delegated(Registry.PMAB, "jem.output.defaultFormat")
+    var outputFormat by delegated(EpmManager.PMAB, "jem.output.defaultFormat")
 
     var viewKeys by delegated(VIEW_ALL, "sci.view.defaultKey")
 
@@ -115,13 +115,13 @@ object AppConfig : Settings() {
     val outArguments = HashMap<String, Any>()
 }
 
-fun checkInputFormat(format: String): Boolean = if (!Registry.hasParser(format)) {
+fun checkInputFormat(format: String): Boolean = if (!EpmManager.hasParser(format)) {
     App.error(tr("error.input.unsupported", format))
     println(tr("tip.unsupportedFormat", OPTION_LIST, OPTION_LIST_LONG))
     false
 } else true
 
-fun checkOutputFormat(format: String): Boolean = if (!Registry.hasMaker(format)) {
+fun checkOutputFormat(format: String): Boolean = if (!EpmManager.hasMaker(format)) {
     App.error(tr("error.output.unsupported", format))
     println(tr("tip.unsupportedFormat", OPTION_LIST, OPTION_LIST_LONG))
     false
@@ -144,7 +144,7 @@ object SCI : CLIDelegate() {
     private const val TAG = "SCI"
 
     override fun onStart() {
-        System.setProperty(Registry.AUTO_LOAD_CUSTOMIZED_KEY, "true")
+        System.setProperty(EpmManager.AUTO_LOAD_CUSTOMIZED_KEY, "true")
         App.ensureHomeExisted()
         Locale.setDefault(AppConfig.appLocale)
         App.translator = Translator(I18N_NAME)
@@ -180,8 +180,8 @@ object SCI : CLIDelegate() {
         // list
         addOption(Option(OPTION_LIST, OPTION_LIST_LONG, false, tr("help.list"))) {
             println(tr("list.title"))
-            println(" ${tr("list.input")} ${Registry.supportedParsers().joinToString(" ")}")
-            println(" ${tr("list.output")} ${Registry.supportedMakers().joinToString(" ")}")
+            println(" ${tr("list.input")} ${EpmManager.supportedParsers().joinToString(" ")}")
+            println(" ${tr("list.output")} ${EpmManager.supportedMakers().joinToString(" ")}")
             0
         }
         // debug level
@@ -346,7 +346,7 @@ object SCI : CLIDelegate() {
                 status = -1
                 continue
             }
-            val format = inFormat ?: Registry.formatOfFile(input) ?: PathUtils.extensionName(input)
+            val format = inFormat ?: EpmManager.formatOfFile(input) ?: PathUtils.extensionName(input)
             if (!checkInputFormat(format)) {
                 status = -1
                 continue

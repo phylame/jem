@@ -52,6 +52,6 @@ public class EpubMaker extends ZipMaker<EpubOutConfig> {
     }
 
     private void writeMIME(ZipOutputStream zipout) throws IOException {
-        ZipUtils.writeString(zipout, EPUB.MIME_FILE, EPUB.MT_EPUB, "ASCII");
+        ZipUtils.write(zipout, EPUB.MIME_FILE, EPUB.MT_EPUB, "ASCII");
     }
 }

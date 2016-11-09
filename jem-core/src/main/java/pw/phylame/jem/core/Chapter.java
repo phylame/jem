@@ -427,7 +427,7 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
 
     @Override
     public String toString() {
-        return Attributes.getTitle(this);
+        return debug();
     }
 
     /**

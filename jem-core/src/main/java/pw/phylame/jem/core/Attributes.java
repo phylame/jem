@@ -15,6 +15,9 @@
 
 package pw.phylame.jem.core;
 
+import static pw.phylame.ycl.util.StringUtils.EMPTY_TEXT;
+import static pw.phylame.ycl.util.StringUtils.join;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -24,19 +27,16 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import lombok.NonNull;
 import lombok.val;
-import pw.phylame.jem.util.Variants;
 import pw.phylame.jem.util.VariantMap.Validator;
+import pw.phylame.jem.util.Variants;
 import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.jem.util.text.Text;
+import pw.phylame.ycl.util.CollectUtils;
 import pw.phylame.ycl.util.Exceptions;
-import pw.phylame.ycl.util.StringUtils;
 
 /**
  * Declares name of attributes supported by Jem for chapter and book.
- *
- * @since 2.1.0
  */
 public final class Attributes {
     public static final String AUTHOR = "author";
@@ -61,37 +61,35 @@ public final class Attributes {
     public static final String VENDOR = "vendor";
     public static final String WORDS = "words";
 
-    public static final String MULTI_SEPARATOR = ";";
-
-    private static final Map<String, String> attributeTypes = new ConcurrentHashMap<>();
-
-    static {
-        attributeTypes.put(COVER, Variants.FLOB);
-        attributeTypes.put(INTRO, Variants.TEXT);
-        attributeTypes.put(WORDS, Variants.INTEGER);
-        attributeTypes.put(DATE, Variants.DATETIME);
-        attributeTypes.put(LANGUAGE, Variants.LOCALE);
-        attributeTypes.put(PAGES, Variants.INTEGER);
-        attributeTypes.put(PRICE, Variants.REAL);
-        attributeTypes.put(PUBDATE, Variants.DATETIME);
-    }
-
     public static class AttributeValidator implements Validator {
         @Override
         public void validate(String name, Object value) throws RuntimeException {
-            val attributeType = typeOf(name);
-            if (attributeType == null) { // unknown attribute name, don't validate
+            val type = typeOf(name);
+            if (type == null) { // unknown attribute name, don't validate
                 return;
             }
-            val valueType = Variants.typeOf(value);
-            if (!attributeType.equals(valueType)) {
-                throw Exceptions.forIllegalArgument("attribute '%s' must be '%s'", name, attributeType);
+            if (!type.equals(Variants.typeOf(value))) {
+                throw Exceptions.forIllegalArgument("attribute '%s' must be '%s'", name, type);
             }
         }
     }
 
+    private static final Map<String, String> attributeTypes = new ConcurrentHashMap<>();
+
+    static {
+        CollectUtils.updateByProperties(attributeTypes, "!pw/phylame/jem/util/attributes.properties");
+    }
+
+    /**
+     * Maps specified attribute name for specified variant type.
+     *
+     * @param name
+     *            name of attribute
+     * @param type
+     *            name of type
+     */
     public static void mapType(String name, String type) {
-        attributeTypes.put(name, type);
+        attributeTypes.put(name, Variants.checkTypeName(type));
     }
 
     /**
@@ -105,160 +103,162 @@ public final class Attributes {
         return attributeTypes.get(name);
     }
 
-    public static List<String> getValues(@NonNull Chapter chapter, String name) {
-        val value = chapter.getAttributes().get(name, StringUtils.EMPTY_TEXT);
-        return !value.isEmpty() ? Arrays.asList(value.split(MULTI_SEPARATOR)) : Collections.<String>emptyList();
+    private static final String VALUES_SEPARATOR = ";";
+
+    public static List<String> getValues(Chapter chapter, String name) {
+        val value = chapter.getAttributes().get(name, EMPTY_TEXT);
+        return !value.isEmpty() ? Arrays.asList(value.split(VALUES_SEPARATOR)) : Collections.<String>emptyList();
     }
 
-    public static void setValues(@NonNull Chapter chapter, String name, Collection<String> values) {
-        chapter.getAttributes().set(name, StringUtils.join(MULTI_SEPARATOR, values));
+    public static void setValues(Chapter chapter, String name, Collection<String> values) {
+        chapter.getAttributes().set(name, join(VALUES_SEPARATOR, values));
     }
 
-    public static String getTitle(@NonNull Chapter chapter) {
-        return chapter.getAttributes().get(TITLE, StringUtils.EMPTY_TEXT);
+    public static String getTitle(Chapter chapter) {
+        return chapter.getAttributes().get(TITLE, EMPTY_TEXT);
     }
 
-    public static void setTitle(@NonNull Chapter chapter, String title) {
+    public static void setTitle(Chapter chapter, String title) {
         chapter.getAttributes().set(TITLE, title);
     }
 
-    public static Flob getCover(@NonNull Chapter chapter) {
+    public static Flob getCover(Chapter chapter) {
         return chapter.getAttributes().get(COVER, Flob.class, null);
     }
 
-    public static void setCover(@NonNull Chapter chapter, Flob cover) {
+    public static void setCover(Chapter chapter, Flob cover) {
         chapter.getAttributes().set(COVER, cover);
     }
 
-    public static Text getIntro(@NonNull Chapter chapter) {
+    public static Text getIntro(Chapter chapter) {
         return chapter.getAttributes().get(INTRO, Text.class, null);
     }
 
-    public static void setIntro(@NonNull Chapter chapter, Text intro) {
+    public static void setIntro(Chapter chapter, Text intro) {
         chapter.getAttributes().set(INTRO, intro);
     }
 
-    public static Integer getWords(@NonNull Chapter chapter) {
+    public static Integer getWords(Chapter chapter) {
         return chapter.getAttributes().get(WORDS, Integer.class, 0);
     }
 
-    public static void setWords(@NonNull Chapter chapter, int words) {
+    public static void setWords(Chapter chapter, int words) {
         chapter.getAttributes().set(WORDS, words);
     }
 
-    public static String getAuthor(@NonNull Chapter chapter) {
-        return chapter.getAttributes().get(AUTHOR, StringUtils.EMPTY_TEXT);
+    public static String getAuthor(Chapter chapter) {
+        return chapter.getAttributes().get(AUTHOR, EMPTY_TEXT);
     }
 
-    public static void setAuthor(@NonNull Chapter chapter, String author) {
+    public static void setAuthor(Chapter chapter, String author) {
         chapter.getAttributes().set(AUTHOR, author);
     }
 
-    public static Date getDate(@NonNull Chapter chapter) {
+    public static Date getDate(Chapter chapter) {
         return chapter.getAttributes().get(DATE, Date.class, null);
     }
 
-    public static void setDate(@NonNull Chapter chapter, Date date) {
+    public static void setDate(Chapter chapter, Date date) {
         chapter.getAttributes().set(DATE, date);
     }
 
-    public static Date getPubdate(@NonNull Chapter chapter) {
+    public static Date getPubdate(Chapter chapter) {
         return chapter.getAttributes().get(PUBDATE, Date.class, null);
     }
 
-    public static void setPubdate(@NonNull Chapter chapter, Date pubdate) {
+    public static void setPubdate(Chapter chapter, Date pubdate) {
         chapter.getAttributes().set(PUBDATE, pubdate);
     }
 
-    public static String getGenre(@NonNull Chapter chapter) {
-        return chapter.getAttributes().get(GENRE, StringUtils.EMPTY_TEXT);
+    public static String getGenre(Chapter chapter) {
+        return chapter.getAttributes().get(GENRE, EMPTY_TEXT);
     }
 
-    public static void setGenre(@NonNull Chapter chapter, String genre) {
+    public static void setGenre(Chapter chapter, String genre) {
         chapter.getAttributes().set(GENRE, genre);
     }
 
-    public static Locale getLanguage(@NonNull Chapter chapter) {
+    public static Locale getLanguage(Chapter chapter) {
         return chapter.getAttributes().get(LANGUAGE, Locale.class, null);
     }
 
-    public static void setLanguage(@NonNull Chapter chapter, Locale language) {
+    public static void setLanguage(Chapter chapter, Locale language) {
         chapter.getAttributes().set(LANGUAGE, language);
     }
 
-    public static String getPublisher(@NonNull Chapter chapter) {
-        return chapter.getAttributes().get(PUBLISHER, StringUtils.EMPTY_TEXT);
+    public static String getPublisher(Chapter chapter) {
+        return chapter.getAttributes().get(PUBLISHER, EMPTY_TEXT);
     }
 
-    public static void setPublisher(@NonNull Chapter chapter, String publisher) {
+    public static void setPublisher(Chapter chapter, String publisher) {
         chapter.getAttributes().set(PUBLISHER, publisher);
     }
 
-    public static String getRights(@NonNull Chapter chapter) {
-        return chapter.getAttributes().get(RIGHTS, StringUtils.EMPTY_TEXT);
+    public static String getRights(Chapter chapter) {
+        return chapter.getAttributes().get(RIGHTS, EMPTY_TEXT);
     }
 
-    public static void setRights(@NonNull Chapter chapter, String rights) {
+    public static void setRights(Chapter chapter, String rights) {
         chapter.getAttributes().set(RIGHTS, rights);
     }
 
-    public static String getState(@NonNull Chapter chapter) {
-        return chapter.getAttributes().get(STATE, StringUtils.EMPTY_TEXT);
+    public static String getState(Chapter chapter) {
+        return chapter.getAttributes().get(STATE, EMPTY_TEXT);
     }
 
-    public static void setState(@NonNull Chapter chapter, String state) {
+    public static void setState(Chapter chapter, String state) {
         chapter.getAttributes().set(STATE, state);
     }
 
-    public static String getKeywords(@NonNull Chapter chapter) {
-        return chapter.getAttributes().get(KEYWORDS, StringUtils.EMPTY_TEXT);
+    public static String getKeywords(Chapter chapter) {
+        return chapter.getAttributes().get(KEYWORDS, EMPTY_TEXT);
     }
 
-    public static void setKeywords(@NonNull Chapter chapter, String keywords) {
+    public static void setKeywords(Chapter chapter, String keywords) {
         chapter.getAttributes().set(KEYWORDS, keywords);
     }
 
-    public static void setKeywords(@NonNull Chapter chapter, @NonNull Collection<String> keywords) {
+    public static void setKeywords(Chapter chapter, Collection<String> keywords) {
         setValues(chapter, KEYWORDS, keywords);
     }
 
-    public static String getVendor(@NonNull Chapter chapter) {
-        return chapter.getAttributes().get(VENDOR, StringUtils.EMPTY_TEXT);
+    public static String getVendor(Chapter chapter) {
+        return chapter.getAttributes().get(VENDOR, EMPTY_TEXT);
     }
 
-    public static void setVendor(@NonNull Chapter chapter, String vendor) {
+    public static void setVendor(Chapter chapter, String vendor) {
         chapter.getAttributes().set(VENDOR, vendor);
     }
 
-    public static String getISBN(@NonNull Chapter chapter) {
-        return chapter.getAttributes().get(ISBN, StringUtils.EMPTY_TEXT);
+    public static String getISBN(Chapter chapter) {
+        return chapter.getAttributes().get(ISBN, EMPTY_TEXT);
     }
 
-    public static void setISBN(@NonNull Chapter chapter, String isbn) {
+    public static void setISBN(Chapter chapter, String isbn) {
         chapter.getAttributes().set(ISBN, isbn);
     }
 
-    public static String getProtagonists(@NonNull Chapter chapter) {
-        return chapter.getAttributes().get(PROTAGONISTS, StringUtils.EMPTY_TEXT);
+    public static String getProtagonists(Chapter chapter) {
+        return chapter.getAttributes().get(PROTAGONISTS, EMPTY_TEXT);
     }
 
-    public static void setProtagonists(@NonNull Chapter chapter, String protagonists) {
+    public static void setProtagonists(Chapter chapter, String protagonists) {
         chapter.getAttributes().set(PROTAGONISTS, protagonists);
     }
 
-    public static void setProtagonists(@NonNull Chapter chapter, @NonNull Collection<String> protagonists) {
+    public static void setProtagonists(Chapter chapter, Collection<String> protagonists) {
         setValues(chapter, PROTAGONISTS, protagonists);
     }
 
-    public static String getTranslators(@NonNull Chapter chapter) {
-        return chapter.getAttributes().get(TRANSLATORS, StringUtils.EMPTY_TEXT);
+    public static String getTranslators(Chapter chapter) {
+        return chapter.getAttributes().get(TRANSLATORS, EMPTY_TEXT);
     }
 
-    public static void setTranslators(@NonNull Chapter chapter, String translators) {
+    public static void setTranslators(Chapter chapter, String translators) {
         chapter.getAttributes().set(TRANSLATORS, translators);
     }
 
-    public static void setTranslators(@NonNull Chapter chapter, @NonNull Collection<String> translators) {
+    public static void setTranslators(Chapter chapter, Collection<String> translators) {
         setValues(chapter, TRANSLATORS, translators);
     }
 }

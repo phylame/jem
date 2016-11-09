@@ -19,7 +19,7 @@
 package pw.phylame.jem.imabw.app
 
 import pw.phylame.jem.core.Book
-import pw.phylame.jem.epm.Registry
+import pw.phylame.jem.epm.EpmManager
 import pw.phylame.jem.imabw.app.ui.Dialogs
 import pw.phylame.jem.imabw.app.ui.OpenResult
 import pw.phylame.ycl.io.PathUtils
@@ -31,7 +31,7 @@ class EpmInParam(var file: File, extension: String?, var arguments: Map<String, 
     var format: String? = if (extension.isNullOrEmpty()) {
         Books.detectFormat(file)
     } else {
-        Registry.nameOfExtension(extension) ?: extension
+        EpmManager.nameOfExtension(extension) ?: extension
     }
 
     companion object {
@@ -59,14 +59,14 @@ class EpmInParam(var file: File, extension: String?, var arguments: Map<String, 
 }
 
 class EpmOutParam(var book: Book, var file: File, extension: String, var arguments: Map<String, Any>) {
-    var format: String = Registry.nameOfExtension(extension) ?: extension
+    var format: String = EpmManager.nameOfExtension(extension) ?: extension
 }
 
 object Books {
     private val parserExtensions: Array<Any> by lazy {
         val results = HashSet<Any>()
-        for (name in Registry.supportedParsers()) {
-            val extensions = Registry.extensionsOfName(name)
+        for (name in EpmManager.supportedParsers()) {
+            val extensions = EpmManager.extensionsOfName(name)
             if (extensions.size == 1) {
                 results.add(extensions[0])
             } else {
@@ -78,8 +78,8 @@ object Books {
 
     private val makerExtensions: Array<Any> by lazy {
         val results = HashSet<Any>()
-        for (name in Registry.supportedMakers()) {
-            val extensions = Registry.extensionsOfName(name)
+        for (name in EpmManager.supportedMakers()) {
+            val extensions = EpmManager.extensionsOfName(name)
             if (extensions.size == 1) {
                 results.add(extensions[0])
             } else {
@@ -101,10 +101,10 @@ object Books {
             if (initFile != null) {
                 _format = PathUtils.extensionName(initFile.path)
                 if (_format.isEmpty()) {
-                    _format = Registry.PMAB
+                    _format = EpmManager.PMAB
                 }
             } else {
-                _format = Registry.PMAB
+                _format = EpmManager.PMAB
             }
         }
         return if (forOpen) {
@@ -124,7 +124,7 @@ object Books {
 
     fun detectFormat(file: File): String {
         val extension = PathUtils.extensionName(file.path).toLowerCase()
-        val format = Registry.nameOfExtension(extension)
+        val format = EpmManager.nameOfExtension(extension)
         return format ?: extension
     }
 

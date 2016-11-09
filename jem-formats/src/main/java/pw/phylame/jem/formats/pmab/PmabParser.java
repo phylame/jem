@@ -58,7 +58,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
 
     @Override
     public Book parse(@NonNull ZipFile zip, PmabInConfig config) throws IOException, ParserException {
-        if (!PMAB.MT_PMAB.equals(ZipUtils.readString(zip, PMAB.MIME_FILE, "ASCII"))) {
+        if (!PMAB.MT_PMAB.equals(ZipUtils.textOf(zip, PMAB.MIME_FILE, "ASCII"))) {
             throw new ParserException(M.tr("pmab.parse.invalidMT", PMAB.MIME_FILE, PMAB.MT_PMAB));
         }
         if (config == null) {
@@ -88,7 +88,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
         tuple.inAttributes = false;
         val b = new StringBuilder();
         val xpp = tuple.xpp;
-        try (val in = ZipUtils.openStream(tuple.zip, PMAB.PBM_FILE)) {
+        try (val in = ZipUtils.streamOf(tuple.zip, PMAB.PBM_FILE)) {
             xpp.setInput(in, null);
             int event = xpp.getEventType();
             do {
@@ -296,7 +296,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
         int version = 0;
         boolean hasText = false;
         val b = new StringBuilder();
-        try (val in = ZipUtils.openStream(tuple.zip, PMAB.PBC_FILE)) {
+        try (val in = ZipUtils.streamOf(tuple.zip, PMAB.PBC_FILE)) {
             xpp.setInput(in, null);
             int event = xpp.getEventType();
             do {

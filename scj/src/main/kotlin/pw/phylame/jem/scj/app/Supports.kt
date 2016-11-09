@@ -21,8 +21,7 @@ package pw.phylame.jem.scj.app
 import pw.phylame.jem.core.Attributes
 import pw.phylame.jem.core.Book
 import pw.phylame.jem.core.Chapter
-import pw.phylame.jem.core.Jem
-import pw.phylame.jem.epm.Registry
+import pw.phylame.jem.epm.EpmManager
 import pw.phylame.jem.epm.util.MakerException
 import pw.phylame.jem.epm.util.ParserException
 import pw.phylame.jem.formats.pmab.PmabOutConfig
@@ -30,7 +29,6 @@ import pw.phylame.jem.util.JemException
 import pw.phylame.jem.util.UnsupportedFormatException
 import pw.phylame.jem.util.Variants
 import pw.phylame.jem.util.flob.Flobs
-import pw.phylame.jem.util.text.Text
 import pw.phylame.jem.util.text.Texts
 import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.iif
@@ -38,6 +36,7 @@ import pw.phylame.qaf.core.tr
 import pw.phylame.ycl.format.Converters
 import pw.phylame.ycl.io.IOUtils
 import pw.phylame.ycl.util.DateUtils
+import pw.phylame.ycl.util.MiscUtils
 import java.io.File
 import java.io.IOException
 import java.lang.System.lineSeparator
@@ -61,7 +60,7 @@ fun printJemError(e: JemException, file: File, format: String) {
 
 fun openBook(tuple: InTuple): Book? {
     try {
-        return Registry.readBook(tuple.file, tuple.format, tuple.arguments)
+        return EpmManager.readBook(tuple.file, tuple.format, tuple.arguments)
     } catch (e: IOException) {
         App.error(tr("error.loadFile", tuple.file), e)
     } catch (e: JemException) {
@@ -95,7 +94,7 @@ fun setAttributes(chapter: Chapter, attributes: Map<String, Any>): Boolean {
                     return false
                 }
             }
-            Attributes.INTRO -> value = Texts.forString(str, Text.PLAIN)
+            Attributes.INTRO -> value = Texts.forString(str, Texts.PLAIN)
             Attributes.LANGUAGE -> value = Converters.parse(str, Locale::class.java)
             else -> value = str
         }
@@ -135,7 +134,7 @@ fun saveBook(book: Book, tuple: OutTuple): String? {
     prepareBook(book, tuple) ?: return null
     val output = tuple.output.iif(tuple.output.isDirectory) { File(it, "${Attributes.getTitle(book)}.${tuple.format}") }
     try {
-        Registry.writeBook(book, output, tuple.format, prepareArguments(HashMap(tuple.arguments)))
+        EpmManager.writeBook(book, output, tuple.format, prepareArguments(HashMap(tuple.arguments)))
         return output.path
     } catch (e: IOException) {
         App.error(tr("error.saveFile", tuple.output), e)
@@ -205,7 +204,7 @@ fun extractBook(inTuple: InTuple, index: String, outTuple: OutTuple): Boolean {
         book.cleanup()
         return false
     }
-    val chapter = Jem.locate(book, indexes)
+    val chapter = MiscUtils.locate(book, indexes)
     if (chapter == null) {
         book.cleanup()
         return false
@@ -344,7 +343,7 @@ private fun viewChapter(book: Book, name: String): Boolean {
     val key = if (parts.size > 1) parts[1] else VIEW_TEXT
     val indexes = parseIndexes(index) ?: return false
     try {
-        viewAttribute(Jem.locate(book, indexes), arrayOf(key), lineSeparator(), false, false)
+        viewAttribute(MiscUtils.locate(book, indexes), arrayOf(key), lineSeparator(), false, false)
         return true
     } catch (e: IndexOutOfBoundsException) {
         App.error(tr("error.view.notFoundChapter", index, Attributes.getTitle(book)), e)

@@ -20,7 +20,7 @@ package pw.phylame.jem.imabw.app
 
 import pw.phylame.jem.core.Book
 import pw.phylame.jem.core.Chapter
-import pw.phylame.jem.epm.Registry
+import pw.phylame.jem.epm.EpmManager
 import pw.phylame.jem.imabw.app.ui.Dialogs
 import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.tr
@@ -33,7 +33,7 @@ import java.util.LinkedList
 class Task(val updater: (Task) -> Unit,
            val book: Book,
            val source: File? = null,
-           val format: String = Registry.PMAB,
+           val format: String = EpmManager.PMAB,
            val arguments: Map<String, Any> = emptyMap()) {
 
     constructor(updater: (Task) -> Unit, book: Book) : this(updater, book, null)
@@ -259,8 +259,8 @@ object Manager {
     fun openFile() {
         openFile(null)
     }
-    
-    fun openFile(file:File?) {
+
+    fun openFile(file: File?) {
         val title = tr("d.openBook.title")
         if (!maybeSaving(title)) {
             return
@@ -271,8 +271,8 @@ object Manager {
     fun newFile() {
         newFile(null)
     }
-    
-    fun newFile(name:String?) {
+
+    fun newFile(name: String?) {
         val title = tr("d.newBook.title")
         if (!maybeSaving(title)) {
             return

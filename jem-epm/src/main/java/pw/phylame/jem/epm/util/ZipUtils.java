@@ -15,18 +15,18 @@
 
 package pw.phylame.jem.epm.util;
 
-import lombok.NonNull;
-import pw.phylame.jem.util.flob.Flob;
-import pw.phylame.jem.util.text.Text;
-import pw.phylame.ycl.io.IOUtils;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
+
+import lombok.NonNull;
+import lombok.val;
+import pw.phylame.jem.util.flob.Flob;
+import pw.phylame.jem.util.text.Text;
+import pw.phylame.ycl.io.IOUtils;
 
 /**
  * Utilities operations for ZIP..
@@ -35,28 +35,29 @@ public final class ZipUtils {
     private ZipUtils() {
     }
 
-    public static InputStream openStream(@NonNull ZipFile zip, String name) throws IOException {
-        ZipEntry entry = zip.getEntry(name);
+    public static InputStream streamOf(@NonNull ZipFile zip, @NonNull String name) throws IOException {
+        val entry = zip.getEntry(name);
         if (entry == null) {
             throw new IOException(M.tr("err.zip.noEntry", name, zip.getName()));
         }
         return zip.getInputStream(entry);
     }
 
-    public static String readString(ZipFile zip, String name, String encoding) throws IOException {
-        try (InputStream in = openStream(zip, name)) {
+    public static String textOf(ZipFile zip, String name, String encoding) throws IOException {
+        try (val in = streamOf(zip, name)) {
             return IOUtils.toString(in, encoding);
         }
     }
 
-    public static void writeString(@NonNull ZipOutputStream zipout, String name, @NonNull String str, String encoding)
-            throws IOException {
+    public static void write(@NonNull ZipOutputStream zipout, @NonNull String name, @NonNull String str,
+            String encoding) throws IOException {
         zipout.putNextEntry(new ZipEntry(name));
         zipout.write(encoding == null ? str.getBytes() : str.getBytes(encoding));
         zipout.closeEntry();
     }
 
-    public static void writeFile(@NonNull ZipOutputStream zipout, String name, @NonNull Flob flob) throws IOException {
+    public static void write(@NonNull ZipOutputStream zipout, @NonNull String name, @NonNull Flob flob)
+            throws IOException {
         zipout.putNextEntry(new ZipEntry(name));
         flob.writeTo(zipout);
         zipout.closeEntry();
@@ -70,7 +71,7 @@ public final class ZipUtils {
      * @param name
      *            name of entry to store text content
      * @param text
-     *            the TextObject
+     *            the Text
      * @param encoding
      *            encoding to encode text, if <tt>null</tt> use platform encoding
      * @throws NullPointerException
@@ -78,12 +79,10 @@ public final class ZipUtils {
      * @throws IOException
      *             if occurs IO errors when writing text
      */
-    public static void writeText(@NonNull ZipOutputStream zipout, String name, @NonNull Text text, String encoding)
+    public static void write(@NonNull ZipOutputStream zipout, String name, @NonNull Text text, String encoding)
             throws IOException {
         zipout.putNextEntry(new ZipEntry(name));
-        Writer writer = encoding != null
-                ? new OutputStreamWriter(zipout, encoding)
-                : new OutputStreamWriter(zipout);
+        val writer = encoding != null ? new OutputStreamWriter(zipout, encoding) : new OutputStreamWriter(zipout);
         try {
             text.writeTo(writer);
         } catch (Exception e) {

@@ -57,7 +57,7 @@ public class JarMaker extends ZipMaker<JarOutConfig> {
         // MANIFEST
         val title = Attributes.getTitle(book);
         val manifest = String.format(JAR.MANIFEST_TEMPLATE, "Jem", Build.VERSION, title, config.vendor, title);
-        ZipUtils.writeString(zipout, JAR.MANIFEST_FILE, manifest, JAR.METADATA_ENCODING);
+        ZipUtils.write(zipout, JAR.MANIFEST_FILE, manifest, JAR.METADATA_ENCODING);
 
         val render = new JarRender(zipout);
         try {

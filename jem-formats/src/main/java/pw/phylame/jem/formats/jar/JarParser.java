@@ -55,7 +55,7 @@ public class JarParser extends ZipParser<JarInConfig> {
     }
 
     private void parseMetadata(Book book, ZipFile zip) throws IOException, ParserException {
-        try (val in = new BufferedInputStream(ZipUtils.openStream(zip, "0"))) {
+        try (val in = new BufferedInputStream(ZipUtils.streamOf(zip, "0"))) {
             val input = new DataInputStream(in);
             if (input.readInt() != JAR.MAGIC_NUMBER) {
                 throw new ParserException(M.tr("jar.parse.badMetadata", zip.getName()));

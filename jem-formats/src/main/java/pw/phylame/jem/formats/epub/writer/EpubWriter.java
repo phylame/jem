@@ -55,15 +55,15 @@ public abstract class EpubWriter {
     }
 
     public void writeToOps(Flob file, String name) throws IOException {
-        ZipUtils.writeFile(tuple.zipout, pathInOps(name), file);
+        ZipUtils.write(tuple.zipout, pathInOps(name), file);
     }
 
     public void writeToOps(String text, String name, String encoding) throws IOException {
-        ZipUtils.writeString(tuple.zipout, pathInOps(name), text, encoding);
+        ZipUtils.write(tuple.zipout, pathInOps(name), text, encoding);
     }
 
     public void writeToOps(Text text, String name, String encoding) throws IOException {
-        ZipUtils.writeText(tuple.zipout, pathInOps(name), text, encoding);
+        ZipUtils.write(tuple.zipout, pathInOps(name), text, encoding);
     }
 
     protected void writeContainer(String opfPath) throws IOException {
@@ -81,6 +81,6 @@ public abstract class EpubWriter {
         render.endTag();
         render.endXml();
 
-        ZipUtils.writeString(tuple.zipout, EPUB.CONTAINER_FILE, writer.toString(), tuple.config.xmlConfig.encoding);
+        ZipUtils.write(tuple.zipout, EPUB.CONTAINER_FILE, writer.toString(), tuple.config.xmlConfig.encoding);
     }
 }

@@ -35,11 +35,11 @@ import pw.phylame.ycl.log.Log;
 import pw.phylame.ycl.util.CollectUtils;
 import pw.phylame.ycl.util.Implementor;
 
-public final class Registry {
-    private Registry() {
+public final class EpmManager {
+    private EpmManager() {
     }
 
-    private static final String TAG = Registry.class.getSimpleName();
+    private static final String TAG = EpmManager.class.getSimpleName();
 
     /**
      * The default format of Jem.
@@ -271,9 +271,9 @@ public final class Registry {
      *             if the <code>name</code> is <code>null</code>
      */
     public static void mapExtensions(@NonNull String name, Collection<String> extensions) {
-        Set<String> current = Registry.extensions.get(name);
+        Set<String> current = EpmManager.extensions.get(name);
         if (current == null) {
-            Registry.extensions.put(name, current = new HashSet<>());
+            EpmManager.extensions.put(name, current = new HashSet<>());
         }
         if (CollectUtils.isEmpty(extensions)) {
             current.add(name);
@@ -429,4 +429,5 @@ public final class Registry {
             loadCustomizedImplementors();
         }
     }
+
 }

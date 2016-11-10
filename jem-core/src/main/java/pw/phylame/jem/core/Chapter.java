@@ -17,6 +17,7 @@ package pw.phylame.jem.core;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -300,7 +301,7 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
 
     @Override
     public List<Chapter> items() {
-        return chapters;
+        return Collections.unmodifiableList(chapters);
     }
 
     /**

@@ -13,14 +13,10 @@
  * specific language governing permissions and limitations under the License.
  */
 
-package pw.phylame.jem.epm.base;
-
-import java.io.Closeable;
-import java.io.File;
-import java.io.IOException;
-import java.util.Map;
+package pw.phylame.jem.epm.impl;
 
 import lombok.NonNull;
+import lombok.Synchronized;
 import lombok.val;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.epm.Parser;
@@ -30,7 +26,12 @@ import pw.phylame.jem.epm.util.ParserException;
 import pw.phylame.jem.epm.util.config.EpmConfig;
 import pw.phylame.jem.util.JemException;
 
-public abstract class AbstractParser<I extends Closeable, C extends EpmConfig> extends BookWorker<C> implements Parser {
+import java.io.Closeable;
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
+
+public abstract class AbstractParser<I extends Closeable, C extends EpmConfig> extends EpmBase<C> implements Parser {
 
     protected AbstractParser(String name, Class<C> clazz) {
         super(name, clazz);
@@ -41,8 +42,8 @@ public abstract class AbstractParser<I extends Closeable, C extends EpmConfig> e
     protected abstract Book parse(I input, C config) throws IOException, ParserException;
 
     @Override
-    public synchronized final Book parse(@NonNull File file, Map<String, Object> args)
-            throws IOException, JemException {
+    @Synchronized
+    public final Book parse(@NonNull File file, Map<String, Object> args) throws IOException, JemException {
         if (!file.exists()) {
             throw E.forFileNotFound("No such file: %s", file.getPath());
         }
@@ -51,18 +52,19 @@ public abstract class AbstractParser<I extends Closeable, C extends EpmConfig> e
         if (input == null) {
             throw E.forParser("'open(File, C)' of '%s' returned null", getClass().getName());
         }
-        Book book;
+        val cleaner = new InputCleaner(input);
+        final Book book;
         try {
             book = parse(input, config);
             if (book == null) {
                 throw E.forParser("'parse(I, C)' of '%s' returned null", getClass().getName());
             }
         } catch (IOException | JemException | RuntimeException e) {
-            input.close();
+            cleaner.consume(null);
             throw e;
         }
         // close the input when book is in cleanup
-        book.registerCleanup(new InputCleaner(input));
+        book.registerCleanup(cleaner);
         return book;
     }
 }

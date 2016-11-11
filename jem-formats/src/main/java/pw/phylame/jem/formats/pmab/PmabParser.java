@@ -25,12 +25,12 @@ import org.xmlpull.v1.XmlPullParserException;
 import pw.phylame.jem.core.Attributes;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.core.Chapter;
-import pw.phylame.jem.epm.base.ZipParser;
+import pw.phylame.jem.epm.impl.ZipParser;
 import pw.phylame.jem.epm.util.NumberUtils;
 import pw.phylame.jem.epm.util.ParserException;
 import pw.phylame.jem.epm.util.ZipUtils;
+import pw.phylame.jem.formats.util.EpmUtils;
 import pw.phylame.jem.formats.util.M;
-import pw.phylame.jem.formats.util.TestUtils;
 import pw.phylame.jem.util.Variants;
 import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.jem.util.flob.Flobs;
@@ -138,15 +138,15 @@ public class PmabParser extends ZipParser<PmabInConfig> {
         } else {
             val type = firstPartOf(itemType, ';');
             if (type.equals(Variants.STRING)) {
-                value = tuple.itemName.equals(Attributes.LANGUAGE) ? TestUtils.parseLocale(text) : text;
+                value = tuple.itemName.equals(Attributes.LANGUAGE) ? EpmUtils.parseLocale(text) : text;
             } else if (type.equals(Variants.DATETIME) || type.equals("date") || type.equals("time")) {
-                value = TestUtils.parseDate(text, valueOfName(itemType, "format", ";", false, tuple.config.dateFormat));
+                value = EpmUtils.parseDate(text, valueOfName(itemType, "format", ";", false, tuple.config.dateFormat));
             } else if (type.startsWith("text/")) {  // text object
                 val t = type.substring(5);
                 Flob flob = Flobs.forZip(tuple.zip, text, "text/" + t);
                 value = Texts.forFlob(flob, valueOfName(itemType, "encoding", ";", false, tuple.config.textEncoding), t);
             } else if (type.equals(Variants.LOCALE)) {
-                value = TestUtils.parseLocale(text);
+                value = EpmUtils.parseLocale(text);
             } else if (type.matches("[\\w]+/[\\w\\-]+")) {   // file object
                 value = Flobs.forZip(tuple.zip, text, type);
             } else if (type.equals(Variants.INTEGER) || type.equals("uint")) {
@@ -273,11 +273,11 @@ public class PmabParser extends ZipParser<PmabInConfig> {
                 val text = b.toString().trim();
                 Object value;
                 if (tuple.attrName.equals(Attributes.DATE)) {
-                    value = TestUtils.parseDate(text, tuple.config.dateFormat);
+                    value = EpmUtils.parseDate(text, tuple.config.dateFormat);
                 } else if (attrName.equals(Attributes.INTRO)) {
                     value = Texts.forString(text, Texts.PLAIN);
                 } else if (attrName.equals(Attributes.LANGUAGE)) {
-                    value = TestUtils.parseLocale(text);
+                    value = EpmUtils.parseLocale(text);
                 } else if (isNotEmpty(tuple.mediaType)) {
                     value = Flobs.forZip(tuple.zip, text, tuple.mediaType);
                 } else {

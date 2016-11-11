@@ -19,8 +19,8 @@
 package pw.phylame.jem.formats.util.html;
 
 /**
- * Writes result of <tt>HtmlRender</tt> to device.
+ * Writes result of {@code HtmlRender} to device.
  */
 public interface HtmlWriter {
-    void finishHtml();
+    void onFinish();
 }

@@ -18,11 +18,13 @@
 
 package pw.phylame.jem.epm.util;
 
+import lombok.NonNull;
+
 import java.io.Closeable;
 import java.io.File;
 
 public class FileDeleter extends InputCleaner {
-    public FileDeleter(Closeable in, final File file) {
+    public FileDeleter(Closeable in, final @NonNull File file) {
         super(in, new Runnable() {
             @Override
             public void run() {

@@ -25,7 +25,7 @@ import lombok.val;
 import pw.phylame.jem.core.Attributes;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.core.Chapter;
-import pw.phylame.jem.epm.base.BinaryParser;
+import pw.phylame.jem.epm.impl.BinaryParser;
 import pw.phylame.jem.epm.util.ParserException;
 import pw.phylame.jem.epm.util.config.NonConfig;
 import pw.phylame.jem.formats.util.M;

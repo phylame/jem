@@ -26,23 +26,23 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- * <code>Parser</code> used for parsing book file and stores to <code>Book</code>.
- * <p><strong>NOTE: </strong> the instance of <code>Parse</code> be reusable.
+ * {@code Parser} used for parsing book file and stores to {@code Book}.
+ * <p><strong>NOTE: </strong> the instance of {@code Parser} be reusable.
  */
 public interface Parser {
     /**
-     * Returns the format name (normally the extension name).
+     * Returns the format name (normally be the extension name).
      *
-     * @return the name of format
+     * @return the name of format for this parser
      */
     String getName();
 
     /**
-     * Parses book file and stores to <code>Book</code>.
+     * Parses book file and stores to {@code Book}.
      *
      * @param file the input book file
      * @param args arguments to the parser
-     * @return <code>Book</code> represents the book file
+     * @return {@code Book} represents the book file
      * @throws IOException  if occurs I/O errors
      * @throws JemException if occurs errors when parsing book file
      */

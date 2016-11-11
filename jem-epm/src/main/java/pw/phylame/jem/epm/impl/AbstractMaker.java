@@ -13,16 +13,10 @@
  * specific language governing permissions and limitations under the License.
  */
 
-package pw.phylame.jem.epm.base;
-
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Map;
+package pw.phylame.jem.epm.impl;
 
 import lombok.NonNull;
+import lombok.Synchronized;
 import lombok.val;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.epm.Maker;
@@ -30,18 +24,22 @@ import pw.phylame.jem.epm.util.MakerException;
 import pw.phylame.jem.epm.util.config.EpmConfig;
 import pw.phylame.jem.util.JemException;
 
-public abstract class AbstractMaker<C extends EpmConfig> extends BookWorker<C> implements Maker {
-    protected AbstractMaker(@NonNull String name, Class<C> clazz) {
+import java.io.*;
+import java.util.Map;
+
+public abstract class AbstractMaker<C extends EpmConfig> extends EpmBase<C> implements Maker {
+
+    protected AbstractMaker(String name, Class<C> clazz) {
         super(name, clazz);
     }
 
     public abstract void make(Book book, OutputStream output, C config) throws IOException, MakerException;
 
     @Override
-    public synchronized final void make(@NonNull Book book, @NonNull File file, Map<String, Object> args)
-            throws IOException, JemException {
-        try (val output = new BufferedOutputStream(new FileOutputStream(file))) {
-            make(book, output, fetchConfig(args));
+    @Synchronized
+    public final void make(@NonNull Book book, @NonNull File file, Map<String, Object> args) throws IOException, JemException {
+        try (val out = new BufferedOutputStream(new FileOutputStream(file))) {
+            make(book, out, fetchConfig(args));
         }
     }
 }

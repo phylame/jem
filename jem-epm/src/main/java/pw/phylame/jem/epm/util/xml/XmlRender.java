@@ -18,6 +18,9 @@
 
 package pw.phylame.jem.epm.util.xml;
 
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
 import org.xmlpull.v1.XmlSerializer;
 import pw.phylame.jem.epm.util.MakerException;
 import pw.phylame.ycl.util.StringUtils;
@@ -39,18 +42,18 @@ public class XmlRender {
 
     private final LinkedList<TagEntry> tagStack = new LinkedList<>();
 
-    public XmlRender(XmlConfig config, boolean awareness) throws MakerException {
+    public XmlRender(@NonNull XmlConfig config, boolean awareness) throws MakerException {
         this.config = config;
         xmlSerializer = XmlUtils.newSerializer(awareness);
         doIndent = StringUtils.isNotEmpty(config.indentString);
     }
 
-    public XmlRender setOutput(Writer writer) throws IOException {
+    public XmlRender setOutput(@NonNull Writer writer) throws IOException {
         xmlSerializer.setOutput(writer);
         return this;
     }
 
-    public XmlRender setOutput(OutputStream outputStream) throws IOException {
+    public XmlRender setOutput(@NonNull OutputStream outputStream) throws IOException {
         xmlSerializer.setOutput(outputStream, config.encoding);
         return this;
     }
@@ -92,11 +95,7 @@ public class XmlRender {
         if (count <= 0) {
             return;
         }
-        StringBuilder b = new StringBuilder();
-        for (int i = 0; i < count; ++i) {
-            b.append(config.indentString);
-        }
-        xmlSerializer.text(b.toString());
+        xmlSerializer.text(StringUtils.multiplyOf(config.indentString, count));
     }
 
     private void newNode() throws IOException {
@@ -146,7 +145,7 @@ public class XmlRender {
         if (tagStack.isEmpty()) {
             throw new AssertionError("startTag should be called firstly");
         }
-        TagEntry tagEntry = tagStack.pop();
+        val tagEntry = tagStack.pop();
         if (tagEntry.hasSubTag) {
             xmlSerializer.text(config.lineSeparator);
             if (doIndent) {
@@ -158,16 +157,12 @@ public class XmlRender {
         return this;
     }
 
+    @RequiredArgsConstructor
     private class TagEntry {
         private final String namespace;
         private final String name;
 
         // for endTag, if hasSubTag add line separator and indent
         private boolean hasSubTag = false;
-
-        private TagEntry(String namespace, String name) {
-            this.namespace = namespace;
-            this.name = name;
-        }
     }
 }

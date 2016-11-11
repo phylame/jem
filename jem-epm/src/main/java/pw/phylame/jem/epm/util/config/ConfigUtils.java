@@ -27,7 +27,6 @@ import pw.phylame.ycl.format.Converters;
 import pw.phylame.ycl.log.Log;
 import pw.phylame.ycl.util.CollectUtils;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Map;
 
@@ -53,11 +52,11 @@ public final class ConfigUtils {
         try {
             // get config object in m, key: prefix + <Class>.SELF
             val field = clazz.getField(EpmConfig.SELF_FIELD_NAME);
-            if (Modifier.isStatic(field.getModifiers())) {
+            if (Modifier.isStatic(field.getModifiers()) && field.isAccessible()) {
                 config = fetchObject(m, (prefix != null ? prefix : "") + field.get(null), clazz, null); // find the config object by key
             }
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            Log.d(TAG, "cannot get config by {0} field", EpmConfig.SELF_FIELD_NAME);
+            Log.d(TAG, "cannot get config by '{0}' field", EpmConfig.SELF_FIELD_NAME);
         }
         if (config != null) {
             return config;
@@ -69,42 +68,41 @@ public final class ConfigUtils {
 
     @SuppressWarnings("unchecked")
     public static <T> T fetchObject(Map<String, Object> m, String key, Class<T> type, Object fallback) throws BadConfigException {
-        Object o = m.get(key);
-        if (o == null) {
+        val obj = m.get(key);
+        if (obj == null) {
             return m.containsKey(key) ? null : (T) fallback;
         }
-        if (type.isInstance(o)) {   // found the item
-            return (T) o;
+        if (type.isInstance(obj)) {   // found the item
+            return (T) obj;
         }
-        if (o instanceof String) {
-            val value = Converters.parse((String) o, type);
+        if (obj instanceof String) {
+            val value = Converters.parse((String) obj, type);
             if (value != null) {
                 return value;
             }
         }
-        throw E.forBadConfig(key, o, type.getName());
+        throw E.forBadConfig(key, obj, type.getName());
     }
 
     @SuppressWarnings("unchecked")
     private static void fetchFields(EpmConfig config, Map<String, Object> m, String prefix) throws BadConfigException {
-        Field[] fields = config.getClass().getFields();
-        for (Field field : fields) {
+        val fields = config.getClass().getFields();
+        for (val field : fields) {
             val configured = field.getAnnotation(Configured.class);
             if (configured == null) {
                 Log.i(TAG, "field {0} is not configured", field.getName());
                 continue;
             }
             if (Modifier.isStatic(field.getModifiers())) {
-                Log.i(TAG, "field {0} is static", field.getName());
                 throw E.forBadConfig(configured.value(), null,
-                        M.tr("err.config.inaccessible", field.getName(), config.getClass(), "static field is not permitted with Configured"));
+                        M.tr("err.config.inaccessible", field.getName(), config.getClass(), "static field is not permitted with @Configured"));
             }
             String key = configured.value();
             if (prefix != null) {
                 key = prefix + key;
             }
             Log.i(TAG, "key for field {0} is {1}", field.getName(), key);
-            Class<?> type = field.getType();
+            val type = field.getType();
             try {
                 Object value = fetchObject(m, key, type, null);
                 if (value == null) {    // not found in m
@@ -118,8 +116,7 @@ public final class ConfigUtils {
                 }
                 field.set(config, value);
             } catch (IllegalAccessException e) {
-                throw E.forBadConfig(key, null,
-                        M.tr("err.config.inaccessible", config.getClass(), field.getName(), e.getMessage()));
+                throw E.forBadConfig(key, null, M.tr("err.config.inaccessible", config.getClass(), field.getName(), e.getMessage()));
             }
         }
         if (fields.length > 0 && config instanceof AdjustableConfig) {

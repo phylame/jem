@@ -13,44 +13,44 @@
  * specific language governing permissions and limitations under the License.
  */
 
-package pw.phylame.jem.epm.base;
+package pw.phylame.jem.epm.impl;
 
 import lombok.Getter;
-import lombok.NonNull;
 import pw.phylame.jem.epm.Parser;
 import pw.phylame.jem.epm.util.config.BadConfigException;
 import pw.phylame.jem.epm.util.config.ConfigUtils;
 import pw.phylame.jem.epm.util.config.EpmConfig;
+import pw.phylame.ycl.util.StringUtils;
+import pw.phylame.ycl.util.Validate;
 
 import java.util.Map;
 
 /**
- * Base of base parser and maker.
+ * Implementation base for parser and maker.
  *
- * @param <C>
- *            config type
+ * @param <C> the config type
  */
-abstract class BookWorker<C extends EpmConfig> {
+public abstract class EpmBase<C extends EpmConfig> {
     /**
      * Key for storing meta data of book in extensions.
+     * <p></p><strong>NOTE: </strong>the corresponding item should be ignored by {@code Maker}.
      */
     public static final String META_KEY = "jem.ext.meta";
 
     /**
-     * Name of the parser or maker.
+     * Name of format for the parser or maker.
      */
     @Getter
     private final String name;
 
     /**
      * Class of the config.
-     * <p>
-     * If no config required, set to <code>null</code>.
-     * </p>
+     * <p>If no config required, set to {@literal null}.
      */
     private final Class<C> clazz;
 
-    BookWorker(@NonNull String name, Class<C> clazz) {
+    protected EpmBase(String name, Class<C> clazz) {
+        Validate.require(StringUtils.isNotEmpty(name), "name cannot be null or empty");
         this.name = name;
         this.clazz = clazz;
     }
@@ -58,6 +58,6 @@ abstract class BookWorker<C extends EpmConfig> {
     protected final C fetchConfig(Map<String, Object> m) throws BadConfigException {
         return clazz == null
                 ? null
-                : ConfigUtils.fetchConfig(m, getName() + '.' + (this instanceof Parser ? "parse." : "make."), clazz);
+                : ConfigUtils.fetchConfig(m, name + '.' + (this instanceof Parser ? "parse." : "make."), clazz);
     }
 }

@@ -18,6 +18,7 @@
 
 package pw.phylame.jem.formats.jar;
 
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 import pw.phylame.jem.epm.util.text.TextWriter;
 
@@ -27,14 +28,11 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+@RequiredArgsConstructor
 class JarRender implements TextWriter {
     private final ZipOutputStream zipout;
-    final List<JarMaker.NavItem> items;
 
-    JarRender(ZipOutputStream zipout) {
-        this.zipout = zipout;
-        this.items = new LinkedList<>();
-    }
+    final List<JarMaker.NavItem> items = new LinkedList<>();
 
     // for generating entry name
     private int chapterCount = 1;
@@ -51,10 +49,11 @@ class JarRender implements TextWriter {
     }
 
     @Override
-    public void writeText(String text) throws IOException {
+    public JarRender write(String text) throws IOException {
         val buf = text.getBytes(JAR.TEXT_ENCODING);
         zipout.write(buf);
         length += buf.length;
+        return this;
     }
 
     @Override

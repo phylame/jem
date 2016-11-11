@@ -16,18 +16,15 @@
 package pw.phylame.jem.epm.util.config;
 
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import pw.phylame.jem.util.JemException;
 
 @Getter
+@RequiredArgsConstructor
 @SuppressWarnings("serial")
 public class BadConfigException extends JemException {
     private final String key;
     private final Object value;
-
-    public BadConfigException(String key, Object value) {
-        this.key = key;
-        this.value = value;
-    }
 
     public BadConfigException(String key, Object value, String message) {
         super(message);

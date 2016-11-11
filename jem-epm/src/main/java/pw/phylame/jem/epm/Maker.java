@@ -26,21 +26,21 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- * <code>Maker</code> used for making <code>Book</code> to book file.
- * <p><strong>NOTE: </strong> the instance of <code>Maker</code> be reusable.
+ * {@code Maker} used for making {@code Book} to book file.
+ * <p><strong>NOTE: </strong> the instance of {@code Maker} be reusable.
  */
 public interface Maker {
     /**
-     * Returns the format name (normally the extension name).
+     * Returns the format name (normally be the extension name).
      *
-     * @return the name of format
+     * @return the name of format for this maker
      */
     String getName();
 
     /**
-     * Writes <code>Book</code> to book file.
+     * Writes {@code Book} to book file.
      *
-     * @param book the <code>Book</code> to be written
+     * @param book the {@code Book} to be written
      * @param file output file to store book
      * @param args arguments to the maker
      * @throws IOException  if occurs I/O errors

@@ -1,18 +1,16 @@
 package pw.phylame.jem.scj.addons;
 
-import java.io.File;
-import java.io.FileReader;
-
-import javax.script.ScriptEngine;
-
-import org.apache.commons.cli.Option;
-
 import lombok.val;
+import org.apache.commons.cli.Option;
 import pw.phylame.qaf.cli.CLIDelegate;
 import pw.phylame.qaf.cli.Command;
 import pw.phylame.qaf.cli.TypedFetcher;
 import pw.phylame.ycl.log.Log;
 import pw.phylame.ycl.util.StringUtils;
+
+import javax.script.ScriptEngine;
+import java.io.File;
+import java.io.FileReader;
 
 public class ScriptRunner extends AbstractPlugin {
     private static final String TAG = "CSR";
@@ -28,11 +26,12 @@ public class ScriptRunner extends AbstractPlugin {
     @Override
     public void init() {
         sci.addOption(Option.builder(OPTION)
-                .longOpt("run-script")
-                .hasArg()
-                .argName(M.tr("runScript.file"))
-                .desc(M.tr("help.runScript"))
-                .build(), new RunnerCommand());
+                        .longOpt("run-script")
+                        .hasArg()
+                        .argName(M.tr("runScript.file"))
+                        .desc(M.tr("help.runScript"))
+                        .build(),
+                new RunnerCommand());
     }
 
     private Object detectScriptEngine() {

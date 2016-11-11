@@ -16,6 +16,8 @@
 # limitations under the License.
 #
 
+# syntax: name=[path to class][;extension]
+
 # PMAB parser
 pmab=pw.phylame.jem.formats.pmab.PmabParser
 

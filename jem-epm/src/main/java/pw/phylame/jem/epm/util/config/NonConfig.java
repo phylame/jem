@@ -15,6 +15,9 @@
 
 package pw.phylame.jem.epm.util.config;
 
+/**
+ * Placeholder for {@code Maker} and {@code Parser} without config.
+ */
 public final class NonConfig implements EpmConfig {
     private NonConfig() {
     }

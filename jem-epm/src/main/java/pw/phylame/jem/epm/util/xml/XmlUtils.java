@@ -55,7 +55,7 @@ public final class XmlUtils {
     }
 
     public static String attributeOf(XmlPullParser xpp, String name) throws ParserException {
-        String value = xpp.getAttributeValue(null, name);
+        val value = xpp.getAttributeValue(null, name);
         if (value == null) {
             throw new ParserException(M.tr("err.xml.noAttribute", name, xpp.getName()));
         }

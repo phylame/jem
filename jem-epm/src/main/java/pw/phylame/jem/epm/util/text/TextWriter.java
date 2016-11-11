@@ -25,7 +25,7 @@ public interface TextWriter {
     // title or joined title if joinTitles if enable
     void startChapter(String title) throws Exception;
 
-    void writeText(String text) throws Exception;
+    TextWriter write(String text) throws Exception;
 
     void endChapter() throws Exception;
 }

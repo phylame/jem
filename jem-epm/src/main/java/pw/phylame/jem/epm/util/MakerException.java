@@ -18,7 +18,7 @@ package pw.phylame.jem.epm.util;
 import pw.phylame.jem.util.JemException;
 
 /**
- * Exception for Jem Maker errors.
+ * Exception for {@code Maker} errors.
  */
 @SuppressWarnings("serial")
 public class MakerException extends JemException {

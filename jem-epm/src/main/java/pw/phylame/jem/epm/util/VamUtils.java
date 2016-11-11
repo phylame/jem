@@ -1,9 +1,5 @@
 package pw.phylame.jem.epm.util;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import lombok.NonNull;
 import lombok.val;
 import pw.phylame.jem.util.flob.Flob;
@@ -12,6 +8,9 @@ import pw.phylame.ycl.io.IOUtils;
 import pw.phylame.ycl.vam.Archive;
 import pw.phylame.ycl.vam.ArchiveWriter;
 import pw.phylame.ycl.vam.Item;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 public final class VamUtils {
     private VamUtils() {
@@ -31,44 +30,24 @@ public final class VamUtils {
         }
     }
 
-    public static <T extends Item> void write(ArchiveWriter<T> zipout, String name, String str, String encoding)
-            throws IOException {
-        val item = zipout.mkitem(name);
-        zipout.begin(item);
-        zipout.write(item, encoding == null ? str.getBytes() : str.getBytes(encoding));
-        zipout.end(item);
+    public static <T extends Item> void write(ArchiveWriter<T> aw, String name, String str, String encoding) throws IOException {
+        val item = aw.mkitem(name);
+        aw.begin(item);
+        aw.write(item, encoding == null ? str.getBytes() : str.getBytes(encoding));
+        aw.end(item);
     }
 
-    public static <T extends Item> void write(ArchiveWriter<T> zipout, String name, Flob flob) throws IOException {
-        val item = zipout.mkitem(name);
-        flob.writeTo(zipout.begin(item));
-        zipout.end(item);
+    public static <T extends Item> void write(ArchiveWriter<T> aw, String name, Flob flob) throws IOException {
+        val item = aw.mkitem(name);
+        flob.writeTo(aw.begin(item));
+        aw.end(item);
     }
 
-    /**
-     * Writes text content in TextObject to PMAB archive.
-     *
-     * @param zipout
-     *            PMAB archive stream
-     * @param name
-     *            name of entry to store text content
-     * @param text
-     *            the TextObject
-     * @param encoding
-     *            encoding to encode text, if <tt>null</tt> use platform encoding
-     * @throws NullPointerException
-     *             if arguments contain <tt>null</tt>
-     * @throws IOException
-     *             if occurs IO errors when writing text
-     */
-    public static <T extends Item> void write(ArchiveWriter<T> zipout, String name, Text text, String encoding)
-            throws IOException {
-        val item = zipout.mkitem(name);
-        val in = zipout.begin(item);
-
-        Writer writer = encoding != null ? new OutputStreamWriter(in, encoding) : new OutputStreamWriter(in);
+    public static <T extends Item> void write(ArchiveWriter<T> aw, String name, Text text, String encoding) throws IOException {
+        val item = aw.mkitem(name);
+        val writer = IOUtils.writerFor(aw.begin(item), encoding);
         text.writeTo(writer);
         writer.flush();
-        zipout.end(item);
+        aw.end(item);
     }
 }

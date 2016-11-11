@@ -18,14 +18,18 @@
 
 package pw.phylame.jem.scj.addons;
 
-import java.util.Map;
-
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import pw.phylame.jem.scj.app.AppConfig;
 import pw.phylame.jem.scj.app.SCI;
 import pw.phylame.qaf.core.App;
 import pw.phylame.qaf.core.Plugin;
 
+import java.util.Map;
+
+@RequiredArgsConstructor
 public abstract class AbstractPlugin implements Plugin {
+    @NonNull
     private final Metadata metadata;
 
     protected final App app = App.INSTANCE;
@@ -33,10 +37,6 @@ public abstract class AbstractPlugin implements Plugin {
     protected final SCI sci = SCI.INSTANCE;
 
     protected final AppConfig config = AppConfig.INSTANCE;
-
-    protected AbstractPlugin(Metadata metadata) {
-        this.metadata = metadata;
-    }
 
     @Override
     public final String getId() {

@@ -18,7 +18,7 @@ package pw.phylame.jem.epm.util;
 import pw.phylame.jem.util.JemException;
 
 /**
- * Exception for Jem Parser errors.
+ * Exception for {@code Parser} errors.
  */
 @SuppressWarnings("serial")
 public class ParserException extends JemException {

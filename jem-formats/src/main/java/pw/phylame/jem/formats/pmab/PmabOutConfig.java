@@ -18,7 +18,7 @@
 
 package pw.phylame.jem.formats.pmab;
 
-import pw.phylame.jem.epm.base.ZipOutConfig;
+import pw.phylame.jem.epm.impl.ZipMaker.ZipOutConfig;
 import pw.phylame.jem.epm.util.config.Configured;
 import pw.phylame.jem.epm.util.xml.XmlConfig;
 

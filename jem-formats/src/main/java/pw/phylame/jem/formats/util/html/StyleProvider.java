@@ -22,9 +22,11 @@ import lombok.val;
 import pw.phylame.jem.formats.util.M;
 import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.jem.util.flob.Flobs;
+import pw.phylame.ycl.io.IOUtils;
+import pw.phylame.ycl.util.CollectUtils;
+import pw.phylame.ycl.util.StringUtils;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.Properties;
 
 /**
@@ -53,59 +55,50 @@ public class StyleProvider {
     public String chapterIntro;
     public String chapterText;
 
-    private static StyleProvider defaultInstance = null;
+    private static volatile StyleProvider defaultInstance = null;
 
     public static StyleProvider getDefaults() throws IOException {
         if (defaultInstance == null) {
-            loadDefaultInstance();
+            synchronized (StyleProvider.class) {
+                if (defaultInstance == null) {
+                    loadDefaultInstance();
+                }
+            }
         }
         return defaultInstance;
     }
 
-    public static final String CONFIG_FILE = "default-styles.properties";
+    public static final String CONFIG_FILE = "!pw/phylame/jem/formats/util/html/default-styles.properties";
 
     private static void loadDefaultInstance() throws IOException {
         defaultInstance = new StyleProvider();
-        val in = StyleProvider.class.getResourceAsStream(CONFIG_FILE);
-        if (in == null) {
+        val prop = CollectUtils.propertiesFor(CONFIG_FILE);
+        if (prop == null) {
             throw new IOException(M.tr("err.html.loadStyle", CONFIG_FILE));
         }
-        val prop = new Properties();
-        try {
-            prop.load(in);
-            fetchStyles(prop);
-        } finally {
-            in.close();
-        }
+        fetchStyles(defaultInstance, prop);
     }
 
-    private static void fetchStyles(Properties prop) throws IOException {
-        String cssPath = prop.getProperty("url");
-        URL url;
-        if (cssPath.startsWith(":")) {   // in JAR
-            url = StyleProvider.class.getResource(cssPath.substring(1));
-        } else {
-            url = new URL(cssPath);
+    public static void fetchStyles(StyleProvider provider, Properties prop) throws IOException {
+        val cssPath = prop.getProperty("url");
+        val url = IOUtils.resourceFor(cssPath);
+        if (url == null) {
+            throw new IOException(M.tr("err.html.noCSS", cssPath));
         }
-        defaultInstance.cssFile = Flobs.forURL(url, "text/css");
+        provider.cssFile = Flobs.forURL(url, "text/css");
 
-        defaultInstance.bookCover = prop.getProperty("bookCover");
-
-        defaultInstance.bookTitle = prop.getProperty("bookTitle");
-        defaultInstance.introTitle = prop.getProperty("introTitle");
-        defaultInstance.introText = prop.getProperty("introText");
-
-        defaultInstance.tocTitle = prop.getProperty("tocTitle");
-        defaultInstance.tocItems = prop.getProperty("tocItems");
-
-        defaultInstance.sectionCover = prop.getProperty("sectionCover");
-        defaultInstance.sectionTitle = prop.getProperty("sectionTitle");
-        defaultInstance.sectionIntro = prop.getProperty("sectionIntro");
-        defaultInstance.sectionItems = prop.getProperty("sectionItems");
-
-        defaultInstance.chapterCover = prop.getProperty("chapterCover");
-        defaultInstance.chapterTitle = prop.getProperty("chapterTitle");
-        defaultInstance.chapterIntro = prop.getProperty("chapterIntro");
-        defaultInstance.chapterText = prop.getProperty("chapterText");
+        try {
+            for (val field : provider.getClass().getFields()) {
+                if (!CharSequence.class.isAssignableFrom(field.getType())) {
+                    return;
+                }
+                val value = prop.getProperty(field.getName());
+                if (StringUtils.isNotEmpty(value)) {
+                    field.set(provider, value);
+                }
+            }
+        } catch (IllegalAccessException e) {
+            throw new InternalError(e.getMessage());
+        }
     }
 }

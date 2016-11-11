@@ -40,10 +40,8 @@ public final class NumberUtils {
     /**
      * Generates a random integer number between {@code bottom} and {@code top}.
      *
-     * @param bottom
-     *            the lower limit
-     * @param top
-     *            the upper limit
+     * @param bottom the lower limit
+     * @param top    the upper limit
      * @return a random number
      */
     public static int randInteger(int bottom, int top) {
@@ -53,13 +51,11 @@ public final class NumberUtils {
     /**
      * Generates a random long number between {@code bottom} and {@code top}.
      *
-     * @param bottom
-     *            the lower limit
-     * @param top
-     *            the upper limit
+     * @param bottom the lower limit
+     * @param top    the upper limit
      * @return a random number
      */
-    public static Long randLong(long bottom, long top) {
+    public static long randLong(long bottom, long top) {
         return random.get().nextInt((int) (top - bottom)) + bottom;
     }
 
@@ -71,6 +67,14 @@ public final class NumberUtils {
         }
     }
 
+    public static int parseInt(String str, int fallback) {
+        try {
+            return Integer.parseInt(str);
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
+
     public static double parseDouble(String str) throws ParserException {
         try {
             return Double.parseDouble(str);
@@ -79,11 +83,27 @@ public final class NumberUtils {
         }
     }
 
+    public static double parseDouble(String str, double fallback) {
+        try {
+            return Double.parseDouble(str);
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
+
     public static Number parseNumber(String str) throws ParserException {
         try {
             return NumberFormat.getInstance().parse(str);
         } catch (ParseException e) {
             throw new ParserException(M.tr("err.number.invalidNumber", str), e);
+        }
+    }
+
+    public static Number parseNumber(String str, Number fallback) {
+        try {
+            return NumberFormat.getInstance().parse(str);
+        } catch (ParseException e) {
+            return fallback;
         }
     }
 }

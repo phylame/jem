@@ -22,7 +22,7 @@ import lombok.NonNull;
 import lombok.val;
 import pw.phylame.jem.core.Attributes;
 import pw.phylame.jem.core.Book;
-import pw.phylame.jem.epm.base.AbstractMaker;
+import pw.phylame.jem.epm.impl.AbstractMaker;
 import pw.phylame.jem.epm.util.MakerException;
 import pw.phylame.jem.epm.util.text.TextRender;
 import pw.phylame.ycl.util.StringUtils;

@@ -16,10 +16,24 @@
  * limitations under the License.
  */
 
-import pw.phylame.jem.epm.util.M;
+package pw.phylame.jem.epm.impl;
 
-public class Test {
-    public static void main(String[] args) {
-        System.out.println(M.tr("err.zip.noEntry", "hello", "/pwd"));
+import pw.phylame.jem.epm.util.config.AbstractConfig;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.zip.ZipFile;
+
+public abstract class ZipParser<C extends ZipParser.ZipInConfig> extends AbstractParser<ZipFile, C> {
+    protected ZipParser(String name, Class<C> clazz) {
+        super(name, clazz);
+    }
+
+    @Override
+    protected ZipFile open(File file, C config) throws IOException {
+        return new ZipFile(file);
+    }
+
+    public static class ZipInConfig extends AbstractConfig {
     }
 }

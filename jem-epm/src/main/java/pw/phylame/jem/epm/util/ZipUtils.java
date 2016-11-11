@@ -15,21 +15,20 @@
 
 package pw.phylame.jem.epm.util;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStreamWriter;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipOutputStream;
-
 import lombok.NonNull;
 import lombok.val;
 import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.jem.util.text.Text;
 import pw.phylame.ycl.io.IOUtils;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
+
 /**
- * Utilities operations for ZIP..
+ * Utilities operations for ZIP.
  */
 public final class ZipUtils {
     private ZipUtils() {
@@ -49,45 +48,31 @@ public final class ZipUtils {
         }
     }
 
-    public static void write(@NonNull ZipOutputStream zipout, @NonNull String name, @NonNull String str,
-            String encoding) throws IOException {
+    public static void write(ZipOutputStream zipout, String name, String str, String encoding) throws IOException {
         zipout.putNextEntry(new ZipEntry(name));
         zipout.write(encoding == null ? str.getBytes() : str.getBytes(encoding));
         zipout.closeEntry();
     }
 
-    public static void write(@NonNull ZipOutputStream zipout, @NonNull String name, @NonNull Flob flob)
-            throws IOException {
+    public static void write(ZipOutputStream zipout, String name, Flob flob) throws IOException {
         zipout.putNextEntry(new ZipEntry(name));
         flob.writeTo(zipout);
         zipout.closeEntry();
     }
 
     /**
-     * Writes text content in TextObject to PMAB archive.
+     * Writes text content in TextObject to zip archive.
      *
-     * @param zipout
-     *            PMAB archive stream
-     * @param name
-     *            name of entry to store text content
-     * @param text
-     *            the Text
-     * @param encoding
-     *            encoding to encode text, if <tt>null</tt> use platform encoding
-     * @throws NullPointerException
-     *             if arguments contain <tt>null</tt>
-     * @throws IOException
-     *             if occurs IO errors when writing text
+     * @param zipout   zip archive stream
+     * @param name     name of entry to store text content
+     * @param text     the Text
+     * @param encoding encoding to encode text, if {@literal null} use platform encoding
+     * @throws IOException if occurs IO errors when writing text
      */
-    public static void write(@NonNull ZipOutputStream zipout, String name, @NonNull Text text, String encoding)
-            throws IOException {
+    public static void write(ZipOutputStream zipout, String name, Text text, String encoding) throws IOException {
         zipout.putNextEntry(new ZipEntry(name));
-        val writer = encoding != null ? new OutputStreamWriter(zipout, encoding) : new OutputStreamWriter(zipout);
-        try {
-            text.writeTo(writer);
-        } catch (Exception e) {
-            throw new IOException(e);
-        }
+        val writer = IOUtils.writerFor(zipout, encoding);
+        text.writeTo(writer);
         writer.flush();
         zipout.closeEntry();
     }

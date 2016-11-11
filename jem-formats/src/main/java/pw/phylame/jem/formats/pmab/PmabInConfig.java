@@ -18,7 +18,7 @@
 
 package pw.phylame.jem.formats.pmab;
 
-import pw.phylame.jem.epm.base.ZipInConfig;
+import pw.phylame.jem.epm.impl.ZipParser.ZipInConfig;
 import pw.phylame.jem.epm.util.config.Configured;
 
 /**

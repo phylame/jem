@@ -13,8 +13,9 @@
  * specific language governing permissions and limitations under the License.
  */
 
-package pw.phylame.jem.epm.base;
+package pw.phylame.jem.epm.impl;
 
+import lombok.val;
 import pw.phylame.jem.epm.util.E;
 import pw.phylame.jem.epm.util.M;
 import pw.phylame.jem.epm.util.ParserException;
@@ -27,12 +28,13 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 public abstract class BinaryParser<C extends EpmConfig> extends AbstractParser<RandomAccessFile, C> {
+
     protected BinaryParser(String name, Class<C> clazz) {
         super(name, clazz);
     }
 
     @Override
-    protected final RandomAccessFile open(File file, C config) throws IOException {
+    protected RandomAccessFile open(File file, C config) throws IOException {
         return new BufferedRandomAccessFile(file, "r");
     }
 
@@ -48,20 +50,19 @@ public abstract class BinaryParser<C extends EpmConfig> extends AbstractParser<R
         return readData(input, size, null);
     }
 
-    protected byte[] readData(RandomAccessFile input, int size, String key, Object... args)
-            throws IOException, ParserException {
+    protected byte[] readData(RandomAccessFile input, int size, String key, Object... args) throws IOException, ParserException {
         if (size < 0) {
             throw E.forIllegalArgument("size(%d) < 0", size);
         }
-        byte[] bytes = new byte[size];
-        if (input.read(bytes) != size) {
+        val data = new byte[size];
+        if (input.read(data) != size) {
             if (key != null) {
                 onBadInput(key, args);
             } else {
                 onBadInput();
             }
         }
-        return bytes;
+        return data;
     }
 
     protected int readUInt16(RandomAccessFile input) throws IOException, ParserException {

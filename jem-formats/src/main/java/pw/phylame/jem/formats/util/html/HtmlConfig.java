@@ -70,7 +70,7 @@ public class HtmlConfig extends AbstractConfig {
     public StyleProvider style;
 
     /**
-     * When making paragraph skip empty line of <tt>TextObject</tt>.
+     * When making paragraph skip empty line of {@code Text}.
      */
     @Configured(SKIP_EMPTY_LINE)
     public boolean skipEmpty = true;

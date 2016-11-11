@@ -19,8 +19,9 @@
 package pw.phylame.jem.epm.util;
 
 import pw.phylame.jem.epm.util.config.BadConfigException;
+import pw.phylame.ycl.util.Exceptions;
 
-public class E extends pw.phylame.ycl.util.Exceptions {
+public class E extends Exceptions {
     public static BadConfigException forBadConfig(String key, Object value, String format, Object... args) {
         return new BadConfigException(key, value, String.format(format, args));
     }

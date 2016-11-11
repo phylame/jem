@@ -25,7 +25,7 @@ import lombok.val;
 import pw.phylame.jem.core.Attributes;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.core.Chapter;
-import pw.phylame.jem.epm.base.ZipMaker;
+import pw.phylame.jem.epm.impl.ZipMaker;
 import pw.phylame.jem.epm.util.MakerException;
 import pw.phylame.jem.epm.util.ZipUtils;
 import pw.phylame.jem.epm.util.xml.XmlRender;

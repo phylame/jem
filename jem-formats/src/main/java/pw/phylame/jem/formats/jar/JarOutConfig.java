@@ -18,7 +18,7 @@
 
 package pw.phylame.jem.formats.jar;
 
-import pw.phylame.jem.epm.base.ZipOutConfig;
+import pw.phylame.jem.epm.impl.ZipMaker.ZipOutConfig;
 import pw.phylame.jem.epm.util.config.Configured;
 import pw.phylame.jem.epm.util.text.TextConfig;
 import pw.phylame.jem.util.Build;

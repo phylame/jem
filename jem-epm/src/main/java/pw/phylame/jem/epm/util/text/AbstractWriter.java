@@ -18,14 +18,12 @@
 
 package pw.phylame.jem.epm.util.text;
 
-import lombok.NonNull;
-
 /**
  * Abstract chapter writer.
  */
 public abstract class AbstractWriter implements TextWriter {
     @Override
-    public void startChapter(@NonNull String title) throws Exception {
+    public void startChapter(String title) throws Exception {
     }
 
     @Override

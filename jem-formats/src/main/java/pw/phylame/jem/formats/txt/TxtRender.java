@@ -31,8 +31,9 @@ class TxtRender extends AbstractWriter {
     private final String lineSeparator;
 
     @Override
-    public void writeText(String text) throws Exception {
+    public TxtRender write(String text) throws Exception {
         writer.write(text);
+        return this;
     }
 
     @Override

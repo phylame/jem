@@ -62,12 +62,12 @@ public final class EpmManager {
     public static final String AUTO_LOAD_CUSTOMIZED_KEY = "jem.emp.autoLoad";
 
     /**
-     * Holds registered <code>Parser</code> class information.
+     * Holds registered {@code Parser} class information.
      */
     private static final Implementor<Parser> parsers = new Implementor<>(Parser.class, true, null);
 
     /**
-     * Holds registered <code>Maker</code> class information.
+     * Holds registered {@code Maker} class information.
      */
     private static final Implementor<Maker> makers = new Implementor<>(Maker.class, true, null);
 
@@ -95,7 +95,7 @@ public final class EpmManager {
      * @param path
      *            path of the parser class
      * @throws IllegalArgumentException
-     *             if the <code>name</code> or <code>path</code> is <code>null</code> or empty string
+     *             if the <code>name</code> or <code>path</code> is {@literal null} or empty string
      */
     public static void registerParser(String name, String path) {
         parsers.register(name, path);
@@ -110,11 +110,11 @@ public final class EpmManager {
      * @param name
      *            name of the parser (normally the extension name of book file)
      * @param clazz
-     *            the <code>Parser</code> class
+     *            the {@code Parser} class
      * @throws IllegalArgumentException
-     *             if the <code>name</code> is <code>null</code> or empty string
+     *             if the <code>name</code> is {@literal null} or empty string
      * @throws NullPointerException
-     *             if the <code>clazz</code> is <code>null</code>
+     *             if the <code>clazz</code> is {@literal null}
      */
     public static void registerParser(String name, Class<? extends Parser> clazz) {
         parsers.register(name, clazz);
@@ -155,9 +155,9 @@ public final class EpmManager {
      *
      * @param name
      *            name of the parser
-     * @return <code>Parser</code> instance or <code>null</code> if parser not registered
+     * @return {@code Parser} instance or {@literal null} if parser not registered
      * @throws NullPointerException
-     *             if the <code>name</code> is <code>null</code>
+     *             if the <code>name</code> is {@literal null}
      * @throws IllegalAccessException
      *             cannot access the parser class
      * @throws InstantiationException
@@ -184,7 +184,7 @@ public final class EpmManager {
      * @param path
      *            class path of the maker class
      * @throws IllegalArgumentException
-     *             if the <code>name</code> or <code>path</code> is <code>null</code> or empty string
+     *             if the <code>name</code> or <code>path</code> is {@literal null} or empty string
      */
     public static void registerMaker(String name, String path) {
         makers.register(name, path);
@@ -199,11 +199,11 @@ public final class EpmManager {
      * @param name
      *            name of the maker (normally the extension name of book file)
      * @param clazz
-     *            the <code>Maker</code> class
+     *            the {@code Maker} class
      * @throws IllegalArgumentException
-     *             if the <code>name</code> is <code>null</code> or empty string
+     *             if the <code>name</code> is {@literal null} or empty string
      * @throws NullPointerException
-     *             if the <code>clazz</code> is <code>null</code>
+     *             if the <code>clazz</code> is {@literal null}
      */
     public static void registerMaker(String name, Class<? extends Maker> clazz) {
         makers.register(name, clazz);
@@ -244,9 +244,9 @@ public final class EpmManager {
      *
      * @param name
      *            name of the maker
-     * @return <code>Maker</code> instance or <code>null</code> if maker not registered
+     * @return {@code Maker} instance or {@literal null} if maker not registered
      * @throws NullPointerException
-     *             if the <code>name</code> is <code>null</code>
+     *             if the <code>name</code> is {@literal null}
      * @throws IllegalAccessException
      *             cannot access the maker class
      * @throws InstantiationException
@@ -265,10 +265,10 @@ public final class EpmManager {
      * @param name
      *            the name of parser or maker
      * @param extensions
-     *            file extension names supported by the parser (or maker), if <code>null</code> use the parser name as
+     *            file extension names supported by the parser (or maker), if {@literal null} use the parser name as
      *            one extension
      * @throws NullPointerException
-     *             if the <code>name</code> is <code>null</code>
+     *             if the <code>name</code> is {@literal null}
      */
     public static void mapExtensions(@NonNull String name, Collection<String> extensions) {
         Set<String> current = EpmManager.extensions.get(name);
@@ -302,7 +302,7 @@ public final class EpmManager {
      *
      * @param extension
      *            the extension name
-     * @return the name or <code>null</code> if the extension name is unknown.
+     * @return the name or {@literal null} if the extension name is unknown.
      */
     public static String nameOfExtension(String extension) {
         return names.get(extension);
@@ -333,7 +333,7 @@ public final class EpmManager {
     }
 
     /**
-     * Reads <code>Book</code> from book file.
+     * Reads {@code Book} from book file.
      *
      * @param input
      *            book file to be read
@@ -341,9 +341,9 @@ public final class EpmManager {
      *            format of the book file
      * @param arguments
      *            arguments to parser
-     * @return <code>Book</code> instance represents the book file
+     * @return {@code Book} instance represents the book file
      * @throws NullPointerException
-     *             if the file or format is <code>null</code>
+     *             if the file or format is {@literal null}
      * @throws IOException
      *             if occurs I/O errors
      * @throws JemException
@@ -368,10 +368,10 @@ public final class EpmManager {
     }
 
     /**
-     * Writes <code>Book</code> to book with specified format.
+     * Writes {@code Book} to book with specified format.
      *
      * @param book
-     *            the <code>Book</code> to be written
+     *            the {@code Book} to be written
      * @param output
      *            output book file
      * @param format
@@ -379,7 +379,7 @@ public final class EpmManager {
      * @param arguments
      *            arguments to maker
      * @throws NullPointerException
-     *             if the book, output or format is <code>null</code>
+     *             if the book, output or format is {@literal null}
      * @throws IOException
      *             if occurs I/O errors
      * @throws JemException

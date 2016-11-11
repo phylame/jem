@@ -23,7 +23,7 @@ import lombok.val;
 import pw.phylame.jem.core.Attributes;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.core.Chapter;
-import pw.phylame.jem.epm.base.AbstractParser;
+import pw.phylame.jem.epm.impl.AbstractParser;
 import pw.phylame.jem.epm.util.FileDeleter;
 import pw.phylame.jem.epm.util.ParserException;
 import pw.phylame.jem.formats.util.M;

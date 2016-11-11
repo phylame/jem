@@ -18,7 +18,7 @@
 
 package pw.phylame.jem.formats.epub;
 
-import pw.phylame.jem.epm.base.ZipOutConfig;
+import pw.phylame.jem.epm.impl.ZipMaker.ZipOutConfig;
 import pw.phylame.jem.epm.util.config.Configured;
 import pw.phylame.jem.epm.util.xml.XmlConfig;
 import pw.phylame.jem.formats.util.html.HtmlConfig;

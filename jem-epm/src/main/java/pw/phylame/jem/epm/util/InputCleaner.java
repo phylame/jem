@@ -20,6 +20,7 @@ import lombok.NonNull;
 import pw.phylame.jem.core.Chapter;
 import pw.phylame.ycl.io.IOUtils;
 import pw.phylame.ycl.util.Consumer;
+
 import java.io.Closeable;
 
 @AllArgsConstructor
@@ -34,7 +35,7 @@ public class InputCleaner implements Consumer<Chapter> {
     }
 
     @Override
-    public void consume(Chapter i) {
+    public void consume(Chapter chapter) {
         IOUtils.closeQuietly(in);
         if (addon != null) {
             addon.run();

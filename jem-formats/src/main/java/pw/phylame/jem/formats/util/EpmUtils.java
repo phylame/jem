@@ -27,7 +27,7 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.Locale;
 
-public final class TestUtils {
+public final class EpmUtils {
     public static Date parseDate(String str, String format) throws ParserException {
         try {
             return DateUtils.parse(str, format);

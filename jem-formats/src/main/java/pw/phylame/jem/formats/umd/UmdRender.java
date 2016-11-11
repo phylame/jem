@@ -45,8 +45,9 @@ class UmdRender implements TextWriter {
     }
 
     @Override
-    public void writeText(String text) throws IOException {
+    public UmdRender write(String text) throws IOException {
         maker.writeString(file, text);
+        return this;
     }
 
     @Override

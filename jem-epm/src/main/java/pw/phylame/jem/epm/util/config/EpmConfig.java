@@ -20,7 +20,7 @@ package pw.phylame.jem.epm.util.config;
 
 /**
  * Interface indicating a configuration for parser or parser.
- * <p>Sub class should implement the interface and set all field public and with annotation <code>Configured</code>.</p>
+ * <p>Sub class should implement the interface and set all field public and with annotation {@code Configured}.</p>
  * <p>Static field with name 'SELF' for finding self in argument map.</p>
  */
 public interface EpmConfig {

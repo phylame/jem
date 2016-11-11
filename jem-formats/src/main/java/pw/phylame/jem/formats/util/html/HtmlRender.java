@@ -18,17 +18,20 @@
 
 package pw.phylame.jem.formats.util.html;
 
+import lombok.NonNull;
+import lombok.val;
 import pw.phylame.jem.epm.util.MakerException;
 import pw.phylame.jem.epm.util.xml.XmlConfig;
 import pw.phylame.jem.epm.util.xml.XmlRender;
 import pw.phylame.jem.util.text.Text;
+import pw.phylame.ycl.util.CollectUtils;
 import pw.phylame.ycl.util.StringUtils;
+import pw.phylame.ycl.util.Validate;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Renders book content with HTML.
@@ -48,23 +51,19 @@ public class HtmlRender {
         }
     }
 
-    private final HtmlConfig config;
+    private final HtmlConfig htmlConfig;
     private final XmlRender xmlRender;
 
-    public HtmlRender(HtmlConfig config) throws MakerException {
-        if (config.htmlLanguage == null) {
-            throw new IllegalArgumentException("Not specify htmlLanguage of HtmlConfig");
-        }
-        if (config.cssHref == null) {
-            throw new IllegalArgumentException("Not specify cssHref of HtmlConfig");
-        }
-        this.config = config;
-        XmlConfig xmlConfig = new XmlConfig();
+    public HtmlRender(@NonNull HtmlConfig config) throws MakerException {
+        Validate.requireNotNull(config.htmlLanguage, "Not specify htmlLanguage of HtmlConfig");
+        Validate.requireNotNull(config.cssHref, "Not specify cssHref of HtmlConfig");
+        val xmlConfig = new XmlConfig();
         xmlConfig.encoding = config.encoding;
         xmlConfig.standalone = true;
         xmlConfig.lineSeparator = "\r\n";
         xmlConfig.indentString = config.indentString;
         xmlRender = new XmlRender(xmlConfig, false);
+        htmlConfig = config;
     }
 
     public void setOutput(OutputStream outputStream) throws IOException {
@@ -80,7 +79,7 @@ public class HtmlRender {
      */
     public void renderCover(String title, String href, String alt) throws IOException {
         beginHtml(title);
-        writeImage(href, alt, config.style.bookCover);
+        writeImage(href, alt, htmlConfig.style.bookCover);
         endHtml();
     }
 
@@ -107,16 +106,18 @@ public class HtmlRender {
                                  Text intro) throws IOException {
         beginHtml(title);
         if (cover != null) {
-            writeImage(cover, alt, config.style.bookCover);
+            writeImage(cover, alt, htmlConfig.style.bookCover);
         }
 
         if (intro != null) {
-            xmlRender.startTag("div").attribute("class", config.style.bookTitle);
-            xmlRender.startTag("h1").text(bookTitle).endTag();
+            xmlRender.startTag("div").attribute("class", htmlConfig.style.bookTitle);
+            xmlRender.startTag("h1")
+                    .text(bookTitle)
+                    .endTag();
             xmlRender.endTag();
 
-            writeTitle(introTitle, config.style.introTitle);
-            writeText(intro, config.style.introText);
+            writeTitle(introTitle, htmlConfig.style.introTitle);
+            writeText(intro, htmlConfig.style.introText);
         }
 
         endHtml();
@@ -128,8 +129,8 @@ public class HtmlRender {
      */
     public void renderToc(String title, List<Link> links) throws IOException {
         beginHtml(title);
-        writeTitle(title, config.style.tocTitle);
-        writeContents(links, config.style.tocItems);
+        writeTitle(title, htmlConfig.style.tocTitle);
+        writeContents(links, htmlConfig.style.tocItems);
         endHtml();
     }
 
@@ -137,7 +138,7 @@ public class HtmlRender {
      * $common-image: href, $style
      */
     public void renderSectionCover(String title, String href, String alt) throws IOException {
-        renderCover0(title, href, alt, config.style.sectionCover);
+        renderCover0(title, href, alt, htmlConfig.style.sectionCover);
     }
 
     /*
@@ -157,10 +158,10 @@ public class HtmlRender {
                               List<Link> links) throws IOException {
         beginHtml(title);
         if (cover != null) {
-            writeImage(cover, alt, config.style.sectionCover);
+            writeImage(cover, alt, htmlConfig.style.sectionCover);
         }
-        writePart(title, config.style.sectionTitle, intro, config.style.sectionIntro);
-        writeContents(links, config.style.sectionItems);
+        writePart(title, htmlConfig.style.sectionTitle, intro, htmlConfig.style.sectionIntro);
+        writeContents(links, htmlConfig.style.sectionItems);
         endHtml();
     }
 
@@ -168,7 +169,7 @@ public class HtmlRender {
      * $common-image: href, $style
      */
     public void renderChapterCover(String title, String href, String alt) throws IOException {
-        renderCover0(title, href, alt, config.style.chapterCover);
+        renderCover0(title, href, alt, htmlConfig.style.chapterCover);
     }
 
     /*
@@ -184,14 +185,13 @@ public class HtmlRender {
      * $common-part: title, $style, intro, $style
      * $common-text: content, $style
      */
-    public void renderChapter(String title, String cover, String alt, Text intro,
-                              Text content) throws IOException {
+    public void renderChapter(String title, String cover, String alt, Text intro, Text content) throws IOException {
         beginHtml(title);
         if (cover != null) {
-            writeImage(cover, alt, config.style.chapterCover);
+            writeImage(cover, alt, htmlConfig.style.chapterCover);
         }
-        writePart(title, config.style.chapterTitle, intro, config.style.chapterIntro);
-        writeText(content, config.style.chapterText);
+        writePart(title, htmlConfig.style.chapterTitle, intro, htmlConfig.style.chapterIntro);
+        writeText(content, htmlConfig.style.chapterText);
         endHtml();
     }
 
@@ -213,10 +213,12 @@ public class HtmlRender {
      */
     private void writeContents(List<Link> links, String style) throws IOException {
         xmlRender.startTag("div").attribute("class", style);
-        for (Link link : links) {
+        for (val link : links) {
             xmlRender.startTag("p");
-            xmlRender.startTag("a").attribute("href", link.href);
-            xmlRender.text(link.title).endTag();
+            xmlRender.startTag("a")
+                    .attribute("href", link.href)
+                    .text(link.title)
+                    .endTag();
             xmlRender.endTag();
         }
         xmlRender.endTag();
@@ -228,8 +230,7 @@ public class HtmlRender {
      * </div>
      * $common-text: intro, intro-style (when intro is not null)
      */
-    private void writePart(String title, String titleStyle, Text intro, String introStyle)
-            throws IOException {
+    private void writePart(String title, String titleStyle, Text intro, String introStyle) throws IOException {
         writeTitle(title, titleStyle);
         if (intro != null) {
             writeText(intro, introStyle);
@@ -244,12 +245,12 @@ public class HtmlRender {
      * </div>
      */
     private void writeText(Text text, String style) throws IOException {
-        List<String> lines = text.getLines(config.skipEmpty);
-        if (lines == null || lines.isEmpty()) {
+        val lines = text.getLines(htmlConfig.skipEmpty);
+        if (CollectUtils.isEmpty(lines)) {
             return;
         }
         xmlRender.startTag("div").attribute("class", style);
-        for (String line : lines) {
+        for (val line : lines) {
             xmlRender.startTag("p").text(StringUtils.trimmed(line)).endTag();
         }
         xmlRender.endTag();
@@ -284,32 +285,32 @@ public class HtmlRender {
         xmlRender.docdecl("html", DT_ID, DT_URI);
         xmlRender.startTag("html");
         xmlRender.attribute("xmlns", NAMESPACE);
-        xmlRender.attribute("xml:lang", config.htmlLanguage);
+        xmlRender.attribute("xml:lang", htmlConfig.htmlLanguage);
 
         // head
         xmlRender.startTag("head");
 
-        xmlRender.startTag("meta");
-        xmlRender.attribute("http-equiv", "Content-Type");
-        xmlRender.attribute("content", "text/html; charset=" + config.encoding);
-        xmlRender.endTag();
+        xmlRender.startTag("meta")
+                .attribute("http-equiv", "Content-Type")
+                .attribute("content", "text/html; charset=" + htmlConfig.encoding)
+                .endTag();
 
         // custom meta info
-        if (config.metaInfo != null && !config.metaInfo.isEmpty()) {
-            for (Map.Entry<String, String> entry : config.metaInfo.entrySet()) {
-                xmlRender.startTag("meta");
-                xmlRender.attribute("name", entry.getKey());
-                xmlRender.attribute("content", entry.getValue());
-                xmlRender.endTag();
+        if (htmlConfig.metaInfo != null && !htmlConfig.metaInfo.isEmpty()) {
+            for (val entry : htmlConfig.metaInfo.entrySet()) {
+                xmlRender.startTag("meta")
+                        .attribute("name", entry.getKey())
+                        .attribute("content", entry.getValue())
+                        .endTag();
             }
         }
 
         // CSS link
-        xmlRender.startTag("link");
-        xmlRender.attribute("type", "text/css");
-        xmlRender.attribute("rel", "stylesheet");
-        xmlRender.attribute("href", config.cssHref);
-        xmlRender.endTag();
+        xmlRender.startTag("link")
+                .attribute("type", "text/css")
+                .attribute("rel", "stylesheet")
+                .attribute("href", htmlConfig.cssHref)
+                .endTag();
 
         // html title
         xmlRender.startTag("title").text(title).endTag();

@@ -25,7 +25,7 @@ pw.phylame.jem.scj.addons.ArgumentsLoader
 pw.phylame.jem.scj.addons.LogSetter
 
 # view details of SCJ
-pw.phylame.jem.scj.addons.SCJInspector
+pw.phylame.jem.scj.addons.AppInspector
 
 # run customized script in SCJ context
 pw.phylame.jem.scj.addons.ScriptRunner

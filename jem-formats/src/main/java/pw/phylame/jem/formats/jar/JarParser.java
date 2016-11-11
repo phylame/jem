@@ -28,7 +28,7 @@ import lombok.val;
 import pw.phylame.jem.core.Attributes;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.core.Chapter;
-import pw.phylame.jem.epm.base.ZipParser;
+import pw.phylame.jem.epm.impl.ZipParser;
 import pw.phylame.jem.epm.util.ParserException;
 import pw.phylame.jem.epm.util.ZipUtils;
 import pw.phylame.jem.formats.util.M;

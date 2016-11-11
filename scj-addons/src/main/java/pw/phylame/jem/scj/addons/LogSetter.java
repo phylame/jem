@@ -18,10 +18,9 @@
 
 package pw.phylame.jem.scj.addons;
 
+import lombok.val;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
-
-import lombok.val;
 import pw.phylame.qaf.cli.CLIDelegate;
 import pw.phylame.qaf.cli.Initializer;
 import pw.phylame.ycl.log.Level;
@@ -56,11 +55,12 @@ public class LogSetter extends AbstractPlugin implements Initializer {
             level = Log.getLevel().getName();
         }
         sci.addOption(Option.builder(OPTION)
-                .longOpt(OPTION_LONG)
-                .hasArg()
-                .argName(M.tr("logSetter.argName"))
-                .desc(M.tr("help.setLogLevel", makeLevelList(), level))
-                .build(), this);
+                        .longOpt(OPTION_LONG)
+                        .hasArg()
+                        .argName(M.tr("logSetter.argName"))
+                        .desc(M.tr("help.setLogLevel", makeLevelList(), level))
+                        .build(),
+                this);
     }
 
     public static String makeLevelList() {

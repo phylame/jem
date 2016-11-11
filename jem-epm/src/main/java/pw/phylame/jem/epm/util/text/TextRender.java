@@ -3,14 +3,17 @@
  *
  * This file is part of Jem.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package pw.phylame.jem.epm.util.text;
@@ -37,46 +40,39 @@ public final class TextRender {
     /**
      * Renders chapter of book to contents with one level.
      */
-    public static void renderBook(@NonNull Chapter book, @NonNull TextWriter writer, @NonNull TextConfig config)
-            throws Exception {
+    public static void renderBook(@NonNull Chapter book, @NonNull TextWriter writer, @NonNull TextConfig config) throws Exception {
         val maker = new RenderHelper(writer, config);
-        for (val sub : book) {
-            walkChapter(sub, maker);
+        for (val chapter : book) {
+            walkChapter(chapter, maker);
         }
     }
 
     /**
      * Renders lines of text in <tt>Text</tt> to specified writer.
      *
-     * @param text
-     *            the text source
-     * @param writer
-     *            the destination writer
-     * @param config
-     *            render config
+     * @param text   the text source
+     * @param writer the destination writer
+     * @param config render config
      * @return number of written lines
-     * @throws Exception
-     *             if occurs error while rendering text
+     * @throws Exception if occurs error while rendering text
      */
     public static int renderLines(Text text, TextWriter writer, TextConfig config) throws Exception {
         return renderLines(text, writer, config, false);
     }
 
-    private static int renderLines(Text text, TextWriter writer, TextConfig config, boolean prependNL)
-            throws Exception {
+    private static int renderLines(Text text, TextWriter writer, TextConfig config, boolean prependNL) throws Exception {
         val lines = text.getLines(config.skipEmptyLine);
         if (CollectUtils.isEmpty(lines)) {
             return 0;
         }
         int ix = 1, size = lines.size();
         if (prependNL && size > 0) {
-            writer.writeText(config.lineSeparator);
+            writer.write(config.lineSeparator);
         }
-        for (String line : lines) {
-            line = trimmed(line);
-            writer.writeText(config.paragraphPrefix + line);
+        for (val line : lines) {
+            writer.write(config.paragraphPrefix).write(trimmed(line));
             if (ix++ != size) {
-                writer.writeText(config.lineSeparator);
+                writer.write(config.lineSeparator);
             }
         }
         return size;
@@ -91,32 +87,26 @@ public final class TextRender {
     /**
      * Renders text in <tt>Text</tt> to specified writer.
      *
-     * @param text
-     *            the text source
-     * @param writer
-     *            the destination writer
-     * @param config
-     *            render config
+     * @param text   the text source
+     * @param writer the destination writer
+     * @param config render config
      * @return written state, <tt>true</tt> if has text written, otherwise not
-     * @throws Exception
-     *             if occurs error while rendering text
+     * @throws Exception if occurs error while rendering text
      */
-    public static boolean renderText(@NonNull Text text, @NonNull TextWriter writer, @NonNull TextConfig config)
-            throws Exception {
+    public static boolean renderText(@NonNull Text text, @NonNull TextWriter writer, @NonNull TextConfig config) throws Exception {
         return renderText(text, writer, config, false);
     }
 
-    private static boolean renderText(Text text, TextWriter writer, TextConfig config,
-            boolean prependLF) throws Exception {
+    private static boolean renderText(Text text, TextWriter writer, TextConfig config, boolean prependLF) throws Exception {
         if (config.formatParagraph) {
             return renderLines(text, writer, config, prependLF) > 0;
         } else {
             val str = text.getText();
             if (!str.isEmpty()) {
                 if (prependLF) {
-                    writer.writeText(config.lineSeparator);
+                    writer.write(config.lineSeparator);
                 }
-                writer.writeText(str);
+                writer.write(str);
                 return true;
             } else {
                 return false;
@@ -141,8 +131,9 @@ public final class TextRender {
         }
 
         @Override
-        public void writeText(String text) throws Exception {
+        public StringWriter write(String text) throws Exception {
             b.append(text);
+            return this;
         }
 
         @Override
@@ -166,14 +157,12 @@ public final class TextRender {
         private final TextWriter writer;
         private final TextConfig config;
 
-        private LinkedList<String> titleStack;
+        private final LinkedList<String> titleStack;
 
         private RenderHelper(TextWriter writer, TextConfig config) {
             this.config = config;
             this.writer = writer;
-            if (config.joinTitles) {
-                titleStack = new LinkedList<>();
-            }
+            titleStack = config.joinTitles ? new LinkedList<String>() : null;
         }
 
         private void beginItem(Chapter chapter) {
@@ -190,20 +179,20 @@ public final class TextRender {
             writer.startChapter(title);
 
             // title
-            boolean writtenTitle = false;
+            boolean titleWritten = false;
             if (config.writeTitle) {
-                writer.writeText(title);
-                writtenTitle = true;
+                writer.write(title);
+                titleWritten = true;
             }
             // prefix
             if (isNotEmpty(config.prefixText)) {
-                writer.writeText(writtenTitle ? lineSeparator + config.prefixText : config.prefixText);
+                writer.write(titleWritten ? lineSeparator + config.prefixText : config.prefixText);
             }
             // intro
             if (config.writeIntro) {
                 val intro = Attributes.getIntro(chapter);
                 if (intro != null && renderText(intro, writer, config, true)) {
-                    writer.writeText(lineSeparator + config.introSeparator);
+                    writer.write(lineSeparator + config.introSeparator);
                 }
             }
             // text
@@ -211,11 +200,11 @@ public final class TextRender {
             renderText(text != null ? text : Texts.forEmpty(Texts.PLAIN), writer, config, true);
             // suffix
             if (isNotEmpty(config.suffixText)) {
-                writer.writeText(lineSeparator + config.suffixText);
+                writer.write(lineSeparator + config.suffixText);
             }
             // padding line
             if (config.paddingLine) {
-                writer.writeText(lineSeparator);
+                writer.write(lineSeparator);
             }
             writer.endChapter();
         }

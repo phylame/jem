@@ -18,7 +18,7 @@
 
 package pw.phylame.jem.formats.jar;
 
-import pw.phylame.jem.epm.base.ZipInConfig;
+import pw.phylame.jem.epm.impl.ZipParser.ZipInConfig;
 
 public class JarInConfig extends ZipInConfig {
 }

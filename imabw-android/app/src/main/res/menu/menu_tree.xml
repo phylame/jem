@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:title="@string/edit_action_insert"
+        android:id="@+id/action_insert" />
+    <item android:title="@string/edit_action_rename"
+        android:id="@+id/action_rename" />
+    <item android:title="@string/edit_action_properties"
+        android:id="@+id/action_properties" />
+</menu>

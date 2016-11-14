@@ -33,6 +33,12 @@ dependencies {
     compile 'com.android.support:design:24.2.1'
     testCompile 'junit:junit:4.12'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile('pw.phylame.jem:jem-formats:3.1.1') {
+        exclude group: 'xpp3', module: 'xpp3'
+    }
+    compile group: 'io.reactivex', name: 'rxjava', version: '1.2.1'
+    compile group: 'io.reactivex', name: 'rxandroid', version: '1.2.1'
+    provided group: 'org.projectlombok', name: 'lombok', version: '1.16.10'
 }
 repositories {
     mavenCentral()

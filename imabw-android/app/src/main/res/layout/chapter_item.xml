@@ -35,15 +35,45 @@
             android:src="@android:drawable/ic_menu_delete" />
     </LinearLayout>
 
-    <android.support.v7.widget.AppCompatTextView
-        android:id="@+id/value"
+    <TableLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
         android:layout_marginLeft="4dp"
         android:layout_toLeftOf="@id/tools"
         android:layout_toRightOf="@+id/icon"
-        android:text="TextView"
-        android:textSize="19sp" />
+        android:orientation="vertical">
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <android.support.v7.widget.AppCompatTextView
+                android:id="@+id/chapter_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:maxLength="15"
+                android:textSize="16sp" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <android.support.v7.widget.AppCompatTextView
+                android:id="@+id/chapter_overview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:maxLength="24"
+                android:textColor="?android:attr/colorActivatedHighlight"
+                android:textSize="16sp"
+                android:textStyle="normal|italic" />
+        </TableRow>
+    </TableLayout>
 
 </RelativeLayout>

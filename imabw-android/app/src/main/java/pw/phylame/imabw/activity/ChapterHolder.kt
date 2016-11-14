@@ -22,8 +22,11 @@ class ChapterHolder(context: Context) : TreeNode.BaseNodeViewHolder<ChapterItem>
         val icon = view.findViewById(R.id.icon) as ImageView
         //        icon.setImageResource(chapter.isSection() ? android.R.drawable.ic_menu_add : android.R.drawable.ic_menu_delete);
 
-        val text = view.findViewById(R.id.value) as TextView
-        text.text = Attributes.getTitle(chapter)
+        val title = view.findViewById(R.id.chapter_title) as TextView
+        title.text = Attributes.getTitle(chapter)
+
+        val overview = view.findViewById(R.id.chapter_overview) as TextView
+        overview.text = if (chapter.isSection) "${chapter.size()} sub chapters" else Attributes.getIntro(chapter)?.text ?: ""
 
         return view
     }

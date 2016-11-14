@@ -21,7 +21,7 @@
         <rxswing.version>0.27.0</rxswing.version>
         <jcalendar.version>1.4</jcalendar.version>
         <jfontchooser.version>1.0.5</jfontchooser.version>
-        <qaf.version>1.0.0</qaf.version>
+        <qaf.version>1.1.0</qaf.version>
     </properties>
 
     <dependencies>

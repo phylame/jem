@@ -9,4 +9,5 @@
     <string name="edit_action_rename">Rename</string>
     <string name="edit_action_properties">Properties</string>
     <string name="edit_action_insert">Insert</string>
+    <string name="title_activity_text">TextActivity</string>
 </resources>

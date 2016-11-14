@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -198,7 +199,15 @@ public class UmdMaker extends AbstractMaker<UmdOutConfig> {
         writeMetaField(UMD.CDT_AUTHOR, Attributes.getAuthor(book), tuple);
 
         val calendar = Calendar.getInstance();
-        calendar.setTime(Attributes.getPubdate(book));
+        Date date = Attributes.getPubdate(book);
+        if (date == null) {
+            date = Attributes.getDate(book);
+        }
+        if (date == null) {
+            Log.i("UMD", "use current date");
+            date = new Date();
+        }
+        calendar.setTime(date);
         writeMetaField(UMD.CDT_YEAR, Integer.toString(calendar.get(Calendar.YEAR)), tuple);
         writeMetaField(UMD.CDT_MONTH, Integer.toString(calendar.get(Calendar.MONTH) + 1), tuple);
         writeMetaField(UMD.CDT_DAY, Integer.toString(calendar.get(Calendar.DAY_OF_MONTH)), tuple);

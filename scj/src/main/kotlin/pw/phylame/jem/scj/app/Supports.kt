@@ -307,8 +307,8 @@ private fun viewAttribute(chapter: Chapter, keys: Array<String>, sep: String, sh
             }
         } else {
             val value = chapter.attributes.get(key, null as Any?)
-            val str = if (value != null) Variants.printable(value) else ""
-            if (!str.isEmpty() || !ignoreEmpty) {
+            val str = if (value != null) Variants.printable(value) ?: value.toString() else ""
+            if (str.isNotEmpty() || !ignoreEmpty) {
                 lines.add(tr("sci.view.attributeFormat", key, str))
             }
         }
@@ -331,7 +331,7 @@ private fun viewExtension(book: Book, names: Array<String>): Boolean {
             App.error(tr("error.view.notFoundItem", name))
             state = false
         } else {
-            println(tr("sci.view.extensionFormat", name, Variants.typeOf(value), Variants.printable(value)))
+            println(tr("sci.view.extensionFormat", name, Variants.typeOf(value), Variants.printable(value) ?: value.toString()))
         }
     }
     return state

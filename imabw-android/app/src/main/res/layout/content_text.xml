@@ -13,9 +13,15 @@
     tools:context="pw.phylame.imabw.activity.TextActivity"
     tools:showIn="@layout/activity_text">
 
+
     <android.support.v7.widget.AppCompatEditText
         android:id="@+id/text"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
+        android:layout_height="match_parent"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:ems="10"
+        android:inputType="textMultiLine"
+        android:scrollHorizontally="false"
+        android:hint="@string/text_activity_tip" />
 </RelativeLayout>

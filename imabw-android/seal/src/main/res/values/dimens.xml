@@ -1,0 +1,29 @@
+<resources>
+    <!--&lt;!&ndash; Default screen margins, per the Android Design guidelines. &ndash;&gt;-->
+    <!--<dimen name="activity_horizontal_margin">16dp</dimen>-->
+    <!--<dimen name="activity_vertical_margin">16dp</dimen>-->
+
+    <dimen name="file_path_bar_height">38dp</dimen>
+    <dimen name="file_path_bar_font_size">18sp</dimen>
+    <dimen name="file_path_bar_spacer">5dp</dimen>
+
+    <dimen name="file_detail_bar_height">48dp</dimen>
+    <dimen name="file_detail_bar_font_size">16sp</dimen>
+    <dimen name="file_detail_bar_spacer">5dp</dimen>
+
+    <dimen name="file_item_icon_size">56dp</dimen>
+    <dimen name="file_item_icon_padding">5dp</dimen>
+
+    <dimen name="file_item_option_height">46dp</dimen>
+    <dimen name="file_item_option_padding">5dp</dimen>
+    <dimen name="file_item_option_icon_size">32sp</dimen>
+    <dimen name="file_item_option_font_size">15sp</dimen>
+
+    <dimen name="list_view_margin">5dp</dimen>
+    <dimen name="icon_item_spacer">5dp</dimen>
+    <dimen name="icon_item_icon_size">56dp</dimen>
+    <dimen name="icon_item_icon_margin">5dp</dimen>
+    <dimen name="icon_item_option_margin">8dp</dimen>
+    <dimen name="icon_item_text1_size">17sp</dimen>
+    <dimen name="icon_item_text2_size">14sp</dimen>
+</resources>

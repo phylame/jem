@@ -1,22 +1,23 @@
 package pw.phylame.imabw.activity
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
-import android.os.Environment
 import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AlertDialog
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.app.AppCompatDialog
 import android.support.v7.widget.Toolbar
 import android.view.*
 import android.widget.Toast
 import com.unnamed.b.atv.model.TreeNode
 import com.unnamed.b.atv.view.AndroidTreeView
 import pw.phylame.imabw.R
+import pw.phylame.jem.core.Attributes
 import pw.phylame.jem.core.Book
 import pw.phylame.jem.core.Chapter
 import pw.phylame.jem.epm.EpmManager
+import pw.phylame.seal.BaseActivity
+import pw.phylame.seal.SealActivity
 import rx.Observable
 import rx.Subscriber
 import rx.android.schedulers.AndroidSchedulers
@@ -24,10 +25,8 @@ import rx.schedulers.Schedulers
 import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
-import android.content.Intent
-import pw.phylame.jem.core.Attributes
 
-class BookActivity : AppCompatActivity() {
+class BookActivity : BaseActivity() {
     lateinit var book: Book
     private var root = TreeNode.root()
     lateinit var treeView: AndroidTreeView
@@ -85,16 +84,7 @@ class BookActivity : AppCompatActivity() {
     }
 
     fun chooseFile() {
-        val intent = Intent(Intent.ACTION_GET_CONTENT)
-        intent.type = "*/*"
-        intent.addCategory(Intent.CATEGORY_OPENABLE)
-
-        try {
-            startActivityForResult(Intent.createChooser(intent, "Select a File"), 100)
-        } catch (ex: android.content.ActivityNotFoundException) {
-            // Potentially direct the user to the Market with a Dialog
-            Toast.makeText(this, "Please install a File Manager.", Toast.LENGTH_SHORT).show()
-        }
+        SealActivity.startMe(this, 100, true, false, false, false, null)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

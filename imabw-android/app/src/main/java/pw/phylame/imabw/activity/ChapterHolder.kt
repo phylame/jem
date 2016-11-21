@@ -8,15 +8,13 @@ import android.widget.TextView
 
 import com.unnamed.b.atv.model.TreeNode
 
-import lombok.`val`
 import pw.phylame.imabw.R
 import pw.phylame.jem.core.Attributes
 
 class ChapterHolder(context: Context) : TreeNode.BaseNodeViewHolder<ChapterItem>(context) {
 
     override fun createNodeView(node: TreeNode, value: ChapterItem): View {
-        val inflater = LayoutInflater.from(context)
-        val view = inflater.inflate(R.layout.chapter_item, null, false)
+        val view = View.inflate(context, R.layout.chapter_item, null)
 
         val chapter = value.chapter
         val icon = view.findViewById(R.id.icon) as ImageView

@@ -1,9 +1,14 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    ext.kotlin_version = '1.0.4'
+    ext {
+        kotlin_version = '1.0.4'
+        rxjava_version = '1.2.1'
+        lombok_version = '1.16.10'
+        support_version = '24.2.1'
+    }
+
     repositories {
-        mavenLocal()
         jcenter()
     }
     dependencies {

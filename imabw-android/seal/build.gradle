@@ -1,19 +1,18 @@
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
+apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion Integer.parseInt(project.BUILD_SDK_VERSION)
     buildToolsVersion project.BUILD_TOOLS_VERSION
 
     defaultConfig {
-        applicationId "pw.phylame.imabw"
-
         minSdkVersion project.MIN_SDK_VERSION
         targetSdkVersion project.TARGET_SDK_VERSION
 
-        versionCode Integer.parseInt(project.APP_VERSION_CODE)
-        versionName project.APP_VERSION_NAME
+        versionCode 1
+        versionName "1.0"
+
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
     }
     buildTypes {
         release {
@@ -21,30 +20,14 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    sourceSets {
-        main.java.srcDirs += 'src/main/kotlin'
-    }
-    productFlavors {
-    }
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile fileTree(dir: 'libs', include: ['*.jar'])
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    compile 'com.github.bmelnychuk:atv:1.2.9'
-    compile 'io.reactivex:rxjava:1.2.1'
-    compile 'io.reactivex:rxandroid:1.2.1'
     compile group: 'com.android.support', name: 'appcompat-v7', version: "$support_version"
     compile group: 'com.android.support', name: 'design', version: "$support_version"
     provided group: 'org.projectlombok', name: 'lombok', version: "$lombok_version"
-
-    testCompile 'junit:junit:4.12'
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compile('pw.phylame.jem:jem-formats:3.1.1') {
-        exclude group: 'xpp3', module: 'xpp3' // use android builtin xpp
-    }
-    compile project(':seal')
-
 }

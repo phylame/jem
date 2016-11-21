@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:showIn="@layout/activity_file">
+
+    <ProgressBar
+        android:id="@+id/fetch_progress"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/tv_path"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/file_path_bar_height"
+        android:layout_alignParentTop="true"
+        android:background="@android:color/background_light"
+        android:ellipsize="marquee"
+        android:gravity="center_vertical"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:maxLines="1"
+        android:paddingEnd="@dimen/file_path_bar_spacer"
+        android:paddingLeft="@dimen/file_path_bar_spacer"
+        android:paddingRight="@dimen/file_path_bar_spacer"
+        android:paddingStart="@dimen/file_path_bar_spacer"
+        android:textSize="@dimen/file_path_bar_font_size" />
+
+    <RelativeLayout
+        android:id="@+id/ly_option"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/file_detail_bar_height"
+        android:layout_alignParentBottom="true"
+        android:background="@android:color/background_light"
+        android:paddingEnd="@dimen/file_detail_bar_spacer"
+        android:paddingLeft="@dimen/file_detail_bar_spacer"
+        android:paddingRight="@dimen/file_detail_bar_spacer"
+        android:paddingStart="@dimen/file_path_bar_spacer">
+
+        <TextView
+            android:id="@+id/tv_detail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:textSize="@dimen/file_detail_bar_font_size" />
+
+        <Button
+            android:id="@+id/btn_choose"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:enabled="false"
+            android:text="@string/file_button_choose"
+            android:textSize="@dimen/file_item_option_font_size" />
+
+        <Button
+            android:id="@+id/btn_cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@id/btn_choose"
+            android:layout_toStartOf="@id/btn_choose"
+            android:text="@string/file_button_cancel"
+            android:textSize="@dimen/file_item_option_font_size" />
+
+        <pw.phylame.seal.CheckedImageButton
+            android:id="@+id/btn_check_all"
+            android:layout_width="@dimen/file_item_option_icon_size"
+            android:layout_height="@dimen/file_item_option_icon_size"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@id/btn_cancel"
+            android:layout_toStartOf="@id/btn_cancel"
+            android:background="#00000000"
+            android:visibility="gone"
+            app:srcCompat="@drawable/ic_checkbox_selected" />
+
+    </RelativeLayout>
+
+    <ListView
+        android:id="@+id/list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/ly_option"
+        android:layout_below="@id/tv_path"
+        android:paddingEnd="@dimen/file_path_bar_spacer"
+        android:paddingLeft="@dimen/file_path_bar_spacer"
+        android:paddingRight="@dimen/file_path_bar_spacer"
+        android:paddingStart="@dimen/file_path_bar_spacer">
+
+    </ListView>
+
+    <TextView
+        android:id="@+id/tv_tip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:drawablePadding="5dp"
+        android:drawableTop="@drawable/ic_tip"
+        android:gravity="center"
+        android:text="@string/file_no_content"
+        android:visibility="gone" />
+
+</RelativeLayout>

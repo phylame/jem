@@ -23,6 +23,13 @@
             android:padding="2dp"
             android:textSize="16sp" />
 
+        <ListView
+            android:id="@+id/list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentBottom="true"
+            android:layout_below="@id/chapter_detail"
+            android:padding="4dp" />
     </RelativeLayout>
 
     <ProgressBar
@@ -30,7 +37,8 @@
         style="?android:attr/progressBarStyleLarge"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:visibility="gone" />
+        android:layout_gravity="center"
+        android:indeterminate="true"
+        android:visibility="invisible" />
 
 </android.support.design.widget.CoordinatorLayout>

@@ -40,4 +40,5 @@
     <plurals name="file_selection_detail">
         <item quantity="other">选中%1$d项</item>
     </plurals>
+    <string name="button_ok">确定</string>
 </resources>

@@ -15,15 +15,6 @@
 
 package pw.phylame.jem.core;
 
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -36,6 +27,9 @@ import pw.phylame.ycl.util.Consumer;
 import pw.phylame.ycl.util.Hierarchical;
 import pw.phylame.ycl.util.StringUtils;
 import pw.phylame.ycl.util.Validate;
+
+import java.lang.ref.WeakReference;
+import java.util.*;
 
 /**
  * <p>
@@ -70,10 +64,8 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
     /**
      * Constructs chapter with specified title.
      *
-     * @param title
-     *            title of chapter
-     * @throws NullPointerException
-     *             if the <code>title</code> is <code>null</code>
+     * @param title title of chapter
+     * @throws NullPointerException if the <code>title</code> is <code>null</code>
      */
     public Chapter(String title) {
         Attributes.setTitle(this, title);
@@ -82,12 +74,9 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
     /**
      * Constructs chapter with specified title and text.
      *
-     * @param title
-     *            title of chapter
-     * @param text
-     *            text text provider
-     * @throws NullPointerException
-     *             if the title or text is {@literal null}
+     * @param title title of chapter
+     * @param text  text text provider
+     * @throws NullPointerException if the title or text is {@literal null}
      */
     public Chapter(String title, Text text) {
         Attributes.setTitle(this, title);
@@ -97,16 +86,11 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
     /**
      * Constructs chapter with specified title, text, cover image and intro text.
      *
-     * @param title
-     *            title of chapter
-     * @param cover
-     *            <code>Flob</code> contains cover image, <code>null</code> will be ignored
-     * @param intro
-     *            intro text, <code>null</code> will be ignored
-     * @param text
-     *            text text provider
-     * @throws NullPointerException
-     *             if the argument list contains <code>null</code>
+     * @param title title of chapter
+     * @param cover <code>Flob</code> contains cover image, <code>null</code> will be ignored
+     * @param intro intro text, <code>null</code> will be ignored
+     * @param text  text text provider
+     * @throws NullPointerException if the argument list contains <code>null</code>
      */
     public Chapter(String title, Flob cover, Text intro, Text text) {
         Attributes.setTitle(this, title);
@@ -161,19 +145,17 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
     protected List<Chapter> chapters = new ArrayList<>();
 
     private Chapter checkChapter(@NonNull Chapter chapter) {
-        Validate.require(chapter.getParent() == null, "Chapter already in a certain section: " + chapter);
-        Validate.require(chapter != this, "Cannot add self to sub chapter list: " + chapter);
-        Validate.require(chapter != getParent(), "Cannot add parent chapter to its sub chapter list: " + chapter);
+        Validate.require(chapter.getParent() == null, "Chapter already in a certain section: %s", chapter);
+        Validate.require(chapter != this, "Cannot add self to sub chapter list: %s", chapter);
+        Validate.require(chapter != getParent(), "Cannot add parent chapter to its sub chapter list: %s", chapter);
         return chapter;
     }
 
     /**
      * Appends the specified chapter to the end of sub-chapter list.
      *
-     * @param chapter
-     *            the <code>Chapter</code> to be added
-     * @throws NullPointerException
-     *             if the <code>chapter</code> is <code>null</code>
+     * @param chapter the <code>Chapter</code> to be added
+     * @throws NullPointerException if the <code>chapter</code> is <code>null</code>
      */
     public final void append(Chapter chapter) {
         chapters.add(checkChapter(chapter));
@@ -183,14 +165,10 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
     /**
      * Inserts the specified chapter at specified position in sub-chapter list.
      *
-     * @param index
-     *            index of the chapter to be inserted
-     * @param chapter
-     *            the <code>Chapter</code> to be added
-     * @throws NullPointerException
-     *             if the <code>chapter</code> is <code>null</code>
-     * @throws IndexOutOfBoundsException
-     *             if the index is out of range (index &lt; 0 || index &ge; size())
+     * @param index   index of the chapter to be inserted
+     * @param chapter the <code>Chapter</code> to be added
+     * @throws NullPointerException      if the <code>chapter</code> is <code>null</code>
+     * @throws IndexOutOfBoundsException if the index is out of range (index &lt; 0 || index &ge; size())
      */
     public final void insert(int index, Chapter chapter) {
         chapters.add(index, checkChapter(chapter));
@@ -200,11 +178,9 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
     /**
      * Returns the index of the first occurrence of the specified chapter in sub chapters list.
      *
-     * @param chapter
-     *            the chapter to search of
+     * @param chapter the chapter to search of
      * @return the index or <code>-1</code> if specified chapter not presents
-     * @throws NullPointerException
-     *             if the <code>chapter</code> is <code>null</code>
+     * @throws NullPointerException if the <code>chapter</code> is <code>null</code>
      */
     public final int indexOf(@NonNull Chapter chapter) {
         return chapter.getParent() != this ? -1 : chapters.indexOf(chapter);
@@ -213,11 +189,9 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
     /**
      * Removes the chapter at specified position from sub-chapter list.
      *
-     * @param index
-     *            index of the chapter to be removed
+     * @param index index of the chapter to be removed
      * @return the chapter at specified position or <code>null</code> if <code>index</code> not exists
-     * @throws IndexOutOfBoundsException
-     *             if the index is out of range (index &lt; 0 || index &ge; size())
+     * @throws IndexOutOfBoundsException if the index is out of range (index &lt; 0 || index &ge; size())
      */
     public final Chapter removeAt(int index) {
         val chapter = chapters.remove(index);
@@ -228,11 +202,9 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
     /**
      * Removes the specified chapter from sub-chapter list.
      *
-     * @param chapter
-     *            chapter to be removed from sub-chapter list, if present
+     * @param chapter chapter to be removed from sub-chapter list, if present
      * @return <code>true</code> if sub-chapter list contained the specified chapter
-     * @throws NullPointerException
-     *             if the <code>chapter</code> is <code>null</code>
+     * @throws NullPointerException if the <code>chapter</code> is <code>null</code>
      */
     public final boolean remove(@NonNull Chapter chapter) {
         // not contained in children list
@@ -249,15 +221,11 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
     /**
      * Replaces the chapter at specified position in sub-chapter list with specified chapter.
      *
-     * @param index
-     *            index of the chapter to replace
-     * @param chapter
-     *            chapter to be stored at the specified position
+     * @param index   index of the chapter to replace
+     * @param chapter chapter to be stored at the specified position
      * @return the chapter previously at the specified position
-     * @throws NullPointerException
-     *             if the <code>chapter</code> is <code>null</code>
-     * @throws IndexOutOfBoundsException
-     *             if the index is out of range (index &lt; 0 || index &ge; size())
+     * @throws NullPointerException      if the <code>chapter</code> is <code>null</code>
+     * @throws IndexOutOfBoundsException if the index is out of range (index &lt; 0 || index &ge; size())
      */
     public final Chapter replace(int index, Chapter chapter) {
         val previous = chapters.set(index, checkChapter(chapter));
@@ -269,11 +237,9 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
     /**
      * Returns the chapter at specified position in sub-chapter list.
      *
-     * @param index
-     *            index of the chapter to return
+     * @param index index of the chapter to return
      * @return the chapter at specified position or <code>null</code> if <code>index</code> not exists
-     * @throws IndexOutOfBoundsException
-     *             if the index is out of range (index &lt; 0 || index &ge; size())
+     * @throws IndexOutOfBoundsException if the index is out of range (index &lt; 0 || index &ge; size())
      */
     public final Chapter chapterAt(int index) {
         return chapters.get(index);
@@ -338,10 +304,8 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
     /**
      * Registers the specified clean task to clean works list.
      *
-     * @param task
-     *            the clean task instance
-     * @throws NullPointerException
-     *             if the specified clean task is <code>null</code>
+     * @param task the clean task instance
+     * @throws NullPointerException if the specified clean task is <code>null</code>
      */
     public void registerCleanup(@NonNull Consumer<Chapter> task) {
         cleaners.add(task);
@@ -350,8 +314,7 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
     /**
      * Removes the specified clean task from clean works list.
      *
-     * @param task
-     *            the clean task to be removed, if <code>null</code> do nothing
+     * @param task the clean task to be removed, if <code>null</code> do nothing
      */
     public void removeCleanup(Consumer<Chapter> task) {
         if (task != null) {
@@ -393,7 +356,7 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
     protected void finalize() throws Throwable {
         super.finalize();
         if (!cleaned) {
-            Log.e("Book", "*** BUG: Chapter \"%s@%d\" not cleaned ***\n", Attributes.getTitle(this), hashCode());
+            Log.e("Book", "*** BUG: Chapter \"{0}@{1}\" not cleaned ***\n", Attributes.getTitle(this), hashCode());
         }
     }
 

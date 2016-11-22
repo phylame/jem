@@ -3,11 +3,13 @@ package pw.phylame.imabw.activity
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.support.design.widget.FloatingActionButton
-import android.support.design.widget.Snackbar
+import android.os.Handler
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.Toolbar
 import android.view.*
+import android.widget.ImageView
+import android.widget.RelativeLayout
+import android.widget.TextView
 import android.widget.Toast
 import com.unnamed.b.atv.model.TreeNode
 import com.unnamed.b.atv.view.AndroidTreeView
@@ -27,9 +29,12 @@ import java.io.PrintWriter
 import java.io.StringWriter
 
 class BookActivity : BaseActivity() {
-    lateinit var book: Book
-    private var root = TreeNode.root()
-    lateinit var treeView: AndroidTreeView
+    private lateinit var book: Book
+    private lateinit var root: TreeNode
+    private lateinit var treeView: AndroidTreeView
+
+    private lateinit var toolbar: Toolbar
+    private lateinit var tvDetail: TextView;
 
     private fun makeNode(chapter: Chapter): TreeNode {
         val node = TreeNode(ChapterItem(chapter)).setViewHolder(ChapterHolder(this))
@@ -46,13 +51,24 @@ class BookActivity : BaseActivity() {
         super.onStart()
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_edit)
-        val toolbar = findViewById(R.id.toolbar) as Toolbar
+    var splash: ImageView? = null
+
+    fun showSplash() {
+        window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        val splash = ImageView(this)
+        splash.scaleType = ImageView.ScaleType.FIT_XY
+        splash.setImageResource(R.drawable.ic_splash)
+        setContentView(splash)
+        this.splash = splash
+    }
+
+    fun initUI() {
+        setContentView(R.layout.activity_book)
+        toolbar = findViewById(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
 
-        treeView = AndroidTreeView(this, root);
+        root = TreeNode.root()
+        treeView = AndroidTreeView(this, root)
         treeView.setDefaultAnimation(true)
         treeView.setDefaultContainerStyle(R.style.TreeNodeStyleDivided, true)
         treeView.setDefaultNodeLongClickListener { node, any ->
@@ -71,16 +87,30 @@ class BookActivity : BaseActivity() {
                 }
             }
         }
-        val view = findViewById(R.id.content_edit) as ViewGroup
-        view.addView(treeView.view)
-        registerForContextMenu(view)
+        val content = findViewById(R.id.content) as ViewGroup
+        val params = RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT)
+        params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
+        params.addRule(RelativeLayout.BELOW, R.id.chapter_detail)
+        val view = treeView.view
+        view.layoutParams = params
+        content.addView(view)
 
-        val fab = findViewById(R.id.fab_add) as FloatingActionButton
-        fab.setOnClickListener {
-            Snackbar.make(it, "Replace with your own action", Snackbar.LENGTH_LONG).setAction("Action", null).show()
+        tvDetail = content.findViewById(R.id.chapter_detail) as TextView;
+
+        registerForContextMenu(content)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        if (splash == null) {
+            showSplash()
+            Handler().postDelayed(Runnable {
+                splash = null
+                window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+                initUI()
+            }, 1000)
         }
-
-        title = "No book opened"
     }
 
     fun chooseFile() {
@@ -106,6 +136,7 @@ class BookActivity : BaseActivity() {
             makeNode(it)
         }.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(object : Subscriber<TreeNode>() {
             override fun onError(e: Throwable) {
+                e.printStackTrace()
                 val sw = StringWriter()
                 e.printStackTrace(PrintWriter(sw))
 
@@ -125,7 +156,9 @@ class BookActivity : BaseActivity() {
 
             override fun onCompleted() {
                 Toast.makeText(this@BookActivity, "Done", Toast.LENGTH_SHORT).show()
-                title = Attributes.getTitle(book)
+                toolbar.title = Attributes.getTitle(book)
+                toolbar.subtitle = getString(R.string.book_detail_pattern,
+                        Attributes.getAuthor(book), Attributes.getGenre(book), Attributes.getWords(book))
             }
         })
     }
@@ -133,7 +166,7 @@ class BookActivity : BaseActivity() {
     fun aboutApp() {
         val dialog = AlertDialog.Builder(this)
                 .setTitle("Supported formats")
-                .setMessage(EpmManager.supportedParsers().joinToString("\n"))
+                .setMessage(EpmManager.supportedParsers().joinToString("\n") { it.toUpperCase() })
                 .setPositiveButton("I Know") {
                     dialog, which ->
                     dialog.dismiss()
@@ -147,21 +180,20 @@ class BookActivity : BaseActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.menu_edit, menu)
+        menuInflater.inflate(R.menu.menu_book_main, menu)
         return super.onCreateOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.action_open -> chooseFile()
-            R.id.action_about -> aboutApp()
             R.id.action_exit -> exit()
         }
         return super.onOptionsItemSelected(item)
     }
 
     override fun onCreateContextMenu(menu: ContextMenu?, v: View?, menuInfo: ContextMenu.ContextMenuInfo?) {
-        menuInflater.inflate(R.menu.menu_tree, menu)
+        menuInflater.inflate(R.menu.menu_book_tree, menu)
         super.onCreateContextMenu(menu, v, menuInfo)
     }
 

@@ -64,7 +64,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
         if (config == null) {
             config = new PmabInConfig();
         }
-        val tuple = new Tuple(new Book(), zip, config, newPullParser(false));
+        val tuple = new Tuple(new Book(), zip, config);
         readPBM(tuple);
         readPBC(tuple);
         return tuple.book;
@@ -87,7 +87,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
         boolean hasText = false;
         tuple.inAttributes = false;
         val b = new StringBuilder();
-        val xpp = tuple.xpp;
+        val xpp = tuple.xpp = newPullParser(false);
         try (val in = ZipUtils.streamOf(tuple.zip, PMAB.PBM_FILE)) {
             xpp.setInput(in, null);
             int event = xpp.getEventType();
@@ -292,7 +292,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
     }
 
     private void readPBC(Tuple tuple) throws IOException, ParserException {
-        val xpp = tuple.xpp;
+        val xpp = tuple.xpp = newPullParser(false);
         int version = 0;
         boolean hasText = false;
         val b = new StringBuilder();
@@ -447,11 +447,10 @@ public class PmabParser extends ZipParser<PmabInConfig> {
         private PmabInConfig config;
         private XmlPullParser xpp;
 
-        private Tuple(Book book, ZipFile zip, PmabInConfig config, XmlPullParser xpp) {
+        private Tuple(Book book, ZipFile zip, PmabInConfig config) {
             this.book = book;
             this.zip = zip;
             this.config = config;
-            this.xpp = xpp;
         }
 
         private int pbmVersion, pbcVersion;

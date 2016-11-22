@@ -20,7 +20,8 @@
         android:layout_height="match_parent"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:layout_centerVertical="true">
+        android:layout_centerVertical="true"
+        android:visibility="gone">
 
         <android.support.v7.widget.AppCompatImageButton
             android:id="@+id/action_add"

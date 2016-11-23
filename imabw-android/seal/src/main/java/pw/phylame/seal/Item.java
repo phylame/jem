@@ -1,34 +1,13 @@
 package pw.phylame.seal;
 
-import java.io.File;
-import java.lang.ref.WeakReference;
+public interface Item {
+    int size();
 
-class Item {
-    File file;
-    int count;
-    boolean checked;
-    private WeakReference<FileAdapter.Holder> holder;
+    boolean isSelected();
 
-    Item(File file, boolean checked) {
-        this.file = file;
-        this.checked = checked;
-    }
+    void setSelected(boolean selected);
 
-    FileAdapter.Holder getHolder() {
-        return holder != null ? holder.get() : null;
-    }
+    void setParent(Item parent);
 
-    void setHolder(FileAdapter.Holder holder) {
-        this.holder = new WeakReference<>(holder);
-    }
-
-    @Override
-    public String toString() {
-        return "Item{" +
-                "file=" + file +
-                ", count=" + count +
-                ", checked=" + checked +
-                ", holder=" + holder +
-                '}';
-    }
+    <T extends Item> T getParent();
 }

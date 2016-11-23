@@ -4,7 +4,6 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -13,22 +12,18 @@ import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
+import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
-import java.util.Set;
+import java.util.Date;
 import java.util.regex.Pattern;
 
 import lombok.val;
@@ -36,7 +31,7 @@ import lombok.val;
 import static android.text.TextUtils.isEmpty;
 import static android.text.TextUtils.join;
 
-public class FileActivity extends BaseActivity implements View.OnClickListener, AdapterView.OnItemClickListener {
+public class FileActivity extends BaseActivity implements View.OnClickListener {
     public static final String PATH_KEY = "_path_key_";
 
     public static final int PROGRESS_LIMIT = 64;
@@ -45,20 +40,18 @@ public class FileActivity extends BaseActivity implements View.OnClickListener, 
     /* package */ boolean multiple = true;
     private boolean showHidden = false;
 
-    private List<Item> data;
     private int fileCount, dirCount;
-    private BaseAdapter adapter;
 
-    private ListView listView;
+    FileView fileView;
+
     private TextView tvPath;
     private TextView tvDetail;
     private Button btnChoose;
     private MenuItem miShowHidden;
     private CheckedImageButton btnCheckAll;
 
-    private File base;
-    private Item current;
-    private Set<File> selection;
+    private File initFile;
+    private boolean canGoUp = true;
 
     private ItemFilter filter;
     private ItemSorter sorter;
@@ -66,13 +59,14 @@ public class FileActivity extends BaseActivity implements View.OnClickListener, 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        initParams();
+
         setContentView(R.layout.activity_file);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
 
         tvPath = (TextView) findViewById(R.id.tv_path);
 
-        listView = (ListView) findViewById(R.id.list);
-        listView.setOnItemClickListener(this);
+        fileView = new FileView((ListView) findViewById(R.id.list), true, null);
 
         tvDetail = (TextView) findViewById(R.id.tv_detail);
 
@@ -85,9 +79,8 @@ public class FileActivity extends BaseActivity implements View.OnClickListener, 
         btnChoose = (Button) findViewById(R.id.btn_choose);
         btnChoose.setOnClickListener(this);
 
-        data = null;
-
-        refresh();
+        fileView.current = new FileItem(initFile, false);
+        fileView.refresh();
     }
 
     @Override
@@ -101,51 +94,37 @@ public class FileActivity extends BaseActivity implements View.OnClickListener, 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         val id = item.getItemId();
-
         if (id == R.id.action_show_hidden) {
             filter.showHidden = !filter.showHidden;
             miShowHidden.setChecked(!miShowHidden.isChecked());
-            refresh();
+            fileView.refresh();
             return true;
         } else if (id == R.id.action_by_name) {
             sorter.sortType = ItemSorter.BY_NAME;
-            refresh();
+            fileView.refresh();
             return true;
         } else if (id == R.id.action_by_type) {
             sorter.sortType = ItemSorter.BY_TYPE;
-            refresh();
+            fileView.refresh();
             return true;
         } else if (id == R.id.action_by_size_asc) {
             sorter.sortType = ItemSorter.BY_SIZE_ASC;
-            refresh();
+            fileView.refresh();
             return true;
         } else if (id == R.id.action_by_size_desc) {
             sorter.sortType = ItemSorter.BY_SIZE_DESC;
-            refresh();
+            fileView.refresh();
             return true;
         } else if (id == R.id.action_by_date_asc) {
             sorter.sortType = ItemSorter.BY_DATE_ASC;
-            refresh();
+            fileView.refresh();
             return true;
         } else if (id == R.id.action_by_date_desc) {
             sorter.sortType = ItemSorter.BY_DATE_DESC;
-            refresh();
+            fileView.refresh();
             return true;
         } else {
             return super.onOptionsItemSelected(item);
-        }
-    }
-
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        val item = data.get(position);
-        val file = item.file;
-        if (file.isDirectory()) {
-            gotoDirectory(item);
-        } else if (!multiple) {
-            finishChoosing(Collections.singletonList(file));
-        } else {
-            toggleSelection(item, null);
         }
     }
 
@@ -155,16 +134,16 @@ public class FileActivity extends BaseActivity implements View.OnClickListener, 
         if (id == R.id.btn_cancel) {
             finishChoosing(null);
         } else if (id == R.id.btn_choose) {
-            finishChoosing(!forFile && !multiple ? Collections.singletonList(current.file) : selection);
+            finishChoosing(!forFile && !multiple ? Collections.singleton(fileView.current) : fileView.selections);
         } else if (id == R.id.btn_check_all) {
             val selected = !btnCheckAll.isSelected();
-            for (val item : data) {
+            for (val item : fileView.items()) {
                 if (forFile) {
                     if (item.file.isFile()) {
-                        toggleSelection(item, selected);
+                        fileView.toggleSelection(item, selected);
                     }
                 } else if (item.file.isDirectory()) {
-                    toggleSelection(item, selected);
+                    fileView.toggleSelection(item, selected);
                 }
             }
         }
@@ -172,58 +151,31 @@ public class FileActivity extends BaseActivity implements View.OnClickListener, 
 
     @Override
     public void onBackPressed() {
-        if (!current.file.equals(base)) {
-            backDirectory();
+        if (!fileView.current.file.equals(initFile) && canGoUp) {
+            fileView.back();
         } else {
             super.onBackPressed();
         }
     }
 
-    /* package */ void toggleSelection(Item item, Boolean checked) {
-        item.checked = checked != null ? checked : !item.checked;
-        FileAdapter.updateCheckboxIcon(item.getHolder(), item);
-        if (item.checked) {
-            selection.add(item.file);
-        } else {
-            selection.remove(item.file);
-        }
-        val count = selection.size();
-        tvDetail.setText(getResources().getQuantityString(R.plurals.file_selection_detail, count, count));
-        if (count != 0) {
-            if (forFile) {
-                btnCheckAll.setSelected(count == fileCount);
-            } else {
-                btnCheckAll.setSelected(count == dirCount);
-            }
-        } else {
-            btnCheckAll.setSelected(false);
-        }
-        btnChoose.setEnabled(count != 0);
-    }
-
-    private void finishChoosing(Collection<File> files) {
-        if (files == null) {
+    private void finishChoosing(Collection<FileItem> items) {
+        if (items == null) {
             setResult(RESULT_CANCELED);
-        } else if (files.size() > 1) {
-
-            val paths = new String[files.size()];
+        } else if (items.size() > 1) {
+            val paths = new String[items.size()];
             int i = 0;
-            for (val item : files) {
-                paths[i++] = item.getAbsolutePath();
+            for (val item : items) {
+                paths[i++] = item.file.getAbsolutePath();
             }
             val data = new Intent();
             data.putExtra(SealActivity.RESULT_KEY, join(SealActivity.PATH_SEPARATOR, paths));
             setResult(RESULT_OK, data);
         } else {
             val data = new Intent();
-            data.setData(Uri.fromFile(files.toArray(new File[1])[0]));
+            data.setData(Uri.fromFile(items.toArray(new FileItem[1])[0].file));
             setResult(RESULT_OK, data);
         }
         finish();
-    }
-
-    private void refresh(Runnable... tasks) {
-        new FetchTask().execute(tasks);
     }
 
     private void initParams() {
@@ -231,9 +183,7 @@ public class FileActivity extends BaseActivity implements View.OnClickListener, 
         forFile = intent.getBooleanExtra(SealActivity.MODE_KEY, forFile);
         multiple = intent.getBooleanExtra(SealActivity.MULTIPLE_KEY, multiple);
         showHidden = intent.getBooleanExtra(SealActivity.SHOW_HIDDEN_KEY, showHidden);
-        base = new File(intent.getStringExtra(PATH_KEY));
-        current = new Item(base, false);
-        selection = new LinkedHashSet<>();
+        initFile = new File(intent.getStringExtra(PATH_KEY));
 
         CharSequence regex = intent.getCharSequenceExtra(SealActivity.PATTERN_KEY);
         Pattern pattern = null;
@@ -242,39 +192,6 @@ public class FileActivity extends BaseActivity implements View.OnClickListener, 
         }
         filter = new ItemFilter(forFile, isEmpty(regex) ? null : pattern, showHidden);
         sorter = new ItemSorter();
-    }
-
-    /* package */ int getItemSize() {
-        return data == null ? 0 : data.size();
-    }
-
-    /* package */ Item getItemAt(int position) {
-        return data.get(position);
-    }
-
-    private void fetchItems() {
-        if (data == null) { // first invoking
-            initParams();
-            data = new ArrayList<>();
-        } else {
-            data.clear();
-        }
-        selection.clear();
-        val files = itemsOfFile(current.file);
-        current.count = files.length;
-        fileCount = dirCount = 0;
-        if (files.length > 0) {
-            Arrays.sort(files, sorter);
-            for (val file : files) {
-                if (file.isFile()) {
-                    ++fileCount;
-                }
-                if (file.isDirectory()) {
-                    ++dirCount;
-                }
-                data.add(new Item(file, false));
-            }
-        }
     }
 
     /* package */ File[] itemsOfFile(File file) {
@@ -320,53 +237,115 @@ public class FileActivity extends BaseActivity implements View.OnClickListener, 
         }
     }
 
-    private final Queue<Pair<Integer, Integer>> positions = new LinkedList<>();
 
-    private void gotoDirectory(Item item) {
-        current = item;
-        selection.clear();
-        int index = listView.getFirstVisiblePosition();
-        View view = listView.getChildAt(0);
-        int top = (view == null) ? 0 : view.getTop();
-        if (top < 0 && listView.getChildAt(1) != null) {
-            index++;
-            view = listView.getChildAt(1);
-            top = view.getTop();
+    private class FileItem extends AbstractItem {
+        /**
+         * Associated file
+         */
+        private File file;
+
+        /**
+         * Number of sub files
+         */
+        private int count;
+
+        private FileItem parent;
+
+        private Holder holder;
+
+        FileItem(File file, boolean selected) {
+            this.file = file;
+            setSelected(selected);
         }
-        positions.offer(new Pair<>(index, top));
-        refresh(new Runnable() {
-            @Override
-            public void run() {
-                listView.setSelection(0);
+
+        @Override
+        public int size() {
+            return count;
+        }
+
+        @Override
+        public void setParent(Item parent) {
+            if (!(parent instanceof FileItem)) {
+                throw new IllegalArgumentException("parent must be " + getClass());
             }
-        });
+            this.parent = (FileItem) parent;
+        }
+
+        @Override
+        public FileItem getParent() {
+            return parent;
+        }
     }
 
-    private void backDirectory() {
-        current = new Item(current.file.getParentFile(), false);
-        selection.clear();
-        refresh(new Runnable() {
-            @Override
-            public void run() {
-                val pair = positions.poll();
-                listView.setSelectionFromTop(pair.first, pair.second);
-            }
-        });
+    /* package */ class Holder {
+        ImageView icon;
+        TextView name;
+        TextView detail;
+        ImageView option;
     }
 
-    private class FetchTask extends AsyncTask<Runnable, Void, Void> {
-        private Runnable[] tasks;
+    void updateCheckboxIcon(Holder holder, FileItem item) {
+        if (holder != null) {
+            holder.option.setImageResource(item.isSelected() ? R.drawable.ic_checkbox_selected : R.drawable.ic_checkbox_normal);
+        }
+    }
+
+    private class FileView extends ListSupport<FileItem> {
         private boolean progressShown;
 
-        @Override
-        protected Void doInBackground(Runnable... tasks) {
-            this.tasks = tasks;
-            fetchItems();
-            return null;
+        FileView(ListView listView, boolean asyncFetch, FileItem current) {
+            super(listView, asyncFetch, multiple, current);
         }
 
         @Override
-        protected void onPreExecute() {
+        protected BaseAdapter createAdapter(ListSupport me) {
+            return new FileAdapter();
+        }
+
+        @Override
+        protected void fillItems(FileItem current) {
+            val files = itemsOfFile(current.file);
+            current.count = files.length;
+            fileCount = dirCount = 0;
+            if (files.length > 0) {
+                Arrays.sort(files, sorter);
+                for (val file : files) {
+                    if (file.isFile()) {
+                        ++fileCount;
+                    }
+                    if (file.isDirectory()) {
+                        ++dirCount;
+                    }
+                    items.add(new FileItem(file, false));
+                }
+            }
+        }
+
+        @Override
+        public void toggleSelection(FileItem item, Boolean selected) {
+            super.toggleSelection(item, selected);
+            updateCheckboxIcon(item.holder, item);
+            val count = selections.size();
+            tvDetail.setText(getResources().getQuantityString(R.plurals.file_selection_detail, count, count));
+            if (count != 0) {
+                if (forFile) {
+                    btnCheckAll.setSelected(count == fileCount);
+                } else {
+                    btnCheckAll.setSelected(count == dirCount);
+                }
+            } else {
+                btnCheckAll.setSelected(false);
+            }
+            btnChoose.setEnabled(count != 0);
+        }
+
+        @Override
+        protected void onChoosing(FileItem item) {
+            finishChoosing(Collections.singleton(item));
+        }
+
+        @Override
+        protected void beforeFetching() {
             if (current == null || current.count <= 0 || current.count > PROGRESS_LIMIT) {
                 progressShown = true;
                 showProgress(true);
@@ -376,26 +355,87 @@ public class FileActivity extends BaseActivity implements View.OnClickListener, 
         }
 
         @Override
-        protected void onPostExecute(Void items) {
+        protected void afterFetching(Pair<Integer, Integer> position) {
+            super.afterFetching(position);
             tvPath.setText(current.file.getPath());
-            if (adapter == null) {
-                listView.setAdapter(adapter = new FileAdapter(FileActivity.this));
-            } else {
-                adapter.notifyDataSetChanged();
-            }
-            if (progressShown) {
-                showProgress(false);
-            }
-            getTipView().setVisibility(adapter.getCount() == 0 ? TextView.VISIBLE : TextView.INVISIBLE);
+            getTipView().setVisibility(size() == 0 ? View.VISIBLE : View.GONE);
             tvDetail.setText(getResources().getQuantityString(R.plurals.file_selection_detail, 0, 0));
             btnCheckAll.setVisibility(multiple ? View.VISIBLE : View.GONE);
             btnCheckAll.setSelected(false);
             btnChoose.setEnabled(!forFile && !multiple);
-
-            // additional tasks
-            for (val task : tasks) {
-                task.run();
+            if (progressShown) {
+                showProgress(false);
             }
         }
+    }
+
+    private class FileAdapter extends BaseAdapter {
+        @Override
+        public int getCount() {
+            return fileView.size();
+        }
+
+        @Override
+        public FileItem getItem(int position) {
+            return fileView.itemAt(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            final Holder holder;
+            val item = getItem(position);
+            if (convertView == null) {
+                convertView = View.inflate(FileActivity.this, R.layout.icon_list_item, null);
+                holder = new Holder();
+                holder.icon = (ImageView) convertView.findViewById(R.id.icon);
+                holder.name = (TextView) convertView.findViewById(R.id.text1);
+                holder.name.setMaxLines(2);
+                holder.detail = (TextView) convertView.findViewById(R.id.text2);
+                holder.option = (ImageView) convertView.findViewById(R.id.option);
+                if (multiple) {
+                    holder.option.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            fileView.toggleSelection((FileItem) v.getTag(), null);
+                        }
+                    });
+                }
+                convertView.setTag(holder);
+            } else {
+                holder = (Holder) convertView.getTag();
+            }
+            item.holder = holder;
+            holder.option.setTag(item);
+            val file = item.file;
+            holder.name.setText(file.getName());
+            val date = new Date(file.lastModified());
+            if (file.isDirectory()) {
+                item.count = itemsOfFile(file).length;
+                holder.icon.setImageResource(item.count != 0 ? R.drawable.ic_folder : R.drawable.ic_folder_empty);
+                holder.detail.setText(getResources().getQuantityString(R.plurals.item_directory_detail, item.count, item.count, date));
+                if (!forFile && multiple) {
+                    updateCheckboxIcon(holder, item);
+                } else {
+                    holder.option.setImageResource(R.drawable.ic_arrow);
+                }
+            } else {
+                holder.icon.setImageResource(R.drawable.ic_file);
+                holder.detail.setText(getString(R.string.item_file_detail, IOs.readableSize(file.length(), getString(R.string.item_file_size_suffix)), date));
+                if (multiple) {
+                    updateCheckboxIcon(holder, item);
+                } else {
+                    holder.option.setImageDrawable(null);
+                }
+            }
+
+            return convertView;
+        }
+
+
     }
 }

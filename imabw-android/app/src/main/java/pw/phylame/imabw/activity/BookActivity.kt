@@ -13,9 +13,7 @@ import pw.phylame.imabw.R
 import pw.phylame.jem.core.Book
 import pw.phylame.jem.core.Chapter
 import pw.phylame.jem.epm.EpmManager
-import pw.phylame.seal.BaseActivity
-import pw.phylame.seal.SealActivity
-import pw.phylame.seal.UIs
+import pw.phylame.seal.*
 import rx.Observable
 import rx.Subscriber
 import rx.android.schedulers.AndroidSchedulers
@@ -105,9 +103,9 @@ class BookActivity : BaseActivity() {
             it.onCompleted()
         }.flatMap {
             Observable.from(it.items())
-        }.map(::Item).subscribeOn(Schedulers.io())
+        }.map(::ChapterItem).subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(object : Subscriber<Item>() {
+                .subscribe(object : Subscriber<ChapterItem>() {
                     override fun onError(e: Throwable) {
                         Log.e(TAG, "failed to load book", e)
                         showProgress(false)
@@ -115,7 +113,7 @@ class BookActivity : BaseActivity() {
                         UIs.alert(this@BookActivity, getString(R.string.book_open_book_failed), e.message)
                     }
 
-                    override fun onNext(node: Item) {
+                    override fun onNext(node: ChapterItem) {
 
                     }
 
@@ -163,10 +161,21 @@ class BookActivity : BaseActivity() {
     }
 }
 
-class Item(chapter: Chapter)
+class ChapterItem(val chapter: Chapter) : AbstractItem() {
+
+    var _parent: ChapterItem? = null
+
+    override fun size(): Int = chapter.size()
+
+    override fun setParent(parent: Item?) {
+        _parent = parent as? ChapterItem
+    }
+
+    override fun <T : Item?> getParent(): T = _parent
+}
 
 class BookAdapter(val context: Context) : BaseAdapter() {
-    val items: List<Item> = ArrayList()
+    val items: List<ChapterItem> = ArrayList()
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
         val view: View
@@ -178,7 +187,7 @@ class BookAdapter(val context: Context) : BaseAdapter() {
         return view
     }
 
-    override fun getItem(position: Int): Item = items[position]
+    override fun getItem(position: Int): ChapterItem = items[position]
 
     override fun getItemId(position: Int): Long = position.toLong()
 

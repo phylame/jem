@@ -1,4 +1,4 @@
-package pw.phylame.seal;
+package pw.phylame.android.listng;
 
 public abstract class AbstractItem implements Item {
     private boolean selected;

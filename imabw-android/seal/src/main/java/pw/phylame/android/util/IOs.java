@@ -1,5 +1,6 @@
-package pw.phylame.seal;
+package pw.phylame.android.util;
 
+import android.annotation.SuppressLint;
 import android.os.Build;
 import android.os.Environment;
 import android.os.StatFs;
@@ -12,6 +13,8 @@ import java.io.FileFilter;
 import lombok.val;
 
 public final class IOs {
+    public static CharSequence sizeSuffix = "b";
+
     public static Pair<Integer, Integer> split(String path) {
         int extpos = path.length(), seppos;
         char ch;
@@ -60,15 +63,16 @@ public final class IOs {
         return name.indexOf('.') == 0;
     }
 
-    public static String readableSize(long size, CharSequence suffix) {
+    @SuppressLint("DefaultLocale")
+    public static String readableSize(long size) {
         if (size < 0x400) {
-            return size + " " + suffix;
+            return size + " " + sizeSuffix;
         } else if (size < 0x100000) {
-            return String.format("%.2f K" + suffix, size / 1024.0);
+            return String.format("%.2f K%s", size / 1024.0, sizeSuffix);
         } else if (size < 0x40000000) {
-            return String.format("%.2f M" + suffix, size / 1024.0 / 1024.0);
+            return String.format("%.2f M%s", size / 1024.0 / 1024.0, sizeSuffix);
         } else {
-            return String.format("%.2f G" + suffix, size / 1024.0 / 1024.0 / 1024.0);
+            return String.format("%.2f G%s", size / 1024.0 / 1024.0 / 1024.0, sizeSuffix);
         }
     }
 

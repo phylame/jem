@@ -1,4 +1,4 @@
-package pw.phylame.seal;
+package pw.phylame.android.listng;
 
 public interface Item {
     int size();
@@ -10,4 +10,8 @@ public interface Item {
     void setParent(Item parent);
 
     <T extends Item> T getParent();
+
+    boolean isItem();
+
+    boolean isGroup();
 }

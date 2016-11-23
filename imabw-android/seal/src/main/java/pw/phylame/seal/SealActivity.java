@@ -18,6 +18,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import lombok.val;
+import pw.phylame.android.util.BaseActivity;
+import pw.phylame.android.util.IOs;
+import pw.phylame.android.util.UIs;
 
 public class SealActivity extends BaseActivity implements AdapterView.OnItemClickListener {
     public static final String RESULT_KEY = "_result_key_";
@@ -25,6 +28,7 @@ public class SealActivity extends BaseActivity implements AdapterView.OnItemClic
     public static final String SDCARD_PATH_KEY = "_sdcard_path_key_";
     public static final String OTG_PATH_KEY = "_otg_path_key_";
     public static final String SHOW_ROOT_KEY = "_show_root_key_";
+    public static final String CAN_GO_UP_KEY = "_can_go_up_key_";
 
     static final String MODE_KEY = "_mode_key_";
     static final String MULTIPLE_KEY = "_multiple_key";
@@ -181,10 +185,7 @@ public class SealActivity extends BaseActivity implements AdapterView.OnItemClic
                     item.available = false;
                 } else {
                     val stat = IOs.statOf(path);
-                    val suffix = getString(R.string.item_file_size_suffix);
-                    details = getString(R.string.seal_device_details,
-                            IOs.readableSize(stat.second, suffix),
-                            IOs.readableSize(stat.first, suffix));
+                    details = getString(R.string.seal_device_details, IOs.readableSize(stat.second), IOs.readableSize(stat.first));
                     item.available = true;
                 }
             }

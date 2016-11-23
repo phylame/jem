@@ -5,6 +5,7 @@ import java.io.File;
 import java.util.Comparator;
 
 import lombok.val;
+import pw.phylame.android.util.IOs;
 
 class ItemSorter implements Comparator<File> {
     static final int BY_NAME = 1;

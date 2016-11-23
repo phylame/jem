@@ -1,95 +1,73 @@
 package pw.phylame.imabw.activity
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
 import android.support.v7.widget.Toolbar
 import android.util.Log
+import android.util.Pair
 import android.view.*
-import android.widget.*
+import android.widget.ImageView
+import android.widget.ListView
+import android.widget.ProgressBar
+import android.widget.TextView
+import pw.phylame.android.listng.AbstractItem
+import pw.phylame.android.listng.Adapter
+import pw.phylame.android.listng.Item
+import pw.phylame.android.listng.ListSupport
+import pw.phylame.android.util.BaseActivity
+import pw.phylame.android.util.UIs
 import pw.phylame.imabw.R
 import pw.phylame.jem.core.Book
 import pw.phylame.jem.core.Chapter
 import pw.phylame.jem.epm.EpmManager
-import pw.phylame.seal.*
+import pw.phylame.seal.SealActivity
 import rx.Observable
 import rx.Subscriber
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
 import java.io.File
-import java.util.*
 
 class BookActivity : BaseActivity() {
     companion object {
         private val TAG = BookActivity::class.java.simpleName
     }
 
-    private lateinit var book: Book
-
-    private lateinit var adapter: BookAdapter
+    private var book: Book? = null
+    private lateinit var bookList: BookList
 
     private lateinit var toolbar: Toolbar
     private lateinit var tvDetail: TextView
-    private lateinit var listView: ListView
-    private var progress: ProgressBar? = null
+
+    private var progressBar: ProgressBar? = null
 
     override fun onStart() {
         System.setProperty(EpmManager.AUTO_LOAD_CUSTOMIZED_KEY, "true")
         super.onStart()
     }
 
-    var splash: ImageView? = null
-
-    fun showSplash() {
-        window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
-        val splash = ImageView(this)
-        splash.scaleType = ImageView.ScaleType.FIT_XY
-        splash.setImageResource(R.drawable.ic_splash)
-        setContentView(splash)
-        this.splash = splash
-    }
-
-    fun initUI() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_book)
         toolbar = findViewById(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
+
         tvDetail = findViewById(R.id.chapter_detail) as TextView
-        listView = findViewById(R.id.list) as ListView
+        val listView = findViewById(R.id.list) as ListView
         registerForContextMenu(listView)
-    }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        if (splash == null) {
-            showSplash()
-            Handler().postDelayed({
-                splash = null
-                window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
-                initUI()
-            }, 1000)
-        }
+        bookList = BookList(listView, null)
     }
 
     fun chooseFile() {
         SealActivity.startMe(this, 100, true, false, false, false, null)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == 100 && resultCode == Activity.RESULT_OK && data != null) {
-            openBook(File(data.data.path))
-        } else {
-            super.onActivityResult(requestCode, resultCode, data)
-        }
-    }
-
     private fun showProgress(shown: Boolean) {
-        if (progress == null) {
-            progress = findViewById(R.id.progress) as ProgressBar
+        if (progressBar == null) {
+            progressBar = findViewById(R.id.progress_bar) as ProgressBar
         }
-        progress!!.visibility = if (shown) View.VISIBLE else View.GONE
+        progressBar!!.visibility = if (shown) View.VISIBLE else View.GONE
     }
 
     fun openBook(file: File, format: String? = null, arguments: Map<String, Any>? = null) {
@@ -101,11 +79,9 @@ class BookActivity : BaseActivity() {
             book = EpmManager.readBook(file, format ?: EpmManager.formatOfFile(file.path), arguments)
             it.onNext(book)
             it.onCompleted()
-        }.flatMap {
-            Observable.from(it.items())
-        }.map(::ChapterItem).subscribeOn(Schedulers.io())
+        }.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(object : Subscriber<ChapterItem>() {
+                .subscribe(object : Subscriber<Book>() {
                     override fun onError(e: Throwable) {
                         Log.e(TAG, "failed to load book", e)
                         showProgress(false)
@@ -113,8 +89,8 @@ class BookActivity : BaseActivity() {
                         UIs.alert(this@BookActivity, getString(R.string.book_open_book_failed), e.message)
                     }
 
-                    override fun onNext(node: ChapterItem) {
-
+                    override fun onNext(book: Book) {
+                        bookList.refresh(ChapterItem(book))
                     }
 
                     override fun onCompleted() {
@@ -125,17 +101,28 @@ class BookActivity : BaseActivity() {
     }
 
     private fun refreshTitle() {
-        toolbar.title = book.title
-        toolbar.subtitle = getString(R.string.book_detail_pattern, book.author, book.genre)
+        val book = this.book
+        if (book != null) {
+            toolbar.title = book.title
+            toolbar.subtitle = getString(R.string.book_detail_pattern, book.author, book.genre)
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        book.cleanup()
+        book?.cleanup()
     }
 
     fun exit() {
         finish()
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == 100 && resultCode == Activity.RESULT_OK && data != null) {
+            openBook(File(data.data.path))
+        } else {
+            super.onActivityResult(requestCode, resultCode, data)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -159,38 +146,85 @@ class BookActivity : BaseActivity() {
     override fun onContextItemSelected(item: MenuItem?): Boolean {
         return super.onContextItemSelected(item)
     }
-}
 
-class ChapterItem(val chapter: Chapter) : AbstractItem() {
-
-    var _parent: ChapterItem? = null
-
-    override fun size(): Int = chapter.size()
-
-    override fun setParent(parent: Item?) {
-        _parent = parent as? ChapterItem
-    }
-
-    override fun <T : Item?> getParent(): T = _parent
-}
-
-class BookAdapter(val context: Context) : BaseAdapter() {
-    val items: List<ChapterItem> = ArrayList()
-
-    override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-        val view: View
-        if (convertView == null) {
-            view = View.inflate(context, R.layout.chapter_item, null)
+    override fun onBackPressed() {
+        val chapter = bookList.current?.chapter
+        if (chapter != null && chapter != book) {
+            bookList.backTop()
         } else {
-            view = convertView
+            super.onBackPressed()
+            exit()
         }
-        return view
     }
 
-    override fun getItem(position: Int): ChapterItem = items[position]
+    data class ItemHolder(val icon: ImageView, val name: TextView, val detail: TextView)
 
-    override fun getItemId(position: Int): Long = position.toLong()
+    private inner class ChapterItem(val chapter: Chapter) : AbstractItem() {
+        lateinit var holder: ItemHolder
 
-    override fun getCount(): Int = items.size
+        private var _parent: ChapterItem? = null
 
+        override fun size(): Int = chapter.size()
+
+        override fun setParent(parent: Item?) {
+            _parent = parent as? ChapterItem
+        }
+
+        @Suppress("unchecked_cast")
+        override fun <T : Item> getParent(): T? = _parent as? T
+
+        override fun isItem(): Boolean = !chapter.isSection
+
+        override fun isGroup(): Boolean = chapter.isSection
+    }
+
+    private inner class BookAdapter(bookList: BookList) : Adapter<ChapterItem>(bookList) {
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+            val view: View
+            val holder: ItemHolder
+
+            if (convertView == null) {
+                view = View.inflate(this@BookActivity, R.layout.chapter_item, null)
+                holder = ItemHolder(
+                        view.findViewById(R.id.icon) as ImageView,
+                        view.findViewById(R.id.chapter_title) as TextView,
+                        view.findViewById(R.id.chapter_overview) as TextView
+                )
+                view.tag = holder
+            } else {
+                view = convertView
+                holder = view.tag as ItemHolder
+            }
+
+            val item = getItem(position)
+            item.holder = holder
+
+            val chapter = item.chapter
+
+            holder.name.text = chapter.title
+            holder.detail.text = chapter.intro?.text ?: ""
+
+            return view
+        }
+    }
+
+    private inner class BookList(listView: ListView, chapterItem: ChapterItem?)
+        : ListSupport<ChapterItem>(listView, true, true, false, chapterItem) {
+
+        override fun makeAdapter(): Adapter<ChapterItem> = BookAdapter(this)
+
+        override fun makeItems(current: ChapterItem, items: MutableList<ChapterItem>) {
+            current.chapter.mapTo(items) { ChapterItem(it) }
+        }
+
+        override fun onChoosing(item: ChapterItem) {
+            UIs.shortToast(this@BookActivity, "edit chapter " + current.chapter.title)
+        }
+
+        override fun afterFetching(position: Pair<Int, Int>?) {
+            super.afterFetching(position)
+            val chapter = current.chapter
+            tvDetail.text = "Total ${chapter.size()} chapters of ${chapter.title}"
+        }
+    }
 }

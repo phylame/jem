@@ -1,4 +1,4 @@
-package pw.phylame.seal;
+package pw.phylame.android.util;
 
 
 import android.annotation.TargetApi;
@@ -7,25 +7,25 @@ import android.os.Build;
 import android.util.AttributeSet;
 import android.widget.ImageButton;
 
-public class CheckedImageButton extends ImageButton {
+public class CheckableButton extends ImageButton {
     public int normalIconId;
 
     public int selectedIconId;
 
-    public CheckedImageButton(Context context) {
+    public CheckableButton(Context context) {
         super(context);
     }
 
-    public CheckedImageButton(Context context, AttributeSet attrs) {
+    public CheckableButton(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
 
-    public CheckedImageButton(Context context, AttributeSet attrs, int defStyleAttr) {
+    public CheckableButton(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public CheckedImageButton(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    public CheckableButton(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
     }
 

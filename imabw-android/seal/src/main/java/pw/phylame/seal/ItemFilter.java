@@ -5,6 +5,7 @@ import java.io.FileFilter;
 import java.util.regex.Pattern;
 
 import lombok.val;
+import pw.phylame.android.util.IOs;
 
 class ItemFilter implements FileFilter {
     private final boolean fileMode;

@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.support.v7.widget.Toolbar
 import android.widget.EditText
 import pw.phylame.imabw.R
-import pw.phylame.seal.BaseActivity
+import pw.phylame.android.util.BaseActivity
 
 class TextActivity : BaseActivity() {
 

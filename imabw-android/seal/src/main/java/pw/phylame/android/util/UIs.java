@@ -1,4 +1,4 @@
-package pw.phylame.seal;
+package pw.phylame.android.util;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -15,6 +15,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import lombok.val;
+import pw.phylame.seal.R;
 
 public final class UIs {
     public static void alert(Context context, Integer titleId, Integer messageId) {

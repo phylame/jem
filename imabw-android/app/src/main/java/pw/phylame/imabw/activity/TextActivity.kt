@@ -28,8 +28,6 @@ class TextActivity : BaseActivity() {
         setContentView(R.layout.activity_text)
         val toolbar = findViewById(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-
 
         val text = findViewById(R.id.text) as EditText
         val str = intent.getStringExtra("text")

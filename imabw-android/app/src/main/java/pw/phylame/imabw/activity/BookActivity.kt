@@ -39,7 +39,7 @@ class BookActivity : BaseActivity() {
     private lateinit var bookList: BookList
 
     private lateinit var toolbar: Toolbar
-    private lateinit var pathBarHolder: View
+    private lateinit var pathBarHolder: HorizontalScrollView
     private lateinit var pathBar: LinearLayout
     private lateinit var detailBar: TextView
 
@@ -60,7 +60,7 @@ class BookActivity : BaseActivity() {
         toolbar = findViewById(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
 
-        pathBarHolder = findViewById(R.id.sv_path_bar)
+        pathBarHolder = findViewById(R.id.sv_path_bar) as HorizontalScrollView
         pathBar = findViewById(R.id.path_bar) as LinearLayout
         detailBar = findViewById(R.id.section_detail) as TextView
 
@@ -104,6 +104,13 @@ class BookActivity : BaseActivity() {
                             val c = Chapter("${ch.title}.$k")
                             c.intro = intro
                             ch.append(c)
+                            for (kk in 3..6) {
+                                val cc = Chapter("${c.title}.$kk")
+                                c.append(cc)
+                                for (kkk in 4..6) {
+                                    cc.append(Chapter("${cc.title}.$kkk"))
+                                }
+                            }
                         }
                     }
                 }
@@ -176,6 +183,9 @@ class BookActivity : BaseActivity() {
                 pathBar.addView(createPathSeparator())
             }
         }
+        pathBarHolder.post {
+            pathBarHolder.fullScroll(HorizontalScrollView.FOCUS_RIGHT)
+        }
     }
 
     private fun createPathButton(chapter: Chapter): View {
@@ -246,16 +256,12 @@ class BookActivity : BaseActivity() {
     private inner class ChapterItem(val chapter: Chapter) : AbstractItem() {
         lateinit var holder: ItemHolder
 
-        private var _parent: ChapterItem? = null
-
         override fun size(): Int = chapter.size()
 
-        override fun setParent(parent: Item?) {
-            _parent = parent as? ChapterItem
-        }
-
         @Suppress("unchecked_cast")
-        override fun <T : Item> getParent(): T? = _parent as? T
+        override fun <T : Item> getParent(): T? = if (chapter.parent != null)
+            ChapterItem(chapter.parent) as T
+        else null
 
         override fun isItem(): Boolean = !chapter.isSection
 
@@ -310,6 +316,10 @@ class BookActivity : BaseActivity() {
 
         override fun onChoosing(item: ChapterItem) {
             TextActivity.editText(this@BookActivity, REQUEST_TEXT, item.chapter)
+        }
+
+        override fun onTopReached() {
+
         }
 
         override fun afterFetching(position: Pair<Int, Int>?) {

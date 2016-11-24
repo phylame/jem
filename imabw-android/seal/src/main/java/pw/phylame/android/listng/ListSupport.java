@@ -47,6 +47,8 @@ public abstract class ListSupport<T extends Item> implements ListView.OnItemClic
     @WorkerThread
     protected abstract void makeItems(T current, List<T> items);
 
+    protected abstract void onTopReached();
+
     /**
      * Handle for item is chosen.
      *
@@ -93,7 +95,6 @@ public abstract class ListSupport<T extends Item> implements ListView.OnItemClic
 
     @MainThread
     public final void gotoItem(T item) {
-        item.setParent(current);
         current = item;
         selections.clear();
         positions.offer(getPosition());
@@ -103,8 +104,12 @@ public abstract class ListSupport<T extends Item> implements ListView.OnItemClic
     @MainThread
     public void backTop() {
         current = current.getParent();
-        selections.clear();
-        onLevelChanged(positions.poll());
+        if (current == null) {
+            onTopReached();
+        } else {
+            selections.clear();
+            onLevelChanged(positions.poll());
+        }
     }
 
     /**
@@ -152,7 +157,7 @@ public abstract class ListSupport<T extends Item> implements ListView.OnItemClic
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         val item = items.get(position);
-        if (item.size() > 0) {
+        if (item.isGroup()) {
             gotoItem(item);
         } else if (!multiple) {
             onChoosing(item);

@@ -15,21 +15,25 @@
         android:layout_centerInParent="true"
         android:visibility="gone" />
 
-    <TextView
-        android:id="@+id/tv_path"
+    <HorizontalScrollView
+        android:id="@+id/sv_path_bar"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/file_path_bar_height"
+        android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:background="@android:color/background_light"
-        android:ellipsize="marquee"
-        android:gravity="center_vertical"
-        android:marqueeRepeatLimit="marquee_forever"
-        android:maxLines="1"
+        android:background="@color/filePathBar"
         android:paddingEnd="@dimen/file_path_bar_spacer"
         android:paddingLeft="@dimen/file_path_bar_spacer"
         android:paddingRight="@dimen/file_path_bar_spacer"
         android:paddingStart="@dimen/file_path_bar_spacer"
-        android:textSize="@dimen/file_path_bar_font_size" />
+        android:scrollbars="none"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/path_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+    </HorizontalScrollView>
 
     <RelativeLayout
         android:id="@+id/ly_option"
@@ -90,7 +94,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@id/ly_option"
-        android:layout_below="@id/tv_path"
+        android:layout_below="@id/sv_path_bar"
         android:paddingEnd="@dimen/file_path_bar_spacer"
         android:paddingLeft="@dimen/file_path_bar_spacer"
         android:paddingRight="@dimen/file_path_bar_spacer"

@@ -7,8 +7,6 @@ public interface Item {
 
     void setSelected(boolean selected);
 
-    void setParent(Item parent);
-
     <T extends Item> T getParent();
 
     boolean isItem();

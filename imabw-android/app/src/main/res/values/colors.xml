@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
+    <!--<color name="colorPrimary">#3F51B5</color>-->
+    <color name="colorPrimary">#2F6EE7</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+
+    <color name="chapterPath">#EDEDED</color>
+    <color name="chapterPathText">#000000</color>
+
+    <color name="chapterNameText">#2F4F4F</color>
+    <color name="chapterOverviewText">#00796F</color>
+
+    <color name="sectionDetail">#EDEDED</color>
 </resources>

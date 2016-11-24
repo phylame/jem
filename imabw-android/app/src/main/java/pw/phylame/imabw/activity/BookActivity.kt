@@ -3,14 +3,12 @@ package pw.phylame.imabw.activity
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.support.v7.widget.AppCompatTextView
 import android.support.v7.widget.Toolbar
 import android.util.Log
 import android.util.Pair
 import android.view.*
-import android.widget.ImageView
-import android.widget.ListView
-import android.widget.ProgressBar
-import android.widget.TextView
+import android.widget.*
 import pw.phylame.android.listng.AbstractItem
 import pw.phylame.android.listng.Adapter
 import pw.phylame.android.listng.Item
@@ -21,23 +19,33 @@ import pw.phylame.imabw.R
 import pw.phylame.jem.core.Book
 import pw.phylame.jem.core.Chapter
 import pw.phylame.jem.epm.EpmManager
+import pw.phylame.jem.util.text.Texts
 import pw.phylame.seal.SealActivity
 import rx.Observable
 import rx.Subscriber
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
 import java.io.File
+import java.util.*
 
 class BookActivity : BaseActivity() {
     companion object {
         private val TAG = BookActivity::class.java.simpleName
+        private const val REQUEST_OPEN = 100
+        private const val REQUEST_TEXT = 200
     }
 
     private var book: Book? = null
     private lateinit var bookList: BookList
 
     private lateinit var toolbar: Toolbar
-    private lateinit var tvDetail: TextView
+    private lateinit var pathBarHolder: View
+    private lateinit var pathBar: LinearLayout
+    private lateinit var detailBar: TextView
+
+    private val pathBarFontSize: Float by lazy {
+        UIs.dimenFor(resources, R.dimen.book_path_font_size)
+    }
 
     private var progressBar: ProgressBar? = null
 
@@ -52,15 +60,19 @@ class BookActivity : BaseActivity() {
         toolbar = findViewById(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
 
-        tvDetail = findViewById(R.id.chapter_detail) as TextView
+        pathBarHolder = findViewById(R.id.sv_path_bar)
+        pathBar = findViewById(R.id.path_bar) as LinearLayout
+        detailBar = findViewById(R.id.section_detail) as TextView
+
         val listView = findViewById(R.id.list) as ListView
         registerForContextMenu(listView)
 
         bookList = BookList(listView, null)
+        newBook()
     }
 
     fun chooseFile() {
-        SealActivity.startMe(this, 100, true, false, false, false, null)
+        SealActivity.choose(this, REQUEST_OPEN, true, false, false, false, null)
     }
 
     private fun showProgress(shown: Boolean) {
@@ -68,6 +80,36 @@ class BookActivity : BaseActivity() {
             progressBar = findViewById(R.id.progress_bar) as ProgressBar
         }
         progressBar!!.visibility = if (shown) View.VISIBLE else View.GONE
+    }
+
+    fun newBook(title: String? = null) {
+        book?.cleanup()
+        book = Book(title ?: getString(R.string.book_default_book_name))
+        val book = this.book!!
+        book.author = "PW"
+        book.genre = "Magic, WP"
+        val intro = Texts.forString("This is intro of book", Texts.PLAIN)
+        book.intro = intro
+        for (i in 1..10) {
+            var chapter = Chapter("Sub Chapter $i")
+            chapter.intro = intro
+            book.append(chapter)
+            if (i % 3 == 0) {
+                for (j in 1..5) {
+                    val ch = Chapter("${chapter.title}.$j")
+                    chapter.append(ch)
+                    ch.intro = intro
+                    if (j % 2 == 0) {
+                        for (k in 1..5) {
+                            val c = Chapter("${ch.title}.$k")
+                            c.intro = intro
+                            ch.append(c)
+                        }
+                    }
+                }
+            }
+        }
+        bookList.refresh(ChapterItem(book))
     }
 
     fun openBook(file: File, format: String? = null, arguments: Map<String, Any>? = null) {
@@ -95,7 +137,6 @@ class BookActivity : BaseActivity() {
 
                     override fun onCompleted() {
                         showProgress(false)
-                        refreshTitle()
                     }
                 })
     }
@@ -117,11 +158,53 @@ class BookActivity : BaseActivity() {
         finish()
     }
 
+    fun setChapterPath(chapter: Chapter) {
+        val chapters = LinkedList<Chapter>()
+        var ch: Chapter? = chapter
+        while (ch != null) {
+            chapters.addFirst(ch)
+            ch = ch.parent
+        }
+        if (pathBarHolder.visibility != View.VISIBLE) {
+            pathBarHolder.visibility = View.VISIBLE
+        }
+        pathBar.removeAllViews()
+        val end = chapters.size - 1
+        chapters.forEachIndexed { i, chapter ->
+            pathBar.addView(createPathButton(chapter))
+            if (i != end) {
+                pathBar.addView(createPathSeparator())
+            }
+        }
+    }
+
+    private fun createPathButton(chapter: Chapter): View {
+        val button = AppCompatTextView(this)
+        button.textSize = pathBarFontSize
+        button.text = chapter.title
+        val padding = resources.getDimensionPixelSize(R.dimen.book_path_margin)
+        button.setPadding(0, padding, 0, padding)
+        button.setOnClickListener(PathButtonListener(chapter))
+        return button
+    }
+
+    private fun createPathSeparator(): View {
+        val text = AppCompatTextView(this)
+        text.textSize = pathBarFontSize
+        text.text = " > "
+        return text
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == 100 && resultCode == Activity.RESULT_OK && data != null) {
-            openBook(File(data.data.path))
-        } else {
-            super.onActivityResult(requestCode, resultCode, data)
+        when (requestCode) {
+            REQUEST_OPEN -> {
+                if (resultCode == Activity.RESULT_OK && data != null) {
+                    openBook(File(data.data.path))
+                }
+            }
+            REQUEST_TEXT -> {
+            }
+            else -> super.onActivityResult(requestCode, resultCode, data)
         }
     }
 
@@ -132,6 +215,7 @@ class BookActivity : BaseActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
+            R.id.action_new -> newBook()
             R.id.action_open -> chooseFile()
             R.id.action_exit -> exit()
         }
@@ -157,7 +241,7 @@ class BookActivity : BaseActivity() {
         }
     }
 
-    data class ItemHolder(val icon: ImageView, val name: TextView, val detail: TextView)
+    data class ItemHolder(val icon: ImageView, val name: TextView, val detail: TextView, val option: ImageView)
 
     private inner class ChapterItem(val chapter: Chapter) : AbstractItem() {
         lateinit var holder: ItemHolder
@@ -188,7 +272,8 @@ class BookActivity : BaseActivity() {
                 holder = ItemHolder(
                         view.findViewById(R.id.icon) as ImageView,
                         view.findViewById(R.id.chapter_title) as TextView,
-                        view.findViewById(R.id.chapter_overview) as TextView
+                        view.findViewById(R.id.chapter_overview) as TextView,
+                        view.findViewById(R.id.option) as ImageView
                 )
                 view.tag = holder
             } else {
@@ -203,6 +288,12 @@ class BookActivity : BaseActivity() {
 
             holder.name.text = chapter.title
             holder.detail.text = chapter.intro?.text ?: ""
+            if (chapter.isSection) {
+                holder.option.visibility = View.VISIBLE
+                holder.option.setImageResource(R.drawable.ic_arrow)
+            } else {
+                holder.option.visibility = View.GONE
+            }
 
             return view
         }
@@ -218,13 +309,23 @@ class BookActivity : BaseActivity() {
         }
 
         override fun onChoosing(item: ChapterItem) {
-            UIs.shortToast(this@BookActivity, "edit chapter " + current.chapter.title)
+            TextActivity.editText(this@BookActivity, REQUEST_TEXT, item.chapter)
         }
 
         override fun afterFetching(position: Pair<Int, Int>?) {
             super.afterFetching(position)
+            refreshTitle()
             val chapter = current.chapter
-            tvDetail.text = "Total ${chapter.size()} chapters of ${chapter.title}"
+            setChapterPath(chapter)
+            detailBar.text = this@BookActivity.getQuantityString(R.plurals.book_section_detail, 0, chapter.size())
+        }
+    }
+
+    private inner class PathButtonListener(val chapter: Chapter) : View.OnClickListener {
+        override fun onClick(v: View?) {
+            if (chapter != bookList.current.chapter) {
+                bookList.gotoItem(ChapterItem(chapter))
+            }
         }
     }
 }

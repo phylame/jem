@@ -39,13 +39,13 @@ public class SealActivity extends BaseActivity implements AdapterView.OnItemClic
     private String sdcardPath;
     private String otgPath;
 
-    public static void startMe(Activity activity,
-                               int requestCode,
-                               boolean forFile,
-                               boolean multiple,
-                               boolean showHidden,
-                               boolean showRoot,
-                               CharSequence pattern) {
+    public static void choose(Activity activity,
+                              int requestCode,
+                              boolean forFile,
+                              boolean multiple,
+                              boolean showHidden,
+                              boolean showRoot,
+                              CharSequence pattern) {
         val intent = new Intent(activity, SealActivity.class);
         intent.putExtra(MODE_KEY, forFile);
         intent.putExtra(MULTIPLE_KEY, multiple);

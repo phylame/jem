@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/content"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="pw.phylame.imabw.activity.TextActivity"
+    tools:showIn="@layout/activity_text">
+
+    <HorizontalScrollView
+        android:id="@+id/sv_path_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:background="@color/chapterPath"
+        android:paddingEnd="@dimen/book_content_margin"
+        android:paddingLeft="@dimen/book_content_margin"
+        android:paddingRight="@dimen/book_content_margin"
+        android:paddingStart="@dimen/book_content_margin"
+        android:scrollbars="none"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/path_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+    </HorizontalScrollView>
+
+    <android.support.v7.widget.AppCompatTextView
+        android:id="@+id/section_detail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="@color/sectionDetail"
+        android:paddingEnd="@dimen/book_content_margin"
+        android:paddingLeft="@dimen/book_content_margin"
+        android:paddingRight="@dimen/book_content_margin"
+        android:paddingStart="@dimen/book_content_margin"
+        android:textSize="@dimen/book_detail_font_size" />
+
+    <ListView
+        android:id="@+id/list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/section_detail"
+        android:layout_below="@id/sv_path_bar"
+        android:paddingEnd="@dimen/book_content_margin"
+        android:paddingLeft="@dimen/book_content_margin"
+        android:paddingRight="@dimen/book_content_margin"
+        android:paddingStart="@dimen/book_content_margin" />
+
+</RelativeLayout>

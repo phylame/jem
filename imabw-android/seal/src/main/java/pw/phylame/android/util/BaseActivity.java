@@ -4,7 +4,6 @@ import android.support.annotation.LayoutRes;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 
-import pw.phylame.android.util.UIs;
 import pw.phylame.seal.R;
 
 public abstract class BaseActivity extends AppCompatActivity {

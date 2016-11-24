@@ -14,8 +14,15 @@
 
     <string name="book_open_progress">Loading book…</string>
     <string name="book_open_book_failed">Failed to load book</string>
-    <string name="book_detail_pattern">%1$s, %2$s</string>
+    <string name="book_detail_pattern">%1$s | %2$s</string>
 
-    <string name="title_activity_text">TextActivity</string>
     <string name="text_activity_tip">Input chapter text here</string>
+    <string name="book_default_book_name">Untitled</string>
+    <string name="book_action_new">New</string>
+
+    <plurals name="book_section_detail">
+        <item quantity="one">1 item</item>
+        <item quantity="other">%1$d items</item>
+    </plurals>
+    <string name="title_activity_text">Text</string>
 </resources>

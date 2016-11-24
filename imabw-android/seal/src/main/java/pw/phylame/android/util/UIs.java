@@ -4,9 +4,16 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AlertDialog;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -14,10 +21,20 @@ import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import java.io.InputStream;
+
 import lombok.val;
 import pw.phylame.seal.R;
 
 public final class UIs {
+    private static TypedValue mReuseValue = new TypedValue();
+
+    public static float dimenFor(Resources resources, int id) {
+        val value = mReuseValue;
+        resources.getValue(id, value, true);
+        return TypedValue.complexToFloat(value.data);
+    }
+
     public static void alert(Context context, Integer titleId, Integer messageId) {
         val builder = new AlertDialog.Builder(context);
         if (titleId != null) {
@@ -48,24 +65,45 @@ public final class UIs {
 
     public static void shortToast(Context context, int resId) {
         Toast.makeText(context, resId, Toast.LENGTH_SHORT)
-             .show();
+                .show();
     }
 
     public static void shortToast(Context context, CharSequence text) {
         Toast.makeText(context, text, Toast.LENGTH_SHORT)
-             .show();
+                .show();
     }
 
     public static void longToast(Context context, int resId) {
         Toast.makeText(context, resId, Toast.LENGTH_LONG)
-             .show();
+                .show();
     }
 
     public static void longToast(Context context, CharSequence text) {
         Toast.makeText(context, text, Toast.LENGTH_LONG)
-             .show();
+                .show();
     }
 
+    public static Drawable drawableOf(InputStream in, int width, int height) {
+        val bmp = BitmapFactory.decodeStream(in);
+        if (width <= 0 && height <= 0) {
+            return new BitmapDrawable(null, bmp);
+        }
+
+        int ow = bmp.getWidth(), oh = bmp.getHeight();
+
+        Matrix matrix = new Matrix();
+        if (width <= 0) {
+            float hs = (float) height / oh;
+            matrix.postScale(hs, hs);
+        } else if (height <= 0) {
+            float ws = (float) width / ow;
+            matrix.postScale(ws, ws);
+        } else {
+            matrix.postScale((float) width / ow, (float) height / oh);
+        }
+
+        return new BitmapDrawable(null, Bitmap.createBitmap(bmp, 0, 0, ow, oh, matrix, true));
+    }
 
     public static void setImmersive(Activity activity, int color) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -97,7 +135,7 @@ public final class UIs {
             drawer.setFitsSystemWindows(true);
             content.setFitsSystemWindows(true);
             drawer.getChildAt(1)
-                  .setFitsSystemWindows(true);
+                    .setFitsSystemWindows(true);
         }
     }
 
@@ -112,7 +150,7 @@ public final class UIs {
             content.setClipToPadding(true);
 
             drawer.getChildAt(1)
-                  .setFitsSystemWindows(false);
+                    .setFitsSystemWindows(false);
         }
     }
 
@@ -130,13 +168,13 @@ public final class UIs {
         root.setFitsSystemWindows(true);
     }
 
-    private static int getStatusBarHeight(Activity activity) {
+    public static int getStatusBarHeight(Activity activity) {
         val resources = activity.getResources();
         int id = resources.getIdentifier("status_bar_height", "dimen", "android");
         return resources.getDimensionPixelSize(id);
     }
 
-    private static int getNavigationBarHeight(Activity activity) {
+    public static int getNavigationBarHeight(Activity activity) {
         val resources = activity.getResources();
         int id = resources.getIdentifier("navigation_bar_height", "dimen", "android");
         return resources.getDimensionPixelSize(id);

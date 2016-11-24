@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">Imabw</string>
+
+    <string name="button_ok">确定</string>
+
+    <string name="menu_item_exit">退出</string>
+    <string name="menu_item_settings">设置</string>
+    <string name="menu_item_open">打开</string>
+    <string name="menu_item_save">保存</string>
+
+    <string name="book_action_rename">重命名</string>
+    <string name="book_action_properties">属性</string>
+    <string name="book_action_insert">插入</string>
+
+    <string name="book_open_progress">读取文件…</string>
+    <string name="book_open_book_failed">打开文件失败</string>
+    <string name="book_detail_pattern">%1$s | %2$s</string>
+
+    <string name="text_activity_tip">输入正文内容</string>
+    <string name="book_default_book_name">未命名</string>
+    <string name="book_action_new">新建</string>
+
+    <plurals name="book_section_detail">
+        <item quantity="other">%1$d 项</item>
+    </plurals>
+    <string name="title_activity_text">正文</string>
+</resources>

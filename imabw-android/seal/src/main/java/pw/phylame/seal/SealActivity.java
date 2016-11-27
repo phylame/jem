@@ -14,6 +14,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,8 +46,17 @@ public class SealActivity extends BaseActivity implements AdapterView.OnItemClic
                               boolean multiple,
                               boolean showHidden,
                               boolean showRoot,
-                              CharSequence pattern) {
-        val intent = new Intent(activity, SealActivity.class);
+                              CharSequence pattern,
+                              String initPath) {
+        Intent intent;
+//        if (TextUtils.isEmpty(initPath)) {
+            intent = new Intent(activity, SealActivity.class);
+//        } else {
+//            intent = new Intent(activity, FileActivity.class);
+//            val file = new File(initPath);
+//            intent.putExtra(FileActivity.PATH_KEY, file.isDirectory() ? initPath : file.getParent());
+//            intent.putExtra(CAN_GO_UP_KEY, true);
+//        }
         intent.putExtra(MODE_KEY, forFile);
         intent.putExtra(MULTIPLE_KEY, multiple);
         intent.putExtra(SHOW_HIDDEN_KEY, showHidden);

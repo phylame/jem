@@ -1,9 +1,10 @@
 package pw.phylame.seal;
 
+import android.annotation.TargetApi;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
-import android.support.v7.widget.AppCompatTextView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Pair;
@@ -22,7 +23,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -52,6 +52,7 @@ public class FileActivity extends BaseActivity implements View.OnClickListener {
     private HorizontalScrollView pathBarHolder;
     private ViewGroup pathBar;
     private float pathBarFontSize;
+    private int pathBarPadding;
 
     private TextView tvDetail;
     private Button btnChoose;
@@ -59,6 +60,7 @@ public class FileActivity extends BaseActivity implements View.OnClickListener {
 
     private File initFile;
     private boolean canGoUp = false;
+    private FileItem topItem;
 
     private ItemFilter filter;
     private ItemSorter sorter;
@@ -72,6 +74,7 @@ public class FileActivity extends BaseActivity implements View.OnClickListener {
         pathBarHolder = (HorizontalScrollView) findViewById(R.id.sv_path_bar);
         pathBar = (ViewGroup) findViewById(R.id.path_bar);
         pathBarFontSize = UIs.dimenFor(getResources(), R.dimen.file_path_bar_font_size);
+        pathBarPadding = getResources().getDimensionPixelSize(R.dimen.file_path_bar_margin);
 
         tvDetail = (TextView) findViewById(R.id.tv_detail);
 
@@ -85,9 +88,8 @@ public class FileActivity extends BaseActivity implements View.OnClickListener {
         btnChoose.setOnClickListener(this);
 
         fetchParams();
-
-        fileList = new FileList((ListView) findViewById(R.id.list), null);
-        fileList.refresh(new FileItem(initFile, false));
+        fileList = new FileList((ListView) findViewById(R.id.list), new FileItem(initFile, false));
+        fileList.refresh(false);
     }
 
     @Override
@@ -100,28 +102,30 @@ public class FileActivity extends BaseActivity implements View.OnClickListener {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         val id = item.getItemId();
-        if (id == R.id.action_show_hidden) {
+        if (id == R.id.action_home) {
+            finish();
+        } else if (id == R.id.action_show_hidden) {
             filter.showHidden = !filter.showHidden;
             item.setChecked(!item.isChecked());
-            fileList.refresh();
+            fileList.refresh(true);
         } else if (id == R.id.action_by_name) {
             sorter.sortType = ItemSorter.BY_NAME;
-            fileList.refresh();
+            fileList.refresh(true);
         } else if (id == R.id.action_by_type) {
             sorter.sortType = ItemSorter.BY_TYPE;
-            fileList.refresh();
+            fileList.refresh(true);
         } else if (id == R.id.action_by_size_asc) {
             sorter.sortType = ItemSorter.BY_SIZE_ASC;
-            fileList.refresh();
+            fileList.refresh(true);
         } else if (id == R.id.action_by_size_desc) {
             sorter.sortType = ItemSorter.BY_SIZE_DESC;
-            fileList.refresh();
+            fileList.refresh(true);
         } else if (id == R.id.action_by_date_asc) {
             sorter.sortType = ItemSorter.BY_DATE_ASC;
-            fileList.refresh();
+            fileList.refresh(true);
         } else if (id == R.id.action_by_date_desc) {
             sorter.sortType = ItemSorter.BY_DATE_DESC;
-            fileList.refresh();
+            fileList.refresh(true);
         } else {
             return super.onOptionsItemSelected(item);
         }
@@ -180,12 +184,12 @@ public class FileActivity extends BaseActivity implements View.OnClickListener {
         canGoUp = intent.getBooleanExtra(SealActivity.CAN_GO_UP_KEY, canGoUp);
         initFile = new File(intent.getStringExtra(PATH_KEY));
 
+        topItem = new FileItem(canGoUp ? null : initFile.getParentFile(), false);
+
         val regex = intent.getCharSequenceExtra(SealActivity.PATTERN_KEY);
         Pattern pattern = null;
         if (!TextUtils.isEmpty(regex)) {
-            pattern = Pattern.compile(regex.toString()
-                    .replace(".", "\\.")
-                    .replace("*", ".*"));
+            pattern = Pattern.compile(regex.toString().replace(".", "\\.").replace("*", ".*"));
         }
         filter = new ItemFilter(forFile, isEmpty(regex) ? null : pattern, showHidden);
         sorter = new ItemSorter();
@@ -202,11 +206,12 @@ public class FileActivity extends BaseActivity implements View.OnClickListener {
 
     private View progressBar;
 
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
     private void showProgress(final boolean shown) {
         if (progressBar == null) {
             progressBar = findViewById(R.id.fetch_progress);
         }
-        progressBar.setVisibility(shown ? View.VISIBLE : View.GONE);
+        UIs.showProgress(this, progressBar, shown);
         if (shown) {
             setTitle(R.string.file_fetching);
         } else if (forFile) {
@@ -214,55 +219,6 @@ public class FileActivity extends BaseActivity implements View.OnClickListener {
         } else {
             setTitle(getResources().getQuantityString(R.plurals.file_title_for_directory, multiple ? 0 : 1));
         }
-    }
-
-    private void setFilePath(File file) {
-        val files = new LinkedList<File>();
-        val parentFile = canGoUp ? new File("/") : initFile.getParentFile();
-        for (; file != null && !file.equals(parentFile); file = file.getParentFile()) {
-            files.addFirst(file);
-        }
-        if (pathBarHolder.getVisibility() != View.VISIBLE) {
-            pathBarHolder.setVisibility(View.VISIBLE);
-        }
-        pathBar.removeAllViews();
-        int end = files.size() - 1, i = 0;
-        for (val f : files) {
-            pathBar.addView(createPathButton(f));
-            if (i++ != end) {
-                pathBar.addView(createPathSeparator());
-            }
-        }
-        pathBarHolder.post(new Runnable() {
-            @Override
-            public void run() {
-                pathBarHolder.fullScroll(HorizontalScrollView.FOCUS_RIGHT);
-            }
-        });
-    }
-
-    private View createPathButton(final File file) {
-        val button = new AppCompatTextView(this);
-        button.setTextSize(pathBarFontSize);
-        button.setText(file.getName());
-        val padding = getResources().getDimensionPixelSize(R.dimen.file_path_bar_margin);
-        button.setPadding(0, padding, 0, padding);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (file != fileList.getCurrent().file) {
-                    fileList.gotoItem(new FileItem(file, false));
-                }
-            }
-        });
-        return button;
-    }
-
-    private View createPathSeparator() {
-        val text = new AppCompatTextView(this);
-        text.setTextSize(pathBarFontSize);
-        text.setText(" > ");
-        return text;
     }
 
     private int imageFor(boolean selected) {
@@ -305,6 +261,17 @@ public class FileActivity extends BaseActivity implements View.OnClickListener {
         @SuppressWarnings("unchecked")
         public FileItem getParent() {
             return new FileItem(file.getParentFile(), false);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return obj != null && obj instanceof FileItem && equals(((FileItem) obj).file, file);
+        }
+
+        @Override
+        public String toString() {
+            val name = file.getName();
+            return name.isEmpty() ? "/" : name;
         }
     }
 
@@ -429,7 +396,7 @@ public class FileActivity extends BaseActivity implements View.OnClickListener {
         }
 
         @Override
-        protected void onChoosing(FileItem item) {
+        protected void onItemChosen(FileItem item) {
             finishChoosing(Collections.singleton(item));
         }
 
@@ -447,7 +414,7 @@ public class FileActivity extends BaseActivity implements View.OnClickListener {
         @Override
         protected void afterFetching(Pair<Integer, Integer> position) {
             super.afterFetching(position);
-            setFilePath(getCurrent().file);
+            setPathBar(topItem, pathBar, pathBarHolder, pathBarFontSize, pathBarPadding);
             getTipView().setVisibility(size() == 0 ? View.VISIBLE : View.GONE);
             tvDetail.setText(getResources().getQuantityString(R.plurals.file_selection_detail, 0, 0));
             btnSelectAll.setVisibility(multiple ? View.VISIBLE : View.GONE);

@@ -4,19 +4,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="pw.phylame.imabw.activity.BookActivity">
+    tools:context="pw.phylame.imabw.activity.PropertiesActivity">
 
     <include layout="@layout/main_toolbar" />
 
-    <include layout="@layout/content_book" />
-
-    <ProgressBar
-        android:id="@+id/progress_bar"
-        style="?android:attr/progressBarStyleLarge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:visibility="gone" />
+    <include layout="@layout/content_properties" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"

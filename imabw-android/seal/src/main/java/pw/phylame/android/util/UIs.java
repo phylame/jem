@@ -1,5 +1,7 @@
 package pw.phylame.android.util;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
@@ -33,6 +35,29 @@ public final class UIs {
         val value = mReuseValue;
         resources.getValue(id, value, true);
         return TypedValue.complexToFloat(value.data);
+    }
+
+    public static void showProgress(Context context, final View progressBar, final boolean shown) {
+        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
+        // for very easy animations. If available, use these APIs to fade-in
+        // the progress spinner.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+            int shortAnimTime = context.getResources().getInteger(android.R.integer.config_shortAnimTime);
+            progressBar.setVisibility(shown ? View.VISIBLE : View.GONE);
+            progressBar.animate()
+                    .setDuration(shortAnimTime)
+                    .alpha(shown ? 1 : 0)
+                    .setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            progressBar.setVisibility(shown ? View.VISIBLE : View.GONE);
+                        }
+                    });
+        } else {
+            // The ViewPropertyAnimator APIs are not available, so simply show
+            // and hide the relevant UI components.
+            progressBar.setVisibility(shown ? View.VISIBLE : View.GONE);
+        }
     }
 
     public static void alert(Context context, Integer titleId, Integer messageId) {
@@ -158,7 +183,7 @@ public final class UIs {
     private static Window adjustWindowFlags(Activity activity) {
         val window = activity.getWindow();
         window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-        window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
+//        window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
         return window;
     }
 

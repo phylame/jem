@@ -1,9 +1,11 @@
 package pw.phylame.imabw.activity
 
 import android.app.Activity
-import android.content.Intent
 import android.os.Bundle
 import android.support.v7.widget.Toolbar
+import android.text.method.KeyListener
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.EditText
 import android.widget.TextView
 import pw.phylame.android.util.BaseActivity
@@ -14,10 +16,8 @@ class TextActivity : BaseActivity() {
 
     companion object {
         fun editText(invoker: Activity, requestCode: Int, chapter: Chapter) {
-            val intent = Intent(invoker, TextActivity::class.java)
-            intent.putExtra("title", chapter.title)
-            intent.putExtra("text", chapter.text?.text ?: "")
-            invoker.startActivityForResult(intent, requestCode)
+            Task.chapter = chapter
+            invoker.startActivityForResult(TextActivity::class.java, requestCode)
         }
     }
 
@@ -29,13 +29,43 @@ class TextActivity : BaseActivity() {
         val toolbar = findViewById(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
 
-        val text = findViewById(R.id.text) as EditText
-        val str = intent.getStringExtra("text")
-        if (str.isNotEmpty()) {
-            text.setText(str)
-        }
+        val chapter = Task.chapter!!
 
-        title = intent.getStringExtra("title") ?: "Untitled"
+        text = findViewById(R.id.text) as EditText
+        val str = chapter.text?.text ?: ""
+        if (str.isNotEmpty()) {
+            text.text = str
+        }
+        toggleEditable()
+
+        title = chapter.title
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+    }
+
+    private fun toggleEditable(): Boolean {
+        if (text.keyListener == null) {
+            text.keyListener = text.tag as KeyListener
+            return true
+        } else {
+            text.tag = text.keyListener
+            text.keyListener = null
+            return false
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_chapter_text, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.action_readonly -> {
+                item.setIcon(if (toggleEditable()) R.drawable.ic_unlocked else R.drawable.ic_locked)
+            }
+            else -> return super.onOptionsItemSelected(item)
+        }
+        return true
     }
 
 }

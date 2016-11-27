@@ -15,25 +15,21 @@
 
 package pw.phylame.jem.core;
 
-import static pw.phylame.ycl.util.StringUtils.EMPTY_TEXT;
-import static pw.phylame.ycl.util.StringUtils.join;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
+import lombok.NonNull;
 import lombok.val;
+import pw.phylame.jem.util.M;
 import pw.phylame.jem.util.VariantMap.Validator;
 import pw.phylame.jem.util.Variants;
 import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.jem.util.text.Text;
 import pw.phylame.ycl.util.CollectUtils;
 import pw.phylame.ycl.util.Exceptions;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static pw.phylame.ycl.util.StringUtils.EMPTY_TEXT;
+import static pw.phylame.ycl.util.StringUtils.join;
 
 /**
  * Declares name of attributes supported by Jem for chapter and book.
@@ -80,13 +76,19 @@ public final class Attributes {
         CollectUtils.updateByProperties(attributeTypes, "!pw/phylame/jem/util/attributes.properties");
     }
 
+    public static String titleOf(@NonNull String name) {
+        try {
+            return M.tr("attribute." + name);
+        } catch (MissingResourceException e) {
+            return null;
+        }
+    }
+
     /**
      * Maps specified attribute name for specified variant type.
      *
-     * @param name
-     *            name of attribute
-     * @param type
-     *            name of type
+     * @param name name of attribute
+     * @param type name of type
      */
     public static void mapType(String name, String type) {
         attributeTypes.put(name, Variants.checkTypeName(type));
@@ -95,8 +97,7 @@ public final class Attributes {
     /**
      * Returns type of specified attribute name.
      *
-     * @param name
-     *            name of attribute or {@literal null} if unknown
+     * @param name name of attribute or {@literal null} if unknown
      * @return the type string
      */
     public static String typeOf(String name) {

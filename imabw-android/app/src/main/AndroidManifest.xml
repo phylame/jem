@@ -19,12 +19,29 @@
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
         </activity>
         <activity
             android:name=".activity.TextActivity"
             android:label="@string/title_activity_text"
+            android:parentActivityName=".activity.BookActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="pw.phylame.imabw.activity.BookActivity" />
+        </activity>
+        <activity
+            android:name=".activity.PropertiesActivity"
+            android:label="@string/title_activity_properties"
             android:parentActivityName=".activity.BookActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data

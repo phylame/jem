@@ -9,4 +9,6 @@
 
     <dimen name="book_content_margin">4dp</dimen>
     <dimen name="book_detail_font_size">18sp</dimen>
+
+    <dimen name="text_margin">5dp</dimen>
 </resources>

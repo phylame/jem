@@ -50,4 +50,5 @@
     <string name="file_action_sort_by_date_asc">Date (newer first)</string>
     <string name="file_action_sort_by_date_desc">Date (older first)</string>
     <string name="file_action_show_hidden">Show Hidden Items</string>
+    <string name="file_action_home">Home</string>
 </resources>

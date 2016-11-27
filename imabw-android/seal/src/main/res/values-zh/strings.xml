@@ -41,4 +41,5 @@
         <item quantity="other">选中%1$d项</item>
     </plurals>
     <string name="button_ok">确定</string>
+    <string name="file_action_home">上级</string>
 </resources>

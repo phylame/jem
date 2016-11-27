@@ -1,11 +1,15 @@
 package pw.phylame.android.listng;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.support.annotation.MainThread;
 import android.support.annotation.WorkerThread;
+import android.support.v7.widget.AppCompatTextView;
 import android.util.Pair;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.HorizontalScrollView;
 import android.widget.ListView;
 
 import java.util.ArrayList;
@@ -13,12 +17,13 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 import java.util.Set;
 
 import lombok.val;
 
 public abstract class ListSupport<T extends Item> implements ListView.OnItemClickListener {
+    public static int fastScrollLimit = 20;
+
     private ListView listView;
     private Adapter<T> adapter;
 
@@ -29,9 +34,8 @@ public abstract class ListSupport<T extends Item> implements ListView.OnItemClic
     private T current;
     private final List<T> items = new ArrayList<>();
     private final Set<T> selections = new LinkedHashSet<>();
-    private final Queue<Pair<Integer, Integer>> positions = new LinkedList<>();
+    private final LinkedList<Pair<Integer, Integer>> positions = new LinkedList<>();
 
-    @MainThread
     public ListSupport(ListView listView, boolean asyncFetch, boolean forItem, boolean multiple, T current) {
         this.listView = listView;
         this.forItem = forItem;
@@ -54,17 +58,78 @@ public abstract class ListSupport<T extends Item> implements ListView.OnItemClic
      *
      * @param item the item
      */
-    protected abstract void onChoosing(T item);
+    protected abstract void onItemChosen(T item);
 
-    @MainThread
-    public void refresh() {
-        onLevelChanged(null);
+    protected final void setPathBar(T top,
+                                    ViewGroup pathBar,
+                                    final HorizontalScrollView pathBarHolder,
+                                    float fontSize,
+                                    int padding) {
+        val items = new LinkedList<Pair<T, Pair<Integer, Integer>>>();
+        @SuppressWarnings("unchecked")
+        val iterator = ((LinkedList<Pair<Integer, Integer>>) positions.clone()).descendingIterator();
+        for (T item = current; item != null && !item.equals(top); item = item.getParent()) {
+            items.addFirst(new Pair<>(item, iterator.hasNext() ? iterator.next() : null));
+        }
+        pathBar.removeAllViews();
+        val context = pathBar.getContext();
+        int end = items.size() - 1, i = 0;
+        View button;
+        for (val it : items) {
+            button = createPathButton(context, it, fontSize, padding);
+            button.setTag(i);
+            pathBar.addView(button);
+            if (i++ != end) {
+                pathBar.addView(createPathSeparator(context, fontSize));
+            }
+        }
+        if (pathBarHolder.getVisibility() != View.VISIBLE) {
+            pathBarHolder.setVisibility(View.VISIBLE);
+        }
+        pathBarHolder.post(new Runnable() {
+            @Override
+            public void run() {
+                pathBarHolder.fullScroll(HorizontalScrollView.FOCUS_RIGHT);
+            }
+        });
+    }
+
+    private View createPathButton(Context context,
+                                  final Pair<T, Pair<Integer, Integer>> item,
+                                  float fontSize,
+                                  int padding) {
+        val button = new AppCompatTextView(context);
+        button.setTextSize(fontSize);
+        button.setText(item.first.toString());
+        button.setPadding(0, padding, 0, padding);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (item.first != current) {
+                    // remove unused positions
+                    Pair<Integer, Integer> position = null;
+                    for (int i = (int) v.getTag(), end = positions.size(); i < end; ++i) {
+                        position = positions.removeLast();
+                    }
+                    selections.clear();
+                    current = item.first;
+                    onLevelChanged(position);
+                }
+            }
+        });
+        return button;
+    }
+
+    private View createPathSeparator(Context context, float fontSize) {
+        val text = new AppCompatTextView(context);
+        text.setTextSize(fontSize);
+        text.setText(" > ");
+        return text;
     }
 
     @MainThread
-    public void refresh(T current) {
-        this.current = current;
-        onLevelChanged(null);
+    public void refresh(boolean keepPosition) {
+        onLevelChanged(keepPosition ? null : new Pair<Integer, Integer>(0, null));
     }
 
     public void toggleSelection(T item, Boolean selected) {
@@ -89,26 +154,21 @@ public abstract class ListSupport<T extends Item> implements ListView.OnItemClic
     }
 
     @MainThread
-    public final void gotoItem(int index) {
-        gotoItem(items.get(index));
-    }
-
-    @MainThread
     public final void gotoItem(T item) {
-        current = item;
         selections.clear();
-        positions.offer(getPosition());
-        onLevelChanged(new Pair<Integer, Integer>(0, null));
+        positions.addLast(currentPosition());
+        this.current = item;
+        refresh(false);
     }
 
     @MainThread
-    public void backTop() {
+    public final void backTop() {
         current = current.getParent();
         if (current == null) {
             onTopReached();
         } else {
             selections.clear();
-            onLevelChanged(positions.poll());
+            onLevelChanged(positions.removeLast());
         }
     }
 
@@ -131,6 +191,7 @@ public abstract class ListSupport<T extends Item> implements ListView.OnItemClic
         } else {
             adapter.notifyDataSetChanged();
         }
+        listView.setFastScrollEnabled(size() >= fastScrollLimit);
         gotoPosition(position);
     }
 
@@ -146,12 +207,19 @@ public abstract class ListSupport<T extends Item> implements ListView.OnItemClic
         return items.get(index);
     }
 
-    public T getCurrent() {
+    public final T getCurrent() {
         return current;
     }
 
-    public Set<T> getSelections() {
-        return selections;
+    public final void setCurrent(T current) {
+        positions.clear();
+        selections.clear();
+        this.current = current;
+        refresh(false);
+    }
+
+    public final Set<T> getSelections() {
+        return Collections.unmodifiableSet(selections);
     }
 
     @Override
@@ -160,7 +228,7 @@ public abstract class ListSupport<T extends Item> implements ListView.OnItemClic
         if (item.isGroup()) {
             gotoItem(item);
         } else if (!multiple) {
-            onChoosing(item);
+            onItemChosen(item);
         } else {
             toggleSelection(item, null);
         }
@@ -180,12 +248,12 @@ public abstract class ListSupport<T extends Item> implements ListView.OnItemClic
             try {
                 fetchItems();
                 afterFetching(position);
-            } catch (RuntimeException ignore) {
+            } catch (RuntimeException ignored) {
             }
         }
     }
 
-    private Pair<Integer, Integer> getPosition() {
+    private Pair<Integer, Integer> currentPosition() {
         int index = listView.getFirstVisiblePosition();
         View view = listView.getChildAt(0);
         int top = (view == null) ? 0 : view.getTop();

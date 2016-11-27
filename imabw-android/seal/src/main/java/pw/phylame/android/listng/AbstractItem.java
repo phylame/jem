@@ -12,4 +12,8 @@ public abstract class AbstractItem implements Item {
     public void setSelected(boolean selected) {
         this.selected = selected;
     }
+
+    public static boolean equals(Object a, Object b) {
+        return (a == b) || (a != null && a.equals(b));
+    }
 }

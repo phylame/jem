@@ -17,7 +17,6 @@ package pw.phylame.jem.core;
 
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.Setter;
 import lombok.val;
 import pw.phylame.jem.util.VariantMap;
 import pw.phylame.jem.util.flob.Flob;
@@ -113,9 +112,11 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
      * Content of the chapter.
      */
     @Getter
-    @Setter
-    @NonNull
     private Text text;
+
+    public void setText(@NonNull Text text) {
+        this.text = text;
+    }
 
     // ****************************
     // ** Sub-chapter operations **

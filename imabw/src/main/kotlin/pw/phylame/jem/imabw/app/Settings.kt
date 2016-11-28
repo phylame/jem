@@ -22,9 +22,9 @@ import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.Settings
 import pw.phylame.qaf.ixin.Ixin
 import pw.phylame.ycl.io.IOUtils
-import pw.phylame.ycl.log.Level
+import pw.phylame.ycl.log.LogLevel
 import java.awt.Font
-import java.util.*
+import java.util.Locale
 
 object AppSettings : Settings("$SETTINGS_DIR/settings") {
     override fun reset() {
@@ -39,7 +39,7 @@ object AppSettings : Settings("$SETTINGS_DIR/settings") {
 
     var appLocale: Locale by delegated(Locale.getDefault(), "app.locale")
 
-    var logLevel by delegated(Level.INFO.name, "app.log.level")
+    var logLevel by delegated(LogLevel.INFO.name, "app.log.level")
 
     val debugLevel by delegated(App.Debug.ECHO.name, "app.debug.level")
 

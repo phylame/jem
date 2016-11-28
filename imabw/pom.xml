@@ -27,12 +27,12 @@
     <dependencies>
         <dependency>
             <groupId>pw.phylame.jem</groupId>
-            <artifactId>jem-epm</artifactId>
+            <artifactId>jem-formats</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>pw.phylame.jem</groupId>
-            <artifactId>jem-formats</artifactId>
+            <artifactId>jem-kotlin</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

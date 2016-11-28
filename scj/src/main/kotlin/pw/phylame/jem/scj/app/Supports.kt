@@ -25,6 +25,7 @@ import pw.phylame.jem.epm.EpmManager
 import pw.phylame.jem.epm.util.MakerException
 import pw.phylame.jem.epm.util.ParserException
 import pw.phylame.jem.formats.pmab.PmabOutConfig
+import pw.phylame.jem.title
 import pw.phylame.jem.util.JemException
 import pw.phylame.jem.util.UnsupportedFormatException
 import pw.phylame.jem.util.Variants
@@ -33,7 +34,6 @@ import pw.phylame.jem.util.text.Texts
 import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.iif
 import pw.phylame.qaf.core.tr
-import pw.phylame.ycl.format.Converters
 import pw.phylame.ycl.io.IOUtils
 import pw.phylame.ycl.util.DateUtils
 import pw.phylame.ycl.util.MiscUtils
@@ -41,10 +41,7 @@ import java.io.File
 import java.io.IOException
 import java.lang.System.lineSeparator
 import java.text.ParseException
-import java.util.Collections
-import java.util.HashMap
-import java.util.LinkedList
-import java.util.Locale
+import java.util.*
 
 fun printJemError(e: JemException, file: File, format: String) {
     if (e is ParserException) {
@@ -54,7 +51,7 @@ fun printJemError(e: JemException, file: File, format: String) {
     } else if (e is UnsupportedFormatException) {
         App.error(tr("error.jem.unsupported", format), e)
     } else {
-        App.error("unknown error", e)
+        App.error(tr("error.unknown"), e)
     }
 }
 
@@ -77,25 +74,34 @@ fun setAttributes(chapter: Chapter, attributes: Map<String, Any>): Boolean {
             continue
         }
         val value: Any?
-        when (k) {
-            Attributes.COVER -> {
-                try {
-                    value = Flobs.forURL(IOUtils.resourceFor(str, null), null)
-                } catch (e: IOException) {
-                    App.error(tr("sci.attribute.cover.invalid", str), e)
-                    return false
-                }
+        when (Attributes.typeOf(k)) {
+            Variants.FLOB -> value = try {
+                Flobs.forURL(IOUtils.resourceFor(str, null), null)
+            } catch (e: IOException) {
+                App.error(tr("sci.attribute.file.invalid", str), e)
+                return false
             }
-            Attributes.PUBDATE, Attributes.DATE -> {
-                try {
-                    value = DateUtils.parse(str, DATE_FORMAT)
-                } catch (e: ParseException) {
-                    App.error(tr("sci.attribute.date.invalid", str))
-                    return false
-                }
+            Variants.DATETIME -> value = try {
+                DateUtils.parse(str, DATE_FORMAT)
+            } catch (e: ParseException) {
+                App.error(tr("sci.attribute.date.invalid", str))
+                return false
             }
-            Attributes.INTRO -> value = Texts.forString(str, Texts.PLAIN)
-            Attributes.LANGUAGE -> value = Converters.parse(str, Locale::class.java)
+            Variants.TEXT -> value = Texts.forString(str, Texts.PLAIN)
+            Variants.LOCALE -> value = MiscUtils.parseLocale(str)
+            Variants.INTEGER -> value = try {
+                str.toInt()
+            } catch (e: NumberFormatException) {
+                App.error(tr("sci.attribute.integer.invalid", str))
+                return false
+            }
+            Variants.REAL -> value = try {
+                str.toDouble()
+            } catch (e: NumberFormatException) {
+                App.error(tr("sci.attribute.real.invalid", str))
+                return false
+            }
+            Variants.BOOLEAN -> value = str.toBoolean()
             else -> value = str
         }
         if (value != null) {
@@ -124,15 +130,14 @@ fun prepareArguments(args: MutableMap<String, Any>): MutableMap<String, Any> {
     return args
 }
 
-fun prepareBook(book: Book, tuple: OutTuple): Book? =
-        if (setAttributes(book, tuple.attributes)) {
-            setExtension(book, tuple.extensions)
-            book
-        } else null
+fun prepareBook(book: Book, tuple: OutTuple): Book? = if (setAttributes(book, tuple.attributes)) {
+    setExtension(book, tuple.extensions)
+    book
+} else null
 
 fun saveBook(book: Book, tuple: OutTuple): String? {
     prepareBook(book, tuple) ?: return null
-    val output = tuple.output.iif(tuple.output.isDirectory) { File(it, "${Attributes.getTitle(book)}.${tuple.format}") }
+    val output = tuple.output.iif(tuple.output.isDirectory) { File(it, "${book.title}.${tuple.format}") }
     try {
         EpmManager.writeBook(book, output, tuple.format, prepareArguments(HashMap(tuple.arguments)))
         return output.path
@@ -174,7 +179,7 @@ fun joinBook(tuple: OutTuple): Boolean {
 }
 
 private fun parseIndexes(str: String): IntArray? {
-    val parts = str.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+    val parts = str.split("\\.".toRegex()).dropLastWhile(String::isEmpty).toTypedArray()
     val indices = IntArray(parts.size)
     for (i in parts.indices) {
         val part = parts[i]
@@ -271,7 +276,7 @@ private fun walkTree(chapter: Chapter, prefix: String, keys: Array<String>,
 }
 
 private fun viewToc(chapter: Chapter, keys: Array<String>, indent: String, showOrder: Boolean, showBrackets: Boolean) {
-    println(tr("sci.view.tocTitle", Attributes.getTitle(chapter)))
+    println(tr("sci.view.tocTitle", chapter.title))
     walkTree(chapter, "", keys, false, showOrder, indent, showBrackets)
 }
 
@@ -309,11 +314,11 @@ private fun viewAttribute(chapter: Chapter, keys: Array<String>, sep: String, sh
             val value = chapter.attributes.get(key, null as Any?)
             val str = if (value != null) Variants.printable(value) ?: value.toString() else ""
             if (str.isNotEmpty() || !ignoreEmpty) {
-                lines.add(tr("sci.view.attributeFormat", key, str))
+                lines.add(tr("sci.view.attributeFormat", "${Attributes.titleOf(key) ?: key.capitalize()}($key)", str))
             }
         }
     }
-    if (lines.size === 0) {
+    if (lines.isEmpty()) {
         return
     }
     if (showBrackets) {
@@ -346,7 +351,7 @@ private fun viewChapter(book: Book, name: String): Boolean {
         viewAttribute(MiscUtils.locate(book, indexes), arrayOf(key), lineSeparator(), false, false)
         return true
     } catch (e: IndexOutOfBoundsException) {
-        App.error(tr("error.view.notFoundChapter", index, Attributes.getTitle(book)), e)
+        App.error(tr("error.view.notFoundChapter", index, book.title), e)
         return false
     }
 }

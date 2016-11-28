@@ -18,26 +18,31 @@
 
 package pw.phylame.jem.scj.addons;
 
+import static java.lang.System.out;
+import static pw.phylame.jem.scj.addons.M.tr;
+
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
+
+import org.apache.commons.cli.Option;
+
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 import lombok.val;
-import org.apache.commons.cli.Option;
 import pw.phylame.jem.scj.app.AppKt;
 import pw.phylame.qaf.cli.CLIDelegate;
 import pw.phylame.qaf.cli.Command;
 import pw.phylame.qaf.cli.PropertiesFetcher;
 import pw.phylame.qaf.core.Plugin;
-import pw.phylame.ycl.log.Level;
+import pw.phylame.ycl.log.LogLevel;
 import pw.phylame.ycl.util.Function;
 import pw.phylame.ycl.util.Provider;
 import pw.phylame.ycl.util.StringUtils;
 import pw.phylame.ycl.value.Lazy;
-
-import java.util.*;
-import java.util.Map.Entry;
-
-import static java.lang.System.out;
-import static pw.phylame.jem.scj.addons.M.tr;
 
 public class AppInspector extends AbstractPlugin {
 
@@ -139,7 +144,7 @@ public class AppInspector extends AbstractPlugin {
                         map.put("app.log.level", new Function<String, Boolean>() {
                             @Override
                             public Boolean apply(String i) {
-                                if (Level.forName(i, null) == null) {
+                                if (LogLevel.forName(i, null) == null) {
                                     app.error(tr("logSetter.invalidLevel", i, LogSetter.makeLevelList()));
                                     return false;
                                 }

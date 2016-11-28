@@ -23,11 +23,15 @@ import pw.phylame.jem.imabw.app.ui.Viewer
 import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.lines
 import pw.phylame.qaf.core.tr
-import pw.phylame.qaf.ixin.*
+import pw.phylame.qaf.ixin.Command
+import pw.phylame.qaf.ixin.CommandDispatcher
+import pw.phylame.qaf.ixin.IDelegate
+import pw.phylame.qaf.ixin.Ixin
+import pw.phylame.qaf.ixin.Resource
 import pw.phylame.ycl.io.IOUtils
-import pw.phylame.ycl.log.Level
 import pw.phylame.ycl.log.Log
-import java.util.*
+import pw.phylame.ycl.log.LogLevel
+import java.util.Locale
 
 object Imabw : IDelegate<Viewer>() {
     override fun onStart() {
@@ -35,7 +39,7 @@ object Imabw : IDelegate<Viewer>() {
         App.ensureHomeExisted()
         proxy = CommandDispatcher(arrayOf(this))
 
-        Log.setLevel(Level.forName(AppSettings.logLevel, Level.INFO))
+        Log.setLevel(LogLevel.forName(AppSettings.logLevel, LogLevel.INFO))
         App.debug = App.Debug.valueOf(AppSettings.debugLevel)
         Locale.setDefault(AppSettings.appLocale)
         resource = Resource(RESOURCE_DIR, "$IMAGE_DIR/${UISettings.iconSets}", I18N_DIR, Imabw.javaClass.classLoader)

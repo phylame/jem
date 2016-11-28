@@ -63,7 +63,9 @@ const val OPTION_LIST_LONG = "list-formats"
 const val OPTION_DEBUG_LEVEL = "d"
 const val OPTION_DEBUG_LEVEL_LONG = "debug-level"
 const val OPTION_INPUT_FORMAT = "f"
+const val OPTION_INPUT_FORMAT_LONG = "input-format"
 const val OPTION_OUTPUT_FORMAT = "t"
+const val OPTION_OUTPUT_FORMAT_LONG = "output-format"
 const val OPTION_OUTPUT = "o"
 const val OPTION_EXTRACT = "x"
 const val OPTION_VIEW = "w"
@@ -193,8 +195,9 @@ object SCI : CLIDelegate() {
                 .build(),
                 fetcherOf(OPTION_DEBUG_LEVEL, String::class.java, ::checkDebugLevel)
         )
-        // input m
+        // input format
         addOption(Option.builder(OPTION_INPUT_FORMAT)
+                .longOpt(OPTION_INPUT_FORMAT_LONG)
                 .argName(tr("help.formatName"))
                 .hasArg()
                 .desc(tr("help.inputFormat"))
@@ -238,6 +241,7 @@ object SCI : CLIDelegate() {
         )
         // output format
         addOption(Option.builder(OPTION_OUTPUT_FORMAT)
+                .longOpt(OPTION_OUTPUT_FORMAT_LONG)
                 .argName(tr("help.formatName"))
                 .hasArg()
                 .desc(tr("help.outputFormat", AppConfig.outputFormat))

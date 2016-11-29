@@ -51,6 +51,7 @@
         <module>jem-core</module>
         <module>jem-epm</module>
         <module>jem-formats</module>
+        <module>jem-kotlin</module>
         <module>scj</module>
         <module>imabw</module>
         <module>scj-addons</module>

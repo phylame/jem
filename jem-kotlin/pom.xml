@@ -12,7 +12,7 @@
     </parent>
 
     <artifactId>jem-kotlin</artifactId>
-    <name>Jem Kotlin Support</name>
+    <name>Jem Kotlin</name>
     <description>Jem support for Kotlin</description>
 
     <properties>

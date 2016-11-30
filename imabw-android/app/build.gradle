@@ -47,6 +47,7 @@ dependencies {
     compile('pw.phylame.jem:jem-formats:3.1.1') {
         exclude group: 'xpp3', module: 'xpp3' // use android builtin xpp
     }
+    compile('pw.phylame.jem:jem-kotlin:3.1.1')
     compile project(':seal')
 
 }

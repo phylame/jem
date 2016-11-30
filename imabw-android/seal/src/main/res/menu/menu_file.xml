@@ -7,7 +7,10 @@
         android:icon="@drawable/ic_home"
         android:title="@string/file_action_home"
         app:showAsAction="ifRoom" />
-    <item android:title="@string/file_menu_sort_type">
+    <item
+        android:title="@string/file_menu_sort_type"
+        app:showAsAction="ifRoom"
+        android:icon="@android:drawable/ic_menu_sort_by_size">
         <menu>
             <item
                 android:id="@+id/action_by_name"

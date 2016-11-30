@@ -15,16 +15,17 @@ import pw.phylame.android.listng.ListSupport
 import pw.phylame.android.util.BaseActivity
 import pw.phylame.android.util.UIs
 import pw.phylame.imabw.R
+import pw.phylame.jem.*
 import pw.phylame.jem.core.Book
 import pw.phylame.jem.core.Chapter
 import pw.phylame.jem.epm.EpmManager
-import pw.phylame.jem.util.text.Texts
 import pw.phylame.seal.SealActivity
 import rx.Observable
 import rx.Subscriber
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
 import java.io.File
+import java.util.*
 
 class BookActivity : BaseActivity() {
     companion object {
@@ -99,36 +100,9 @@ class BookActivity : BaseActivity() {
 
     private fun makeSimpleBook(title: String?): Book {
         val book = Book(title ?: getString(R.string.book_default_book_name))
-        book.author = "PW"
-        book.genre = "Magic, WP"
-        val intro = Texts.forString("This is intro of book", Texts.PLAIN)
-        book.intro = intro
-        for (i in 1..10) {
-            val chapter = Chapter("Sub Chapter $i")
-            chapter.intro = intro
-            book.append(chapter)
-            if (i % 3 == 0) {
-                for (j in 1..5) {
-                    val ch = Chapter("${chapter.title}.$j")
-                    chapter.append(ch)
-                    ch.intro = intro
-                    if (j % 2 == 0) {
-                        for (k in 1..5) {
-                            val c = Chapter("${ch.title}.$k")
-                            c.intro = intro
-                            ch.append(c)
-                            for (kk in 3..6) {
-                                val cc = Chapter("${c.title}.$kk")
-                                c.append(cc)
-                                for (kkk in 4..6) {
-                                    cc.append(Chapter("${cc.title}.$kkk"))
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        book.author = ""
+        book.pubdate = Date()
+        addAttributes(book)
         return book
     }
 

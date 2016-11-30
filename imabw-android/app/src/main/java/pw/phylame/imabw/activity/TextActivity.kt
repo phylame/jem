@@ -11,6 +11,7 @@ import android.widget.TextView
 import pw.phylame.android.util.BaseActivity
 import pw.phylame.imabw.R
 import pw.phylame.jem.core.Chapter
+import pw.phylame.jem.title
 
 class TextActivity : BaseActivity() {
 

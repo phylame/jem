@@ -47,7 +47,7 @@ import java.util.*;
  * </p>
  * <ul>
  * <li>attributes map: a string-value map contains information of chapter</li>
- * <li>text text: main text of the chapter, provided by <code>Text</code> text</li>
+ * <li>text text: main text of the chapter, provided by {@code Text} text</li>
  * <li>sub-chapter list: list of sub chapters</li>
  * <li>clean works: task for cleaning resources and others</li>
  * </ul>
@@ -106,7 +106,7 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
      * Attributes of the chapter.
      */
     @Getter
-    private VariantMap attributes = new VariantMap(new HashMap<String, Object>(), new Attributes.AttributeValidator());
+    private VariantMap attributes = new VariantMap(new HashMap<String, Object>(), new Attributes.TypeValidator());
 
     /**
      * Content of the chapter.
@@ -143,7 +143,7 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
     /**
      * Sub-chapters list.
      */
-    protected List<Chapter> chapters = new ArrayList<>();
+    private List<Chapter> chapters = new ArrayList<>();
 
     private Chapter checkChapter(@NonNull Chapter chapter) {
         Validate.require(chapter.getParent() == null, "Chapter already in a certain section: %s", chapter);
@@ -401,12 +401,9 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
      * @return the string
      */
     public String debug() {
-        val b = new StringBuilder()
-                .append(getClass().getSimpleName()).append('@').append(hashCode())
-                .append(": attributes@").append(attributes.hashCode()).append(':').append(attributes);
-        if (text != null) {
-            b.append(", text@").append(text.hashCode()).append(':').append(text);
+        if (text == null) {
+            return String.format("%s@%d: attributes: %s", getClass().getSimpleName(), hashCode(), attributes);
         }
-        return b.toString();
+        return String.format("%s@%d: attributes: %s, text: %s", getClass().getSimpleName(), hashCode(), attributes, text);
     }
 }

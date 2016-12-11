@@ -37,14 +37,4 @@ public class UnsupportedFormatException extends JemException {
         super(message);
         this.format = format;
     }
-
-    public UnsupportedFormatException(String format, String message, Throwable cause) {
-        super(message, cause);
-        this.format = format;
-    }
-
-    public UnsupportedFormatException(String format, Throwable cause) {
-        super(cause);
-        this.format = format;
-    }
 }

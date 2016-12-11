@@ -15,12 +15,6 @@
 
 package pw.phylame.jem.util.text;
 
-import java.io.IOException;
-import java.io.Writer;
-import java.nio.charset.Charset;
-import java.util.Iterator;
-import java.util.List;
-
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -28,10 +22,17 @@ import pw.phylame.jem.util.Variants;
 import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.ycl.io.IOUtils;
 import pw.phylame.ycl.util.Exceptions;
-import pw.phylame.ycl.util.StringUtils;
+
+import java.io.IOException;
+import java.io.Writer;
+import java.nio.charset.Charset;
+import java.util.Iterator;
+import java.util.List;
+
+import static pw.phylame.ycl.util.StringUtils.EMPTY_TEXT;
 
 /**
- * Factory class for creating <code>Text</code> instance.
+ * Factory class for creating {@code Text} instance.
  */
 public final class Texts {
 
@@ -49,11 +50,11 @@ public final class Texts {
     public static final String PLAIN = "plain";
 
     public static Text forEmpty(String type) {
-        return forString(StringUtils.EMPTY_TEXT, type);
+        return forString(EMPTY_TEXT, type);
     }
 
-    public static Text forString(@NonNull CharSequence str, String type) {
-        return new RawText(str, type);
+    public static Text forString(@NonNull CharSequence cs, String type) {
+        return new RawText(cs, type);
     }
 
     public static Text forFlob(@NonNull Flob file, String encoding, String type) {
@@ -67,7 +68,7 @@ public final class Texts {
 
         private final CharSequence text;
 
-        private RawText(@NonNull CharSequence cs, String type) {
+        private RawText(CharSequence cs, String type) {
             super(type);
             this.text = cs;
         }
@@ -86,7 +87,7 @@ public final class Texts {
         private final Flob file;
         private final String encoding;
 
-        private FlobText(@NonNull Flob file, String encoding, String type) {
+        private FlobText(Flob file, String encoding, String type) {
             super(type);
             this.file = file;
             this.encoding = encoding;

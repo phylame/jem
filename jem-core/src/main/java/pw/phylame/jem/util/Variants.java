@@ -47,7 +47,7 @@ public final class Variants {
 
     private static final Map<Class<?>, String> typeMapping = new ConcurrentHashMap<>();
 
-    static {
+    private static void initVariants() {
         try {
             val prop = CollectUtils.propertiesFor("!pw/phylame/jem/util/variants.properties");
             if (prop != null) {
@@ -63,6 +63,10 @@ public final class Variants {
         }
     }
 
+    static {
+        initVariants();
+    }
+
     /**
      * Returns supported type by Jem.
      *
@@ -73,7 +77,21 @@ public final class Variants {
     }
 
     /**
-     * Registers user's type.
+     * Gets readable text for variant type.
+     *
+     * @param type name of variant
+     * @return the text, or {@literal null} if the type is unknown
+     */
+    public static String titleOf(@NonNull String type) {
+        try {
+            return M.tr("variant." + type);
+        } catch (MissingResourceException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Registers user specified type.
      *
      * @param type name of type
      */
@@ -82,12 +100,12 @@ public final class Variants {
             throw new IllegalArgumentException("type cannot be null or empty");
         }
         if (typeNames.contains(type)) {
-            throw Exceptions.forIllegalArgument("type %s registered", type);
+            throw Exceptions.forIllegalArgument("type %s already registered", type);
         }
         typeNames.add(type);
     }
 
-    public static String checkTypeName(String type) {
+    public static String checkType(String type) {
         if (StringUtils.isEmpty(type)) {
             throw new IllegalArgumentException("type cannot be null or empty");
         }
@@ -98,19 +116,19 @@ public final class Variants {
     }
 
     /**
-     * Maps specified type for class.
+     * Maps specified class for variant type.
      *
      * @param clazz the class
      * @param type  name of type
      * @throws NullPointerException     if the class is {@literal null}
-     * @throws IllegalArgumentException if the name of type is empty
+     * @throws IllegalArgumentException if the name of type is invalid
      */
     public static void mapType(@NonNull Class<?> clazz, String type) {
-        typeMapping.put(clazz, checkTypeName(type));
+        typeMapping.put(clazz, checkType(type));
     }
 
     /**
-     * Returns type name of specified object.
+     * Detects the type of specified object.
      *
      * @param obj the object
      * @return the type name or {@literal null} if unknown
@@ -130,23 +148,15 @@ public final class Variants {
         });
     }
 
-    public static String titleOf(@NonNull String type) {
-        try {
-            return M.tr("variant." + type);
-        } catch (MissingResourceException e) {
-            return null;
-        }
-    }
-
     /**
-     * Returns default value of specified type.
+     * Returns default value for specified type.
      *
      * @param type name of type
-     * @return the value or {@literal null} if the type not in jem built-in types
+     * @return the value, or {@literal null} if the type not in jem built-in types
      * @throws IllegalArgumentException if the name of type is empty
      */
     public static Object defaultFor(String type) {
-        switch (checkTypeName(type)) {
+        switch (checkType(type)) {
             case STRING:
                 return StringUtils.EMPTY_TEXT;
             case TEXT:

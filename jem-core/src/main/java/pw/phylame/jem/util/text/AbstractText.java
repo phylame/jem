@@ -26,7 +26,7 @@ import lombok.val;
 import pw.phylame.ycl.util.StringUtils;
 
 /**
- * Abstract class for <code>Text</code>.
+ * Abstract class for {@code Text}.
  */
 public abstract class AbstractText implements Text {
     @Getter

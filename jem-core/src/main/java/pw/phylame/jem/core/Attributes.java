@@ -57,7 +57,7 @@ public final class Attributes {
     public static final String VENDOR = "vendor";
     public static final String WORDS = "words";
 
-    public static class AttributeValidator implements Validator {
+    public static class TypeValidator implements Validator {
         @Override
         public void validate(String name, Object value) throws RuntimeException {
             val type = typeOf(name);
@@ -76,6 +76,12 @@ public final class Attributes {
         CollectUtils.updateByProperties(attributeTypes, "!pw/phylame/jem/util/attributes.properties");
     }
 
+    /**
+     * Gets readable text for attribute name.
+     *
+     * @param name name of attribute
+     * @return the text, or {@literal null} if the name is unknown
+     */
     public static String titleOf(@NonNull String name) {
         try {
             return M.tr("attribute." + name);
@@ -91,17 +97,28 @@ public final class Attributes {
      * @param type name of type
      */
     public static void mapType(String name, String type) {
-        attributeTypes.put(name, Variants.checkTypeName(type));
+        attributeTypes.put(name, Variants.checkType(type));
     }
 
     /**
-     * Returns type of specified attribute name.
+     * Gets the type of specified attribute name.
      *
      * @param name name of attribute or {@literal null} if unknown
      * @return the type string
      */
     public static String typeOf(String name) {
         return attributeTypes.get(name);
+    }
+
+    /**
+     * Returns default value for specfified attribute.
+     *
+     * @param name name of attribute
+     * @return the value, or {@literal null} if the name is unknown
+     */
+    public static Object defaultOf(String name) {
+        val type = typeOf(name);
+        return type == null ? null : Variants.defaultFor(type);
     }
 
     private static final String VALUES_SEPARATOR = ";";

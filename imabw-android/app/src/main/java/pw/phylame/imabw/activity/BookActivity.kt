@@ -3,6 +3,7 @@ package pw.phylame.imabw.activity
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.os.Environment
 import android.support.v7.widget.Toolbar
 import android.util.Log
 import android.util.Pair
@@ -75,6 +76,8 @@ class BookActivity : BaseActivity() {
 
         bookList = BookList(listView)
         newBook()
+
+        println(Environment.getExternalStorageDirectory())
     }
 
     fun chooseFile() {

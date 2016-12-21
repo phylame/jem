@@ -2,9 +2,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <groupId>pw.phylame.util</groupId>
+        <artifactId>common-dependencies</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
     <groupId>pw.phylame.jem</groupId>
     <artifactId>jem-project</artifactId>
-    <version>3.1.1</version>
+    <version>3.1.2</version>
     <packaging>pom</packaging>
 
     <name>Project Jem</name>
@@ -12,39 +18,16 @@
     <url>https://github.com/phylame/jem</url>
     <description>PW's ebook processing toolkit</description>
 
-    <licenses>
-        <license>
-            <name>The Apache Software License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-        </license>
-    </licenses>
-
     <scm>
         <url>https://github.com/phylame/jem</url>
         <connection>scm:git:https://github.com/phylame/jem.git</connection>
         <developerConnection>scm:git:https://github.com/phylame/jem.git</developerConnection>
     </scm>
 
-    <developers>
-        <developer>
-            <id>pw</id>
-            <name>Peng Wan</name>
-            <email>phylame@163.com</email>
-            <timezone>+8</timezone>
-        </developer>
-    </developers>
-
     <properties>
-        <maven.compiler.source>1.7</maven.compiler.source>
-        <maven.compiler.target>1.7</maven.compiler.target>
-        <maven.compiler.debug>true</maven.compiler.debug>
-        <maven.compiler.optimize>true</maven.compiler.optimize>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
         <ycl.version>1.1.0</ycl.version>
+        <qaf.version>1.1.0</qaf.version>
         <xpp3.version>1.1.4c</xpp3.version>
-        <testng.version>6.9.10</testng.version>
-        <lombok.version>1.16.10</lombok.version>
     </properties>
 
     <modules>
@@ -60,65 +43,31 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.testng</groupId>
-                <artifactId>testng</artifactId>
-                <version>${testng.version}</version>
-                <scope>test</scope>
+                <groupId>pw.phylame.util</groupId>
+                <artifactId>ycl</artifactId>
+                <version>${ycl.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.projectlombok</groupId>
+                        <artifactId>lombok</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
-                <groupId>org.projectlombok</groupId>
-                <artifactId>lombok</artifactId>
-                <version>${lombok.version}</version>
-                <scope>provided</scope>
+                <groupId>pw.phylame.qaf</groupId>
+                <artifactId>qaf-cli</artifactId>
+                <version>${qaf.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>pw.phylame.qaf</groupId>
+                <artifactId>qaf-ixin</artifactId>
+                <version>${qaf.version}</version>
             </dependency>
             <dependency>
                 <groupId>xpp3</groupId>
                 <artifactId>xpp3</artifactId>
                 <version>${xpp3.version}</version>
             </dependency>
-            <dependency>
-                <groupId>pw.phylame.util</groupId>
-                <artifactId>ycl</artifactId>
-                <version>${ycl.version}</version>
-            </dependency>
         </dependencies>
     </dependencyManagement>
-
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.3</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-source-plugin</artifactId>
-                    <version>2.4</version>
-                    <configuration>
-                        <attach>true</attach>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <phase>compile</phase>
-                            <goals>
-                                <goal>jar</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
 </project>

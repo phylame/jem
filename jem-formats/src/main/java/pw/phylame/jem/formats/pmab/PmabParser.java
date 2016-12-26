@@ -130,6 +130,17 @@ public class PmabParser extends ZipParser<PmabInConfig> {
         }
     }
 
+    private Object detectValue(String text, String name) throws ParserException {
+        switch (Attributes.typeOf(name)) {
+            case Variants.TEXT:
+                return Texts.forString(text, Texts.PLAIN);
+            case Variants.LOCALE:
+                return EpmUtils.parseLocale(text);
+            default:
+                return text;
+        }
+    }
+
     private Object parseV3Item(String text, Tuple tuple) throws IOException, ParserException {
         val itemType = tuple.itemType;
         Object value;
@@ -138,7 +149,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
         } else {
             val type = firstPartOf(itemType, ';');
             if (type.equals(Variants.STRING)) {
-                value = tuple.itemName.equals(Attributes.LANGUAGE) ? EpmUtils.parseLocale(text) : text;
+                value = detectValue(text, tuple.itemName);
             } else if (type.equals(Variants.DATETIME) || type.equals("date") || type.equals("time")) {
                 value = EpmUtils.parseDate(text, valueOfName(itemType, "format", ";", false, tuple.config.dateFormat));
             } else if (type.startsWith("text/")) {  // text object
@@ -159,7 +170,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
             } else if (type.equals(Variants.BOOLEAN)) {
                 value = Boolean.parseBoolean(text);
             } else {    // store as string
-                value = text;
+                value = detectValue(text, tuple.itemName);
             }
         }
         return value;

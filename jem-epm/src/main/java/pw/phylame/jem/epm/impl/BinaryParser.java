@@ -34,7 +34,7 @@ public abstract class BinaryParser<C extends EpmConfig> extends AbstractParser<R
     }
 
     @Override
-    protected RandomAccessFile open(File file, C config) throws IOException {
+    protected RandomAccessFile openInput(File file, C config) throws IOException {
         return new BufferedRandomAccessFile(file, "r");
     }
 

@@ -23,10 +23,13 @@ import pw.phylame.jem.formats.util.M;
 import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.jem.util.flob.Flobs;
 import pw.phylame.ycl.io.IOUtils;
-import pw.phylame.ycl.util.CollectUtils;
+import pw.phylame.ycl.util.CollectionUtils;
+import pw.phylame.ycl.util.Provider;
 import pw.phylame.ycl.util.StringUtils;
+import pw.phylame.ycl.value.Lazy;
 
 import java.io.IOException;
+import java.lang.reflect.Modifier;
 import java.util.Properties;
 
 /**
@@ -55,28 +58,27 @@ public class StyleProvider {
     public String chapterIntro;
     public String chapterText;
 
-    private static volatile StyleProvider defaultInstance = null;
-
-    public static StyleProvider getDefaults() throws IOException {
-        if (defaultInstance == null) {
-            synchronized (StyleProvider.class) {
-                if (defaultInstance == null) {
-                    loadDefaultInstance();
-                }
-            }
+    private static final Lazy<StyleProvider> defaults = new Lazy<StyleProvider>(new Provider<StyleProvider>() {
+        @Override
+        public StyleProvider provide() throws Exception {
+            return loadDefaultInstance();
         }
-        return defaultInstance;
+    });
+
+    public static StyleProvider getDefaults() {
+        return defaults.get();
     }
 
     public static final String CONFIG_FILE = "!pw/phylame/jem/formats/util/html/default-styles.properties";
 
-    private static void loadDefaultInstance() throws IOException {
-        defaultInstance = new StyleProvider();
-        val prop = CollectUtils.propertiesFor(CONFIG_FILE);
+    private static StyleProvider loadDefaultInstance() throws IOException {
+        val provider = new StyleProvider();
+        val prop = CollectionUtils.propertiesFor(CONFIG_FILE);
         if (prop == null) {
             throw new IOException(M.tr("err.html.loadStyle", CONFIG_FILE));
         }
-        fetchStyles(defaultInstance, prop);
+        fetchStyles(provider, prop);
+        return provider;
     }
 
     public static void fetchStyles(StyleProvider provider, Properties prop) throws IOException {
@@ -89,8 +91,11 @@ public class StyleProvider {
 
         try {
             for (val field : provider.getClass().getFields()) {
+                if (!Modifier.isPublic(field.getModifiers()) || Modifier.isStatic(field.getModifiers())) {
+                    continue;
+                }
                 if (!CharSequence.class.isAssignableFrom(field.getType())) {
-                    return;
+                    continue;
                 }
                 val value = prop.getProperty(field.getName());
                 if (StringUtils.isNotEmpty(value)) {

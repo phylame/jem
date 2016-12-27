@@ -40,8 +40,7 @@ public class Book extends Chapter {
     /**
      * Constructs instance with specified title.
      *
-     * @param title
-     *            the title of book
+     * @param title the title of book
      */
     public Book(String title) {
         super(title);
@@ -50,12 +49,9 @@ public class Book extends Chapter {
     /**
      * Constructs instance with specified title and author.
      *
-     * @param title
-     *            the title string
-     * @param author
-     *            the author string
-     * @throws NullPointerException
-     *             if the argument list contains <code>null</code>
+     * @param title  the title string
+     * @param author the author string
+     * @throws NullPointerException if the argument list contains <code>null</code>
      */
     public Book(String title, String author) {
         super(title);
@@ -92,6 +88,6 @@ public class Book extends Chapter {
 
     @Override
     public String debug() {
-        return super.debug() + ", extensions@" + extensions.hashCode() + ": " + extensions;
+        return super.debug() + ", extensions: " + extensions;
     }
 }

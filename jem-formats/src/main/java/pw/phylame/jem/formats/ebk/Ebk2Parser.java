@@ -159,6 +159,8 @@ public class Ebk2Parser extends BinaryParser<NonConfig> {
 
         private int chapterCount;
         private int blockCount;
+
+        @SuppressWarnings("unused")
         private int mediaCount;
 
         private final List<TextBlock> blocks = new ArrayList<>();

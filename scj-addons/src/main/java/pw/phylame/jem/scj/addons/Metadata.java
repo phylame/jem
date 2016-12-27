@@ -38,6 +38,7 @@ public class Metadata {
 
     public Map<String, Object> toMap() {
         val map = new LinkedHashMap<String, Object>();
+        map.put("id", id);
         map.put("name", name);
         map.put("version", version);
         map.put("vendor", vendor);

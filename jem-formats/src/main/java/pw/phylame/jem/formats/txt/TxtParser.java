@@ -50,7 +50,7 @@ public class TxtParser extends AbstractParser<Reader, TxtInConfig> {
     }
 
     @Override
-    protected Reader open(File file, TxtInConfig config) throws IOException {
+    protected Reader openInput(File file, TxtInConfig config) throws IOException {
         val in = new FileInputStream(file);
         try {
             return new BufferedReader(new InputStreamReader(in, config.encoding));

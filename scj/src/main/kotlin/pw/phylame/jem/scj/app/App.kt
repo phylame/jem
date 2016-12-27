@@ -18,9 +18,21 @@
 
 package pw.phylame.jem.scj.app
 
-import org.apache.commons.cli.*
+import org.apache.commons.cli.AlreadySelectedException
+import org.apache.commons.cli.HelpFormatter
+import org.apache.commons.cli.MissingArgumentException
+import org.apache.commons.cli.MissingOptionException
+import org.apache.commons.cli.Option
+import org.apache.commons.cli.OptionGroup
+import org.apache.commons.cli.ParseException
+import org.apache.commons.cli.UnrecognizedOptionException
 import pw.phylame.jem.epm.EpmManager
-import pw.phylame.qaf.cli.*
+import pw.phylame.jem.util.Build
+import pw.phylame.qaf.cli.CLIDelegate
+import pw.phylame.qaf.cli.Command
+import pw.phylame.qaf.cli.ListFetcher
+import pw.phylame.qaf.cli.PropertiesFetcher
+import pw.phylame.qaf.cli.fetcherOf
 import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.Settings
 import pw.phylame.qaf.core.Translator
@@ -28,12 +40,14 @@ import pw.phylame.qaf.core.tr
 import pw.phylame.ycl.io.IOUtils
 import pw.phylame.ycl.io.PathUtils
 import pw.phylame.ycl.log.Log
-import pw.phylame.ycl.util.CollectUtils
+import pw.phylame.ycl.util.CollectionUtils
 import java.io.File
-import java.util.*
+import java.util.Calendar
+import java.util.HashMap
+import java.util.Locale
 
 const val NAME = "scj"
-const val VERSION = "3.1.1"
+val VERSION = Build.VERSION
 
 const val I18N_NAME = "pw/phylame/jem/scj/res/i18n/scj"
 const val DATE_FORMAT = "yyyy-M-d"
@@ -83,7 +97,7 @@ object AppConfig : Settings() {
     override fun reset() {
         super.reset()
         comment = "Configurations of PW's SCJ v$VERSION"
-        val prop = CollectUtils.propertiesFor(SETTING_TEMPLATE_PATH, AppConfig.javaClass.classLoader)
+        val prop = CollectionUtils.propertiesFor(SETTING_TEMPLATE_PATH, AppConfig.javaClass.classLoader)
         if (prop != null) {
             @Suppress("unchecked_cast")
             update(prop as Map<String, String>)
@@ -161,7 +175,7 @@ object SCI : CLIDelegate() {
         if (AppConfig.pluginEnable) {
             App.loadPlugins(blacklist)
         } else {
-            Log.i(TAG, "plugin is not enable")
+            Log.d(TAG, "plugin is not enable")
         }
     }
 

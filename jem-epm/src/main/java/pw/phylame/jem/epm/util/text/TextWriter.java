@@ -23,7 +23,7 @@ package pw.phylame.jem.epm.util.text;
  */
 public interface TextWriter {
     // title or joined title if joinTitles if enable
-    void startChapter(String title) throws Exception;
+    void beginChapter(String title) throws Exception;
 
     TextWriter write(String text) throws Exception;
 

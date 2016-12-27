@@ -157,7 +157,7 @@ object History {
 
     val items: Sequence<String> get() = histories.asSequence()
 
-    fun insert(file: File, updating: Boolean = false) {
+    fun append(file: File, updating: Boolean = false) {
         if (!AppSettings.historyEnable) {
             return
         }
@@ -318,7 +318,7 @@ object Manager {
         if (task != null) {
             task.cleanup()
             if (task.source != null) {
-                History.insert(task.source, false)
+                History.append(task.source, false)
             }
         }
         App.exit(0)

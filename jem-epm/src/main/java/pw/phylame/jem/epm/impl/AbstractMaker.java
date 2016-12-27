@@ -15,17 +15,20 @@
 
 package pw.phylame.jem.epm.impl;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Map;
+
 import lombok.NonNull;
-import lombok.Synchronized;
 import lombok.val;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.epm.Maker;
 import pw.phylame.jem.epm.util.MakerException;
 import pw.phylame.jem.epm.util.config.EpmConfig;
 import pw.phylame.jem.util.JemException;
-
-import java.io.*;
-import java.util.Map;
 
 public abstract class AbstractMaker<C extends EpmConfig> extends EpmBase<C> implements Maker {
 
@@ -36,7 +39,6 @@ public abstract class AbstractMaker<C extends EpmConfig> extends EpmBase<C> impl
     public abstract void make(Book book, OutputStream output, C config) throws IOException, MakerException;
 
     @Override
-    @Synchronized
     public final void make(@NonNull Book book, @NonNull File file, Map<String, Object> args) throws IOException, JemException {
         try (val out = new BufferedOutputStream(new FileOutputStream(file))) {
             make(book, out, fetchConfig(args));

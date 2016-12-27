@@ -8,7 +8,7 @@ import pw.phylame.qaf.cli.Command;
 import pw.phylame.qaf.cli.Initializer;
 import pw.phylame.ycl.io.IOUtils;
 import pw.phylame.ycl.log.Log;
-import pw.phylame.ycl.util.CollectUtils;
+import pw.phylame.ycl.util.CollectionUtils;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -42,7 +42,7 @@ public class DisablePlugin extends AbstractPlugin implements Initializer, Comman
         if (paths != null && paths.length > 0) {
             val set = new LinkedHashSet<String>();
             try (val reader = new FileReader(config.getBlacklist())) {
-                CollectUtils.extend(set, IOUtils.linesOf(reader, true));
+                CollectionUtils.extend(set, IOUtils.linesOf(reader, true));
                 for (val path : paths) {
                     set.add(path);
                 }

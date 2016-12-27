@@ -24,7 +24,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Key in args for finding value to fields in {@code EpmConfig}.
+ * Annotation for fields of {@code EpmConfig} that can be fetched value from argument map.
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)

@@ -32,7 +32,7 @@ import pw.phylame.jem.util.UnsupportedFormatException;
 import pw.phylame.ycl.io.IOUtils;
 import pw.phylame.ycl.io.PathUtils;
 import pw.phylame.ycl.log.Log;
-import pw.phylame.ycl.util.CollectUtils;
+import pw.phylame.ycl.util.CollectionUtils;
 import pw.phylame.ycl.util.Implementor;
 
 public final class EpmManager {
@@ -59,7 +59,7 @@ public final class EpmManager {
     /**
      * Name of system property to auto load customized parsers and parsers.
      */
-    public static final String AUTO_LOAD_CUSTOMIZED_KEY = "jem.emp.autoLoad";
+    public static final String AUTO_LOAD_CUSTOMIZED_KEY = "jem.epm.autoLoad";
 
     /**
      * Holds registered {@code Parser} class information.
@@ -275,7 +275,7 @@ public final class EpmManager {
         if (current == null) {
             EpmManager.extensions.put(name, current = new HashSet<>());
         }
-        if (CollectUtils.isEmpty(extensions)) {
+        if (CollectionUtils.isEmpty(extensions)) {
             current.add(name);
         } else {
             current.addAll(extensions);
@@ -413,7 +413,7 @@ public final class EpmManager {
                     String[] parts = e.getValue().toString().split(NAME_EXTENSION_SEPARATOR, 2);
                     factory.register(name, parts[0]);
                     if (parts.length > 1) {
-                        mapExtensions(name, CollectUtils.setOf(parts[1].toLowerCase().split(EXTENSION_SEPARATOR)));
+                        mapExtensions(name, CollectionUtils.setOf(parts[1].toLowerCase().split(EXTENSION_SEPARATOR)));
                     } else {
                         mapExtensions(name, null);
                     }

@@ -18,10 +18,23 @@
 
 package pw.phylame.jem.formats.pmab;
 
-import lombok.NonNull;
-import lombok.val;
+import static pw.phylame.jem.epm.util.xml.XmlUtils.attributeOf;
+import static pw.phylame.jem.epm.util.xml.XmlUtils.newPullParser;
+import static pw.phylame.ycl.util.StringUtils.firstPartOf;
+import static pw.phylame.ycl.util.StringUtils.isEmpty;
+import static pw.phylame.ycl.util.StringUtils.isNotEmpty;
+import static pw.phylame.ycl.util.StringUtils.valueOfName;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.zip.ZipFile;
+
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
+
+import lombok.NonNull;
+import lombok.val;
 import pw.phylame.jem.core.Attributes;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.core.Chapter;
@@ -37,15 +50,6 @@ import pw.phylame.jem.util.flob.Flobs;
 import pw.phylame.jem.util.text.Text;
 import pw.phylame.jem.util.text.Texts;
 import pw.phylame.ycl.log.Log;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.zip.ZipFile;
-
-import static pw.phylame.jem.epm.util.xml.XmlUtils.attributeOf;
-import static pw.phylame.jem.epm.util.xml.XmlUtils.newPullParser;
-import static pw.phylame.ycl.util.StringUtils.*;
 
 /**
  * PMAB e-book parser.
@@ -100,7 +104,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
                         } else if (version == 2) {
                             hasText = startPBMv2(tag, tuple);
                         } else if (tag.equals("pbm")) {
-                            tuple.pbmVersion = version = getVersion(xpp, "pmab.parse.unsupportedPBM");
+                            version = getVersion(xpp, "pmab.parse.unsupportedPBM");
                         } else {
                             hasText = false;
                         }
@@ -131,7 +135,11 @@ public class PmabParser extends ZipParser<PmabInConfig> {
     }
 
     private Object detectValue(String text, String name) throws ParserException {
-        switch (Attributes.typeOf(name)) {
+        val type = Attributes.typeOf(name);
+        if (type == null) {
+            return text;
+        }
+        switch (type) {
             case Variants.TEXT:
                 return Texts.forString(text, Texts.PLAIN);
             case Variants.LOCALE:
@@ -463,8 +471,6 @@ public class PmabParser extends ZipParser<PmabInConfig> {
             this.zip = zip;
             this.config = config;
         }
-
-        private int pbmVersion, pbcVersion;
 
         // PBM 3 data
         private String itemName, itemType;      // item attribute

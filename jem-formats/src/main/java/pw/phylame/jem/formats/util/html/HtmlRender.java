@@ -24,7 +24,7 @@ import pw.phylame.jem.epm.util.MakerException;
 import pw.phylame.jem.epm.util.xml.XmlConfig;
 import pw.phylame.jem.epm.util.xml.XmlRender;
 import pw.phylame.jem.util.text.Text;
-import pw.phylame.ycl.util.CollectUtils;
+import pw.phylame.ycl.util.CollectionUtils;
 import pw.phylame.ycl.util.StringUtils;
 import pw.phylame.ycl.util.Validate;
 
@@ -110,8 +110,8 @@ public class HtmlRender {
         }
 
         if (intro != null) {
-            xmlRender.startTag("div").attribute("class", htmlConfig.style.bookTitle);
-            xmlRender.startTag("h1")
+            xmlRender.beginTag("div").attribute("class", htmlConfig.style.bookTitle);
+            xmlRender.beginTag("h1")
                     .text(bookTitle)
                     .endTag();
             xmlRender.endTag();
@@ -212,10 +212,10 @@ public class HtmlRender {
      * </div>
      */
     private void writeContents(List<Link> links, String style) throws IOException {
-        xmlRender.startTag("div").attribute("class", style);
+        xmlRender.beginTag("div").attribute("class", style);
         for (val link : links) {
-            xmlRender.startTag("p");
-            xmlRender.startTag("a")
+            xmlRender.beginTag("p");
+            xmlRender.beginTag("a")
                     .attribute("href", link.href)
                     .text(link.title)
                     .endTag();
@@ -246,12 +246,12 @@ public class HtmlRender {
      */
     private void writeText(Text text, String style) throws IOException {
         val lines = text.getLines(htmlConfig.skipEmpty);
-        if (CollectUtils.isEmpty(lines)) {
+        if (CollectionUtils.isEmpty(lines)) {
             return;
         }
-        xmlRender.startTag("div").attribute("class", style);
+        xmlRender.beginTag("div").attribute("class", style);
         for (val line : lines) {
-            xmlRender.startTag("p").text(StringUtils.trimmed(line)).endTag();
+            xmlRender.beginTag("p").text(StringUtils.trimmed(line)).endTag();
         }
         xmlRender.endTag();
     }
@@ -262,8 +262,8 @@ public class HtmlRender {
      * </div>
      */
     private void writeImage(String href, String alt, String style) throws IOException {
-        xmlRender.startTag("div").attribute("class", style);
-        xmlRender.startTag("img").attribute("src", href);
+        xmlRender.beginTag("div").attribute("class", style);
+        xmlRender.beginTag("img").attribute("src", href);
         xmlRender.attribute("alt", alt);
         xmlRender.endTag();
         xmlRender.endTag();
@@ -275,22 +275,22 @@ public class HtmlRender {
      * </div>
      */
     private void writeTitle(String title, String style) throws IOException {
-        xmlRender.startTag("div").attribute("class", style);
-        xmlRender.startTag("h3").text(title).endTag();
+        xmlRender.beginTag("div").attribute("class", style);
+        xmlRender.beginTag("h3").text(title).endTag();
         xmlRender.endTag();
     }
 
     private void beginHtml(String title) throws IOException {
-        xmlRender.startXml();
+        xmlRender.beginXml();
         xmlRender.docdecl("html", DT_ID, DT_URI);
-        xmlRender.startTag("html");
+        xmlRender.beginTag("html");
         xmlRender.attribute("xmlns", NAMESPACE);
         xmlRender.attribute("xml:lang", htmlConfig.htmlLanguage);
 
         // head
-        xmlRender.startTag("head");
+        xmlRender.beginTag("head");
 
-        xmlRender.startTag("meta")
+        xmlRender.beginTag("meta")
                 .attribute("http-equiv", "Content-Type")
                 .attribute("content", "text/html; charset=" + htmlConfig.encoding)
                 .endTag();
@@ -298,7 +298,7 @@ public class HtmlRender {
         // custom meta info
         if (htmlConfig.metaInfo != null && !htmlConfig.metaInfo.isEmpty()) {
             for (val entry : htmlConfig.metaInfo.entrySet()) {
-                xmlRender.startTag("meta")
+                xmlRender.beginTag("meta")
                         .attribute("name", entry.getKey())
                         .attribute("content", entry.getValue())
                         .endTag();
@@ -306,18 +306,18 @@ public class HtmlRender {
         }
 
         // CSS link
-        xmlRender.startTag("link")
+        xmlRender.beginTag("link")
                 .attribute("type", "text/css")
                 .attribute("rel", "stylesheet")
                 .attribute("href", htmlConfig.cssHref)
                 .endTag();
 
         // html title
-        xmlRender.startTag("title").text(title).endTag();
+        xmlRender.beginTag("title").text(title).endTag();
 
         xmlRender.endTag(); // head
 
-        xmlRender.startTag("body");
+        xmlRender.beginTag("body");
     }
 
     private void endHtml() throws IOException {

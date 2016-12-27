@@ -25,8 +25,11 @@ import pw.phylame.jem.epm.util.E;
 import pw.phylame.jem.epm.util.M;
 import pw.phylame.ycl.format.Converters;
 import pw.phylame.ycl.log.Log;
-import pw.phylame.ycl.util.CollectUtils;
+import pw.phylame.ycl.util.CollectionUtils;
+import pw.phylame.ycl.util.Function;
+import pw.phylame.ycl.util.Reflections;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Map;
 
@@ -45,7 +48,7 @@ public final class ConfigUtils {
     }
 
     public static <C extends EpmConfig> C fetchConfig(Map<String, Object> m, String prefix, @NonNull Class<C> clazz) throws BadConfigException {
-        if (CollectUtils.isEmpty(m)) {
+        if (CollectionUtils.isEmpty(m)) {
             return defaultConfig(clazz);
         }
         C config = null;
@@ -86,22 +89,24 @@ public final class ConfigUtils {
 
     @SuppressWarnings("unchecked")
     private static void fetchFields(EpmConfig config, Map<String, Object> m, String prefix) throws BadConfigException {
-        val fields = config.getClass().getFields();
+        val fields = Reflections.getFields(config.getClass(), new Function<Field, Boolean>() {
+            @Override
+            public Boolean apply(Field field) {
+                int mod = field.getModifiers();
+                return Modifier.isPublic(mod) && !Modifier.isStatic(mod);
+            }
+        });
         for (val field : fields) {
             val configured = field.getAnnotation(Configured.class);
             if (configured == null) {
-                Log.i(TAG, "field {0} is not configured", field.getName());
+                Log.d(TAG, "field {0} is not configured", field.getName());
                 continue;
-            }
-            if (Modifier.isStatic(field.getModifiers())) {
-                throw E.forBadConfig(configured.value(), null,
-                        M.tr("err.config.inaccessible", field.getName(), config.getClass(), "static field is not permitted with @Configured"));
             }
             String key = configured.value();
             if (prefix != null) {
                 key = prefix + key;
             }
-            Log.i(TAG, "key for field {0} is {1}", field.getName(), key);
+            Log.t(TAG, "key for field {0} is {1}", field.getName(), key);
             val type = field.getType();
             try {
                 Object value = fetchObject(m, key, type, null);
@@ -119,7 +124,7 @@ public final class ConfigUtils {
                 throw E.forBadConfig(key, null, M.tr("err.config.inaccessible", config.getClass(), field.getName(), e.getMessage()));
             }
         }
-        if (fields.length > 0 && config instanceof AdjustableConfig) {
+        if (!fields.isEmpty() && config instanceof AdjustableConfig) {
             ((AdjustableConfig) config).adjust();
         }
     }

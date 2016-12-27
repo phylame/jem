@@ -59,17 +59,17 @@ class OPF_2_0 implements OpfWriter {
                       OutTuple tuple) throws IOException, MakerException {
         this.render = tuple.render;
         this.config = tuple.config;
-        render.startXml();
-        render.startTag("package").attribute("version", OPF_VERSION_2);
+        render.beginXml();
+        render.beginTag("package").attribute("version", OPF_VERSION_2);
         render.attribute("unique-identifier", BOOK_ID_NAME);
         render.attribute("xmlns", OPF_XML_NS);
 
         writeMetadata(tuple.book, coverID);
 
         // manifest
-        render.startTag("manifest");
+        render.beginTag("manifest");
         for (Resource resource : resources) {
-            render.startTag("item")
+            render.beginTag("item")
                     .attribute("id", resource.id)
                     .attribute("href", resource.href)
                     .attribute("media-type", resource.mediaType)
@@ -78,9 +78,9 @@ class OPF_2_0 implements OpfWriter {
         render.endTag();
 
         // spine
-        render.startTag("spine").attribute("toc", ncxID);
+        render.beginTag("spine").attribute("toc", ncxID);
         for (val item : spines) {
-            render.startTag("itemref").attribute("idref", item.idref);
+            render.beginTag("itemref").attribute("idref", item.idref);
             if (!item.linear) {
                 render.attribute("linear", "no");
             }
@@ -91,9 +91,9 @@ class OPF_2_0 implements OpfWriter {
         }
         render.endTag();
         // guide
-        render.startTag("guide");
+        render.beginTag("guide");
         for (val item : guides) {
-            render.startTag("reference")
+            render.beginTag("reference")
                     .attribute("href", item.href)
                     .attribute("type", item.type)
                     .attribute("title", item.title)
@@ -106,61 +106,61 @@ class OPF_2_0 implements OpfWriter {
     }
 
     private void writeMetadata(Book book, String coverID) throws IOException, MakerException {
-        render.startTag("metadata");
+        render.beginTag("metadata");
         render.attribute("xmlns:dc", DC_XML_NS).attribute("xmlns:opf", OPF_XML_NS);
         addDcmi(book, config.uuid, coverID);
         render.endTag();
     }
 
     private void addDcmi(Book book, String uuid, String coverID) throws IOException, MakerException {
-        render.startTag("dc:identifier").attribute("id", BOOK_ID_NAME);
+        render.beginTag("dc:identifier").attribute("id", BOOK_ID_NAME);
         render.attribute("opf:scheme", "uuid").text(uuid).endTag();
 
-        render.startTag("dc:title").text(Attributes.getTitle(book)).endTag();
+        render.beginTag("dc:title").text(Attributes.getTitle(book)).endTag();
 
         String value = Attributes.getAuthor(book);
         if (StringUtils.isNotEmpty(value)) {
-            render.startTag("dc:creator");
+            render.beginTag("dc:creator");
             render.attribute("opf:role", "aut").text(value).endTag();
         }
 
         value = Attributes.getGenre(book);
         if (StringUtils.isNotEmpty(value)) {
-            render.startTag("dc:type").text(value).endTag();
+            render.beginTag("dc:type").text(value).endTag();
         }
 
         value = Attributes.getKeywords(book);
         if (StringUtils.isNotEmpty(value)) {
-            render.startTag("dc:subject").text(value).endTag();
+            render.beginTag("dc:subject").text(value).endTag();
         }
 
         val intro = Attributes.getIntro(book);
         if (intro != null) {
             val text = intro.getText();
             if (StringUtils.isNotEmpty(text)) {
-                render.startTag("dc:description").text(text).endTag();
+                render.beginTag("dc:description").text(text).endTag();
             }
         }
 
         value = Attributes.getPublisher(book);
         if (StringUtils.isNotEmpty(value)) {
-            render.startTag("dc:publisher").text(value).endTag();
+            render.beginTag("dc:publisher").text(value).endTag();
         }
 
         if (coverID != null) {
-            render.startTag("meta").attribute("name", "cover").attribute("content", coverID).endTag();
+            render.beginTag("meta").attribute("name", "cover").attribute("content", coverID).endTag();
         }
 
         val date = Attributes.getDate(book);
         if (date != null) {
-            render.startTag("dc:date")
+            render.beginTag("dc:date")
                     .attribute("opf:event", "creation")
                     .text(DateUtils.format(date, config.dateFormat))
                     .endTag();
 
             val today = new Date();
             if (!today.equals(date)) {
-                render.startTag("dc:date")
+                render.beginTag("dc:date")
                         .attribute("opf:event", "modification")
                         .text(DateUtils.format(today, config.dateFormat))
                         .endTag();
@@ -169,23 +169,23 @@ class OPF_2_0 implements OpfWriter {
 
         val language = Attributes.getLanguage(book);
         if (language != null) {
-            render.startTag("dc:language").text(Converters.render(language, Locale.class)).endTag();
+            render.beginTag("dc:language").text(Converters.render(language, Locale.class)).endTag();
         }
 
         value = Attributes.getRights(book);
         if (StringUtils.isNotEmpty(value)) {
-            render.startTag("dc:rights").text(value).endTag();
+            render.beginTag("dc:rights").text(value).endTag();
         }
 
         value = Attributes.getVendor(book);
         if (StringUtils.isNotEmpty(value)) {
-            render.startTag("dc:contributor").attribute("opf:role", "bkp").text(value).endTag();
+            render.beginTag("dc:contributor").attribute("opf:role", "bkp").text(value).endTag();
         }
 
         for (val key : OPTIONAL_METADATA) {
             value = book.getAttributes().get(key, "");
             if (StringUtils.isNotEmpty(value)) {
-                render.startTag("dc:" + key).text(value).endTag();
+                render.beginTag("dc:" + key).text(value).endTag();
             }
         }
     }

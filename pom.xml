@@ -1,5 +1,5 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -57,11 +57,23 @@
                 <groupId>pw.phylame.qaf</groupId>
                 <artifactId>qaf-cli</artifactId>
                 <version>${qaf.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>pw.phylame.util</groupId>
+                        <artifactId>ycl</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>pw.phylame.qaf</groupId>
                 <artifactId>qaf-ixin</artifactId>
                 <version>${qaf.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>pw.phylame.util</groupId>
+                        <artifactId>ycl</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>xpp3</groupId>

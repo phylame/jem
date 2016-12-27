@@ -41,7 +41,9 @@ import java.io.File
 import java.io.IOException
 import java.lang.System.lineSeparator
 import java.text.ParseException
-import java.util.*
+import java.util.Collections
+import java.util.HashMap
+import java.util.LinkedList
 
 fun printJemError(e: JemException, file: File, format: String) {
     if (e is ParserException) {
@@ -66,7 +68,7 @@ fun openBook(tuple: InTuple): Book? {
     return null
 }
 
-fun setAttributes(chapter: Chapter, attributes: Map<String, Any>): Boolean {
+fun setAttributes(chapter: Chapter, attributes: Map<String, *>): Boolean {
     for ((k, v) in attributes) {
         val str = v.toString()
         if (str.isEmpty()) {
@@ -111,7 +113,7 @@ fun setAttributes(chapter: Chapter, attributes: Map<String, Any>): Boolean {
     return true
 }
 
-fun setExtension(book: Book, extensions: Map<String, Any>) {
+fun setExtension(book: Book, extensions: Map<String, *>) {
     for ((k, v) in extensions) {
         val str = v.toString()
         if (str.isEmpty()) {
@@ -184,7 +186,7 @@ private fun parseIndexes(str: String): IntArray? {
     for (i in parts.indices) {
         val part = parts[i]
         try {
-            var n = Integer.parseInt(part)
+            var n = part.toInt()
             if (n == 0) {
                 App.error(tr("sci.invalidIndexes", str))
                 return null

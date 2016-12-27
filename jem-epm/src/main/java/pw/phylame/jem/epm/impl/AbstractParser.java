@@ -15,8 +15,12 @@
 
 package pw.phylame.jem.epm.impl;
 
+import java.io.Closeable;
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
+
 import lombok.NonNull;
-import lombok.Synchronized;
 import lombok.val;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.epm.Parser;
@@ -26,29 +30,23 @@ import pw.phylame.jem.epm.util.ParserException;
 import pw.phylame.jem.epm.util.config.EpmConfig;
 import pw.phylame.jem.util.JemException;
 
-import java.io.Closeable;
-import java.io.File;
-import java.io.IOException;
-import java.util.Map;
-
 public abstract class AbstractParser<I extends Closeable, C extends EpmConfig> extends EpmBase<C> implements Parser {
 
     protected AbstractParser(String name, Class<C> clazz) {
         super(name, clazz);
     }
 
-    protected abstract I open(File file, C config) throws IOException;
+    protected abstract I openInput(File file, C config) throws IOException;
 
     protected abstract Book parse(I input, C config) throws IOException, ParserException;
 
     @Override
-    @Synchronized
     public final Book parse(@NonNull File file, Map<String, Object> args) throws IOException, JemException {
         if (!file.exists()) {
             throw E.forFileNotFound("No such file: %s", file.getPath());
         }
         val config = fetchConfig(args);
-        val input = open(file, config);
+        val input = openInput(file, config);
         if (input == null) {
             throw E.forParser("'open(File, C)' of '%s' returned null", getClass().getName());
         }

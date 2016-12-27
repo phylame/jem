@@ -34,7 +34,7 @@ import pw.phylame.jem.util.text.AbstractText;
 import pw.phylame.jem.util.text.Texts;
 import pw.phylame.ycl.io.PathUtils;
 import pw.phylame.ycl.io.ZLibUtils;
-import pw.phylame.ycl.util.CollectUtils;
+import pw.phylame.ycl.util.CollectionUtils;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -361,7 +361,7 @@ public class UmdParser extends BinaryParser<NonConfig> {
         @SneakyThrows({IOException.class, DataFormatException.class})
         @Override
         public List<String> getLines(boolean skipEmpty) {
-            return CollectUtils.listOf(rawText().split(UMD.UMD_LINE_FEED));
+            return CollectionUtils.listOf(rawText().split(UMD.UMD_LINE_FEED));
         }
     }
 }

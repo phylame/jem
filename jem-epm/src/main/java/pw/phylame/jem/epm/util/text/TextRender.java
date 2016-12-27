@@ -24,7 +24,7 @@ import pw.phylame.jem.core.Attributes;
 import pw.phylame.jem.core.Chapter;
 import pw.phylame.jem.util.text.Text;
 import pw.phylame.jem.util.text.Texts;
-import pw.phylame.ycl.util.CollectUtils;
+import pw.phylame.ycl.util.CollectionUtils;
 
 import java.util.LinkedList;
 
@@ -62,7 +62,7 @@ public final class TextRender {
 
     private static int renderLines(Text text, TextWriter writer, TextConfig config, boolean prependNL) throws Exception {
         val lines = text.getLines(config.skipEmptyLine);
-        if (CollectUtils.isEmpty(lines)) {
+        if (CollectionUtils.isEmpty(lines)) {
             return 0;
         }
         int ix = 1, size = lines.size();
@@ -127,7 +127,7 @@ public final class TextRender {
         }
 
         @Override
-        public void startChapter(String title) throws Exception {
+        public void beginChapter(String title) throws Exception {
         }
 
         @Override
@@ -176,7 +176,7 @@ public final class TextRender {
             val title = config.joinTitles
                     ? join(config.titleSeparator, titleStack)
                     : Attributes.getTitle(chapter);
-            writer.startChapter(title);
+            writer.beginChapter(title);
 
             // title
             boolean titleWritten = false;

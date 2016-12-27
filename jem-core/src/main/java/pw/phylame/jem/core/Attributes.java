@@ -22,7 +22,7 @@ import pw.phylame.jem.util.VariantMap.Validator;
 import pw.phylame.jem.util.Variants;
 import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.jem.util.text.Text;
-import pw.phylame.ycl.util.CollectUtils;
+import pw.phylame.ycl.util.CollectionUtils;
 import pw.phylame.ycl.util.Exceptions;
 
 import java.util.*;
@@ -73,7 +73,7 @@ public final class Attributes {
     private static final Map<String, String> attributeTypes = new ConcurrentHashMap<>();
 
     static {
-        CollectUtils.updateByProperties(attributeTypes, "!pw/phylame/jem/util/attributes.properties");
+        CollectionUtils.updateByProperties(attributeTypes, "!pw/phylame/jem/util/attributes.properties");
     }
 
     /**

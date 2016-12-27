@@ -20,7 +20,6 @@ import pw.phylame.jem.epm.Parser;
 import pw.phylame.jem.epm.util.config.BadConfigException;
 import pw.phylame.jem.epm.util.config.ConfigUtils;
 import pw.phylame.jem.epm.util.config.EpmConfig;
-import pw.phylame.ycl.util.StringUtils;
 import pw.phylame.ycl.util.Validate;
 
 import java.util.Map;
@@ -28,7 +27,7 @@ import java.util.Map;
 /**
  * Implementation base for parser and maker.
  *
- * @param <C> the config type
+ * @param <C> the config clazz
  */
 public abstract class EpmBase<C extends EpmConfig> {
     /**
@@ -50,7 +49,7 @@ public abstract class EpmBase<C extends EpmConfig> {
     private final Class<C> clazz;
 
     protected EpmBase(String name, Class<C> clazz) {
-        Validate.require(StringUtils.isNotEmpty(name), "name cannot be null or empty");
+        Validate.requireNotEmpty(name, "name cannot be null or empty");
         this.name = name;
         this.clazz = clazz;
     }

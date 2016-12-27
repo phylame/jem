@@ -34,43 +34,48 @@ import java.util.LinkedList;
  * Renders XML document.
  */
 public class XmlRender {
-    private final XmlSerializer xmlSerializer;
+    private final XmlSerializer serializer;
     private final XmlConfig config;
 
-    private final boolean doIndent;
+    private final boolean useIndent;
     private int indentCount;
 
     private final LinkedList<TagEntry> tagStack = new LinkedList<>();
 
     public XmlRender(@NonNull XmlConfig config, boolean awareness) throws MakerException {
         this.config = config;
-        xmlSerializer = XmlUtils.newSerializer(awareness);
-        doIndent = StringUtils.isNotEmpty(config.indentString);
+        serializer = XmlUtils.newSerializer(awareness);
+        useIndent = StringUtils.isNotEmpty(config.indentString);
     }
 
     public XmlRender setOutput(@NonNull Writer writer) throws IOException {
-        xmlSerializer.setOutput(writer);
+        serializer.setOutput(writer);
         return this;
     }
 
     public XmlRender setOutput(@NonNull OutputStream outputStream) throws IOException {
-        xmlSerializer.setOutput(outputStream, config.encoding);
+        serializer.setOutput(outputStream, config.encoding);
+        return this;
+    }
+
+    public XmlRender setOutput(@NonNull OutputStream outputStream, String encoding) throws IOException {
+        serializer.setOutput(outputStream, encoding);
         return this;
     }
 
     public XmlRender flush() throws IOException {
-        xmlSerializer.flush();
+        serializer.flush();
         return this;
     }
 
-    public XmlRender startXml() throws IOException {
-        xmlSerializer.startDocument(config.encoding, config.standalone);
+    public XmlRender beginXml() throws IOException {
+        serializer.startDocument(config.encoding, config.standalone);
         reset();
         return this;
     }
 
     public void endXml() throws IOException {
-        xmlSerializer.endDocument();
+        serializer.endDocument();
         flush();
     }
 
@@ -86,8 +91,8 @@ public class XmlRender {
     }
 
     public XmlRender docdecl(String text) throws IOException {
-        xmlSerializer.text(config.lineSeparator);
-        xmlSerializer.docdecl(" " + text);
+        serializer.text(config.lineSeparator);
+        serializer.docdecl(" " + text);
         return this;
     }
 
@@ -95,12 +100,12 @@ public class XmlRender {
         if (count <= 0) {
             return;
         }
-        xmlSerializer.text(StringUtils.multiplyOf(config.indentString, count));
+        serializer.text(StringUtils.multiplyOf(config.indentString, count));
     }
 
     private void newNode() throws IOException {
-        xmlSerializer.text(config.lineSeparator);   // node in new line
-        if (doIndent) {
+        serializer.text(config.lineSeparator);   // node in new line
+        if (useIndent) {
             indent(indentCount);
         }
         if (!tagStack.isEmpty()) {
@@ -110,34 +115,34 @@ public class XmlRender {
 
     public XmlRender comment(String text) throws IOException {
         newNode();
-        xmlSerializer.comment(text);
+        serializer.comment(text);
         return this;
     }
 
-    public XmlRender startTag(String name) throws IOException {
-        return startTag(null, name);
+    public XmlRender beginTag(String name) throws IOException {
+        return beginTag(null, name);
     }
 
-    public XmlRender startTag(String namespace, String name) throws IOException {
+    public XmlRender beginTag(String namespace, String name) throws IOException {
         newNode();
         ++indentCount;
-        xmlSerializer.startTag(namespace, name);
+        serializer.startTag(namespace, name);
         tagStack.push(new TagEntry(namespace, name));
         return this;
     }
 
     public XmlRender attribute(String name, String value) throws IOException {
-        xmlSerializer.attribute(null, name, value);
+        serializer.attribute(null, name, value);
         return this;
     }
 
     public XmlRender attribute(String namespace, String name, String value) throws IOException {
-        xmlSerializer.attribute(namespace, name, value);
+        serializer.attribute(namespace, name, value);
         return this;
     }
 
     public XmlRender text(String text) throws IOException {
-        xmlSerializer.text(text);
+        serializer.text(text);
         return this;
     }
 
@@ -147,13 +152,13 @@ public class XmlRender {
         }
         val tagEntry = tagStack.pop();
         if (tagEntry.hasSubTag) {
-            xmlSerializer.text(config.lineSeparator);
-            if (doIndent) {
+            serializer.text(config.lineSeparator);
+            if (useIndent) {
                 indent(indentCount - 1);
             }
         }
         --indentCount;
-        xmlSerializer.endTag(tagEntry.namespace, tagEntry.name);
+        serializer.endTag(tagEntry.namespace, tagEntry.name);
         return this;
     }
 

@@ -23,7 +23,7 @@ package pw.phylame.jem.epm.util.text;
  */
 public abstract class AbstractWriter implements TextWriter {
     @Override
-    public void startChapter(String title) throws Exception {
+    public void beginChapter(String title) throws Exception {
     }
 
     @Override

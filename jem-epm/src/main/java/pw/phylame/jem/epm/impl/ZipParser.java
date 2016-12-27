@@ -30,7 +30,7 @@ public abstract class ZipParser<C extends ZipParser.ZipInConfig> extends Abstrac
     }
 
     @Override
-    protected ZipFile open(File file, C config) throws IOException {
+    protected ZipFile openInput(File file, C config) throws IOException {
         return new ZipFile(file);
     }
 

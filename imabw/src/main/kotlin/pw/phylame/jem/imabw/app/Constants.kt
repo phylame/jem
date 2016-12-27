@@ -18,11 +18,12 @@
 
 package pw.phylame.jem.imabw.app
 
+import pw.phylame.jem.util.Build
 import pw.phylame.qaf.ixin.Ixin
 
 // meta data
-val APP_NAME = System.getProperty("app.icon") ?: "imabw"
-val APP_VERSION = System.getProperty("app.version") ?: "3.1.0"
+val APP_NAME = System.getProperty("app.name", "imabw")
+val APP_VERSION = System.getProperty("app.version", Build.VERSION)
 const val DOCUMENT_URL = "https://github.com/phylame/jem"
 
 const val SETTINGS_DIR = "config/"

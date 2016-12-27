@@ -4,7 +4,8 @@ import pw.phylame.jem.core.Attributes
 import pw.phylame.jem.core.Chapter
 import pw.phylame.jem.util.flob.Flob
 import pw.phylame.jem.util.text.Text
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 var Chapter.title: String get() = Attributes.getTitle(this)
     set(value) {

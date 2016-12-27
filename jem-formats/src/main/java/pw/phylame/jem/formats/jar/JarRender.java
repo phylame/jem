@@ -41,7 +41,7 @@ class JarRender implements TextWriter {
     private String title;
 
     @Override
-    public void startChapter(String title) throws IOException {
+    public void beginChapter(String title) throws IOException {
         name = String.valueOf(chapterCount++);
         zipout.putNextEntry(new ZipEntry(name));
         length = 0;

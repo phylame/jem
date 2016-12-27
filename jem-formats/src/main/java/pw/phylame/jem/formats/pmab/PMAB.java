@@ -21,7 +21,7 @@ package pw.phylame.jem.formats.pmab;
 /**
  * Constants for PMAB.
  */
-public final class PMAB {
+public interface PMAB {
 
     ///// MIME type for PMAB /////
     static final String MIME_FILE = "mimetype";

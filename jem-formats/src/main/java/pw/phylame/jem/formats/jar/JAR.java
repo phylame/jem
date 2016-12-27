@@ -33,7 +33,7 @@ public final class JAR {
     /**
      * Java ME template book file
      */
-    static final String JAR_TEMPLATE = "!pw/phylame/jem/formats/jar/book.jar";
+    static final String JAR_TEMPLATE = "!pw/phylame/jem/formats/jar/book-jar.tpl";
 
     static final String MANIFEST_TEMPLATE = "Manifest-Version: 1.0\n" +
             "Created-By: %s v%s\n" +

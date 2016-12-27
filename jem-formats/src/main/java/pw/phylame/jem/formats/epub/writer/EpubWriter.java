@@ -70,12 +70,12 @@ public abstract class EpubWriter {
         val render = tuple.render;
         val writer = new StringWriter();
         render.setOutput(writer);
-        render.startXml();
-        render.startTag("container").attribute("version", CONTAINER_VERSION);
+        render.beginXml();
+        render.beginTag("container").attribute("version", CONTAINER_VERSION);
         render.attribute("xmlns", CONTAINER_XML_NS);
 
-        render.startTag("rootfiles");
-        render.startTag("rootfile").attribute("full-path", opfPath).attribute("media-type", EPUB.MT_OPF).endTag();
+        render.beginTag("rootfiles");
+        render.beginTag("rootfile").attribute("full-path", opfPath).attribute("media-type", EPUB.MT_OPF).endTag();
         render.endTag();
 
         render.endTag();

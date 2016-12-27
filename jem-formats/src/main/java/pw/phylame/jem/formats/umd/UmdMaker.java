@@ -45,7 +45,7 @@ import pw.phylame.ycl.io.BufferedRandomAccessFile;
 import pw.phylame.ycl.io.PathUtils;
 import pw.phylame.ycl.io.ZLibUtils;
 import pw.phylame.ycl.log.Log;
-import pw.phylame.ycl.util.CollectUtils;
+import pw.phylame.ycl.util.CollectionUtils;
 import pw.phylame.ycl.util.StringUtils;
 
 /**
@@ -124,7 +124,7 @@ public class UmdMaker extends AbstractMaker<UmdOutConfig> {
         String imageFormat = "jpg";
 
         // get cartoon images
-        if (CollectUtils.isNotEmpty(tuple.config.cartoonImages)) {
+        if (CollectionUtils.isNotEmpty(tuple.config.cartoonImages)) {
             images = tuple.config.cartoonImages;
             imageFormat = tuple.config.imageFormat;
         } else {
@@ -227,7 +227,7 @@ public class UmdMaker extends AbstractMaker<UmdOutConfig> {
         val rand = NumberUtils.randInteger(0x3000, 0x3FFF);
         writeChunk(UMD.CDT_CHAPTER_OFFSET, true, littleRender.putUInt32(rand), tuple);
         byte[] data;
-        if (CollectUtils.isNotEmpty(offsets)) {
+        if (CollectionUtils.isNotEmpty(offsets)) {
             val out = new ByteArrayOutputStream();
             for (val offset : offsets) {
                 out.write(littleRender.putUInt32(offset));
@@ -244,7 +244,7 @@ public class UmdMaker extends AbstractMaker<UmdOutConfig> {
         val rand = NumberUtils.randInteger(0x4000, 0x4FFF);
         writeChunk(UMD.CDT_CHAPTER_TITLE, true, littleRender.putUInt32(rand), tuple);
         byte[] data;
-        if (CollectUtils.isNotEmpty(titles)) {
+        if (CollectionUtils.isNotEmpty(titles)) {
             val out = new ByteArrayOutputStream();
             byte[] bytes;
             for (val title : titles) {

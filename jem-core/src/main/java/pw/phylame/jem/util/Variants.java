@@ -49,7 +49,7 @@ public final class Variants {
 
     private static void initVariants() {
         try {
-            val prop = CollectUtils.propertiesFor("!pw/phylame/jem/util/variants.properties");
+            val prop = CollectionUtils.propertiesFor("!pw/phylame/jem/util/variants.properties");
             if (prop != null) {
                 String type;
                 for (val e : prop.entrySet()) {
@@ -135,7 +135,7 @@ public final class Variants {
      * @throws NullPointerException if the object is {@literal null}
      */
     public static String typeOf(@NonNull final Object obj) {
-        return CollectUtils.getOrPut(typeMapping, obj.getClass(), false, new Function<Class<?>, String>() {
+        return CollectionUtils.getOrPut(typeMapping, obj.getClass(), false, new Function<Class<?>, String>() {
             @Override
             public String apply(Class<?> clazz) {
                 for (val e : typeMapping.entrySet()) {

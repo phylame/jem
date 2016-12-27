@@ -6,6 +6,7 @@ import pw.phylame.qaf.cli.CLIDelegate;
 import pw.phylame.qaf.cli.Command;
 import pw.phylame.qaf.cli.TypedFetcher;
 import pw.phylame.ycl.log.Log;
+import pw.phylame.ycl.util.Reflections;
 import pw.phylame.ycl.util.StringUtils;
 
 import javax.script.ScriptEngine;
@@ -26,11 +27,11 @@ public class ScriptRunner extends AbstractPlugin {
     @Override
     public void init() {
         sci.addOption(Option.builder(OPTION)
-                        .longOpt("run-script")
-                        .hasArg()
-                        .argName(M.tr("runScript.file"))
-                        .desc(M.tr("help.runScript"))
-                        .build(),
+                .longOpt("run-script")
+                .hasArg()
+                .argName(M.tr("runScript.file"))
+                .desc(M.tr("help.runScript"))
+                .build(),
                 new RunnerCommand());
     }
 
@@ -41,7 +42,7 @@ public class ScriptRunner extends AbstractPlugin {
             if (StringUtils.isEmpty(name)) {
                 name = DEFAULT_ENGINE;
             }
-            val engine = clazz.getMethod("getEngineByName", String.class).invoke(clazz.newInstance(), name);
+            val engine = Reflections.i(clazz.newInstance(), "getEngineByName", name);
             if (engine == null) {
                 app.error(M.tr("runScript.noSuchEngine", name));
             }

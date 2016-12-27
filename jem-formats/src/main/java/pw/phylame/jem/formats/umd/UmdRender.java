@@ -39,7 +39,7 @@ class UmdRender implements TextWriter {
     }
 
     @Override
-    public void startChapter(String title) throws Exception {
+    public void beginChapter(String title) throws Exception {
         offsets.add(file.getFilePointer());
         titles.add(title);
     }

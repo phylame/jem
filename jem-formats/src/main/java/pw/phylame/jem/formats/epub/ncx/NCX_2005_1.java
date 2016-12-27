@@ -48,29 +48,29 @@ class NCX_2005_1 implements NcxWriter, BookListener {
         this.render = tuple.render;
         val book = tuple.book;
         val config = tuple.config;
-        render.startXml();
+        render.beginXml();
         render.docdecl("ncx", DT_ID, DT_URI);
 
-        render.startTag("ncx").attribute("version", VERSION);
+        render.beginTag("ncx").attribute("version", VERSION);
         render.attribute("xml:lang", config.htmlConfig.htmlLanguage = EPUB.languageOfBook(book)).attribute("xmlns",
                 NAMESPACE);
 
         writeHead(MiscUtils.depthOf((Chapter) book), config.uuid, 0, 0, render);
 
         // docTitle
-        render.startTag("docTitle");
-        render.startTag("text").text(Attributes.getTitle(book)).endTag();
+        render.beginTag("docTitle");
+        render.beginTag("text").text(Attributes.getTitle(book)).endTag();
         render.endTag();
         // docAuthor
         val author = Attributes.getAuthor(book);
         if (StringUtils.isNotEmpty(author)) {
-            render.startTag("docAuthor");
-            render.startTag("text").text(author).endTag();
+            render.beginTag("docAuthor");
+            render.beginTag("text").text(author).endTag();
             render.endTag();
         }
 
         // navMap
-        render.startTag("navMap");
+        render.beginTag("navMap");
         // render contents
         bookRender = new BookRender(writer, this, tuple);
         bookRender.start();
@@ -103,7 +103,7 @@ class NCX_2005_1 implements NcxWriter, BookListener {
 
     private void writeHead(int depth, String uuid, int totalPageCount, int maxPageNumber, XmlRender render)
             throws IOException {
-        render.startTag("head");
+        render.beginTag("head");
         writeMeta("dtb:uid", uuid, render);
         writeMeta("dtb:depth", Integer.toString(depth), render);
         writeMeta("dtb:totalPageCount", Integer.toString(totalPageCount), render);
@@ -112,20 +112,20 @@ class NCX_2005_1 implements NcxWriter, BookListener {
     }
 
     private void writeMeta(String name, String value, XmlRender render) throws IOException {
-        render.startTag("meta").attribute("name", name);
+        render.beginTag("meta").attribute("name", name);
         render.attribute("content", value).endTag();
     }
 
     @Override
     public void startNavPoint(String id, String href, String title) throws IOException {
-        render.startTag("navPoint").attribute("id", id);
+        render.beginTag("navPoint").attribute("id", id);
         render.attribute("playOrder", Integer.toString(playOrder++));
 
-        render.startTag("navLabel");
-        render.startTag("text").text(title).endTag();
+        render.beginTag("navLabel");
+        render.beginTag("text").text(title).endTag();
         render.endTag(); // navLabel
 
-        render.startTag("content").attribute("src", href).endTag();
+        render.beginTag("content").attribute("src", href).endTag();
     }
 
     @Override

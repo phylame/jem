@@ -25,46 +25,46 @@ import pw.phylame.jem.imabw.app.ui.Dialogs
 import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.tr
 import pw.phylame.qaf.ixin.Command
+import rx.Observer
 import java.io.File
 import java.nio.charset.Charset
-import java.util.IdentityHashMap
-import java.util.LinkedList
+import java.util.*
 
-class Task(val updater: (Task) -> Unit,
-           val book: Book,
+class Task(val book: Book,
+           val updater: (Task) -> Unit,
            val source: File? = null,
            val format: String = EpmManager.PMAB,
            val arguments: Map<String, Any> = emptyMap()) {
 
-    constructor(updater: (Task) -> Unit, book: Book) : this(updater, book, null)
+    constructor(book: Book, updater: (Task) -> Unit) : this(book, updater, null)
 
-    // test current book of the task modification state
+    // test current book of the activeTask modification state
     val isModified: Boolean get() = isModified(book)
 
     // test the specified chapter modification state
     fun isModified(chapter: Chapter): Boolean = states[chapter]?.isModified ?: false
 
     fun textModified(chapter: Chapter, modified: Boolean) {
-        val state = getOrNew(chapter)
-        state.setTextModified(modified)
+        val state = stateOf(chapter)
+        state.textModified(modified)
         updater(this)
     }
 
-    fun childrenModified(chapter: Chapter, modified: Boolean) {
-        val state = getOrNew(chapter)
-        state.setChildrenModified(modified)
+    fun contentsModified(chapter: Chapter, modified: Boolean) {
+        val state = stateOf(chapter)
+        state.contentsModified(modified)
         updater(this)
     }
 
     fun attributeModified(chapter: Chapter, modified: Boolean) {
-        val state = getOrNew(chapter)
-        state.setAttributeModified(modified)
+        val state = stateOf(chapter)
+        state.attributeModified(modified)
         updater(this)
     }
 
     fun extensionModified(modified: Boolean) {
-        val state = getOrNew(book)
-        state.setExtensionModified(modified)
+        val state = stateOf(book)
+        state.extensionModified(modified)
         updater(this)
     }
 
@@ -74,29 +74,27 @@ class Task(val updater: (Task) -> Unit,
 
     fun bookSaved() {
         states.clear()
-
     }
 
     fun bookClosed() {
         states.clear()
     }
 
-    // cleanup this task
     fun cleanup() {
         book.cleanup()
     }
 
     private val states = IdentityHashMap<Chapter, State>()
 
-    private fun getOrNew(chapter: Chapter): State = states.getOrPut(chapter) { State(chapter) }
+    private fun stateOf(chapter: Chapter): State = states.getOrPut(chapter) { State(chapter) }
 
     // hold modification state of chapter
     private inner class State(val chapter: Chapter) {
         // count of text modification
         var text = 0
 
-        // count of sub-chapter modification
-        var children = 0
+        // count of contents modification
+        var contents = 0
 
         // count of attributes modification
         var attribute = 0
@@ -104,36 +102,47 @@ class Task(val updater: (Task) -> Unit,
         // count of extension(only for book) modification
         var extension = 0
 
-        val isModified: Boolean get() = text > 0 || children > 0 || attribute > 0 || extension > 0
+        val isModified: Boolean get() = text > 0 || contents > 0 || attribute > 0 || extension > 0
 
         // reset all to unmodified state
         fun reset() {
             text = 0
-            children = 0
+            contents = 0
             attribute = 0
             extension = 0
         }
 
-        fun setTextModified(modified: Boolean) {
+        fun textModified(modified: Boolean) {
             text += if (modified) 1 else -1
-            System.err.println("$chapter text state: $text")
+            if (text < 0) {
+                text = 0
+            }
+            App.echo("$chapter text state: $text")
         }
 
-        fun setAttributeModified(modified: Boolean) {
+        fun attributeModified(modified: Boolean) {
             attribute += if (modified) 1 else -1
-            System.err.println("$chapter attribute state: $attribute")
+            if (attribute < 0) {
+                attribute = 0
+            }
+            App.echo("$chapter attribute state: $attribute")
         }
 
-        fun setChildrenModified(modified: Boolean) {
-            children += if (modified) 1 else -1
-            System.err.println("$chapter children state: $children")
+        fun contentsModified(modified: Boolean) {
+            contents += if (modified) 1 else -1
+            if (contents < 0) {
+                contents = 0
+            }
+            App.echo("$chapter contents state: $contents")
         }
 
-        fun setExtensionModified(modified: Boolean) {
+        fun extensionModified(modified: Boolean) {
             extension += if (modified) 1 else -1
-            System.err.println("$chapter extension state: $extension")
+            if (extension < 0) {
+                extension = 0
+            }
+            App.echo("$chapter extension state: $extension")
         }
-
     }
 }
 
@@ -168,9 +177,9 @@ object History {
             }
             histories.addFirst(path)
             modified = true
-        }
-        if (updating) {
-            updater?.invoke()
+            if (updating) {
+                updater?.invoke()
+            }
         }
     }
 
@@ -181,9 +190,9 @@ object History {
         val path = file.canonicalPath
         if (histories.remove(path)) {
             modified = true
-        }
-        if (updating) {
-            updater?.invoke()
+            if (updating) {
+                updater?.invoke()
+            }
         }
     }
 
@@ -194,9 +203,9 @@ object History {
         if (histories.isNotEmpty()) {
             histories.clear()
             modified = true
-        }
-        if (updating) {
-            updater?.invoke()
+            if (updating) {
+                updater?.invoke()
+            }
         }
     }
 
@@ -236,23 +245,70 @@ object History {
 }
 
 object Manager {
-    private val _tasks: MutableList<Task> = LinkedList()
-
-    // readonly view of tasks
-    val tasks: List<Task> get() = _tasks
-
-    val task: Task? get() = _tasks.firstOrNull()
+    var task: Task? = null
+        set (value) {
+            if (value == null) {
+                throw NullPointerException("task cannot be null")
+            }
+            if (value === field) { // already activated
+                return
+            }
+            val form = Imabw.form
+            var source = field?.source
+            field = value
+            form.updateBook(value.book)
+            if (source != null) {
+                History.append(source, false)
+            }
+            source = value.source
+            Dialogs.setCurrentDirectory(value.source)
+            if (source != null) {
+                History.remove(source, true)
+                form.actions[FILE_DETAILS]?.isEnabled = true
+            } else {
+                form.actions[FILE_DETAILS]?.isEnabled = false
+            }
+        }
 
     fun maybeSaving(title: String): Boolean {
         if (!(task?.isModified ?: false)) { // not modified
             return true
         }
-        val option = Dialogs.saving(Imabw.form, title, tr("d.askSaving.tip"))
-        return when (option) {
+        return when (Dialogs.saving(Imabw.form, title, tr("d.askSaving.tip"))) {
             Dialogs.OPTION_DISCARD -> true
             Dialogs.OPTION_OK -> saveFile()
             else -> false
         }
+    }
+
+    fun openBook(title: String, param: EpmInParam) {
+        if (!param.file.exists()) {
+            Dialogs.error(Imabw.form, title, tr("d.openBook.fileNotExist", param.file))
+        }
+        if (!EpmManager.hasParser(param.format)) {
+            Dialogs.error(Imabw.form, title, tr("d.openBook.unsupportedFormat", param.format))
+        }
+        val dialog = Dialogs.waiting(Imabw.form, title, tr("d.openBook.tip", param.file), tr("d.openBook.waiting"))
+        Books.openBook(arrayOf(param), {
+            task?.cleanup()
+        }, object : Observer<Triple<Book, File?, EpmInParam>> {
+            override fun onError(e: Throwable) {
+                dialog.isVisible = false
+            }
+
+            override fun onNext(t: Triple<Book, File?, EpmInParam>) {
+            }
+
+            override fun onCompleted() {
+                dialog.isVisible = false
+            }
+
+        })
+        dialog.showForResult(false)
+    }
+
+    private fun updateBookState(task: Task) {
+
     }
 
     @Command(OPEN_FILE)
@@ -265,6 +321,9 @@ object Manager {
         if (!maybeSaving(title)) {
             return
         }
+        val param = EpmInParam.getOrSelect(Imabw.form, title, file, task?.format) ?: return
+        param.cached = true
+        openBook(title, param)
     }
 
     @Command(NEW_FILE)
@@ -277,11 +336,12 @@ object Manager {
         if (!maybeSaving(title)) {
             return
         }
-//        val book = worker.newBook(viewer, title, name) ?: return
+        val book = Books.newBook(Imabw.form, title, name) ?: return
         task?.cleanup()
-
-//        activateTask(BookTask.fromNewBook(book))
-//        app.localizedMessage("d.newBook.finished", book)
+        task = Task(book) {
+            updateBookState(it)
+        }
+        Imabw.message("d.newBook.done", book)
     }
 
     @Command(SAVE_FILE)

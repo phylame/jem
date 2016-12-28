@@ -18,6 +18,7 @@
 
 package pw.phylame.jem.imabw.app
 
+import pw.phylame.jem.epm.EpmManager
 import pw.phylame.jem.imabw.app.ui.Dialogs
 import pw.phylame.jem.imabw.app.ui.Viewer
 import pw.phylame.qaf.core.App
@@ -37,6 +38,7 @@ object Imabw : IDelegate<Viewer>() {
     override fun onStart() {
         super.onStart()
         App.ensureHomeExisted()
+        System.setProperty(EpmManager.AUTO_LOAD_CUSTOMIZED_KEY, "true")
         proxy = CommandDispatcher(arrayOf(this))
 
         Log.setLevel(LogLevel.forName(AppSettings.logLevel, LogLevel.INFO))
@@ -71,6 +73,18 @@ object Imabw : IDelegate<Viewer>() {
 
     fun addProxy(proxy: Any) {
         (this.proxy as CommandDispatcher).addProxy(proxy)
+    }
+
+    override fun onReady() {
+        Manager.newFile(tr("d.newBook.defaultTitle"))
+    }
+
+    fun message(id: String) {
+        form.statusText = tr(id)
+    }
+
+    fun message(id: String, vararg args: Any) {
+        form.statusText = tr(id, args)
     }
 
     @Command(EDIT_SETTINGS)

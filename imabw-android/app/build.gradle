@@ -44,10 +44,10 @@ dependencies {
 
     testCompile 'junit:junit:4.12'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compile('pw.phylame.jem:jem-formats:3.1.1') {
+    compile("pw.phylame.jem:jem-formats:$jem_version") {
         exclude group: 'xpp3', module: 'xpp3' // use android builtin xpp
     }
-    compile('pw.phylame.jem:jem-kotlin:3.1.1')
+    compile("pw.phylame.jem:jem-kotlin:$jem_version")
     compile project(':seal')
 
 }

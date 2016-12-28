@@ -259,7 +259,7 @@ class BookActivity : BaseActivity() {
         override fun equals(other: Any?): Boolean = when (other) {
             null -> false
             !is ChapterItem -> false
-            else -> other.chapter == chapter
+            else -> other.chapter === chapter
         }
 
         override fun toString(): String = chapter.title

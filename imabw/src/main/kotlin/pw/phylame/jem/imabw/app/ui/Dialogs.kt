@@ -131,7 +131,6 @@ internal abstract class InputDialog<D, T : JTextComponent> : BaseDialog<D> {
     constructor(owner: Dialog, title: String, modal: Boolean) : super(owner, title, modal) {
         setDecorationIfNeed(JRootPane.QUESTION_DIALOG)
     }
-
 }
 
 internal class SimpleInputDialog : InputDialog<Any, JTextField> {
@@ -146,14 +145,12 @@ internal class SimpleInputDialog : InputDialog<Any, JTextField> {
     }
 
     override val result: Any?
-        get() {
-            if (!inputted) {
-                return null
-            } else if (formatter != null) {
-                return (texting as JFormattedTextField).value
-            } else {
-                return texting.text
-            }
+        get() = if (!inputted) {
+            null
+        } else if (formatter != null) {
+            (texting as JFormattedTextField).value
+        } else {
+            texting.text
         }
 
     override fun createComponents(userPane: JPanel) {
@@ -330,11 +327,7 @@ internal class ErrorDialog : BaseDialog<Int> {
             }
         })
 
-        controlsPane = createControlsPane(-1,
-                reportButton,
-                Box.createHorizontalGlue(),
-                detailsButton,
-                createCloseButton(BUTTON_CLOSE.id))
+        controlsPane = createControlsPane(-1, reportButton, Box.createHorizontalGlue(), detailsButton, createCloseButton(BUTTON_CLOSE.id))
 
         userPane.add(tipLabel, BorderLayout.PAGE_START)
 
@@ -342,11 +335,56 @@ internal class ErrorDialog : BaseDialog<Int> {
     }
 
     private fun createTextArea(e: Throwable): JTextArea {
-        val texting = JTextArea()
-        texting.text = e.dumpToString()
-        texting.isEditable = false
-        texting.caretPosition = 0
-        return texting
+        val text = JTextArea()
+        text.text = e.dumpToString()
+        text.isEditable = false
+        text.caretPosition = 0
+        return text
+    }
+}
+
+class WaitingDialog : BaseDialog<Unit> {
+    override val result: Unit? = null
+
+    constructor(owner: Frame, title: String, modal: Boolean) : super(owner, title, modal) {
+    }
+
+    constructor(owner: Dialog, title: String, modal: Boolean) : super(owner, title, modal) {
+    }
+
+    lateinit var progressBar: JProgressBar
+    lateinit var tipLabel: JLabel
+
+    var tip = ""
+    var waiting = ""
+    var cancellable = false
+    var progressable = false
+
+    override fun createComponents(userPane: JPanel) {
+        tipLabel = JLabel(tip)
+        progressBar = JProgressBar()
+        progressBar.minimum = 0
+        progressBar.maximum = 100
+        progressBar.value = 0
+        progressBar.isStringPainted = true
+        progressBar.string = waiting
+        progressBar.isIndeterminate = progressable
+
+        userPane.layout = GridLayout(2, 1)
+        userPane.add(tipLabel)
+        userPane.add(progressBar)
+
+        val button = createCloseButton("d.waiting.buttonCancel")
+        button.isEnabled = cancellable
+        defaultButton = button
+        controlsPane = createControlsPane(SwingConstants.RIGHT, button)
+        preferredSize = Dimension(427, 118)
+    }
+
+    override fun cancelling() {
+        if (cancellable) {
+            super.cancelling()
+        }
     }
 }
 
@@ -506,12 +544,19 @@ object Dialogs {
         dialog.showForResult(true)
     }
 
-    fun initFileChooser(title: String,
-                        mode: Int,
-                        multiple: Boolean,
-                        initFile: File?, initDir: File?,
-                        acceptAll: Boolean,
-                        filters: Array<FileFilter>?, initFilter: FileFilter?) {
+    fun waiting(parent: Component, title: String, tip: String, waitingText: String): WaitingDialog {
+        val dialog = ICommonDialog.createDialog(parent, title, true, WaitingDialog::class.java)
+        dialog.tip = tip
+        dialog.waiting = waitingText
+        return dialog
+    }
+
+    fun initChooser(title: String,
+                    mode: Int,
+                    multiple: Boolean,
+                    initFile: File?, initDir: File?,
+                    acceptAll: Boolean,
+                    filters: Array<FileFilter>?, initFilter: FileFilter?) {
         fileChooser.dialogTitle = title
         fileChooser.fileSelectionMode = mode
         fileChooser.isMultiSelectionEnabled = multiple
@@ -541,12 +586,11 @@ object Dialogs {
         fileChooser.approveButtonToolTipText = tip
     }
 
-    // id: translation key
     fun setApproveButtonName(id: String) {
         setApproveButtonName(tr(id), tr(id + IAction.tipTextSuffix))
     }
 
-    private fun fileWithExtension(): File {
+    private fun selectedFile(): File {
         var file = fileChooser.selectedFile
 
         if (PathUtils.extensionName(file.path).isEmpty()) {
@@ -572,7 +616,7 @@ object Dialogs {
                  initFile: File? = null, initDir: File? = null,
                  acceptAll: Boolean = true,
                  filters: Array<FileFilter>? = null, initFilter: FileFilter? = null): OpenResult? {
-        initFileChooser(title, JFileChooser.FILES_ONLY, multiple, initFile, initDir, acceptAll, filters, initFilter)
+        initChooser(title, JFileChooser.FILES_ONLY, multiple, initFile, initDir, acceptAll, filters, initFilter)
         setApproveButtonName("d.openFile.approveButton")
         if (fileChooser.showOpenDialog(parent) != JFileChooser.APPROVE_OPTION) {
             return null
@@ -591,10 +635,10 @@ object Dialogs {
                  askOverwrite: Boolean = true,
                  acceptAll: Boolean = true,
                  filters: Array<FileFilter>? = null, initFilter: FileFilter? = null): OpenResult? {
-        initFileChooser(title, JFileChooser.FILES_ONLY, false, initFile, initDir, acceptAll, filters, initFilter)
+        initChooser(title, JFileChooser.FILES_ONLY, false, initFile, initDir, acceptAll, filters, initFilter)
         setApproveButtonName("d.saveFile.approveButton")
         while (fileChooser.showSaveDialog(parent) == JFileChooser.APPROVE_OPTION) {
-            val file = fileWithExtension()
+            val file = selectedFile()
 
             if (file.exists() && askOverwrite) {
                 if (!confirm(parent, title, false, tr("d.saveFile.askOverwrite", file.path)).first) {
@@ -609,25 +653,25 @@ object Dialogs {
         return null
     }
 
-    val formatDescriptions = HashMap<String, String>()
+    val extensionDescriptions = HashMap<String, String>()
 
     // [desc] (*.xxx *.yyy *.zzz)
-    private fun descriptionOfFormat(formats: Array<String>): String {
-        val key = formats[0]
-        val v = formatDescriptions.getOrPut(key) {
-            var s: String? = null
+    private fun descriptionOfExtensions(extensions: Array<String>): String {
+        val key = extensions[0]
+        val v = extensionDescriptions.getOrPut(key) {
+            var name: String? = null
             try {
-                s = tr("common.format." + key.toLowerCase())
+                name = tr("common.extension." + key.toLowerCase())
             } catch (e: MissingResourceException) {
-                App.error("no such format key: $key")
+                App.error("no such extension key: $key")
             }
 
-            if (s.isNullOrEmpty()) {
-                s = key.toUpperCase() + tr("common.format.suffix")
+            if (name.isNullOrEmpty()) {
+                name = key.toUpperCase() + tr("common.extension.suffix")
             }
-            s!!
+            name!!
         }
-        return "$v (*.${formats.joinToString(" *.")})"
+        return "$v (*.${extensions.joinToString(" *.")})"
     }
 
     @Suppress("unchecked_cast")
@@ -637,15 +681,14 @@ object Dialogs {
         } else {
             arrayOf(format.toString())
         }
-        return FileNameExtensionFilter(descriptionOfFormat(extensions), *extensions)
+        return FileNameExtensionFilter(descriptionOfExtensions(extensions), *extensions)
     }
 
     @Suppress("unchecked_cast")
-    fun extensionFiltersFor(formats: Array<Any>, initFormat: Any?): Pair<Array<FileFilter>, FileFilter> {
+    fun extensionFiltersFor(formats: Array<Any>, initFormat: Any?): Pair<Array<FileFilter>, FileFilter?> {
         val filters = ArrayList<FileFilter>(formats.size)
         var initFilter: FileFilter? = null
         var isEqual = false
-        val i = 0
         for (format in formats) {
             val extensions: Array<String>
             if (format is String) {
@@ -659,18 +702,19 @@ object Dialogs {
                     if (initFormat is String) {
                         isEqual = initFormat in extensions
                     } else if (initFormat is Array<*>) {
-                        isEqual = Arrays.equals(extensions, initFormat as Array<String>)
+                        isEqual = Arrays.equals(extensions, initFormat)
                     }
                 }
             } else {
                 continue
             }
-            filters.add(extensionFilterFor(extensions))
+            val filter = extensionFilterFor(extensions)
+            filters.add(filter)
             if (isEqual) {
-                initFilter = filters[i - 1]
+                initFilter = filter
             }
         }
-        return filters.toTypedArray() to initFilter!!
+        return filters.toTypedArray() to initFilter
     }
 
     fun selectFile(parent: Component?,

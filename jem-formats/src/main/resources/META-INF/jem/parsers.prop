@@ -32,3 +32,6 @@ txt=pw.phylame.jem.formats.txt.TxtParser
 
 # EBK2 parser
 ebk2=pw.phylame.jem.formats.ebk.Ebk2Parser
+
+# ePub parser
+epub=pw.phylame.jem.formats.epub.EpubParser

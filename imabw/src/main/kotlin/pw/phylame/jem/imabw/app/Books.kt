@@ -95,13 +95,13 @@ object Books {
         return str
     }
 
-    fun showOpenError(parent: Component?, title: String, data: ParserData, err: Throwable) {
-        val str = tr("d.openBook.failed", data.file, dumpError(err))
+    fun showOpenError(parent: Component?, title: String, param: EpmInParam, err: Throwable) {
+        val str = tr("d.openBook.failed", param.file, dumpError(err))
         Dialogs.trace(parent, title, str, err)
     }
 
-    fun showSaveError(parent: Component?, title: String, data: MakerData, e: Throwable) {
-        val str = tr("d.saveBook.failed", data.file, dumpError(e))
+    fun showSaveError(parent: Component?, title: String, param: EpmOutParam, e: Throwable) {
+        val str = tr("d.saveBook.failed", param.file, dumpError(e))
         Dialogs.trace(parent, title, str, e)
     }
 
@@ -125,7 +125,7 @@ object Books {
 
         val book: Book
         try {
-            book = EpmManager.readBook(param.file, param.format, param.arguments)
+            book = EpmManager.readBook(input, param.format, param.arguments)
         } catch (e: Exception) {
             deleteFile(cache)
             throw e

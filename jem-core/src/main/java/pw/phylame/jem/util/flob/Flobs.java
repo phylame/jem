@@ -31,6 +31,8 @@ import pw.phylame.jem.util.Variants;
 import pw.phylame.ycl.io.IOUtils;
 import pw.phylame.ycl.io.RAFInputStream;
 import pw.phylame.ycl.util.Exceptions;
+import pw.phylame.ycl.vam.VamItem;
+import pw.phylame.ycl.vam.VamReader;
 
 /**
  * Factory class for creating <code>Flob</code> instance.
@@ -49,6 +51,10 @@ public final class Flobs {
 
     public static Flob forZip(@NonNull ZipFile zipFile, @NonNull String entry, String mime) throws IOException {
         return new EntryFlob(zipFile, entry, mime);
+    }
+
+    public static Flob forVam(@NonNull VamReader vam, @NonNull String entry, String mime) throws IOException {
+        return new VamFlob(vam, entry, mime);
     }
 
     public static BlockFlob forBlock(@NonNull String name, @NonNull RandomAccessFile file, long offset, long size,
@@ -90,6 +96,42 @@ public final class Flobs {
         @Override
         public FileInputStream openStream() throws IOException {
             return new FileInputStream(file);
+        }
+    }
+
+    private static class VamFlob extends AbstractFlob {
+
+        static {
+            Variants.mapType(VamFlob.class, Variants.FLOB);
+        }
+
+        private final VamReader vam;
+        private final String entry;
+        private final VamItem item;
+
+        VamFlob(VamReader vam, String entry, String mime) throws IOException {
+            super(mime);
+            item = vam.itemFor(entry);
+            if (item == null) {
+                throw Exceptions.forIO("No such item in Vam: %s", entry);
+            }
+            this.vam = vam;
+            this.entry = entry;
+        }
+
+        @Override
+        public String getName() {
+            return entry;
+        }
+
+        @Override
+        public InputStream openStream() throws IOException {
+            return vam.streamOf(item);
+        }
+
+        @Override
+        public String toString() {
+            return item.toString();
         }
     }
 

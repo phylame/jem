@@ -15,6 +15,19 @@
 
 package pw.phylame.jem.core;
 
+import static pw.phylame.ycl.util.StringUtils.EMPTY_TEXT;
+import static pw.phylame.ycl.util.StringUtils.join;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.MissingResourceException;
+import java.util.concurrent.ConcurrentHashMap;
+
 import lombok.NonNull;
 import lombok.val;
 import pw.phylame.jem.util.M;
@@ -22,14 +35,9 @@ import pw.phylame.jem.util.VariantMap.Validator;
 import pw.phylame.jem.util.Variants;
 import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.jem.util.text.Text;
+import pw.phylame.jem.util.text.Texts;
 import pw.phylame.ycl.util.CollectionUtils;
 import pw.phylame.ycl.util.Exceptions;
-
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-
-import static pw.phylame.ycl.util.StringUtils.EMPTY_TEXT;
-import static pw.phylame.ycl.util.StringUtils.join;
 
 /**
  * Declares name of attributes supported by Jem for chapter and book.
@@ -79,7 +87,8 @@ public final class Attributes {
     /**
      * Gets readable text for attribute name.
      *
-     * @param name name of attribute
+     * @param name
+     *            name of attribute
      * @return the text, or {@literal null} if the name is unknown
      */
     public static String titleOf(@NonNull String name) {
@@ -93,8 +102,10 @@ public final class Attributes {
     /**
      * Maps specified attribute name for specified variant type.
      *
-     * @param name name of attribute
-     * @param type name of type
+     * @param name
+     *            name of attribute
+     * @param type
+     *            name of type
      */
     public static void mapType(String name, String type) {
         attributeTypes.put(name, Variants.checkType(type));
@@ -103,7 +114,8 @@ public final class Attributes {
     /**
      * Gets the type of specified attribute name.
      *
-     * @param name name of attribute or {@literal null} if unknown
+     * @param name
+     *            name of attribute or {@literal null} if unknown
      * @return the type string
      */
     public static String typeOf(String name) {
@@ -113,7 +125,8 @@ public final class Attributes {
     /**
      * Returns default value for specfified attribute.
      *
-     * @param name name of attribute
+     * @param name
+     *            name of attribute
      * @return the value, or {@literal null} if the name is unknown
      */
     public static Object defaultOf(String name) {
@@ -154,6 +167,10 @@ public final class Attributes {
 
     public static void setIntro(Chapter chapter, Text intro) {
         chapter.getAttributes().set(INTRO, intro);
+    }
+
+    public static void setIntro(Chapter chapter, String intro) {
+        chapter.getAttributes().set(INTRO, Texts.forString(intro, Texts.PLAIN));
     }
 
     public static Integer getWords(Chapter chapter) {

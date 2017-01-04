@@ -15,23 +15,29 @@
 
 package pw.phylame.jem.formats.epub.ncx;
 
+import java.io.IOException;
+import java.util.List;
+
 import lombok.val;
 import pw.phylame.jem.core.Attributes;
 import pw.phylame.jem.core.Chapter;
 import pw.phylame.jem.epm.util.MakerException;
 import pw.phylame.jem.epm.util.xml.XmlRender;
-import pw.phylame.jem.formats.epub.*;
+import pw.phylame.jem.formats.epub.TocWriter;
+import pw.phylame.jem.formats.epub.EPUB;
+import pw.phylame.jem.formats.epub.OutData;
+import pw.phylame.jem.formats.epub.TocListener;
+import pw.phylame.jem.formats.epub.item.Guide;
+import pw.phylame.jem.formats.epub.item.Resource;
+import pw.phylame.jem.formats.epub.item.Spine;
 import pw.phylame.jem.formats.epub.writer.EpubWriter;
 import pw.phylame.ycl.util.MiscUtils;
 import pw.phylame.ycl.util.StringUtils;
 
-import java.io.IOException;
-import java.util.List;
-
 /**
  * NCX version 2005-1
  */
-class NCX_2005_1 implements NcxWriter, BookListener {
+class NCX_2005_1 implements NcxWriter, TocListener {
     public static final String DT_ID = "-//NISO//DTD ncx 2005-1//EN";
     public static final String DT_URI = "http://www.daisy.org/z3986/2005/ncx-2005-1.dtd";
 
@@ -41,21 +47,22 @@ class NCX_2005_1 implements NcxWriter, BookListener {
     private int playOrder = 1;
 
     private XmlRender render;
-    private BookRender bookRender;
+    private TocWriter tocWriter;
 
     @Override
-    public void write(EpubWriter writer, OutTuple tuple) throws IOException, MakerException {
-        this.render = tuple.render;
-        val book = tuple.book;
-        val config = tuple.config;
+    public void write(EpubWriter writer, OutData data) throws IOException, MakerException {
+        this.render = data.render;
+        val book = data.book;
+        val config = data.config;
         render.beginXml();
         render.docdecl("ncx", DT_ID, DT_URI);
 
-        render.beginTag("ncx").attribute("version", VERSION);
-        render.attribute("xml:lang", config.htmlConfig.htmlLanguage = EPUB.languageOfBook(book)).attribute("xmlns",
-                NAMESPACE);
+        render.beginTag("ncx")
+                .attribute("version", VERSION)
+                .attribute("xml:lang", config.htmlConfig.htmlLanguage = EPUB.languageOfBook(book))
+                .attribute("xmlns", NAMESPACE);
 
-        writeHead(MiscUtils.depthOf((Chapter) book), config.uuid, 0, 0, render);
+        writeHead(MiscUtils.depthOf((Chapter) book), config.uuid, 0, 0);
 
         // docTitle
         render.beginTag("docTitle");
@@ -72,8 +79,8 @@ class NCX_2005_1 implements NcxWriter, BookListener {
         // navMap
         render.beginTag("navMap");
         // render contents
-        bookRender = new BookRender(writer, this, tuple);
-        bookRender.start();
+        tocWriter = new TocWriter(writer, this, data);
+        tocWriter.start();
 
         render.endTag(); // navMap
         render.endTag(); // ncx
@@ -82,42 +89,43 @@ class NCX_2005_1 implements NcxWriter, BookListener {
     }
 
     @Override
-    public String getCoverID() {
-        return bookRender.getCoverID();
+    public String getCoverId() {
+        return tocWriter.getCoverId();
     }
 
     @Override
     public List<Resource> getResources() {
-        return bookRender.getResources();
+        return tocWriter.getResources();
     }
 
     @Override
     public List<Spine> getSpines() {
-        return bookRender.getSpineItems();
+        return tocWriter.getSpineItems();
     }
 
     @Override
     public List<Guide> getGuides() {
-        return bookRender.getGuideItems();
+        return tocWriter.getGuideItems();
     }
 
-    private void writeHead(int depth, String uuid, int totalPageCount, int maxPageNumber, XmlRender render)
-            throws IOException {
+    private void writeHead(int depth, String uuid, int totalPageCount, int maxPageNumber) throws IOException {
         render.beginTag("head");
-        writeMeta("dtb:uid", uuid, render);
-        writeMeta("dtb:depth", Integer.toString(depth), render);
-        writeMeta("dtb:totalPageCount", Integer.toString(totalPageCount), render);
-        writeMeta("dtb:maxPageNumber", Integer.toString(maxPageNumber), render);
+        writeMeta("dtb:uid", uuid);
+        writeMeta("dtb:depth", Integer.toString(depth));
+        writeMeta("dtb:totalPageCount", Integer.toString(totalPageCount));
+        writeMeta("dtb:maxPageNumber", Integer.toString(maxPageNumber));
         render.endTag();
     }
 
-    private void writeMeta(String name, String value, XmlRender render) throws IOException {
-        render.beginTag("meta").attribute("name", name);
-        render.attribute("content", value).endTag();
+    private void writeMeta(String name, String value) throws IOException {
+        render.beginTag("meta")
+                .attribute("name", name)
+                .attribute("content", value)
+                .endTag();
     }
 
     @Override
-    public void startNavPoint(String id, String href, String title) throws IOException {
+    public void beginNavPoint(String id, String href, String title) throws IOException {
         render.beginTag("navPoint").attribute("id", id);
         render.attribute("playOrder", Integer.toString(playOrder++));
 

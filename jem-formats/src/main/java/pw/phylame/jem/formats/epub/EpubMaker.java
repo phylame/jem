@@ -18,6 +18,9 @@
 
 package pw.phylame.jem.formats.epub;
 
+import java.io.IOException;
+import java.util.zip.ZipOutputStream;
+
 import lombok.NonNull;
 import lombok.val;
 import pw.phylame.jem.core.Book;
@@ -26,9 +29,6 @@ import pw.phylame.jem.epm.util.MakerException;
 import pw.phylame.jem.epm.util.ZipUtils;
 import pw.phylame.jem.formats.epub.writer.EpubWriterFactory;
 import pw.phylame.jem.formats.util.M;
-
-import java.io.IOException;
-import java.util.zip.ZipOutputStream;
 
 /**
  * ePub e-book maker.
@@ -39,7 +39,8 @@ public class EpubMaker extends ZipMaker<EpubOutConfig> {
     }
 
     @Override
-    public void make(@NonNull Book book, @NonNull ZipOutputStream zipout, EpubOutConfig config) throws IOException, MakerException {
+    public void make(@NonNull Book book, @NonNull ZipOutputStream zipout, EpubOutConfig config)
+            throws IOException, MakerException {
         if (config == null) {
             config = new EpubOutConfig();
         }
@@ -47,11 +48,7 @@ public class EpubMaker extends ZipMaker<EpubOutConfig> {
         if (writer == null) {
             throw new MakerException(M.tr("epub.make.unsupportedVersion", config.version));
         }
-        writeMIME(zipout);
-        writer.write(book, config, zipout);
-    }
-
-    private void writeMIME(ZipOutputStream zipout) throws IOException {
         ZipUtils.write(zipout, EPUB.MIME_FILE, EPUB.MT_EPUB, "ASCII");
+        writer.write(book, config, zipout);
     }
 }

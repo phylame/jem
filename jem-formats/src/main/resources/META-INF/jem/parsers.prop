@@ -35,3 +35,6 @@ ebk2=pw.phylame.jem.formats.ebk.Ebk2Parser
 
 # ePub parser
 epub=pw.phylame.jem.formats.epub.EpubParser
+
+# Mobi parser
+mobi=pw.phylame.jem.formats.mobi.MobiParser;mobi prc

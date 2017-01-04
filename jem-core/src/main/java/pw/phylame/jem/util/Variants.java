@@ -15,19 +15,27 @@
 
 package pw.phylame.jem.util;
 
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.Locale;
+import java.util.Map;
+import java.util.MissingResourceException;
+import java.util.concurrent.ConcurrentHashMap;
+
 import lombok.NonNull;
 import lombok.val;
-import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.jem.util.flob.Flobs;
 import pw.phylame.jem.util.text.Text;
 import pw.phylame.jem.util.text.Texts;
 import pw.phylame.ycl.io.PathUtils;
 import pw.phylame.ycl.log.Log;
-import pw.phylame.ycl.util.*;
-
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import pw.phylame.ycl.util.CollectionUtils;
+import pw.phylame.ycl.util.DateUtils;
+import pw.phylame.ycl.util.Exceptions;
+import pw.phylame.ycl.util.Function;
+import pw.phylame.ycl.util.StringUtils;
 
 public final class Variants {
     private Variants() {
@@ -79,7 +87,8 @@ public final class Variants {
     /**
      * Gets readable text for variant type.
      *
-     * @param type name of variant
+     * @param type
+     *            name of variant
      * @return the text, or {@literal null} if the type is unknown
      */
     public static String titleOf(@NonNull String type) {
@@ -93,7 +102,8 @@ public final class Variants {
     /**
      * Registers user specified type.
      *
-     * @param type name of type
+     * @param type
+     *            name of type
      */
     public static void registerType(String type) {
         if (StringUtils.isEmpty(type)) {
@@ -118,10 +128,14 @@ public final class Variants {
     /**
      * Maps specified class for variant type.
      *
-     * @param clazz the class
-     * @param type  name of type
-     * @throws NullPointerException     if the class is {@literal null}
-     * @throws IllegalArgumentException if the name of type is invalid
+     * @param clazz
+     *            the class
+     * @param type
+     *            name of type
+     * @throws NullPointerException
+     *             if the class is {@literal null}
+     * @throws IllegalArgumentException
+     *             if the name of type is invalid
      */
     public static void mapType(@NonNull Class<?> clazz, String type) {
         typeMapping.put(clazz, checkType(type));
@@ -130,9 +144,11 @@ public final class Variants {
     /**
      * Detects the type of specified object.
      *
-     * @param obj the object
+     * @param obj
+     *            the object
      * @return the type name or {@literal null} if unknown
-     * @throws NullPointerException if the object is {@literal null}
+     * @throws NullPointerException
+     *             if the object is {@literal null}
      */
     public static String typeOf(@NonNull final Object obj) {
         return CollectionUtils.getOrPut(typeMapping, obj.getClass(), false, new Function<Class<?>, String>() {
@@ -151,51 +167,61 @@ public final class Variants {
     /**
      * Returns default value for specified type.
      *
-     * @param type name of type
+     * @param type
+     *            name of type
      * @return the value, or {@literal null} if the type not in jem built-in types
-     * @throws IllegalArgumentException if the name of type is empty
+     * @throws IllegalArgumentException
+     *             if the name of type is empty
      */
     public static Object defaultFor(String type) {
         switch (checkType(type)) {
-            case STRING:
-                return StringUtils.EMPTY_TEXT;
-            case TEXT:
-                return Texts.forEmpty(Texts.PLAIN);
-            case FLOB:
-                return Flobs.forEmpty("_empty_", PathUtils.UNKNOWN_MIME);
-            case DATETIME:
-                return new Date();
-            case LOCALE:
-                return Locale.getDefault();
-            case INTEGER:
-                return 0;
-            case REAL:
-                return 0.0D;
-            case BOOLEAN:
-                return Boolean.FALSE;
-            default:
-                return null;
+        case STRING:
+            return StringUtils.EMPTY_TEXT;
+        case TEXT:
+            return Texts.forEmpty(Texts.PLAIN);
+        case FLOB:
+            return Flobs.forEmpty("_empty_", PathUtils.UNKNOWN_MIME);
+        case DATETIME:
+            return new Date();
+        case LOCALE:
+            return Locale.getDefault();
+        case INTEGER:
+            return 0;
+        case REAL:
+            return 0.0D;
+        case BOOLEAN:
+            return Boolean.FALSE;
+        default:
+            return null;
         }
     }
 
     /**
      * Converts specified object to string for printing.
      *
-     * @param obj the object or {@literal null} if the type of object is unknown
+     * @param obj
+     *            the object or {@literal null} if the type of object is unknown
      * @return a string represent the object
      */
     public static String printable(@NonNull Object obj) {
-        if (obj instanceof CharSequence) {
+        val type = typeOf(obj);
+        if (type == null) {
+            return null;
+        }
+        switch (type) {
+        case STRING:
+        case BOOLEAN:
+        case REAL:
+        case INTEGER:
+        case FLOB:
             return obj.toString();
-        } else if (obj instanceof Text) {
+        case TEXT:
             return ((Text) obj).getText();
-        } else if (obj instanceof Date) {
-            return DateUtils.format((Date) obj, "yy-M-d");
-        } else if (obj instanceof Locale) {
+        case DATETIME:
+            return DateUtils.format((Date) obj, "yyyy-M-d");
+        case LOCALE:
             return ((Locale) obj).getDisplayName();
-        } else if (obj instanceof Flob) {
-            return obj.toString();
-        } else {
+        default:
             return null;
         }
     }

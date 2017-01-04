@@ -18,7 +18,7 @@
 
 package pw.phylame.jem.formats.epub.opf;
 
-public class OpfWriterFactory {
+public class OpfFactory {
     public static OpfWriter getWriter(String version) {
         if ("2.0".equals(version)) {
             return new OPF_2_0();

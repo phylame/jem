@@ -19,10 +19,10 @@
 package pw.phylame.jem.formats.epub.ncx;
 
 import pw.phylame.jem.epm.util.MakerException;
-import pw.phylame.jem.formats.epub.Guide;
-import pw.phylame.jem.formats.epub.OutTuple;
-import pw.phylame.jem.formats.epub.Resource;
-import pw.phylame.jem.formats.epub.Spine;
+import pw.phylame.jem.formats.epub.OutData;
+import pw.phylame.jem.formats.epub.item.Guide;
+import pw.phylame.jem.formats.epub.item.Resource;
+import pw.phylame.jem.formats.epub.item.Spine;
 import pw.phylame.jem.formats.epub.writer.EpubWriter;
 
 import java.io.IOException;
@@ -32,9 +32,9 @@ import java.util.List;
  * NCX builder.
  */
 public interface NcxWriter {
-    void write(EpubWriter writer, OutTuple tuple) throws IOException, MakerException;
+    void write(EpubWriter writer, OutData data) throws IOException, MakerException;
 
-    String getCoverID();
+    String getCoverId();
 
     List<Resource> getResources();
 

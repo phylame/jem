@@ -32,6 +32,7 @@ public class EpubOutConfig extends ZipOutConfig {
     public static final String XML_CONFIG = "xmlConfig";
     public static final String HTML_CONFIG = "htmlConfig";
     public static final String UUID = "uuid";
+    public static final String UUID_TYPE = "uuidType";
     public static final String DATE_FORMAT = "dateFormat";
     public static final String SMALL_PAGE = "smallPage";
 
@@ -50,11 +51,14 @@ public class EpubOutConfig extends ZipOutConfig {
     @Configured(UUID)
     public String uuid = null;
 
+    @Configured(UUID_TYPE)
+    public String uuidType = "uuid";
+
     @Configured(DATE_FORMAT)
     public String dateFormat = EPUB.dateFormat;
 
     /**
-     * If <tt>smallPage</tt> is <tt>true</tt>, each HTML page will be smaller.
+     * If <tt>smallPage</tt> is <tt>true</tt>, each HTML page will be smaller for mobile version.
      */
     @Configured(SMALL_PAGE)
     public boolean smallPage = true;

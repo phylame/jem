@@ -18,14 +18,13 @@
 
 package pw.phylame.jem.formats.epub;
 
-import lombok.AllArgsConstructor;
+import java.io.IOException;
 
 /**
- * An item in <spine> of OPF.
+ * Listener for <tt>TocRender</tt>.
  */
-@AllArgsConstructor
-public class Spine {
-    public final String idref;
-    public final boolean linear;
-    public final String properties;
+public interface TocListener {
+    void beginNavPoint(String id, String href, String title) throws IOException;
+
+    void endNavPoint() throws IOException;
 }

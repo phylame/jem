@@ -16,19 +16,14 @@
  * limitations under the License.
  */
 
-package pw.phylame.jem.formats.epub;
+package pw.phylame.jem.formats.epub.ncx;
 
-
-import lombok.AllArgsConstructor;
-import pw.phylame.jem.core.Book;
-import pw.phylame.jem.epm.util.xml.XmlRender;
-
-import java.util.zip.ZipOutputStream;
-
-@AllArgsConstructor
-public class OutTuple {
-    public final Book book;
-    public final XmlRender render;
-    public final EpubOutConfig config;
-    public final ZipOutputStream zipout;
+public class NcxFactory {
+    public static NcxWriter getWriter(String version) {
+        if ("2005-1".equals(version)) {
+            return new NCX_2005_1();
+        } else {
+            return null;
+        }
+    }
 }

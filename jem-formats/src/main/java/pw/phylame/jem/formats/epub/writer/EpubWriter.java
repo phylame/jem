@@ -18,6 +18,10 @@
 
 package pw.phylame.jem.formats.epub.writer;
 
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.zip.ZipOutputStream;
+
 import lombok.val;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.epm.util.MakerException;
@@ -25,13 +29,9 @@ import pw.phylame.jem.epm.util.ZipUtils;
 import pw.phylame.jem.epm.util.xml.XmlRender;
 import pw.phylame.jem.formats.epub.EPUB;
 import pw.phylame.jem.formats.epub.EpubOutConfig;
-import pw.phylame.jem.formats.epub.OutTuple;
+import pw.phylame.jem.formats.epub.OutData;
 import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.jem.util.text.Text;
-
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.zip.ZipOutputStream;
 
 /**
  * Common ePub writer.
@@ -41,10 +41,10 @@ public abstract class EpubWriter {
     public static final String CONTAINER_VERSION = "1.0";
     public static final String OPS_DIR = "OEBPS";
 
-    protected OutTuple tuple;
+    protected OutData data;
 
     public void write(Book book, EpubOutConfig config, ZipOutputStream zipout) throws IOException, MakerException {
-        tuple = new OutTuple(book, new XmlRender(config.xmlConfig, false), config, zipout);
+        data = new OutData(book, new XmlRender(config.xmlConfig, false), config, zipout);
         write();
     }
 
@@ -55,19 +55,19 @@ public abstract class EpubWriter {
     }
 
     public void writeToOps(Flob file, String name) throws IOException {
-        ZipUtils.write(tuple.zipout, pathInOps(name), file);
+        ZipUtils.write(data.zipout, pathInOps(name), file);
     }
 
     public void writeToOps(String text, String name, String encoding) throws IOException {
-        ZipUtils.write(tuple.zipout, pathInOps(name), text, encoding);
+        ZipUtils.write(data.zipout, pathInOps(name), text, encoding);
     }
 
     public void writeToOps(Text text, String name, String encoding) throws IOException {
-        ZipUtils.write(tuple.zipout, pathInOps(name), text, encoding);
+        ZipUtils.write(data.zipout, pathInOps(name), text, encoding);
     }
 
     protected void writeContainer(String opfPath) throws IOException {
-        val render = tuple.render;
+        val render = data.render;
         val writer = new StringWriter();
         render.setOutput(writer);
         render.beginXml();
@@ -81,6 +81,6 @@ public abstract class EpubWriter {
         render.endTag();
         render.endXml();
 
-        ZipUtils.write(tuple.zipout, EPUB.CONTAINER_FILE, writer.toString(), tuple.config.xmlConfig.encoding);
+        ZipUtils.write(data.zipout, EPUB.CONTAINER_FILE, writer.toString(), data.config.xmlConfig.encoding);
     }
 }

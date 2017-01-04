@@ -16,14 +16,16 @@
  * limitations under the License.
  */
 
-package pw.phylame.jem.formats.epub.ncx;
+package pw.phylame.jem.formats.epub.item;
 
-public class NcxWriterFactory {
-    public static NcxWriter getWriter(String version) {
-        if ("2005-1".equals(version)) {
-            return new NCX_2005_1();
-        } else {
-            return null;
-        }
-    }
+import lombok.RequiredArgsConstructor;
+
+/**
+ * An guide item in of OPF.
+ */
+@RequiredArgsConstructor
+public class Guide {
+    public final String href;
+    public final String type;
+    public final String title;
 }

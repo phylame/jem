@@ -16,15 +16,16 @@
  * limitations under the License.
  */
 
-package pw.phylame.jem.formats.epub;
+package pw.phylame.jem.formats.epub.item;
 
-import java.io.IOException;
+import lombok.RequiredArgsConstructor;
 
 /**
- * Listener for <tt>BookRender</tt>.
+ * A spine item in of OPF.
  */
-public interface BookListener {
-    void startNavPoint(String id, String href, String title) throws IOException;
-
-    void endNavPoint() throws IOException;
+@RequiredArgsConstructor
+public class Spine {
+    public final String idref;
+    public final boolean linear;
+    public final String properties;
 }

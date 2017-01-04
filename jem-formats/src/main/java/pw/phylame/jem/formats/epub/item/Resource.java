@@ -16,14 +16,14 @@
  * limitations under the License.
  */
 
-package pw.phylame.jem.formats.epub;
+package pw.phylame.jem.formats.epub.item;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 /**
- * Describe resource in ePub.
+ * Resource item in ePub.
  */
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class Resource {
     public final String id;
     public final String href;

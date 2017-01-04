@@ -18,8 +18,16 @@
 
 package pw.phylame.jem.formats.ebk;
 
-import lombok.AllArgsConstructor;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.RandomAccessFile;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.DataFormatException;
+
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
 import pw.phylame.jem.core.Attributes;
@@ -34,14 +42,6 @@ import pw.phylame.jem.util.text.Texts;
 import pw.phylame.ycl.io.ByteUtils;
 import pw.phylame.ycl.io.ZLibUtils;
 import pw.phylame.ycl.util.StringUtils;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.zip.DataFormatException;
 
 public class Ebk2Parser extends BinaryParser<NonConfig> {
     public Ebk2Parser() {
@@ -60,35 +60,35 @@ public class Ebk2Parser extends BinaryParser<NonConfig> {
 
     @Override
     public Book parse(@NonNull RandomAccessFile input, NonConfig config) throws IOException, ParserException {
-        val tuple = new Tuple(input);
-        readHeader(tuple);
-        readIndexes(tuple);
-        return tuple.book;
+        val data = new Local(input);
+        readHeader(data);
+        readIndexes(data);
+        return data.book;
     }
 
-    private void readHeader(Tuple tuple) throws IOException, ParserException {
-        val file = tuple.file;
-        val book = tuple.book;
+    private void readHeader(Local data) throws IOException, ParserException {
+        val file = data.file;
+        val book = data.book;
 
         book.getAttributes().set("book_id", readUInt32(file));
-        tuple.headerSize = readUInt16(file);
+        data.headerSize = readUInt16(file);
         int version = readUInt16(file);
         if (version != 2) {
             onBadInput("ebk.parse.unsupportedVersion", version);
         }
 
-        file.skipBytes(4);     // ebk2 size
+        file.skipBytes(4); // ebk2 size
         Attributes.setTitle(book, readString(file, 64));
-        file.skipBytes(4);     // file size
-        tuple.indexesSize = readUInt32(file);
-        file.skipBytes(4);     // first block
-        tuple.chapterCount = readUInt16(file);
-        tuple.blockCount = readUInt16(file);
-        tuple.mediaCount = (int) readUInt32(file);
-        file.skipBytes(8);     // media size and txt size
+        file.skipBytes(4); // file size
+        data.indexesSize = readUInt32(file);
+        file.skipBytes(4); // first block
+        data.chapterCount = readUInt16(file);
+        data.blockCount = readUInt16(file);
+        data.mediaCount = (int) readUInt32(file);
+        file.skipBytes(8); // media size and txt size
     }
 
-    private void readIndexes(Tuple data) throws IOException, ParserException {
+    private void readIndexes(Local data) throws IOException, ParserException {
         final InputStream in;
         try {
             in = new ByteArrayInputStream(ZLibUtils.decompress(readData(data.file, (int) data.indexesSize)));
@@ -100,7 +100,7 @@ public class Ebk2Parser extends BinaryParser<NonConfig> {
         readBlocks(data, in);
     }
 
-    private void readChapters(Tuple data, InputStream stream) throws IOException, ParserException {
+    private void readChapters(Local data, InputStream stream) throws IOException, ParserException {
         String title;
         EbkText text;
         long offset, length;
@@ -116,7 +116,7 @@ public class Ebk2Parser extends BinaryParser<NonConfig> {
         }
     }
 
-    private void readBlocks(Tuple data, InputStream stream) throws IOException, ParserException {
+    private void readBlocks(Local data, InputStream stream) throws IOException, ParserException {
         long offset, length;
         for (int i = 0; i < data.blockCount; ++i) {
             offset = readUInt32(stream);
@@ -145,12 +145,12 @@ public class Ebk2Parser extends BinaryParser<NonConfig> {
         return StringUtils.trimmed(new String(readBytes(in, length), EBK.TEXT_ENCODING));
     }
 
-    @AllArgsConstructor
+    @RequiredArgsConstructor
     private class TextBlock {
         private final long offset, size;
     }
 
-    private class Tuple {
+    private class Local {
         private final RandomAccessFile file;
         private final Book book;
 
@@ -165,7 +165,7 @@ public class Ebk2Parser extends BinaryParser<NonConfig> {
 
         private final List<TextBlock> blocks = new ArrayList<>();
 
-        private Tuple(RandomAccessFile file) {
+        private Local(RandomAccessFile file) {
             this.file = file;
             book = new Book();
         }
@@ -189,8 +189,8 @@ public class Ebk2Parser extends BinaryParser<NonConfig> {
         }
 
         private String rawText() throws IOException, DataFormatException {
-            int index = (int) (offset >> 16);   // div 0x10000
-            val start = (int) (offset & 0x9999);  // mod 0x10000
+            int index = (int) (offset >> 16); // div 0x10000
+            val start = (int) (offset & 0x9999); // mod 0x10000
             int length = -start;
             val b = new StringBuilder();
             do {

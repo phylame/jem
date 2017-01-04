@@ -19,10 +19,10 @@
 package pw.phylame.jem.formats.epub.opf;
 
 import pw.phylame.jem.epm.util.MakerException;
-import pw.phylame.jem.formats.epub.Guide;
-import pw.phylame.jem.formats.epub.OutTuple;
-import pw.phylame.jem.formats.epub.Resource;
-import pw.phylame.jem.formats.epub.Spine;
+import pw.phylame.jem.formats.epub.OutData;
+import pw.phylame.jem.formats.epub.item.Guide;
+import pw.phylame.jem.formats.epub.item.Resource;
+import pw.phylame.jem.formats.epub.item.Spine;
 
 import java.io.IOException;
 import java.util.List;
@@ -37,5 +37,5 @@ public interface OpfWriter {
                List<Spine> spines,
                String ncxID,
                List<Guide> guides,
-               OutTuple tuple) throws IOException, MakerException;
+               OutData tuple) throws IOException, MakerException;
 }

@@ -18,14 +18,17 @@
 
 package pw.phylame.jem.formats.epub;
 
-import lombok.AllArgsConstructor;
 
-/**
- * An item in <guide> of OPF.
- */
-@AllArgsConstructor
-public class Guide {
-    public final String href;
-    public final String type;
-    public final String title;
+import java.util.zip.ZipOutputStream;
+
+import lombok.RequiredArgsConstructor;
+import pw.phylame.jem.core.Book;
+import pw.phylame.jem.epm.util.xml.XmlRender;
+
+@RequiredArgsConstructor
+public class OutData {
+    public final Book book;
+    public final XmlRender render;
+    public final EpubOutConfig config;
+    public final ZipOutputStream zipout;
 }

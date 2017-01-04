@@ -62,7 +62,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
 
     @Override
     public Book parse(@NonNull ZipFile zip, PmabInConfig config) throws IOException, ParserException {
-        if (!PMAB.MT_PMAB.equals(ZipUtils.textOf(zip, PMAB.MIME_FILE, "ASCII"))) {
+        if (!PMAB.MT_PMAB.equals(ZipUtils.textOf(zip, PMAB.MIME_FILE, "ASCII").trim())) {
             throw new ParserException(M.tr("pmab.parse.invalidMT", PMAB.MIME_FILE, PMAB.MT_PMAB));
         }
         if (config == null) {
@@ -77,12 +77,12 @@ public class PmabParser extends ZipParser<PmabInConfig> {
     private int getVersion(XmlPullParser xpp, String error) throws ParserException {
         val str = attributeOf(xpp, "version");
         switch (str) {
-            case "3.0":
-                return 3;
-            case "2.0":
-                return 2;
-            default:
-                throw new ParserException(M.tr(error));
+        case "3.0":
+            return 3;
+        case "2.0":
+            return 2;
+        default:
+            throw new ParserException(M.tr(error));
         }
     }
 
@@ -97,35 +97,35 @@ public class PmabParser extends ZipParser<PmabInConfig> {
             int event = xpp.getEventType();
             do {
                 switch (event) {
-                    case XmlPullParser.START_TAG: {
-                        val tag = xpp.getName();
-                        if (version == 3) {
-                            hasText = startPBMv3(tag, tuple);
-                        } else if (version == 2) {
-                            hasText = startPBMv2(tag, tuple);
-                        } else if (tag.equals("pbm")) {
-                            version = getVersion(xpp, "pmab.parse.unsupportedPBM");
-                        } else {
-                            hasText = false;
-                        }
+                case XmlPullParser.START_TAG: {
+                    val tag = xpp.getName();
+                    if (version == 3) {
+                        hasText = startPBMv3(tag, tuple);
+                    } else if (version == 2) {
+                        hasText = startPBMv2(tag, tuple);
+                    } else if (tag.equals("pbm")) {
+                        version = getVersion(xpp, "pmab.parse.unsupportedPBM");
+                    } else {
+                        hasText = false;
                     }
-                    break;
-                    case XmlPullParser.TEXT: {
-                        if (hasText) {
-                            b.append(xpp.getText());
-                        }
+                }
+                break;
+                case XmlPullParser.TEXT: {
+                    if (hasText) {
+                        b.append(xpp.getText());
                     }
-                    break;
-                    case XmlPullParser.END_TAG: {
-                        val tag = xpp.getName();
-                        if (version == 3) {
-                            endPBMv3(tag, b, tuple);
-                        } else if (version == 2) {
-                            endPBMv2(tag, b, tuple);
-                        }
-                        b.setLength(0);
+                }
+                break;
+                case XmlPullParser.END_TAG: {
+                    val tag = xpp.getName();
+                    if (version == 3) {
+                        endPBMv3(tag, b, tuple);
+                    } else if (version == 2) {
+                        endPBMv2(tag, b, tuple);
                     }
-                    break;
+                    b.setLength(0);
+                }
+                break;
                 }
                 event = xpp.next();
             } while (event != XmlPullParser.END_DOCUMENT);
@@ -140,12 +140,12 @@ public class PmabParser extends ZipParser<PmabInConfig> {
             return text;
         }
         switch (type) {
-            case Variants.TEXT:
-                return Texts.forString(text, Texts.PLAIN);
-            case Variants.LOCALE:
-                return EpmUtils.parseLocale(text);
-            default:
-                return text;
+        case Variants.TEXT:
+            return Texts.forString(text, Texts.PLAIN);
+        case Variants.LOCALE:
+            return EpmUtils.parseLocale(text);
+        default:
+            return text;
         }
     }
 
@@ -160,13 +160,14 @@ public class PmabParser extends ZipParser<PmabInConfig> {
                 value = detectValue(text, tuple.itemName);
             } else if (type.equals(Variants.DATETIME) || type.equals("date") || type.equals("time")) {
                 value = EpmUtils.parseDate(text, valueOfName(itemType, "format", ";", false, tuple.config.dateFormat));
-            } else if (type.startsWith("text/")) {  // text object
+            } else if (type.startsWith("text/")) { // text object
                 val t = type.substring(5);
                 Flob flob = Flobs.forZip(tuple.zip, text, "text/" + t);
-                value = Texts.forFlob(flob, valueOfName(itemType, "encoding", ";", false, tuple.config.textEncoding), t);
+                value = Texts.forFlob(flob, valueOfName(itemType, "encoding", ";", false, tuple.config.textEncoding),
+                        t);
             } else if (type.equals(Variants.LOCALE)) {
                 value = EpmUtils.parseLocale(text);
-            } else if (type.matches("[\\w]+/[\\w\\-]+")) {   // file object
+            } else if (type.matches("[\\w]+/[\\w\\-]+")) { // file object
                 value = Flobs.forZip(tuple.zip, text, type);
             } else if (type.equals(Variants.INTEGER) || type.equals("uint")) {
                 value = NumberUtils.parseInt(text);
@@ -177,7 +178,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
                 value = text;
             } else if (type.equals(Variants.BOOLEAN)) {
                 value = Boolean.parseBoolean(text);
-            } else {    // store as string
+            } else { // store as string
                 value = detectValue(text, tuple.itemName);
             }
         }
@@ -188,21 +189,21 @@ public class PmabParser extends ZipParser<PmabInConfig> {
         val xpp = tuple.xpp;
         boolean hasText = false;
         switch (tag) {
-            case "item": {
-                tuple.itemName = attributeOf(xpp, "name");
-                tuple.itemType = xpp.getAttributeValue(null, "type");
-                hasText = true;
-            }
-            break;
-            case "attributes":
-                tuple.inAttributes = true;
-                break;
-            case "meta":
-                tuple.metadata.put(attributeOf(xpp, "name"), attributeOf(xpp, "value"));
-                break;
-            case "head":
-                tuple.metadata = new HashMap<>();
-                break;
+        case "item": {
+            tuple.itemName = attributeOf(xpp, "name");
+            tuple.itemType = xpp.getAttributeValue(null, "type");
+            hasText = true;
+        }
+        break;
+        case "attributes":
+            tuple.inAttributes = true;
+        break;
+        case "meta":
+            tuple.metadata.put(attributeOf(xpp, "name"), attributeOf(xpp, "value"));
+        break;
+        case "head":
+            tuple.metadata = new HashMap<>();
+        break;
         }
         return hasText;
     }
@@ -224,63 +225,64 @@ public class PmabParser extends ZipParser<PmabInConfig> {
         val xpp = tuple.xpp;
         boolean hasText = false;
         switch (tag) {
-            case "attr": {
-                if (tuple.checkCount()) {
-                    tuple.attrName = attributeOf(xpp, "name");
-                    tuple.mediaType = tuple.attrName.equals(Attributes.COVER) ? xpp.getAttributeValue(null, "media-type") : null;
-                    hasText = true;
+        case "attr": {
+            if (tuple.checkCount()) {
+                tuple.attrName = attributeOf(xpp, "name");
+                tuple.mediaType = tuple.attrName.equals(Attributes.COVER) ? xpp.getAttributeValue(null, "media-type")
+                        : null;
+                hasText = true;
+            }
+        }
+        break;
+        case "item": {
+            if (tuple.checkCount()) {
+                val name = attributeOf(xpp, "name");
+                val type = xpp.getAttributeValue(null, "type");
+                if (isEmpty(type) || type.equals(Variants.TEXT)) {
+                    tuple.book.getExtensions().set(name, attributeOf(xpp, "value"));
+                } else if (type.equals("number")) {
+                    tuple.book.getExtensions().set(name, NumberUtils.parseNumber(attributeOf(xpp, "value")));
+                } else if (type.equals(Variants.FLOB)) { // file will be processed in <object>
+                    tuple.attrName = name;
+                } else {
+                    throw new ParserException(M.tr("pmab.parse.2.unknownItemType", type));
                 }
             }
-            break;
-            case "item": {
-                if (tuple.checkCount()) {
-                    val name = attributeOf(xpp, "name");
-                    val type = xpp.getAttributeValue(null, "type");
-                    if (isEmpty(type) || type.equals(Variants.TEXT)) {
-                        tuple.book.getExtensions().set(name, attributeOf(xpp, "value"));
-                    } else if (type.equals("number")) {
-                        tuple.book.getExtensions().set(name, NumberUtils.parseNumber(attributeOf(xpp, "value")));
-                    } else if (type.equals(Variants.FLOB)) {    // file will be processed in <object>
-                        tuple.attrName = name;
-                    } else {
-                        throw new ParserException(M.tr("pmab.parse.2.unknownItemType", type));
-                    }
+        }
+        break;
+        case "object": {
+            if (tuple.checkCount()) {
+                val mime = attributeOf(xpp, "media-type");
+                val flob = Flobs.forZip(tuple.zip, attributeOf(xpp, "href"), mime);
+                Object value = flob;
+                if (mime.startsWith("text/plain")) {
+                    val encoding = xpp.getAttributeValue(null, "encoding");
+                    value = isEmpty(encoding)
+                            ? Texts.forFlob(flob, tuple.config.textEncoding, Texts.PLAIN)
+                            : Texts.forFlob(flob, encoding, Texts.PLAIN);
                 }
+                tuple.book.getExtensions().set(tuple.attrName, value);
             }
-            break;
-            case "object": {
-                if (tuple.checkCount()) {
-                    val mime = attributeOf(xpp, "media-type");
-                    val flob = Flobs.forZip(tuple.zip, attributeOf(xpp, "href"), mime);
-                    Object value = flob;
-                    if (mime.startsWith("text/plain")) {
-                        val encoding = xpp.getAttributeValue(null, "encoding");
-                        value = isEmpty(encoding)
-                                ? Texts.forFlob(flob, tuple.config.textEncoding, Texts.PLAIN)
-                                : Texts.forFlob(flob, encoding, Texts.PLAIN);
-                    }
-                    tuple.book.getExtensions().set(tuple.attrName, value);
-                }
-            }
-            break;
-            case "metadata": {
-                val str = xpp.getAttributeValue(null, "count");
-                tuple.count = isNotEmpty(str) ? NumberUtils.parseInt(str) : -1;
-                tuple.order = 0;
-            }
-            break;
-            case "extension": {
-                val str = xpp.getAttributeValue(null, "count");
-                tuple.count = isNotEmpty(str) ? NumberUtils.parseInt(str) : -1;
-                tuple.order = 0;
-            }
-            break;
-            case "meta":
-                tuple.metadata.put(attributeOf(xpp, "name"), attributeOf(xpp, "content"));
-                break;
-            case "head":
-                tuple.metadata = new HashMap<>();
-                break;
+        }
+        break;
+        case "metadata": {
+            val str = xpp.getAttributeValue(null, "count");
+            tuple.count = isNotEmpty(str) ? NumberUtils.parseInt(str) : -1;
+            tuple.order = 0;
+        }
+        break;
+        case "extension": {
+            val str = xpp.getAttributeValue(null, "count");
+            tuple.count = isNotEmpty(str) ? NumberUtils.parseInt(str) : -1;
+            tuple.order = 0;
+        }
+        break;
+        case "meta":
+            tuple.metadata.put(attributeOf(xpp, "name"), attributeOf(xpp, "content"));
+        break;
+        case "head":
+            tuple.metadata = new HashMap<>();
+        break;
         }
         return hasText;
     }
@@ -320,39 +322,39 @@ public class PmabParser extends ZipParser<PmabInConfig> {
             int event = xpp.getEventType();
             do {
                 switch (event) {
-                    case XmlPullParser.START_TAG: {
-                        val tag = xpp.getName();
-                        if (version == 3) {
-                            hasText = startPBCv3(tag, tuple);
-                        } else if (version == 2) {
-                            hasText = startPBCv2(tag, tuple);
-                        } else if (tag.equals("pbc")) {
-                            version = getVersion(xpp, "pmab.parse.unsupportedPBC");
-                        } else {
-                            hasText = false;
-                        }
+                case XmlPullParser.START_TAG: {
+                    val tag = xpp.getName();
+                    if (version == 3) {
+                        hasText = startPBCv3(tag, tuple);
+                    } else if (version == 2) {
+                        hasText = startPBCv2(tag, tuple);
+                    } else if (tag.equals("pbc")) {
+                        version = getVersion(xpp, "pmab.parse.unsupportedPBC");
+                    } else {
+                        hasText = false;
                     }
-                    break;
-                    case XmlPullParser.TEXT: {
-                        if (hasText) {
-                            b.append(xpp.getText());
-                        }
+                }
+                break;
+                case XmlPullParser.TEXT: {
+                    if (hasText) {
+                        b.append(xpp.getText());
                     }
-                    break;
-                    case XmlPullParser.END_TAG: {
-                        val tag = xpp.getName();
-                        if (version == 3) {
-                            endPBCv3(tag, b, tuple);
-                        } else if (version == 2) {
-                            endPBCv2(tag, b, tuple);
-                        }
-                        b.setLength(0);
+                }
+                break;
+                case XmlPullParser.END_TAG: {
+                    val tag = xpp.getName();
+                    if (version == 3) {
+                        endPBCv3(tag, b, tuple);
+                    } else if (version == 2) {
+                        endPBCv2(tag, b, tuple);
                     }
-                    break;
-                    case XmlPullParser.START_DOCUMENT: {
-                        tuple.currentChapter = tuple.book;
-                    }
-                    break;
+                    b.setLength(0);
+                }
+                break;
+                case XmlPullParser.START_DOCUMENT: {
+                    tuple.currentChapter = tuple.book;
+                }
+                break;
                 }
                 event = xpp.next();
             } while (event != XmlPullParser.END_DOCUMENT);
@@ -365,20 +367,20 @@ public class PmabParser extends ZipParser<PmabInConfig> {
         val xpp = tuple.xpp;
         boolean hasText = false;
         switch (tag) {
-            case "chapter":
-                tuple.appendChapter();
-                break;
-            case "item": {
-                tuple.itemName = attributeOf(xpp, "name");
-                tuple.itemType = xpp.getAttributeValue(null, "type");
-                hasText = true;
-            }
-            break;
-            case "content": {
-                tuple.itemType = xpp.getAttributeValue(null, "type");
-                hasText = true;
-            }
-            break;
+        case "chapter":
+            tuple.appendChapter();
+        break;
+        case "item": {
+            tuple.itemName = attributeOf(xpp, "name");
+            tuple.itemType = xpp.getAttributeValue(null, "type");
+            hasText = true;
+        }
+        break;
+        case "content": {
+            tuple.itemType = xpp.getAttributeValue(null, "type");
+            hasText = true;
+        }
+        break;
         }
         return hasText;
     }
@@ -386,28 +388,29 @@ public class PmabParser extends ZipParser<PmabInConfig> {
     private void endPBCv3(String tag, StringBuilder b, Tuple tuple) throws IOException, ParserException {
         val itemType = tuple.itemType;
         switch (tag) {
-            case "chapter":
-                tuple.currentChapter = tuple.currentChapter.getParent();
-                break;
-            case "item": {
-                String text = b.toString().trim();
-                tuple.currentChapter.getAttributes().set(tuple.itemName, parseV3Item(text, tuple));
+        case "chapter":
+            tuple.currentChapter = tuple.currentChapter.getParent();
+        break;
+        case "item": {
+            String text = b.toString().trim();
+            tuple.currentChapter.getAttributes().set(tuple.itemName, parseV3Item(text, tuple));
+        }
+        break;
+        case "content": {
+            Text text;
+            val data = b.toString().trim();
+            if (isEmpty(itemType)) {
+                text = Texts.forString(data, Texts.PLAIN);
+            } else if (itemType.startsWith("text/")) {
+                val flob = Flobs.forZip(tuple.zip, data, firstPartOf(itemType, ';'));
+                text = Texts.forFlob(flob, valueOfName(itemType, "encoding", ";", false, tuple.config.textEncoding),
+                        Texts.PLAIN);
+            } else {
+                text = Texts.forString(data, Texts.PLAIN);
             }
-            break;
-            case "content": {
-                Text text;
-                val data = b.toString().trim();
-                if (isEmpty(itemType)) {
-                    text = Texts.forString(data, Texts.PLAIN);
-                } else if (itemType.startsWith("text/")) {
-                    val flob = Flobs.forZip(tuple.zip, data, firstPartOf(itemType, ';'));
-                    text = Texts.forFlob(flob, valueOfName(itemType, "encoding", ";", false, tuple.config.textEncoding), Texts.PLAIN);
-                } else {
-                    text = Texts.forString(data, Texts.PLAIN);
-                }
-                tuple.currentChapter.setText(text);
-            }
-            break;
+            tuple.currentChapter.setText(text);
+        }
+        break;
         }
     }
 
@@ -415,39 +418,39 @@ public class PmabParser extends ZipParser<PmabInConfig> {
         val xpp = tuple.xpp;
         boolean hasText = false;
         switch (tag) {
-            case "chapter": {
-                val href = xpp.getAttributeValue(null, "href");
-                if (isEmpty(href)) {
-                    tuple.appendChapter();
-                } else {
-                    val flob = Flobs.forZip(tuple.zip, href, "text/plain");
-                    tuple.chapterEncoding = xpp.getAttributeValue(null, "encoding");
-                    if (isEmpty(tuple.chapterEncoding)) {
-                        tuple.chapterEncoding = tuple.config.textEncoding;
-                    }
-                    tuple.appendChapter();
-                    tuple.currentChapter.setText(Texts.forFlob(flob, tuple.chapterEncoding, Texts.PLAIN));
+        case "chapter": {
+            val href = xpp.getAttributeValue(null, "href");
+            if (isEmpty(href)) {
+                tuple.appendChapter();
+            } else {
+                val flob = Flobs.forZip(tuple.zip, href, "text/plain");
+                tuple.chapterEncoding = xpp.getAttributeValue(null, "encoding");
+                if (isEmpty(tuple.chapterEncoding)) {
+                    tuple.chapterEncoding = tuple.config.textEncoding;
                 }
+                tuple.appendChapter();
+                tuple.currentChapter.setText(Texts.forFlob(flob, tuple.chapterEncoding, Texts.PLAIN));
             }
-            break;
-            case "title":
-                hasText = true;
-                break;
-            case "cover": {
-                val href = attributeOf(xpp, "href");
-                val mime = attributeOf(xpp, "media-type");
-                Attributes.setCover(tuple.currentChapter, Flobs.forZip(tuple.zip, href, mime));
+        }
+        break;
+        case "title":
+            hasText = true;
+        break;
+        case "cover": {
+            val href = attributeOf(xpp, "href");
+            val mime = attributeOf(xpp, "media-type");
+            Attributes.setCover(tuple.currentChapter, Flobs.forZip(tuple.zip, href, mime));
+        }
+        break;
+        case "intro": {
+            val flob = Flobs.forZip(tuple.zip, attributeOf(xpp, "href"), "text/plain");
+            String encoding = xpp.getAttributeValue(null, "encoding");
+            if (isEmpty(encoding)) {
+                encoding = tuple.config.useChapterEncoding ? tuple.chapterEncoding : tuple.config.textEncoding;
             }
-            break;
-            case "intro": {
-                val flob = Flobs.forZip(tuple.zip, attributeOf(xpp, "href"), "text/plain");
-                String encoding = xpp.getAttributeValue(null, "encoding");
-                if (isEmpty(encoding)) {
-                    encoding = tuple.config.useChapterEncoding ? tuple.chapterEncoding : tuple.config.textEncoding;
-                }
-                Attributes.setIntro(tuple.currentChapter, Texts.forFlob(flob, encoding, Texts.PLAIN));
-            }
-            break;
+            Attributes.setIntro(tuple.currentChapter, Texts.forFlob(flob, encoding, Texts.PLAIN));
+        }
+        break;
         }
         return hasText;
     }
@@ -473,8 +476,8 @@ public class PmabParser extends ZipParser<PmabInConfig> {
         }
 
         // PBM 3 data
-        private String itemName, itemType;      // item attribute
-        private boolean inAttributes = false;   // item is contained in <attributes>
+        private String itemName, itemType; // item attribute
+        private boolean inAttributes = false; // item is contained in <attributes>
         // PMAB 2 counter
         private int count, order;
         // PBM 2 data

@@ -15,6 +15,11 @@
 
 package pw.phylame.jem.epm.impl;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.util.Arrays;
+
 import lombok.val;
 import pw.phylame.jem.epm.util.E;
 import pw.phylame.jem.epm.util.M;
@@ -22,10 +27,6 @@ import pw.phylame.jem.epm.util.ParserException;
 import pw.phylame.jem.epm.util.config.EpmConfig;
 import pw.phylame.ycl.io.BufferedRandomAccessFile;
 import pw.phylame.ycl.io.ByteUtils;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
 
 public abstract class BinaryParser<C extends EpmConfig> extends AbstractParser<RandomAccessFile, C> {
 
@@ -50,7 +51,8 @@ public abstract class BinaryParser<C extends EpmConfig> extends AbstractParser<R
         return readData(input, size, null);
     }
 
-    protected byte[] readData(RandomAccessFile input, int size, String key, Object... args) throws IOException, ParserException {
+    protected byte[] readData(RandomAccessFile input, int size, String key, Object... args)
+            throws IOException, ParserException {
         if (size < 0) {
             throw E.forIllegalArgument("size(%d) < 0", size);
         }
@@ -65,11 +67,20 @@ public abstract class BinaryParser<C extends EpmConfig> extends AbstractParser<R
         return data;
     }
 
+    protected byte[] ensureLength(byte[] b, int length) {
+        return b.length >= length ? b : Arrays.copyOf(b, length);
+    }
+
     protected int readUInt16(RandomAccessFile input) throws IOException, ParserException {
         return ByteUtils.littleParser.getUInt16(readData(input, 2), 0);
     }
 
     protected long readUInt32(RandomAccessFile input) throws IOException, ParserException {
         return ByteUtils.littleParser.getUInt32(readData(input, 4), 0);
+    }
+
+    protected String readString(RandomAccessFile input, int length, String encoding)
+            throws ParserException, IOException {
+        return new String(readData(input, length), encoding);
     }
 }

@@ -18,20 +18,33 @@
 
 package pw.phylame.jem.formats.epub.opf;
 
-import lombok.val;
-import pw.phylame.jem.core.Attributes;
-import pw.phylame.jem.core.Book;
-import pw.phylame.jem.epm.util.MakerException;
-import pw.phylame.jem.epm.util.xml.XmlRender;
-import pw.phylame.jem.formats.epub.*;
-import pw.phylame.ycl.format.Converters;
-import pw.phylame.ycl.util.DateUtils;
-import pw.phylame.ycl.util.StringUtils;
+import static pw.phylame.jem.core.Attributes.getAuthor;
+import static pw.phylame.jem.core.Attributes.getDate;
+import static pw.phylame.jem.core.Attributes.getGenre;
+import static pw.phylame.jem.core.Attributes.getIntro;
+import static pw.phylame.jem.core.Attributes.getKeywords;
+import static pw.phylame.jem.core.Attributes.getLanguage;
+import static pw.phylame.jem.core.Attributes.getPublisher;
+import static pw.phylame.jem.core.Attributes.getRights;
+import static pw.phylame.jem.core.Attributes.getTitle;
+import static pw.phylame.jem.core.Attributes.getVendor;
+import static pw.phylame.ycl.util.StringUtils.isNotEmpty;
 
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
+
+import lombok.val;
+import pw.phylame.jem.core.Book;
+import pw.phylame.jem.epm.util.MakerException;
+import pw.phylame.jem.epm.util.xml.XmlRender;
+import pw.phylame.jem.formats.epub.EpubOutConfig;
+import pw.phylame.jem.formats.epub.OutData;
+import pw.phylame.jem.formats.epub.item.Guide;
+import pw.phylame.jem.formats.epub.item.Resource;
+import pw.phylame.jem.formats.epub.item.Spine;
+import pw.phylame.ycl.util.DateUtils;
+import pw.phylame.ycl.util.MiscUtils;
 
 /**
  * OPF 2.0 implements.
@@ -46,29 +59,29 @@ class OPF_2_0 implements OpfWriter {
 
     public static final String[] OPTIONAL_METADATA = {"source", "relation", "format"};
 
-
     private XmlRender render;
     private EpubOutConfig config;
 
     @Override
     public void write(String coverID,
-                      List<Resource> resources,
-                      List<Spine> spines,
-                      String ncxID,
-                      List<Guide> guides,
-                      OutTuple tuple) throws IOException, MakerException {
-        this.render = tuple.render;
-        this.config = tuple.config;
+            List<Resource> resources,
+            List<Spine> spines,
+            String ncxID,
+            List<Guide> guides,
+            OutData data) throws IOException, MakerException {
+        this.render = data.render;
+        this.config = data.config;
+
         render.beginXml();
         render.beginTag("package").attribute("version", OPF_VERSION_2);
         render.attribute("unique-identifier", BOOK_ID_NAME);
         render.attribute("xmlns", OPF_XML_NS);
 
-        writeMetadata(tuple.book, coverID);
+        writeMetadata(data.book, coverID);
 
         // manifest
         render.beginTag("manifest");
-        for (Resource resource : resources) {
+        for (val resource : resources) {
             render.beginTag("item")
                     .attribute("id", resource.id)
                     .attribute("href", resource.href)
@@ -79,24 +92,25 @@ class OPF_2_0 implements OpfWriter {
 
         // spine
         render.beginTag("spine").attribute("toc", ncxID);
-        for (val item : spines) {
-            render.beginTag("itemref").attribute("idref", item.idref);
-            if (!item.linear) {
+        for (val spine : spines) {
+            render.beginTag("itemref").attribute("idref", spine.idref);
+            if (!spine.linear) {
                 render.attribute("linear", "no");
             }
-            if (item.properties != null) {
-                render.attribute("properties", item.properties);
+            if (isNotEmpty(spine.properties)) {
+                render.attribute("properties", spine.properties);
             }
             render.endTag();
         }
         render.endTag();
+
         // guide
         render.beginTag("guide");
-        for (val item : guides) {
+        for (val guide : guides) {
             render.beginTag("reference")
-                    .attribute("href", item.href)
-                    .attribute("type", item.type)
-                    .attribute("title", item.title)
+                    .attribute("href", guide.href)
+                    .attribute("type", guide.type)
+                    .attribute("title", guide.title)
                     .endTag();
         }
         render.endTag();
@@ -108,50 +122,52 @@ class OPF_2_0 implements OpfWriter {
     private void writeMetadata(Book book, String coverID) throws IOException, MakerException {
         render.beginTag("metadata");
         render.attribute("xmlns:dc", DC_XML_NS).attribute("xmlns:opf", OPF_XML_NS);
-        addDcmi(book, config.uuid, coverID);
+        writeDcmi(book, config.uuid, config.uuidType);
+        if (isNotEmpty(coverID)) {
+            writeMeta("cover", coverID);
+        }
         render.endTag();
     }
 
-    private void addDcmi(Book book, String uuid, String coverID) throws IOException, MakerException {
+    private void writeMeta(String name, String content) throws IOException {
+        render.beginTag("meta").attribute("name", name).attribute("content", content).endTag();
+    }
+
+    private void writeDcmi(Book book, String uuid, String uuidType) throws IOException, MakerException {
         render.beginTag("dc:identifier").attribute("id", BOOK_ID_NAME);
-        render.attribute("opf:scheme", "uuid").text(uuid).endTag();
+        render.attribute("opf:scheme", uuidType).text(uuid).endTag();
 
-        render.beginTag("dc:title").text(Attributes.getTitle(book)).endTag();
+        render.beginTag("dc:title").text(getTitle(book)).endTag();
 
-        String value = Attributes.getAuthor(book);
-        if (StringUtils.isNotEmpty(value)) {
-            render.beginTag("dc:creator");
-            render.attribute("opf:role", "aut").text(value).endTag();
+        String value = getAuthor(book);
+        if (isNotEmpty(value)) {
+            render.beginTag("dc:creator").attribute("opf:role", "aut").text(value).endTag();
         }
 
-        value = Attributes.getGenre(book);
-        if (StringUtils.isNotEmpty(value)) {
+        value = getGenre(book);
+        if (isNotEmpty(value)) {
             render.beginTag("dc:type").text(value).endTag();
         }
 
-        value = Attributes.getKeywords(book);
-        if (StringUtils.isNotEmpty(value)) {
+        value = getKeywords(book);
+        if (isNotEmpty(value)) {
             render.beginTag("dc:subject").text(value).endTag();
         }
 
-        val intro = Attributes.getIntro(book);
+        val intro = getIntro(book);
         if (intro != null) {
             val text = intro.getText();
-            if (StringUtils.isNotEmpty(text)) {
+            if (isNotEmpty(text)) {
                 render.beginTag("dc:description").text(text).endTag();
             }
         }
 
-        value = Attributes.getPublisher(book);
-        if (StringUtils.isNotEmpty(value)) {
+        value = getPublisher(book);
+        if (isNotEmpty(value)) {
             render.beginTag("dc:publisher").text(value).endTag();
         }
 
-        if (coverID != null) {
-            render.beginTag("meta").attribute("name", "cover").attribute("content", coverID).endTag();
-        }
-
-        val date = Attributes.getDate(book);
+        val date = getDate(book);
         if (date != null) {
             render.beginTag("dc:date")
                     .attribute("opf:event", "creation")
@@ -167,24 +183,25 @@ class OPF_2_0 implements OpfWriter {
             }
         }
 
-        val language = Attributes.getLanguage(book);
+        val language = getLanguage(book);
         if (language != null) {
-            render.beginTag("dc:language").text(Converters.render(language, Locale.class)).endTag();
+            render.beginTag("dc:language").text(MiscUtils.renderLocale(language)).endTag();
         }
 
-        value = Attributes.getRights(book);
-        if (StringUtils.isNotEmpty(value)) {
+        value = getRights(book);
+        if (isNotEmpty(value)) {
             render.beginTag("dc:rights").text(value).endTag();
         }
 
-        value = Attributes.getVendor(book);
-        if (StringUtils.isNotEmpty(value)) {
+        value = getVendor(book);
+        if (isNotEmpty(value)) {
             render.beginTag("dc:contributor").attribute("opf:role", "bkp").text(value).endTag();
         }
 
+        val attributes = book.getAttributes();
         for (val key : OPTIONAL_METADATA) {
-            value = book.getAttributes().get(key, "");
-            if (StringUtils.isNotEmpty(value)) {
+            value = attributes.get(key, "");
+            if (isNotEmpty(value)) {
                 render.beginTag("dc:" + key).text(value).endTag();
             }
         }

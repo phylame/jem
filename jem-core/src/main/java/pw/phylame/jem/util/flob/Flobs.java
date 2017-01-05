@@ -181,8 +181,7 @@ public final class Flobs {
 
         public long offset, size;
 
-        private BlockFlob(@NonNull String name, @NonNull RandomAccessFile file, long offset, long size, String mime)
-                throws IOException {
+        private BlockFlob(String name, RandomAccessFile file, long offset, long size, String mime) throws IOException {
             super(mime);
             if (size > (file.length() - offset)) {
                 throw Exceptions.forIllegalArgument("offset(%d) + size(%d) > total(%d)", offset, size, file.length());

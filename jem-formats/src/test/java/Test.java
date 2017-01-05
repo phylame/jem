@@ -18,7 +18,7 @@ public class Test {
     public static void main(String[] args) throws IOException, JemException {
         System.setProperty(EpmManager.AUTO_LOAD_CUSTOMIZED_KEY, "true");
         Log.setLevel(LogLevel.ALL);
-        val book = parseFile("D:/down/qiyu/yxz.mobi", null);
+        val book = parseFile("D:\\down\\qiyu\\yxz.mobi", null);
         if (book == null) {
             return;
         }

@@ -18,7 +18,6 @@ package pw.phylame.jem.epm.impl;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.Arrays;
 
 import lombok.val;
 import pw.phylame.jem.epm.util.E;
@@ -65,10 +64,6 @@ public abstract class BinaryParser<C extends EpmConfig> extends AbstractParser<R
             }
         }
         return data;
-    }
-
-    protected byte[] ensureLength(byte[] b, int length) {
-        return b.length >= length ? b : Arrays.copyOf(b, length);
     }
 
     protected int readUInt16(RandomAccessFile input) throws IOException, ParserException {

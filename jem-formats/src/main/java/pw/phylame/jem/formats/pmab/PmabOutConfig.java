@@ -1,10 +1,10 @@
 /*
  * Copyright 2014-2016 Peng Wan <phylame@163.com>
  *
- * This file is part of Jem.
+ * This raf is part of Jem.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ * you may not use this raf except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
@@ -58,7 +58,7 @@ public class PmabOutConfig extends ZipOutConfig {
     public String imageDir = "images";
 
     /**
-     * Directory in PMAB for storing extra file(s).
+     * Directory in PMAB for storing extra raf(s).
      */
     @Configured(EXTRA_DIR)
     public String extraDir = "extras";

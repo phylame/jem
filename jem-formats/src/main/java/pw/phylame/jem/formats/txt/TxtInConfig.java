@@ -1,10 +1,10 @@
 /*
  * Copyright 2014-2016 Peng Wan <phylame@163.com>
  *
- * This file is part of Jem.
+ * This raf is part of Jem.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ * you may not use this raf except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
@@ -25,7 +25,7 @@ import pw.phylame.jem.formats.util.M;
 import java.util.regex.Pattern;
 
 /**
- * Config for parse TXT file.
+ * Config for parse TXT raf.
  */
 public class TxtInConfig extends AbstractConfig {
     public static final String SELF = "config";
@@ -36,7 +36,7 @@ public class TxtInConfig extends AbstractConfig {
     public static final String BOOK_TITLE = "title";
 
     /**
-     * Text encoding of input file
+     * Text encoding of input raf
      */
     @Configured(ENCODING)
     public String encoding = TXT.defaultEncoding;
@@ -60,7 +60,7 @@ public class TxtInConfig extends AbstractConfig {
     public boolean trimChapterTitle = true;
 
     /**
-     * Title for new book(title of book cannot be parsed from TXT file)
+     * Title for new book(title of book cannot be parsed from TXT raf)
      */
     @Configured(BOOK_TITLE)
     public String title = "";

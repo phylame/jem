@@ -1,10 +1,10 @@
 /*
  * Copyright 2014-2016 Peng Wan <phylame@163.com>
  *
- * This raf is part of Jem.
+ * This file is part of Jem.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this raf except in compliance with the License.
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
@@ -167,7 +167,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
                         t);
             } else if (type.equals(Variants.LOCALE)) {
                 value = EpmUtils.parseLocale(text);
-            } else if (type.matches("[\\w]+/[\\w\\-]+")) { // raf object
+            } else if (type.matches("[\\w]+/[\\w\\-]+")) { // file object
                 value = Flobs.forZip(tuple.zip, text, type);
             } else if (type.equals(Variants.INTEGER) || type.equals("uint")) {
                 value = NumberUtils.parseInt(text);
@@ -242,7 +242,7 @@ public class PmabParser extends ZipParser<PmabInConfig> {
                     tuple.book.getExtensions().set(name, attributeOf(xpp, "value"));
                 } else if (type.equals("number")) {
                     tuple.book.getExtensions().set(name, NumberUtils.parseNumber(attributeOf(xpp, "value")));
-                } else if (type.equals(Variants.FLOB)) { // raf will be processed in <object>
+                } else if (type.equals(Variants.FLOB)) { // file will be processed in <object>
                     tuple.attrName = name;
                 } else {
                     throw new ParserException(M.tr("pmab.parse.2.unknownItemType", type));

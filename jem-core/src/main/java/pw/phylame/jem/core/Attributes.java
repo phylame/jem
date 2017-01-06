@@ -141,7 +141,7 @@ public final class Attributes {
         return !value.isEmpty() ? Arrays.asList(value.split(VALUES_SEPARATOR)) : Collections.<String>emptyList();
     }
 
-    public static void setValues(Chapter chapter, String name, Collection<String> values) {
+    public static void setValues(Chapter chapter, String name, Collection<?> values) {
         chapter.getAttributes().set(name, join(VALUES_SEPARATOR, values));
     }
 
@@ -187,6 +187,10 @@ public final class Attributes {
 
     public static void setAuthor(Chapter chapter, String author) {
         chapter.getAttributes().set(AUTHOR, author);
+    }
+
+    public static void setAuthors(Chapter chapter, Collection<?> authors) {
+        setValues(chapter, AUTHOR, authors);
     }
 
     public static Date getDate(Chapter chapter) {
@@ -253,7 +257,7 @@ public final class Attributes {
         chapter.getAttributes().set(KEYWORDS, keywords);
     }
 
-    public static void setKeywords(Chapter chapter, Collection<String> keywords) {
+    public static void setKeywords(Chapter chapter, Collection<?> keywords) {
         setValues(chapter, KEYWORDS, keywords);
     }
 
@@ -281,7 +285,7 @@ public final class Attributes {
         chapter.getAttributes().set(PROTAGONISTS, protagonists);
     }
 
-    public static void setProtagonists(Chapter chapter, Collection<String> protagonists) {
+    public static void setProtagonists(Chapter chapter, Collection<?> protagonists) {
         setValues(chapter, PROTAGONISTS, protagonists);
     }
 
@@ -293,7 +297,7 @@ public final class Attributes {
         chapter.getAttributes().set(TRANSLATORS, translators);
     }
 
-    public static void setTranslators(Chapter chapter, Collection<String> translators) {
+    public static void setTranslators(Chapter chapter, Collection<?> translators) {
         setValues(chapter, TRANSLATORS, translators);
     }
 }

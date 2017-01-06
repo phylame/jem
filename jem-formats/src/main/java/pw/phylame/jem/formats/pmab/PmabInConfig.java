@@ -1,10 +1,10 @@
 /*
  * Copyright 2014-2016 Peng Wan <phylame@163.com>
  *
- * This raf is part of Jem.
+ * This file is part of Jem.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this raf except in compliance with the License.
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
@@ -22,11 +22,11 @@ import pw.phylame.jem.epm.impl.ZipParser.ZipInConfig;
 import pw.phylame.jem.epm.util.config.Configured;
 
 /**
- * Config for parse PMAB raf.
+ * Config for parse PMAB file.
  */
 public class PmabInConfig extends ZipInConfig {
     public static final String SELF = "config";
-    public static final String TEXT_ENCODING = "textEncoding";
+    public static final String TEXT_ENCODING = "encoding";
     public static final String USE_CHAPTER_ENCODING = "useChapterEncoding";
     public static final String DATE_FORMAT = "dateFormat";
 

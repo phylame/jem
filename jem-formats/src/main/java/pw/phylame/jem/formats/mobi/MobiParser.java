@@ -5,7 +5,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
@@ -14,161 +17,183 @@ import pw.phylame.jem.core.Attributes;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.epm.impl.BinaryParser;
 import pw.phylame.jem.epm.util.ParserException;
-import pw.phylame.jem.epm.util.config.NonConfig;
 import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.jem.util.flob.FlobWrapper;
 import pw.phylame.jem.util.flob.Flobs;
+import pw.phylame.jem.util.flob.Flobs.BlockFlob;
 import pw.phylame.jem.util.text.Texts;
 import pw.phylame.ycl.io.ByteUtils;
 import pw.phylame.ycl.io.IOUtils;
-import pw.phylame.ycl.io.LZ77Utils;
+import pw.phylame.ycl.io.Lz77Utils;
 import pw.phylame.ycl.log.Log;
 import pw.phylame.ycl.util.DateUtils;
 import pw.phylame.ycl.util.MiscUtils;
+import pw.phylame.ycl.util.StringUtils;
 
-public class MobiParser extends BinaryParser<NonConfig> {
+public class MobiParser extends BinaryParser<MobiInConfig> {
     private static final String TAG = MobiParser.class.getSimpleName();
 
     public MobiParser() {
-        super("mobi", null);
+        super("mobi", MobiInConfig.class);
     }
 
     @Override
-    protected Book parse(RandomAccessFile file, NonConfig config) throws IOException, ParserException {
-        val data = new Local(file, new Book());
+    protected Book parse(RandomAccessFile file, MobiInConfig config) throws IOException, ParserException {
+        if (config == null) {
+            config = new MobiInConfig();
+        }
+        val data = new Local(file, config, new Book());
         readPdfHeader(data);
         readPalmDocHeader(data);
         readMobiHeader(data);
         readExtHeader(data);
-        val flob = flobForRecord("", data, data.firstContentIndex, true);
-        val text = Texts.forFlob(flob, data.textEncoding, Texts.HTML);
+        System.out.println(getTrailingSize(data, 1));
+        val flob = flobForRecord("", data, 1, true);
+        val text = Texts.forFlob(flob, data.encoding, Texts.HTML);
         System.out.println(text);
         return data.book;
     }
 
     private void readPdfHeader(Local data) throws IOException, ParserException {
-        val raf = data.raf;
-        raf.seek(60);
-        if (!"BOOKMOBI".equals(readString(raf, 8, "ASCII"))) {
-            Log.d(TAG, "type and creator in PDF is not BOOKMOBI");
-            throw new ParserException("Unsupport MOBI raf");
+        val in = data.file;
+        in.seek(60);
+        data.ident = readString(in, 8, "ASCII");
+        if (!"BOOKMOBI".equals(data.ident) && !"TEXTREAD".equals(data.ident)) {
+            Log.d(TAG, "type and creator in PDF is not BOOKMOBI or TEXTREAD: {0}", data.ident);
+            throw new ParserException("Unsupport MOBI file");
         }
-        raf.skipBytes(8);
-        val count = raf.readUnsignedShort();
+        in.skipBytes(8);
+        val count = in.readUnsignedShort();
+        Log.t(TAG, "total pdb {0} records", count);
         data.records = new Record[count];
+        Record previous = null;
         for (int i = 0; i < count; ++i) {
-            data.records[i] = new Record(
-                    readUInt(raf),
-                    raf.readUnsignedByte(),
-                    raf.readUnsignedByte(),
-                    raf.readUnsignedShort());
+            val record = new Record(readUInt(in), in.readUnsignedByte(), in.readUnsignedByte(), in.readUnsignedShort());
+            if (previous != null) {
+                previous.size = record.offset - previous.offset;
+            }
+            previous = record;
+            data.records[i] = record;
+        }
+        if (previous != null) {
+            data.records[count - 1].size = in.length() - previous.offset;
         }
     }
 
     private void readPalmDocHeader(Local data) throws IOException, ParserException {
-        val raf = data.raf;
-        raf.seek(data.records[0].offset);
-        data.compression = raf.readUnsignedShort();
-        raf.skipBytes(2);
-        Attributes.setWords(data.book, raf.readInt());
-        data.textRecordCount = raf.readUnsignedShort();
-        data.textRecordSize = raf.readUnsignedShort();
-        if (data.compression == 17480) {
-            data.encryption = raf.readUnsignedShort();
-            raf.skipBytes(2);
-        } else {
-            data.currentPosition = raf.readInt();
-        }
+        val in = data.file;
+        in.seek(data.records[0].offset);
+        data.compressionType = in.readUnsignedShort();
+        in.skipBytes(2);
+        Attributes.setWords(data.book, in.readInt());
+        data.textRecordCount = in.readUnsignedShort();
+        Log.t(TAG, "number of text record: {0}", data.textRecordCount);
+        data.textRecordSize = in.readUnsignedShort();
+        Log.t(TAG, "maximum size of text record: {0}", data.textRecordSize);
+        data.encryptionType = in.readUnsignedShort();
+        in.skipBytes(2);
     }
 
     private void readMobiHeader(Local data) throws ParserException, IOException {
-        val raf = data.raf;
-        val curpos = raf.getFilePointer();
-        if (!"MOBI".equals(readString(raf, 4, "ASCII"))) {
+        val in = data.file;
+        if ("TEXTREAD".equals(data.ident)) {
+            data.encoding = "cp1252";
+        }
+        if (data.records[0].size <= 16) {
             Log.d(TAG, "not found MOBI header");
-            return;
-        }
-        val headerLength = raf.readInt();
-        Log.t(TAG, "length of mobi header is {0}", headerLength);
-        data.mobiType = raf.readInt();
-        Log.d(TAG, "mobi type is {0}", data.mobiType);
-        if (data.mobiType != 2) {// Mobipocket Book
-            throw new ParserException("Unsupport MOBI type: " + data.mobiType);
-        }
-        raf.skipBytes(2);
-        data.textEncoding = detectEncoding(raf.readUnsignedShort());
-        data.book.getExtensions().set("mobi.uniqueId", raf.readInt());
-        data.book.getExtensions().set("mobi.version", raf.readInt());
-        raf.skipBytes(40);
-        data.textRecordEnd = raf.readInt(); // not include this record
-        Log.d(TAG, "text end record is {0}", data.textRecordEnd);
-        int titleOffset = raf.readInt();
-        int titleLength = raf.readInt();
-        Log.d(TAG, "locale code is {0}", raf.readInt());
-        raf.skipBytes(8);
-        Log.d(TAG, "min version for mobi is {0}", raf.readInt());
-        data.imageIndex = raf.readInt();
-        raf.skipBytes(16);
-        data.extFlags = raf.readInt();
-        raf.skipBytes(32);
-        data.drmOffset = raf.readInt();
-        data.drmCount = raf.readInt();
-        data.drmSize = raf.readInt();
-        data.drmFlags = raf.readInt();
-        raf.skipBytes(12);
-        data.firstContentIndex = raf.readUnsignedShort();
-        data.lastContentIndex = raf.readUnsignedShort();
-        raf.skipBytes(4);
-        data.fcisIndex = raf.readInt();
-        raf.skipBytes(4);
-        data.flisIndex = raf.readInt();
-        raf.skipBytes(32);
-        data.ncxIndex = raf.readInt();
+            data.encoding = "cp1252";
+        } else {
+            val curpos = in.getFilePointer();
+            if (!"MOBI".equals(readString(in, 4, "ASCII"))) {
+                Log.d(TAG, "not found MOBI header");
+                return;
+            }
+            val headerLength = in.readInt();
+            data.mobiType = in.readInt();
+            Log.d(TAG, "mobi type is {0}", data.mobiType);
+            detectEncoding(in.readInt(), data);
+            data.book.getExtensions().set("mobi.uniqueId", in.readInt());
+            data.book.getExtensions().set("mobi.version", in.readInt());
+            in.skipBytes(40);
+            data.textRecordEnd = in.readInt(); // not include this record
+            Log.d(TAG, "text end record is {0}", data.textRecordEnd);
+            int titleOffset = in.readInt();
+            int titleLength = in.readInt();
+            detectLanguage(in.readInt(), data);
+            in.skipBytes(8);
+            val mobiVersion = in.readInt();
+            Log.d(TAG, "min version for mobi is {0}", mobiVersion);
+            data.imageIndex = in.readInt();
+            if (data.compressionType == 17480) {
+                data.huffIndex = in.readInt();
+                data.huffCount = in.readInt();
+                in.skipBytes(8);
+            } else {
+                in.skipBytes(16);
+            }
+            data.exthFlags = in.readInt();
+            in.skipBytes(60);
+            data.firstContentIndex = in.readUnsignedShort();
+            data.lastContentIndex = in.readUnsignedShort();
+            in.skipBytes(4);
+            data.fcisIndex = in.readInt();
+            in.skipBytes(4);
+            data.flisIndex = in.readInt();
+            in.skipBytes(28);
 
-        raf.seek(data.records[0].offset + titleOffset);
-        Attributes.setTitle(data.book, readString(raf, titleLength, data.textEncoding));
+            if ("TEXTREAD".equals(data.ident)
+                    || headerLength < 0xE4
+                    || headerLength > data.config.maxHeaderLength
+                    || (data.config.fixExtraData && headerLength == 0xE4)) {
+                data.extraFlags = 0;
+                in.skipBytes(4);
+            } else {
+                data.extraFlags = in.readInt();
+            }
 
-        raf.seek(curpos + headerLength);
-    }
+            if (headerLength >= 0xF8) {
+                data.ncxIndex = in.readInt();
+                Log.t(TAG, "indx record is {0}", data.ncxIndex);
+            }
 
-    private String detectEncoding(int code) throws ParserException {
-        switch (code) {
-        case 65001:
-            return "UTF-8";
-        case 1252:
-            return "CP1252";
-        default:
-            throw new ParserException("Unknown encoding: " + code);
+            in.seek(data.records[0].offset + titleOffset);
+            Attributes.setTitle(data.book, readString(in, titleLength, data.encoding));
+
+            Log.t(TAG, "extra record data flags is {0}", data.extraFlags);
+            in.seek(curpos + headerLength - 2);
+            data.extraBytes = 2 * onebits(in.readUnsignedShort() & 0xFFFE);
         }
     }
 
     private void readExtHeader(Local data) throws ParserException, IOException {
-        val raf = data.raf;
-        if ((data.extFlags & 0x40) == 0) {
+        val in = data.file;
+        if ((data.exthFlags & 0x40) == 0) {
             Log.d(TAG, "no EXTH header flag found");
             return;
         }
-        if (!"EXTH".equals(readString(raf, 4, "ASCII"))) {
+        if (!"EXTH".equals(readString(in, 4, "ASCII"))) {
             Log.d(TAG, "not found EXTH header");
             return;
         }
         val attributes = data.book.getAttributes();
         val extensions = data.book.getExtensions();
-        raf.skipBytes(4);
-        val count = raf.readInt();
+        in.skipBytes(4);
+        val count = in.readInt();
         byte[] b = {};
+        val authors = new LinkedList<String>();
+        val keywords = new LinkedHashSet<String>();;
         int majorVersion = -1, minorVersion = -1, buildNumber = -1;
         for (int i = 0; i < count; ++i) {
-            val type = raf.readInt();
-            val length = raf.readInt() - 8;
+            val type = in.readInt();
+            val length = in.readInt() - 8;
             b = IOUtils.ensureLength(b, length);
-            raf.readFully(b, 0, length);
+            in.readFully(b, 0, length);
             String key;
             Object value = null;
             switch (type) {
             case 100:
-                key = Attributes.AUTHOR;
-            break;
+                authors.add(new String(b, 0, length, data.encoding).trim());
+                continue;
             case 101:
                 key = Attributes.PUBLISHER;
             break;
@@ -177,18 +202,20 @@ public class MobiParser extends BinaryParser<NonConfig> {
             break;
             case 103: {
                 key = Attributes.INTRO;
-                value = Texts.forString(new String(b, 0, length, data.textEncoding), Texts.PLAIN);
+                value = Texts.forString(new String(b, 0, length, data.encoding).trim(), Texts.PLAIN);
             }
             break;
             case 104:
                 key = Attributes.ISBN;
+                value = new String(b, 0, length, data.encoding).trim().replace("-", "");
             break;
             case 105:
                 key = Attributes.GENRE;
-            break;
+                Collections.addAll(keywords, new String(b, 0, length, data.encoding).trim().split(";"));
+                continue;
             case 106: {
                 key = Attributes.PUBDATE;
-                value = DateUtils.parse(new String(b, 0, length, data.textEncoding), "yyyy-m-D", new Date());
+                value = DateUtils.parse(new String(b, 0, length, data.encoding), "yyyy-m-D", new Date());
             }
             break;
             case 107:
@@ -206,14 +233,29 @@ public class MobiParser extends BinaryParser<NonConfig> {
             case 111:
                 key = "type";
             break;
-            case 112:
+            case 112: {
                 key = "source";
+                String str = new String(b, 0, length, data.encoding).trim();
+                if (str.startsWith("urn:isbn:")) {
+                    str = str.substring(9);
+                    if (StringUtils.isNotEmpty(str)) {
+                        Attributes.setISBN(data.book, str);
+                        continue;
+                    }
+                } else if (str.startsWith("calibre:")) {
+                    str = str.substring(8);
+                    if (StringUtils.isNotEmpty(str)) {
+                        key = "uuid";
+                        value = str;
+                    }
+                }
+            }
             break;
             case 113:
                 key = "uuid";
             break;
             case 129:
-                Log.t(TAG, "ignore 'KF8CoverURI': {0}", new String(b, 0, length, data.textEncoding));
+                Log.t(TAG, "ignore 'KF8CoverURI': {0}", new String(b, 0, length, data.encoding));
                 continue;
             case 201: {
                 key = Attributes.COVER;
@@ -258,11 +300,11 @@ public class MobiParser extends BinaryParser<NonConfig> {
                 key = Attributes.TITLE;
             break;
             case 501:
-                extensions.set("mobi.cdetype", new String(b, 0, length, data.textEncoding));
+                extensions.set("mobi.cdetype", new String(b, 0, length, data.encoding));
                 continue;
             case 524: {
                 key = Attributes.LANGUAGE;
-                value = MiscUtils.parseLocale(new String(b, 0, length, data.textEncoding));
+                value = MiscUtils.parseLocale(new String(b, 0, length, data.encoding));
             }
             break;
             default:
@@ -270,10 +312,12 @@ public class MobiParser extends BinaryParser<NonConfig> {
                 continue;
             }
             if (value == null) {
-                value = new String(b, 0, length, data.textEncoding);
+                value = new String(b, 0, length, data.encoding).trim();
             }
             attributes.set(key, value);
         }
+        Attributes.setAuthors(data.book, authors);
+        Attributes.setKeywords(data.book, keywords);
         if ((majorVersion | minorVersion | buildNumber) >= 0) {
             extensions.set("mobi.creatorVersion", majorVersion + "." + minorVersion + "." + buildNumber);
         }
@@ -283,36 +327,91 @@ public class MobiParser extends BinaryParser<NonConfig> {
         return ByteUtils.getUInt32(readData(file, 4), 0);
     }
 
+    private int getTrailingSize(Local data, int index) throws IOException {
+        val in = data.file;
+        int size = (int) data.records[index].size;
+        in.seek(data.records[index + 1].offset);
+        int num = 0;
+        for (int flags = data.extraFlags; flags != 0; flags >>= 1) {
+            if ((flags & 1) != 0) {
+                num += getEntryTrailing(in, size - num);
+            }
+        }
+        return num;
+    }
+
+    private int getEntryTrailing(RandomAccessFile in, int size) {
+        int bitpos = 0, result = 0;
+        while (true) {
+            // TODO
+        }
+    }
+
+    private void detectEncoding(int code, Local data) {
+        switch (code) {
+        case 65001:
+            data.encoding = "UTF-8";
+        break;
+        case 1252:
+            data.encoding = "CP1252";
+        break;
+        default:
+            data.encoding = StringUtils.notEmptyOr(data.config.textEncoding, "CP1252");
+        break;
+        }
+    }
+
+    private void detectLanguage(int code, Local data) {
+        val language = code & 0xFF;
+        val dialect = (code >> 10) & 0xFF;
+        Log.d(TAG, "language is {0}, dialect is {1}", language, dialect);
+    }
+
     private Flob flobForRecord(String name, Local data, int index, boolean useCompression) throws IOException {
         val offset = data.records[index].offset;
         val end = data.records[index + 1].offset;
-        val flob = Flobs.forBlock(name, data.raf, offset, end - offset, null);
-        if (data.compression == 2 && useCompression) {
+        val flob = Flobs.forBlock(name, data.file, offset, end - offset, null);
+        if (data.compressionType == 2 && useCompression) {
+            flob.size -= data.extraBytes;
             return new LZ77Flob(flob);
         } else {
             return flob;
         }
     }
 
+    private int onebits(int x) {
+        int count = 0;
+        for (int i = 15; i >= 0; --i) {
+            if (((x >> i) & 1) == 1) {
+                ++count;
+            }
+        }
+        return count;
+    }
+
     @RequiredArgsConstructor
     private class Local {
-        final RandomAccessFile raf;
+        final RandomAccessFile file;
+        final MobiInConfig config;
         final Book book;
+
+        String ident;
 
         Record[] records;
 
-        int compression;
-        int encryption = 0;
+        int compressionType;
+        int encryptionType;
 
         int mobiType;
 
-        int currentPosition = 0;
-        String textEncoding;
+        String encoding;
         int textRecordCount;
         int textRecordSize;
         int textRecordEnd;
         int firstContentIndex;
         int lastContentIndex;
+
+        int huffIndex, huffCount;
 
         int fcisIndex;
         int flisIndex;
@@ -321,15 +420,16 @@ public class MobiParser extends BinaryParser<NonConfig> {
 
         int imageIndex = -1;
 
-        int extFlags;
+        int exthFlags;
 
-        int drmOffset, drmCount, drmSize, drmFlags;
+        int extraFlags, extraBytes;
     }
 
     @ToString
     @RequiredArgsConstructor
     private class Record {
         final long offset;
+        long size;
         final int attrs;
         final int uid1;
         final int uid2;
@@ -352,24 +452,24 @@ public class MobiParser extends BinaryParser<NonConfig> {
 
     private class LZ77Flob extends FlobWrapper {
 
-        LZ77Flob(Flob flob) {
+        LZ77Flob(BlockFlob flob) {
             super(flob);
         }
 
         @Override
         public InputStream openStream() throws IOException {
-            val bb = LZ77Utils.uncompress(super.openStream());
+            val bb = Lz77Utils.decompress(getTarget().openStream());
             return new ByteArrayInputStream(bb.getDirectArray());
         }
 
         @Override
         public byte[] readAll() throws IOException {
-            return LZ77Utils.uncompress(super.openStream()).toByteArray();
+            return Lz77Utils.decompress(getTarget().openStream()).toByteArray();
         }
 
         @Override
         public long writeTo(OutputStream out) throws IOException {
-            val bb = LZ77Utils.uncompress(super.openStream());
+            val bb = Lz77Utils.decompress(getTarget().openStream());
             bb.writeTo(out);
             return bb.size();
         }

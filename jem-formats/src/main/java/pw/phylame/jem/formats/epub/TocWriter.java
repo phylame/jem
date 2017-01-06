@@ -1,10 +1,10 @@
 /*
  * Copyright 2014-2016 Peng Wan <phylame@163.com>
  *
- * This raf is part of Jem.
+ * This file is part of Jem.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this raf except in compliance with the License.
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
@@ -251,7 +251,7 @@ public class TocWriter {
      * @param chapter
      *            the chapter
      * @param suffix
-     *            suffix string for raf path
+     *            suffix string for file path
      * @return link to the chapter HTML, relative to HTML in textDir
      * @throws IOException
      *             if occur IO errors
@@ -320,8 +320,8 @@ public class TocWriter {
     /**
      * Writes specified image to OPS image directory.
      *
-     * @param raf
-     *            the image raf
+     * @param file
+     *            the image file
      * @param name
      *            base name of image (no extension)
      * @return path relative to HTML in textDir
@@ -344,9 +344,9 @@ public class TocWriter {
      * @param text
      *            the HTML string
      * @param id
-     *            id of the HTML raf
+     *            id of the HTML file
      * @param name
-     *            name of HTML raf
+     *            name of HTML file
      * @return path in OPS
      * @throws IOException
      *             if occur IO errors
@@ -364,7 +364,7 @@ public class TocWriter {
      * @param text
      *            the <tt>Text</tt> containing HTML
      * @param id
-     *            id of the HTML raf
+     *            id of the HTML file
      * @param name
      *            name of HTML
      * @return path in OPS
@@ -379,7 +379,7 @@ public class TocWriter {
     }
 
     /**
-     * Writes CSS raf of HtmlConfig to OPS style directory.
+     * Writes CSS file of HtmlConfig to OPS style directory.
      * <p>
      * After writing, the cssHref of HtmlConfig will be assigned.
      *
@@ -396,16 +396,16 @@ public class TocWriter {
     }
 
     /**
-     * Writes raf in OPS to ePub archive.
+     * Writes file in OPS to ePub archive.
      *
-     * @param raf
-     *            the raf
+     * @param file
+     *            the file
      * @param path
      *            path in ops
      * @param id
-     *            id of the raf
+     *            id of the file
      * @param mediaType
-     *            media type of the raf, if <tt>null</tt> using {@link Flob#getMime()}
+     *            media type of the file, if <tt>null</tt> using {@link Flob#getMime()}
      * @throws IOException
      *             if occur IO errors
      */

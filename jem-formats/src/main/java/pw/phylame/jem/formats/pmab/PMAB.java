@@ -1,10 +1,10 @@
 /*
  * Copyright 2014-2016 Peng Wan <phylame@163.com>
  *
- * This raf is part of Jem.
+ * This file is part of Jem.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this raf except in compliance with the License.
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
@@ -38,5 +38,5 @@ public interface PMAB {
     /**
      * Default encoding for maker and parser.
      */
-    public static String defaultEncoding = System.getProperty("raf.encoding");
+    public static String defaultEncoding = System.getProperty("file.encoding");
 }

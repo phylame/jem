@@ -1,19 +1,27 @@
 import lombok.val;
-import pw.phylame.jem.core.Book;
+import pw.phylame.jem.core.Attributes;
+import pw.phylame.jem.core.Chapter;
 import pw.phylame.jem.crawler.CrawlerConfig;
-import pw.phylame.jem.crawler.CrawlerContext;
+import pw.phylame.jem.crawler.OnFetchingListener;
 import pw.phylame.jem.crawler.ProviderManager;
 import pw.phylame.jem.epm.EpmManager;
+import pw.phylame.jem.epm.util.DebugUtils;
+import pw.phylame.ycl.util.CollectionUtils;
 
 public class Test {
     public static void main(String[] args) throws Exception {
         System.setProperty(EpmManager.AUTO_LOAD_CUSTOMIZED_KEY, "true");
         System.setProperty(ProviderManager.AUTO_LOAD_CUSTOMIZED_KEY, "true");
-        val provider = ProviderManager.providerForHost("https://yd.sogou.com");
-        val url = ProviderManager.getAttrUrlById(provider, "7CF8A4E9AC33064A95ABF2848B56FDBD");
-        val content = new CrawlerContext(new Book(), url, new CrawlerConfig());
-        provider.init(content);
-        provider.fetchContents();
-        provider.fetchAttributes();
+        val url = "http://www.mangg.com/id5812/";
+        val book = EpmManager.readBook(url, "crawler", CollectionUtils.<String, Object>mapOf(
+                "crawler.parse." + CrawlerConfig.FETCH_LISTENER, new OnFetchingListener() {
+                    @Override
+                    public void fetching(int total, int current, Chapter chapter) {
+                        System.out.printf("%d/%d: %s\n", current, total, Attributes.getTitle(chapter));
+                    }
+                }
+        ));
+        DebugUtils.printAttributes(book, true);
+        System.out.println(book.chapterAt(20).getText());
     }
 }

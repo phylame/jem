@@ -281,7 +281,7 @@ public final class EpmManager {
      * @return string represent the format
      */
     public static String formatOfFile(String path) {
-        return nameOfExtension(PathUtils.extensionName(path).toLowerCase());
+        return nameOfExtension(PathUtils.extName(path).toLowerCase());
     }
 
     public static Parser parserForFormat(@NonNull String format) throws UnsupportedFormatException {

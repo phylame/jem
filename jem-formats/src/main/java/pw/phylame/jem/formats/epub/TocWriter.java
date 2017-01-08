@@ -329,7 +329,7 @@ public class TocWriter {
      *             if occur IO errors
      */
     private String writeImage(Flob file, String name, String id) throws IOException {
-        val path = IMAGE_DIR + "/" + name + "." + PathUtils.extensionName(file.getName());
+        val path = IMAGE_DIR + "/" + name + "." + PathUtils.extName(file.getName());
         writeIntoEpub(file, path, id, file.getMime());
         return "../" + path; // relative to HTML in textDir
     }

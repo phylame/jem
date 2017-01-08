@@ -303,7 +303,7 @@ public class UmdMaker extends AbstractMaker<UmdOutConfig> {
         if (cover == null) {
             return;
         }
-        val type = UMD.formatOfName(PathUtils.extensionName(cover.getName()));
+        val type = UMD.formatOfName(PathUtils.extName(cover.getName()));
         val rand = NumberUtils.randInteger(0x1000, 0x1FFF);
         val data = new byte[]{(byte) type, 0, 0, 0, 0};
         System.arraycopy(littleRender.putUInt32(rand), 0, data, 1, 4);

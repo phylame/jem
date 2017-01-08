@@ -42,7 +42,7 @@ public final class DebugUtils {
     }
 
     public static Book parseFile(String path, Map<String, Object> args) {
-        val format = EpmManager.nameOfExtension(PathUtils.extensionName(path));
+        val format = EpmManager.nameOfExtension(PathUtils.extName(path));
         if (format == null) {
             System.err.println("unsupported format: " + path);
             return null;
@@ -61,7 +61,7 @@ public final class DebugUtils {
     }
 
     public static void makeFile(Book book, String path, Map<String, Object> args) {
-        val format = EpmManager.nameOfExtension(PathUtils.extensionName(path));
+        val format = EpmManager.nameOfExtension(PathUtils.extName(path));
         if (format == null) {
             System.err.println("unsupported format: " + path);
             return;

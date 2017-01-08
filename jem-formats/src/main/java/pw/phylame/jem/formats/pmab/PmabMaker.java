@@ -348,7 +348,7 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
     }
 
     private String writeFile(Flob file, String baseName, String mimeKey, Tuple tuple) throws IOException {
-        val name = baseName + "." + PathUtils.extensionName(file.getName());
+        val name = baseName + "." + PathUtils.extName(file.getName());
         val dir = file.getMime().startsWith("image/") ? tuple.config.imageDir : tuple.config.extraDir;
         return writeFile(file, dir, name, mimeKey, tuple);
     }

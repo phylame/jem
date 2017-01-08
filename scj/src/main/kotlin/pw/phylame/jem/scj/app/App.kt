@@ -356,7 +356,7 @@ object SCI : CLIDelegate() {
         }
         var status = 0
         for (input in inputs) {
-            val format = inFormat ?: EpmManager.formatOfFile(input) ?: PathUtils.extensionName(input)
+            val format = inFormat ?: EpmManager.formatOfFile(input) ?: PathUtils.extName(input)
             if (!checkInputFormat(format, input)) {
                 status = -1
                 continue

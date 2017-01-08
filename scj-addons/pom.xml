@@ -10,12 +10,12 @@
 
     <groupId>pw.phylame.jem</groupId>
     <artifactId>scj-addons</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <name>SCJ Addons</name>
     <description>Addons for SCJ</description>
 
     <properties>
-        <jem.version>3.1.2</jem.version>
+        <jem.version>3.2.0</jem.version>
     </properties>
 
     <dependencies>

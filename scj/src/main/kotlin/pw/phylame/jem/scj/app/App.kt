@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 Peng Wan <phylame@163.com>
+ * Copyright 2014-2017 Peng Wan <phylame@163.com>
  *
  * This file is part of SCJ.
  *
@@ -18,21 +18,11 @@
 
 package pw.phylame.jem.scj.app
 
-import org.apache.commons.cli.AlreadySelectedException
-import org.apache.commons.cli.HelpFormatter
-import org.apache.commons.cli.MissingArgumentException
-import org.apache.commons.cli.MissingOptionException
-import org.apache.commons.cli.Option
-import org.apache.commons.cli.OptionGroup
-import org.apache.commons.cli.ParseException
-import org.apache.commons.cli.UnrecognizedOptionException
+import org.apache.commons.cli.*
+import pw.phylame.jem.crawler.ProviderManager
 import pw.phylame.jem.epm.EpmManager
 import pw.phylame.jem.util.Build
-import pw.phylame.qaf.cli.CLIDelegate
-import pw.phylame.qaf.cli.Command
-import pw.phylame.qaf.cli.ListFetcher
-import pw.phylame.qaf.cli.PropertiesFetcher
-import pw.phylame.qaf.cli.fetcherOf
+import pw.phylame.qaf.cli.*
 import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.Settings
 import pw.phylame.qaf.core.Translator
@@ -42,9 +32,7 @@ import pw.phylame.ycl.io.PathUtils
 import pw.phylame.ycl.log.Log
 import pw.phylame.ycl.util.CollectionUtils
 import java.io.File
-import java.util.Calendar
-import java.util.HashMap
-import java.util.Locale
+import java.util.*
 
 const val NAME = "scj"
 val VERSION = Build.VERSION
@@ -131,7 +119,12 @@ object AppConfig : Settings() {
     val outArguments = HashMap<String, Any>()
 }
 
-fun checkInputFormat(format: String): Boolean = if (!EpmManager.hasParser(format)) {
+fun checkInputFormat(format: String) = checkInputFormat(format, null)
+
+fun checkInputFormat(format: String, input: String?): Boolean = if (format.isEmpty()) {
+    App.error(tr("error.input.unknownFormat", input))
+    false
+} else if (!EpmManager.hasParser(format)) {
     App.error(tr("error.input.unsupported", format))
     println(tr("tip.unsupportedFormat", OPTION_LIST, OPTION_LIST_LONG))
     false
@@ -161,6 +154,7 @@ object SCI : CLIDelegate() {
 
     override fun onStart() {
         System.setProperty(EpmManager.AUTO_LOAD_CUSTOMIZED_KEY, "true")
+        System.setProperty(ProviderManager.AUTO_LOAD_CUSTOMIZED_KEY, "true")
         App.ensureHomeExisted()
         Locale.setDefault(AppConfig.appLocale)
         App.translator = Translator(I18N_NAME)
@@ -295,7 +289,11 @@ object SCI : CLIDelegate() {
         }
 
         // extract and indices
-        option = Option.builder(OPTION_EXTRACT).argName(tr("help.extract.argName")).hasArg().desc(tr("help.extract")).build()
+        option = Option.builder(OPTION_EXTRACT)
+                .argName(tr("help.extract.argName"))
+                .hasArg()
+                .desc(tr("help.extract"))
+                .build()
         group.addOption(option)
         addOption(option, ExtractBook(OPTION_EXTRACT))
 
@@ -358,25 +356,19 @@ object SCI : CLIDelegate() {
         }
         var status = 0
         for (input in inputs) {
-            val file = File(input)
-            if (!file.exists()) {
-                App.error(tr("error.input.notExists", input))
-                status = -1
-                continue
-            }
             val format = inFormat ?: EpmManager.formatOfFile(input) ?: PathUtils.extensionName(input)
-            if (!checkInputFormat(format)) {
+            if (!checkInputFormat(format, input)) {
                 status = -1
                 continue
             }
-            status = Math.min(status, if (consumer.consume(InTuple(file, format))) 0 else 1)
+            status = Math.min(status, if (consumer.consume(InTuple(input, format))) 0 else 1)
         }
         return status
     }
 }
 
 data class InTuple(
-        val file: File,
+        val input: String,
         val format: String,
         val arguments: Map<String, Any> = SCI.inArguments
 )
@@ -400,7 +392,6 @@ interface ConsumerCommand : Command, Consumer {
 class ExtractBook(option: String) : ListFetcher(option), ConsumerCommand {
     override fun consume(tuple: InTuple): Boolean {
         var state = true
-        @Suppress("unchecked_cast")
         for (index in SCI.chapterIndices) {
             state = extractBook(tuple, index, OutTuple())
         }
@@ -409,7 +400,7 @@ class ExtractBook(option: String) : ListFetcher(option), ConsumerCommand {
 }
 
 class ViewBook(option: String) : ListFetcher(option), ConsumerCommand {
-    override fun consume(tuple: InTuple): Boolean = @Suppress("unchecked_cast") viewBook(tuple, OutTuple(), SCI.viewKeys)
+    override fun consume(tuple: InTuple): Boolean = viewBook(tuple, OutTuple(), SCI.viewKeys)
 }
 
 fun main(args: Array<String>) {

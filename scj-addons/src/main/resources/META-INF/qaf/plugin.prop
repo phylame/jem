@@ -19,16 +19,16 @@
 # SCJ Addons configurations
 
 # set default arguments for maker and parser
-pw.phylame.jem.scj.addons.ArgumentsLoader
+jem.scj.addons.ArgumentsLoader
 
 # set log level in SCJ
-pw.phylame.jem.scj.addons.LogSetter
+jem.scj.addons.LogSetter
 
 # view details of SCJ
-pw.phylame.jem.scj.addons.AppInspector
+jem.scj.addons.AppInspector
 
 # run customized script in SCJ context
-pw.phylame.jem.scj.addons.ScriptRunner
+jem.scj.addons.ScriptRunner
 
 # disable plugin
-pw.phylame.jem.scj.addons.DisablePlugin
+jem.scj.addons.DisablePlugin

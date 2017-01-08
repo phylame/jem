@@ -1,0 +1,37 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>pw.phylame.util</groupId>
+        <artifactId>common-dependencies</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <groupId>pw.phylame.jem</groupId>
+    <artifactId>crawler-addons</artifactId>
+    <version>1.0.0</version>
+    <name>Crawler Addons</name>
+    <description>Crawler addons for SCJ</description>
+
+    <properties>
+        <jem.version>3.2.0</jem.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>pw.phylame.jem</groupId>
+            <artifactId>scj</artifactId>
+            <version>${jem.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>pw.phylame.jem</groupId>
+            <artifactId>jem-crawler</artifactId>
+            <version>${jem.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+    </dependencies>
+</project>

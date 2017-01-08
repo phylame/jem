@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 Peng Wan <phylame@163.com>
+ * Copyright 2014-2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -31,6 +31,12 @@ import java.util.Map;
  */
 public interface Parser {
     /**
+     * Key for storing meta data of book in extensions.
+     * <p></p><strong>NOTE: </strong>the corresponding item should be ignored by {@code Maker}.
+     */
+    String META_KEY = "jem.ext.meta";
+
+    /**
      * Returns the format name (normally be the extension name).
      *
      * @return the name of format for this parser
@@ -42,9 +48,21 @@ public interface Parser {
      *
      * @param file the input book file
      * @param args arguments to the parser
-     * @return {@code Book} represents the book file
+     * @return {@code Book} from the input file
      * @throws IOException  if occurs I/O errors
      * @throws JemException if occurs errors when parsing book file
      */
     Book parse(File file, Map<String, Object> args) throws IOException, JemException;
+
+    /**
+     * Parses book from specified input path.
+     *
+     * @param input path to input
+     * @param args  arguments to the parser
+     * @return {@code } from the input path
+     * @throws IOException  if occurs I/O errors
+     * @throws JemException if occurs errors when parsing book file
+     * @since 3.2.0
+     */
+    Book parse(String input, Map<String, Object> args) throws IOException, JemException;
 }

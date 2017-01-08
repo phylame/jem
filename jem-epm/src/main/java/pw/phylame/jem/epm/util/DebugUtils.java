@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 Peng Wan <phylame@163.com>
+ * Copyright 2014-2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,13 +18,6 @@
 
 package pw.phylame.jem.epm.util;
 
-import static pw.phylame.jem.core.Attributes.getTitle;
-import static pw.phylame.jem.core.Attributes.titleOf;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Map;
-
 import lombok.val;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.core.Chapter;
@@ -33,6 +26,13 @@ import pw.phylame.jem.util.JemException;
 import pw.phylame.jem.util.Variants;
 import pw.phylame.ycl.io.PathUtils;
 import pw.phylame.ycl.util.StringUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
+
+import static pw.phylame.jem.core.Attributes.getTitle;
+import static pw.phylame.jem.core.Attributes.titleOf;
 
 /**
  * Utilities for debug parser and maker.

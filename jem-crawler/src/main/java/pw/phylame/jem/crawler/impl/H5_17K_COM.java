@@ -1,33 +1,67 @@
+/*
+ * Copyright 2017 Peng Wan <phylame@163.com>
+ *
+ * This file is part of Jem.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package pw.phylame.jem.crawler.impl;
+
+import lombok.val;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+import org.jsoup.nodes.TextNode;
+import org.jsoup.select.Elements;
+import pw.phylame.jem.core.Attributes;
+import pw.phylame.jem.core.Chapter;
+import pw.phylame.jem.crawler.AbstractProvider;
+import pw.phylame.jem.crawler.CrawlerContext;
+import pw.phylame.jem.crawler.Identifiable;
+import pw.phylame.jem.crawler.Searchable;
+import pw.phylame.jem.crawler.util.HtmlText;
+import pw.phylame.jem.util.flob.Flobs;
+import pw.phylame.ycl.io.HttpUtils;
+import pw.phylame.ycl.io.IOUtils;
+import pw.phylame.ycl.io.PathUtils;
+import pw.phylame.ycl.util.DateUtils;
+import pw.phylame.ycl.util.StringUtils;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.LinkedList;
+import java.util.*;
 
-import org.json.JSONObject;
-import org.json.JSONTokener;
-import org.jsoup.Jsoup;
-import org.jsoup.select.Elements;
+public class H5_17K_COM extends AbstractProvider implements Searchable, Identifiable {
+    private static final String ENCODING = "UTF-8";
+    private static final String HOST = "http://h5.17k.com";
+    private static final int PAGE_SIZE = 180;
 
-import lombok.val;
-import pw.phylame.jem.core.Attributes;
-import pw.phylame.jem.core.Book;
-import pw.phylame.jem.core.Chapter;
-import pw.phylame.jem.crawler.CrawlerConfig;
-import pw.phylame.jem.crawler.CrawlerContext;
-import pw.phylame.jem.util.flob.Flobs;
-import pw.phylame.ycl.io.IOUtils;
-import pw.phylame.ycl.util.StringUtils;
-import pw.phylame.ycl.value.Pair;
+    private Chapter section;
+    private String bookId;
 
-public class H5_17K_COM {
-    public Pair<String, String> fetchLinks(String url) {
-        return Pair.of(url, null);
+    @Override
+    public void init(CrawlerContext context) {
+        super.init(context);
+        bookId = PathUtils.baseName(context.getAttrUrl());
     }
 
-    public void fetchAttributes(CrawlerContext ctx) throws IOException {
-        val doc = Jsoup.connect(ctx.getAttrUrl()).timeout(3000).get();
-        val book = ctx.getBook();
+    @Override
+    public void fetchAttributes() throws IOException {
+        ensureInitialized();
+        val doc = getSoup(context.getAttrUrl());
+        if (doc == null) {
+            return;
+        }
         Elements section = doc.select("section.bookhome_top");
         Attributes.setCover(book, Flobs.forURL(new URL(section.select("img").attr("src")), null));
         Attributes.setTitle(book, section.select("p.title").text());
@@ -39,49 +73,97 @@ public class H5_17K_COM {
         for (val e : section.select("p").first().textNodes()) {
             lines.add(StringUtils.trimmed(e.text()));
         }
-        Attributes.setIntro(book, StringUtils.join(System.lineSeparator(), lines));
+        Attributes.setIntro(book, StringUtils.join(config.lineSeparator, lines));
     }
 
-    public void fetchContents(CrawlerContext ctx) throws IOException {
-        String bookId = "1080397";
-        int pages = parsePage(ctx, bookId, 1);
-        for (int i = 2; i < pages; ++i) {
-            parsePage(ctx, bookId, i);
+    @Override
+    public void fetchContents() throws IOException {
+        ensureInitialized();
+        for (int i = 2, pages = fetchPage(1); i <= pages; ++i) {
+            fetchPage(i);
         }
     }
 
-    public int parsePage(CrawlerContext ctx, String id, int page) throws IOException {
-        val url = String.format("http://h5.17k.com/h5/book/ajaxBookList.k?bookId=%s&page=%d", id, page);
-        val content = IOUtils.toString(IOUtils.openResource(url), "UTF-8");
-        val json = new JSONObject(new JSONTokener(content));
-        val book = ctx.getBook();
-        JSONObject jo;
-        String title;
-        Chapter section = book, chapter;
+    @Override
+    public String fetchText(String url) {
+        val doc = getSoup(url);
+        if (doc == null) {
+            return "";
+        }
+        val div = doc.select("div#TextContent");
+        val lines = new LinkedList<String>();
+        for (val node : div.first().childNodes()) {
+            if (!(node instanceof TextNode)) {
+                continue;
+            }
+            val text = (TextNode) node;
+            if (!text.isBlank()) {
+                lines.add(StringUtils.trimmed(text.text()));
+            }
+        }
+        return StringUtils.join(config.lineSeparator, lines);
+    }
+
+    private int fetchPage(int page) throws IOException {
+        val conn = HttpUtils.Request.builder()
+                .url(String.format("%s/h5/book/ajaxBookList.k?bookId=%s&page=%d&size=%d", HOST, bookId, page, PAGE_SIZE))
+                .method("get")
+                .connectTimeout(config.timeout)
+                .build()
+                .connect();
+        val json = new JSONObject(new JSONTokener(IOUtils.readerFor(conn.getInputStream(), ENCODING)));
+        Chapter chapter;
         for (val item : json.getJSONArray("datas")) {
-            jo = (JSONObject) item;
-            title = jo.optString("volumeName");
-            if (title != null) { // section
+            val obj = (JSONObject) item;
+            val title = obj.optString("volumeName");
+            if (!title.isEmpty()) { // section
+                section = section != null ? section.getParent() : book;
                 section.append(chapter = new Chapter(title));
                 section = chapter;
             } else {
-                section.append(chapter = new Chapter(jo.getString("name")));
-                Attributes.setWords(chapter, jo.getInt("wordCount"));
+                section.append(chapter = new Chapter(obj.getString("name")));
+                Attributes.setWords(chapter, obj.getInt("wordCount"));
+                Attributes.setDate(chapter, new Date(obj.getLong("updateDate")));
+                val url = String.format("%s/chapter/%s/%d.html", HOST, bookId, obj.getLong("id"));
+                chapter.setText(new HtmlText(url, this, chapter));
             }
+        }
+        if (chapterCount == -1) {
+            chapterCount = json.getInt("totalChapter");
         }
         return json.getInt("totalPage");
     }
 
-    public static void main(String[] args) throws IOException {
-        val url = "http://h5.17k.com/book/1080397.html";
-        val ctx = new CrawlerContext();
-        ctx.setAttrUrl(url);
-        ctx.setTocUrl(url.replace("book", "list"));
-        ctx.setBook(new Book());
-        ctx.setConfig(new CrawlerConfig());
-        val impl = new H5_17K_COM();
-        impl.fetchAttributes(ctx);
-        impl.fetchContents(ctx);
-        System.out.println(ctx.getBook());
+    @Override
+    public String attrUrlOf(String id) {
+        return String.format("%s/book/%s.html", HOST, id);
+    }
+
+    @Override
+    public List<Map<String, Object>> search(String keywords) throws IOException {
+        val conn = HttpUtils.Request.builder()
+                .url(String.format("http://search.17k.com/h5/sl?page=1&pageSize=10&searchType=0&q=%s&sortType=5", keywords))
+                .connectTimeout(3000)
+                .build()
+                .connect();
+        val results = new ArrayList<Map<String, Object>>(10);
+        val json = new JSONObject(new JSONTokener(IOUtils.readerFor(conn.getInputStream(), ENCODING)));
+        for (val item : json.getJSONArray("viewList")) {
+            results.add(parseItem((JSONObject) item));
+        }
+        return results;
+    }
+
+    private Map<String, Object> parseItem(JSONObject obj) {
+        val map = new HashMap<String, Object>();
+        map.put(Attributes.TITLE, obj.getString("bookName"));
+        map.put(Attributes.AUTHOR, obj.getString("authorPenname"));
+        map.put(Attributes.STATE, obj.getString("bookStatus"));
+        map.put(Attributes.GENRE, obj.getString("categoryName"));
+        map.put(Attributes.INTRO, obj.getString("introduction"));
+        map.put(Attributes.COVER, "http://img.17k.com/images/bookcover" + obj.getString("coverImageUrl"));
+        map.put(LAST_UPDATE_KEY, DateUtils.parse(obj.getString("lastUpdateChapterDate"), "yyyy-m-D H:M", null));
+        map.put(LAST_CHAPTER_KEY, obj.getString("lastupdateChapterName"));
+        return map;
     }
 }

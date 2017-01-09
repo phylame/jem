@@ -97,7 +97,7 @@ public class WWW_MANGG_COM extends AbstractProvider implements Identifiable {
                 if (text.isEmpty() || text.equals(";")) {
                     continue;
                 }
-                lines.add(text);
+                lines.add(text.replace("卝", ""));
             }
         }
         return join(config.lineSeparator, lines);

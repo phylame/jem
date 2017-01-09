@@ -31,7 +31,7 @@ public class CrawlerConfig extends AbstractConfig {
      * Timeout for networks.
      */
     @Configured(TIMEOUT)
-    public int timeout = 3000;
+    public int timeout = 10000;
 
     @Configured(LINE_SEPARATOR)
     public String lineSeparator = System.lineSeparator();

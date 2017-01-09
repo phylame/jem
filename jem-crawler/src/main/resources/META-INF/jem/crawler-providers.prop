@@ -27,3 +27,4 @@ http\://book.qidian.com=pw.phylame.jem.crawler.impl.BOOK_QIDIAN_COM
 http\://m.zongheng.com=pw.phylame.jem.crawler.impl.M_ZONGHENG_COM
 http\://book.zongheng.com=pw.phylame.jem.crawler.impl.BOOK_ZONGHENG_COM
 http\://m.motie.com=pw.phylame.jem.crawler.impl.M_MOTIE_COM
+http\://www.zhulang.com=pw.phylame.jem.crawler.impl.WWW_ZHULANG_COM

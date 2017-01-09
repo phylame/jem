@@ -191,6 +191,7 @@ public class HtmlRender {
             writeImage(cover, alt, htmlConfig.style.chapterCover);
         }
         writePart(title, htmlConfig.style.chapterTitle, intro, htmlConfig.style.chapterIntro);
+        System.out.println(title);
         writeText(content, htmlConfig.style.chapterText);
         endHtml();
     }

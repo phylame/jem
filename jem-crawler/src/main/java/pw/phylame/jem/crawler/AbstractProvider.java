@@ -18,13 +18,24 @@
 
 package pw.phylame.jem.crawler;
 
+import java.io.IOException;
+
+import org.json.JSONObject;
+import org.json.JSONTokener;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
+import lombok.val;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.core.Chapter;
+import pw.phylame.ycl.io.HttpUtils;
+import pw.phylame.ycl.io.IOUtils;
+import pw.phylame.ycl.util.CollectionUtils;
+import pw.phylame.ycl.util.Function;
+import pw.phylame.ycl.util.StringUtils;
 import pw.phylame.ycl.util.Validate;
-
-import java.io.IOException;
 
 public abstract class AbstractProvider implements CrawlerProvider {
     protected Book book;
@@ -49,23 +60,58 @@ public abstract class AbstractProvider implements CrawlerProvider {
         initialized = true;
     }
 
+    protected final void fetchContentsPaged() throws IOException {
+        ensureInitialized();
+        for (int i = 2, pages = fetchPage(1); i <= pages; ++i) {
+            fetchPage(i);
+        }
+    }
+
+    protected int fetchPage(int page) throws IOException {
+        throw new UnsupportedOperationException("require for implementation");
+    }
+
     @Override
     public final String fetchText(Chapter chapter, String url) {
         ensureInitialized();
         if (config.fetchingListener != null) {
             config.fetchingListener.fetching(chapterCount, chapterIndex++, chapter);
         }
-        return fetchText(url);
+        return url.isEmpty() ? StringUtils.EMPTY_TEXT : fetchText(url);
     }
 
     protected abstract String fetchText(String url);
 
-    protected final Document getSoup(String url) {
-        try {
-            return Jsoup.connect(url).timeout(config.timeout).get();
-        } catch (IOException e) {
-            context.setError(e);
-            return null;
-        }
+    protected final Document getSoup(String url) throws IOException {
+        return Jsoup.connect(url).timeout(config.timeout).get();
+    }
+
+    protected JSONObject getJson(String url, String encoding) throws IOException {
+        val conn = HttpUtils.Request.builder()
+                .url(url)
+                .method("get")
+                .connectTimeout(config.timeout)
+                .build()
+                .connect();
+        return new JSONObject(new JSONTokener(IOUtils.readerFor(conn.getInputStream(), encoding)));
+    }
+
+    protected JSONObject postJson(String url, String encoding) throws IOException {
+        val conn = HttpUtils.Request.builder()
+                .url(url)
+                .method("post")
+                .connectTimeout(config.timeout)
+                .build()
+                .connect();
+        return new JSONObject(new JSONTokener(IOUtils.readerFor(conn.getInputStream(), encoding)));
+    }
+
+    protected String joinString(Elements soup, String separator) {
+        return StringUtils.join(separator, CollectionUtils.map(soup, new Function<Element, String>() {
+            @Override
+            public String apply(Element e) {
+                return StringUtils.trimmed(e.text());
+            }
+        }));
     }
 }

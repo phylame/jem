@@ -593,7 +593,7 @@ object Dialogs {
     private fun selectedFile(): File {
         var file = fileChooser.selectedFile
 
-        if (PathUtils.extensionName(file.path).isEmpty()) {
+        if (PathUtils.extName(file.path).isEmpty()) {
             // append extension by choose extension filter
             val filter = fileChooser.fileFilter
             if (filter is FileNameExtensionFilter) {

@@ -18,44 +18,37 @@
 
 package pw.phylame.jem.crawler.impl;
 
-import lombok.val;
-import org.jsoup.nodes.TextNode;
-import org.jsoup.select.Elements;
-import pw.phylame.jem.core.Attributes;
-import pw.phylame.jem.core.Chapter;
-import pw.phylame.jem.crawler.AbstractProvider;
-import pw.phylame.jem.crawler.CrawlerContext;
-import pw.phylame.jem.crawler.Identifiable;
-import pw.phylame.jem.crawler.util.HtmlText;
-import pw.phylame.jem.util.flob.Flobs;
-import pw.phylame.ycl.io.PathUtils;
-import pw.phylame.ycl.util.DateUtils;
+import static pw.phylame.ycl.util.StringUtils.EMPTY_TEXT;
+import static pw.phylame.ycl.util.StringUtils.firstPartOf;
+import static pw.phylame.ycl.util.StringUtils.join;
+import static pw.phylame.ycl.util.StringUtils.secondPartOf;
+import static pw.phylame.ycl.util.StringUtils.trimmed;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
 import java.util.LinkedList;
 
-import static pw.phylame.ycl.util.StringUtils.*;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.TextNode;
+import org.jsoup.select.Elements;
+
+import lombok.val;
+import pw.phylame.jem.core.Attributes;
+import pw.phylame.jem.core.Chapter;
+import pw.phylame.jem.crawler.AbstractProvider;
+import pw.phylame.jem.crawler.Identifiable;
+import pw.phylame.jem.crawler.util.HtmlText;
+import pw.phylame.jem.util.flob.Flobs;
+import pw.phylame.ycl.util.DateUtils;
 
 public class WWW_MANGG_COM extends AbstractProvider implements Identifiable {
     public static final String HOST = "http://www.mangg.com";
-
-    private String bookId;
-
-    @Override
-    public void init(CrawlerContext context) {
-        super.init(context);
-        bookId = PathUtils.baseName(context.getAttrUrl().substring(0, context.getAttrUrl().length() - 1));
-    }
 
     @Override
     public void fetchAttributes() throws IOException {
         ensureInitialized();
         val doc = getSoup(context.getAttrUrl());
-        if (doc == null) {
-            return;
-        }
         Elements soup = doc.select("div#info");
         Attributes.setTitle(book, soup.select("h1").text().trim());
         val div = soup.first();
@@ -90,14 +83,17 @@ public class WWW_MANGG_COM extends AbstractProvider implements Identifiable {
     @Override
     protected String fetchText(String url) {
         ensureInitialized();
-        val doc = getSoup(url);
-        if (doc == null) {
-            return "";
+        final Document doc;
+        try {
+            doc = getSoup(url);
+        } catch (IOException e) {
+            context.setError(e);
+            return EMPTY_TEXT;
         }
         val lines = new LinkedList<String>();
         for (val node : doc.select("div#content").first().childNodes()) {
             if (node instanceof TextNode) {
-                val text = trimmed(((TextNode) node).text());
+                val text = trimmed(node.toString().replace("&nbsp;", ""));
                 if (text.isEmpty() || text.equals(";")) {
                     continue;
                 }

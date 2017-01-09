@@ -193,7 +193,7 @@ object Books {
         var _format: String? = format
         if (_format.isNullOrEmpty()) {
             if (initFile != null) {
-                _format = PathUtils.extensionName(initFile.path)
+                _format = PathUtils.extName(initFile.path)
                 if (_format.isEmpty()) {
                     _format = EpmManager.PMAB
                 }
@@ -217,7 +217,7 @@ object Books {
     }
 
     fun detectFormat(file: File): String {
-        val extension = PathUtils.extensionName(file.path).toLowerCase()
+        val extension = PathUtils.extName(file.path).toLowerCase()
         return EpmManager.nameOfExtension(extension) ?: extension
     }
 

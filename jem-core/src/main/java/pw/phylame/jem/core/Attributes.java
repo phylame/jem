@@ -137,7 +137,7 @@ public final class Attributes {
         return type == null ? null : Variants.defaultFor(type);
     }
 
-    private static final String VALUES_SEPARATOR = ";";
+    public static final String VALUES_SEPARATOR = ";";
 
     public static List<String> getValues(Chapter chapter, String name) {
         val value = chapter.getAttributes().get(name, EMPTY_TEXT);

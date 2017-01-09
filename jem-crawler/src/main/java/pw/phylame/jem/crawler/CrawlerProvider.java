@@ -18,9 +18,9 @@
 
 package pw.phylame.jem.crawler;
 
-import pw.phylame.jem.core.Chapter;
-
 import java.io.IOException;
+
+import pw.phylame.jem.core.Chapter;
 
 public interface CrawlerProvider {
     void init(CrawlerContext ctx);

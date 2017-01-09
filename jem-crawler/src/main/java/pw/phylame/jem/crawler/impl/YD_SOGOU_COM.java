@@ -18,13 +18,27 @@
 
 package pw.phylame.jem.crawler.impl;
 
-import lombok.val;
+import static pw.phylame.ycl.util.StringUtils.EMPTY_TEXT;
+import static pw.phylame.ycl.util.StringUtils.isNotEmpty;
+import static pw.phylame.ycl.util.StringUtils.join;
+import static pw.phylame.ycl.util.StringUtils.valueOfName;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.json.JSONObject;
-import org.json.JSONTokener;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.jsoup.select.Selector;
+
+import lombok.val;
 import pw.phylame.jem.core.Attributes;
 import pw.phylame.jem.core.Chapter;
 import pw.phylame.jem.crawler.AbstractProvider;
@@ -34,17 +48,9 @@ import pw.phylame.jem.crawler.Searchable;
 import pw.phylame.jem.crawler.util.HtmlText;
 import pw.phylame.jem.crawler.util.SoupUtils;
 import pw.phylame.jem.util.flob.Flobs;
-import pw.phylame.ycl.io.HttpUtils;
-import pw.phylame.ycl.io.IOUtils;
 import pw.phylame.ycl.util.CollectionUtils;
 import pw.phylame.ycl.util.DateUtils;
 import pw.phylame.ycl.util.Function;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.*;
-
-import static pw.phylame.ycl.util.StringUtils.*;
 
 public class YD_SOGOU_COM extends AbstractProvider implements Searchable, Identifiable {
     private static final String ENCODING = "UTF-8";
@@ -63,9 +69,6 @@ public class YD_SOGOU_COM extends AbstractProvider implements Searchable, Identi
     public void fetchAttributes() throws IOException {
         ensureInitialized();
         val doc = getSoup(context.getAttrUrl());
-        if (doc == null) {
-            return;
-        }
         Elements soup = doc.select("div.detail-wrap");
         val img = largeImage(soup.select("img").attr("data-echo"));
         Attributes.setCover(book, Flobs.forURL(new URL(img), "image/jpg"));
@@ -98,17 +101,17 @@ public class YD_SOGOU_COM extends AbstractProvider implements Searchable, Identi
 
     @Override
     public void fetchContents() throws IOException {
-        ensureInitialized();
-        for (int i = 2, pages = fetchPage(1); i <= pages; ++i) {
-            fetchPage(i);
-        }
+        fetchContentsPaged();
     }
 
     @Override
     public String fetchText(String url) {
-        val doc = getSoup(url);
-        if (doc == null) {
-            return "";
+        final Document doc;
+        try {
+            doc = getSoup(url);
+        } catch (IOException e) {
+            context.setError(e);
+            return EMPTY_TEXT;
         }
         val i = CollectionUtils.map(doc.select("div#text").first().children(), new Function<Element, String>() {
             @Override
@@ -119,14 +122,10 @@ public class YD_SOGOU_COM extends AbstractProvider implements Searchable, Identi
         return join(config.lineSeparator, i);
     }
 
-    private int fetchPage(int page) throws IOException {
-        val conn = HttpUtils.Request.builder()
-                .url(String.format("%s/h5/cpt/ajax/detail?%s&p=%d&bkey=%s&asc=asc", HOST, GP, page, bookKey))
-                .method("post")
-                .connectTimeout(config.timeout)
-                .build()
-                .connect();
-        val json = new JSONObject(new JSONTokener(IOUtils.readerFor(conn.getInputStream(), ENCODING)));
+    @Override
+    protected int fetchPage(int page) throws IOException {
+        val json = postJson(String.format("%s/h5/cpt/ajax/detail?%s&p=%d&bkey=%s&asc=asc", HOST, GP, page, bookKey),
+                ENCODING);
         val list = json.getJSONObject("list");
         for (val item : list.getJSONArray("items")) {
             val obj = (JSONObject) item;
@@ -139,8 +138,10 @@ public class YD_SOGOU_COM extends AbstractProvider implements Searchable, Identi
         }
         if (chapterCount == -1) {
             chapterCount = list.getInt("total");
+            return list.getInt("totalPages");
+        } else {
+            return 0;
         }
-        return list.getInt("totalPages");
     }
 
     private String largeImage(String url) {

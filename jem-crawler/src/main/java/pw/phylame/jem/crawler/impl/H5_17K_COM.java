@@ -18,11 +18,26 @@
 
 package pw.phylame.jem.crawler.impl;
 
-import lombok.val;
+import static pw.phylame.ycl.util.StringUtils.EMPTY_TEXT;
+import static pw.phylame.ycl.util.StringUtils.join;
+import static pw.phylame.ycl.util.StringUtils.trimmed;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 import org.json.JSONObject;
 import org.json.JSONTokener;
+import org.jsoup.nodes.Document;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
+
+import lombok.val;
 import pw.phylame.jem.core.Attributes;
 import pw.phylame.jem.core.Chapter;
 import pw.phylame.jem.crawler.AbstractProvider;
@@ -35,11 +50,6 @@ import pw.phylame.ycl.io.HttpUtils;
 import pw.phylame.ycl.io.IOUtils;
 import pw.phylame.ycl.io.PathUtils;
 import pw.phylame.ycl.util.DateUtils;
-import pw.phylame.ycl.util.StringUtils;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.*;
 
 public class H5_17K_COM extends AbstractProvider implements Searchable, Identifiable {
     private static final String ENCODING = "UTF-8";
@@ -59,9 +69,6 @@ public class H5_17K_COM extends AbstractProvider implements Searchable, Identifi
     public void fetchAttributes() throws IOException {
         ensureInitialized();
         val doc = getSoup(context.getAttrUrl());
-        if (doc == null) {
-            return;
-        }
         Elements section = doc.select("section.bookhome_top");
         Attributes.setCover(book, Flobs.forURL(new URL(section.select("img").attr("src")), null));
         Attributes.setTitle(book, section.select("p.title").text());
@@ -71,24 +78,25 @@ public class H5_17K_COM extends AbstractProvider implements Searchable, Identifi
         section = doc.select("section.description");
         val lines = new LinkedList<String>();
         for (val e : section.select("p").first().textNodes()) {
-            lines.add(StringUtils.trimmed(e.text()));
+            lines.add(trimmed(e.text()));
         }
-        Attributes.setIntro(book, StringUtils.join(config.lineSeparator, lines));
+        Attributes.setIntro(book, join(config.lineSeparator, lines));
     }
 
     @Override
     public void fetchContents() throws IOException {
-        ensureInitialized();
-        for (int i = 2, pages = fetchPage(1); i <= pages; ++i) {
-            fetchPage(i);
-        }
+        fetchContentsPaged();
     }
 
     @Override
     public String fetchText(String url) {
-        val doc = getSoup(url);
-        if (doc == null) {
-            return "";
+        ensureInitialized();
+        final Document doc;
+        try {
+            doc = getSoup(url);
+        } catch (IOException e) {
+            context.setError(e);
+            return EMPTY_TEXT;
         }
         val div = doc.select("div#TextContent");
         val lines = new LinkedList<String>();
@@ -98,20 +106,17 @@ public class H5_17K_COM extends AbstractProvider implements Searchable, Identifi
             }
             val text = (TextNode) node;
             if (!text.isBlank()) {
-                lines.add(StringUtils.trimmed(text.text()));
+                lines.add(trimmed(text.text()));
             }
         }
-        return StringUtils.join(config.lineSeparator, lines);
+        return join(config.lineSeparator, lines);
     }
 
-    private int fetchPage(int page) throws IOException {
-        val conn = HttpUtils.Request.builder()
-                .url(String.format("%s/h5/book/ajaxBookList.k?bookId=%s&page=%d&size=%d", HOST, bookId, page, PAGE_SIZE))
-                .method("get")
-                .connectTimeout(config.timeout)
-                .build()
-                .connect();
-        val json = new JSONObject(new JSONTokener(IOUtils.readerFor(conn.getInputStream(), ENCODING)));
+    @Override
+    protected int fetchPage(int page) throws IOException {
+        val json = getJson(
+                String.format("%s/h5/book/ajaxBookList.k?bookId=%s&page=%d&size=%d", HOST, bookId, page, PAGE_SIZE),
+                ENCODING);
         Chapter chapter;
         for (val item : json.getJSONArray("datas")) {
             val obj = (JSONObject) item;
@@ -130,8 +135,10 @@ public class H5_17K_COM extends AbstractProvider implements Searchable, Identifi
         }
         if (chapterCount == -1) {
             chapterCount = json.getInt("totalChapter");
+            return json.getInt("totalPage");
+        } else {
+            return 0;
         }
-        return json.getInt("totalPage");
     }
 
     @Override
@@ -142,7 +149,8 @@ public class H5_17K_COM extends AbstractProvider implements Searchable, Identifi
     @Override
     public List<Map<String, Object>> search(String keywords) throws IOException {
         val conn = HttpUtils.Request.builder()
-                .url(String.format("http://search.17k.com/h5/sl?page=1&pageSize=10&searchType=0&q=%s&sortType=5", keywords))
+                .url(String.format("http://search.17k.com/h5/sl?page=1&pageSize=10&searchType=0&q=%s&sortType=5",
+                        keywords))
                 .connectTimeout(3000)
                 .build()
                 .connect();

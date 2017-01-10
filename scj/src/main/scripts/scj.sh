@@ -38,7 +38,7 @@ if [ -z "$SCJ_HOME" -o ! -d "$SCJ_HOME" ]; then
 fi
 
 # SCJ main class
-SCJ_CLASS=pw.phylame.jem.scj.app.AppKt
+SCJ_CLASS=jem.scj.app.AppKt
 
 # Set extension JAR
 SCJ_CLASS_PATH=""

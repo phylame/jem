@@ -21,7 +21,6 @@ package jem.scj.addons;
 import static java.lang.System.out;
 import static jem.scj.addons.M.tr;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -30,21 +29,31 @@ import java.util.Properties;
 
 import org.apache.commons.cli.Option;
 
+import jem.scj.app.AppConfig;
+import jem.scj.app.AppKt;
+import jem.scj.app.SCI;
+import jem.scj.app.SCJPlugin;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 import lombok.val;
-import pw.phylame.jem.scj.app.AppKt;
 import pw.phylame.qaf.cli.CLIDelegate;
 import pw.phylame.qaf.cli.Command;
 import pw.phylame.qaf.cli.PropertiesFetcher;
+import pw.phylame.qaf.core.App;
+import pw.phylame.qaf.core.Metadata;
 import pw.phylame.qaf.core.Plugin;
 import pw.phylame.ycl.log.LogLevel;
-import pw.phylame.ycl.util.Function;
+import pw.phylame.ycl.util.CollectionUtils;
+import pw.phylame.ycl.util.Prediction;
 import pw.phylame.ycl.util.Provider;
 import pw.phylame.ycl.util.StringUtils;
 import pw.phylame.ycl.value.Lazy;
 
-public class AppInspector extends AbstractPlugin {
+public class AppInspector extends SCJPlugin {
+
+    private SCI sci = getSci();
+    private App app = getApp();
+    private AppConfig config = getConfig();
 
     public AppInspector() {
         super(new Metadata("45fd7ef3-aa4a-40a9-bf79-416fbc44aeab", "App Inspector", "1.0", "PW"));
@@ -100,11 +109,11 @@ public class AppInspector extends AbstractPlugin {
             }
         });
         sci.addOption(Option.builder("S")
-                        .numberOfArgs(2)
-                        .argName(app.tr("help.kvName"))
-                        .valueSeparator()
-                        .desc(tr("help.setConfig"))
-                        .build(),
+                .numberOfArgs(2)
+                .argName(app.tr("help.kvName"))
+                .valueSeparator()
+                .desc(tr("help.setConfig"))
+                .build(),
                 new ConfigSetter());
     }
 
@@ -130,28 +139,27 @@ public class AppInspector extends AbstractPlugin {
     }
 
     private class ConfigSetter extends PropertiesFetcher implements Command {
-        private final Lazy<Map<String, Function<String, Boolean>>> validators = new Lazy<>(
-                new Provider<Map<String, Function<String, Boolean>>>() {
+        private final Lazy<Map<String, Prediction<String>>> validators = new Lazy<>(
+                new Provider<Map<String, Prediction<String>>>() {
                     @Override
-                    public Map<String, Function<String, Boolean>> provide() throws Exception {
-                        val map = new HashMap<String, Function<String, Boolean>>();
-                        map.put("app.debug.level", new Function<String, Boolean>() {
-                            @Override
-                            public Boolean apply(String i) {
-                                return AppKt.checkDebugLevel(i);
-                            }
-                        });
-                        map.put("app.log.level", new Function<String, Boolean>() {
-                            @Override
-                            public Boolean apply(String i) {
-                                if (LogLevel.forName(i, null) == null) {
-                                    app.error(tr("logSetter.invalidLevel", i, LogSetter.makeLevelList()));
-                                    return false;
-                                }
-                                return true;
-                            }
-                        });
-                        return map;
+                    public Map<String, Prediction<String>> provide() throws Exception {
+                        return CollectionUtils.<String, Prediction<String>>mapOf(
+                                "app.debug.level", new Prediction<String>() {
+                                    @Override
+                                    public Boolean apply(String i) {
+                                        return AppKt.checkDebugLevel(i);
+                                    }
+                                },
+                                "app.log.level", new Prediction<String>() {
+                                    @Override
+                                    public Boolean apply(String i) {
+                                        if (LogLevel.forName(i, null) == null) {
+                                            app.error(tr("logSetter.invalidLevel", i, LogSetter.makeLevelList()));
+                                            return false;
+                                        }
+                                        return true;
+                                    }
+                                });
                     }
                 });
 

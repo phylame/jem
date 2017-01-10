@@ -18,8 +18,13 @@
 
 package pw.phylame.jem.crawler;
 
+import pw.phylame.jem.core.Book;
 import pw.phylame.jem.core.Chapter;
 
 public interface OnFetchingListener {
-    void fetching(int total, int current, Chapter chapter);
+    void attributeFetched(Book book);
+
+    void contentsFetched(Book book);
+
+    void fetchingText(int total, int current, Chapter chapter);
 }

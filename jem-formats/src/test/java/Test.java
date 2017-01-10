@@ -10,7 +10,7 @@ import static pw.phylame.jem.epm.util.DebugUtils.*;
 
 public class Test {
     public static void main(String[] args) throws IOException, JemException {
-        System.setProperty(EpmManager.AUTO_LOAD_CUSTOMIZED_KEY, "true");
+        System.setProperty(EpmManager.AUTO_LOAD_KEY, "true");
         Log.setLevel(LogLevel.ALL);
         val book = parseFile("F:/books/恐慌沸腾.pmab.zip", "pmab", null);
         if (book == null) {

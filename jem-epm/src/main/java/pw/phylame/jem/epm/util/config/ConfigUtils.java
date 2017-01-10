@@ -18,6 +18,10 @@
 
 package pw.phylame.jem.epm.util.config;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.Map;
+
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -26,12 +30,8 @@ import pw.phylame.jem.epm.util.M;
 import pw.phylame.ycl.format.Converters;
 import pw.phylame.ycl.log.Log;
 import pw.phylame.ycl.util.CollectionUtils;
-import pw.phylame.ycl.util.Function;
+import pw.phylame.ycl.util.Prediction;
 import pw.phylame.ycl.util.Reflections;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.Map;
 
 /**
  * Utilities for maker and parser configurations
@@ -47,7 +47,8 @@ public final class ConfigUtils {
         return clazz.newInstance();
     }
 
-    public static <C extends EpmConfig> C fetchConfig(Map<String, Object> m, String prefix, @NonNull Class<C> clazz) throws BadConfigException {
+    public static <C extends EpmConfig> C fetchConfig(Map<String, Object> m, String prefix, @NonNull Class<C> clazz)
+            throws BadConfigException {
         if (CollectionUtils.isEmpty(m)) {
             return defaultConfig(clazz);
         }
@@ -56,7 +57,9 @@ public final class ConfigUtils {
             // get config object in m, key: prefix + <Class>.SELF
             val field = clazz.getField(EpmConfig.SELF_FIELD_NAME);
             if (Modifier.isStatic(field.getModifiers()) && field.isAccessible()) {
-                config = fetchObject(m, (prefix != null ? prefix : "") + field.get(null), clazz, null); // find the config object by key
+                config = fetchObject(m, (prefix != null ? prefix : "") + field.get(null), clazz, null); // find the
+                                                                                                        // config object
+                                                                                                        // by key
             }
         } catch (NoSuchFieldException | IllegalAccessException e) {
             Log.d(TAG, "cannot get config by '{0}' field", EpmConfig.SELF_FIELD_NAME);
@@ -70,12 +73,13 @@ public final class ConfigUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> T fetchObject(Map<String, Object> m, String key, Class<T> type, Object fallback) throws BadConfigException {
+    public static <T> T fetchObject(Map<String, Object> m, String key, Class<T> type, Object fallback)
+            throws BadConfigException {
         val obj = m.get(key);
         if (obj == null) {
             return m.containsKey(key) ? null : (T) fallback;
         }
-        if (type.isInstance(obj)) {   // found the item
+        if (type.isInstance(obj)) { // found the item
             return (T) obj;
         }
         if (obj instanceof String) {
@@ -89,7 +93,7 @@ public final class ConfigUtils {
 
     @SuppressWarnings("unchecked")
     private static void fetchFields(EpmConfig config, Map<String, Object> m, String prefix) throws BadConfigException {
-        val fields = Reflections.getFields(config.getClass(), new Function<Field, Boolean>() {
+        val fields = Reflections.getFields(config.getClass(), new Prediction<Field>() {
             @Override
             public Boolean apply(Field field) {
                 int mod = field.getModifiers();
@@ -110,9 +114,9 @@ public final class ConfigUtils {
             val type = field.getType();
             try {
                 Object value = fetchObject(m, key, type, null);
-                if (value == null) {    // not found in m
+                if (value == null) { // not found in m
                     Object initial = field.get(config);
-                    if (EpmConfig.class.isAssignableFrom(type)) {   // field is EpmConfig
+                    if (EpmConfig.class.isAssignableFrom(type)) { // field is EpmConfig
                         fetchFields(initial != null
                                 ? (EpmConfig) initial
                                 : defaultConfig((Class<? extends EpmConfig>) type), m, prefix);
@@ -121,7 +125,8 @@ public final class ConfigUtils {
                 }
                 field.set(config, value);
             } catch (IllegalAccessException e) {
-                throw E.forBadConfig(key, null, M.tr("err.config.inaccessible", config.getClass(), field.getName(), e.getMessage()));
+                throw E.forBadConfig(key, null,
+                        M.tr("err.config.inaccessible", config.getClass(), field.getName(), e.getMessage()));
             }
         }
         if (!fields.isEmpty() && config instanceof AdjustableConfig) {

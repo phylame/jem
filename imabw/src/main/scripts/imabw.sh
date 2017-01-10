@@ -78,7 +78,7 @@ else
 fi
 
 # IMABW main class
-IMABW_CLASS=pw.phylame.jem.imabw.app.ImabwKt
+IMABW_CLASS=jem.imabw.app.ImabwKt
 
 # Set extension JAR
 IMABW_CLASS_PATH=""

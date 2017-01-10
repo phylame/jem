@@ -19,15 +19,13 @@
 package pw.phylame.jem.crawler;
 
 import pw.phylame.ycl.util.Implementor;
-
-import java.net.MalformedURLException;
-import java.net.URL;
+import pw.phylame.ycl.util.MiscUtils;
 
 public final class ProviderManager {
     private ProviderManager() {
     }
 
-    public static final String AUTO_LOAD_CUSTOMIZED_KEY = "jem.crawler.autoLoad";
+    public static final String AUTO_LOAD_KEY = "jem.crawler.autoLoad";
 
     public static final String REGISTRY_FILE = "META-INF/jem/crawler-providers.prop";
 
@@ -53,34 +51,18 @@ public final class ProviderManager {
         return providers.contains(host);
     }
 
-    public static CrawlerProvider providerForHost(String host) throws IllegalAccessException, ClassNotFoundException, InstantiationException {
+    public static CrawlerProvider providerFor(String host)
+            throws IllegalAccessException, ClassNotFoundException, InstantiationException {
         return providers.getInstance(host);
     }
 
-    public static CrawlerProvider providerForUrl(String url) throws IllegalAccessException, InstantiationException, ClassNotFoundException {
-        final URL u;
-        try {
-            u = new URL(url);
-        } catch (MalformedURLException e) {
-            return null;
-        }
-        return providerForHost(u.getProtocol() + "://" + u.getHost());
-    }
-
-    public static String getAttrUrlById(CrawlerProvider provider, String bookId) {
-        if (provider instanceof Identifiable) {
-            return ((Identifiable) provider).attrUrlOf(bookId);
-        }
-        return null;
-    }
-
-    public static void loadCustomizedProviders() {
-        providers.load(REGISTRY_FILE, null);
+    public static void loadProviders() {
+        providers.load(REGISTRY_FILE, MiscUtils.getContextClassLoader(), null);
     }
 
     static {
-        if (Boolean.getBoolean(AUTO_LOAD_CUSTOMIZED_KEY)) {
-            loadCustomizedProviders();
+        if (Boolean.getBoolean(AUTO_LOAD_KEY)) {
+            loadProviders();
         }
     }
 }

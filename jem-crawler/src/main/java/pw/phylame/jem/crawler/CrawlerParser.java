@@ -48,7 +48,7 @@ public class CrawlerParser extends EpmBase<CrawlerConfig> implements Parser {
         val host = url.getProtocol() + "://" + url.getHost();
         final CrawlerProvider provider;
         try {
-            provider = ProviderManager.providerForHost(host);
+            provider = ProviderManager.providerFor(host);
         } catch (IllegalAccessException | ClassNotFoundException | InstantiationException e) {
             throw new ParserException(M.tr("err.unknownHost", host), e);
         }
@@ -57,9 +57,16 @@ public class CrawlerParser extends EpmBase<CrawlerConfig> implements Parser {
         }
         val book = new Book();
         val context = new CrawlerContext(book, input, config);
+        val listener = config.fetchingListener;
         provider.init(context);
         provider.fetchAttributes();
+        if (listener != null) {
+            listener.attributeFetched(book);
+        }
         provider.fetchContents();
+        if (listener != null) {
+            listener.contentsFetched(book);
+        }
         book.getAttributes().set("source", input);
         return book;
     }

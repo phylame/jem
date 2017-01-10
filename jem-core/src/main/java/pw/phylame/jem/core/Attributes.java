@@ -18,9 +18,12 @@
 
 package pw.phylame.jem.core;
 
+import static pw.phylame.ycl.util.CollectionUtils.propertiesFor;
+import static pw.phylame.ycl.util.CollectionUtils.update;
 import static pw.phylame.ycl.util.StringUtils.EMPTY_TEXT;
 import static pw.phylame.ycl.util.StringUtils.join;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -39,7 +42,7 @@ import pw.phylame.jem.util.Variants;
 import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.jem.util.text.Text;
 import pw.phylame.jem.util.text.Texts;
-import pw.phylame.ycl.util.CollectionUtils;
+import pw.phylame.ycl.log.Log;
 import pw.phylame.ycl.util.Exceptions;
 
 /**
@@ -84,7 +87,11 @@ public final class Attributes {
     private static final Map<String, String> attributeTypes = new ConcurrentHashMap<>();
 
     static {
-        CollectionUtils.updateByProperties(attributeTypes, "!pw/phylame/jem/util/attributes.properties");
+        try {
+            update(attributeTypes, propertiesFor("!pw/phylame/jem/util/attributes.properties"));
+        } catch (IOException e) {
+            Log.d("Attributes", e);
+        }
     }
 
     /**
@@ -126,7 +133,7 @@ public final class Attributes {
     }
 
     /**
-     * Returns default value for specfified attribute.
+     * Returns default value for specified attribute.
      *
      * @param name
      *            name of attribute

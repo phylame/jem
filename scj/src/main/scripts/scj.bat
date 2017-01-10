@@ -21,7 +21,7 @@
 if "%SCJ_HOME%" == "" set "SCJ_HOME=%~dp0.."
 
 :: -- SCJ main class
-set SCJ_CLASS=pw.phylame.jem.scj.app.AppKt
+set SCJ_CLASS=jem.scj.app.AppKt
 
 :: -- Set extension JAR
 setlocal EnableDelayedExpansion

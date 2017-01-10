@@ -18,13 +18,25 @@
 
 package jem.scj.addons;
 
-import pw.phylame.ycl.util.CollectionUtils;
+import static pw.phylame.ycl.util.CollectionUtils.propertiesFor;
+import static pw.phylame.ycl.util.CollectionUtils.update;
 
+import java.io.IOException;
 import java.util.Map;
 
-public class ArgumentsLoader extends AbstractPlugin {
+import jem.scj.app.AppConfig;
+import jem.scj.app.SCJPlugin;
+import pw.phylame.qaf.core.App;
+import pw.phylame.qaf.core.Metadata;
+import pw.phylame.ycl.log.Log;
+
+public class ArgumentsLoader extends SCJPlugin {
+    private static final String TAG = ArgumentsLoader.class.getSimpleName();
 
     private static final String NAME_SUFFIX = ".prop";
+
+    private App app = getApp();
+    private AppConfig config = getConfig();
 
     public ArgumentsLoader() {
         super(new Metadata("ee4ef607-a500-4e16-aecc-08aa457a60ea", "Arguments Loader", "1.0", "PW"));
@@ -32,13 +44,17 @@ public class ArgumentsLoader extends AbstractPlugin {
 
     @Override
     public void init() {
-        update("in-arguments", config.getInArguments());
-        update("out-attributes", config.getOutAttributes());
-        update("out-extensions", config.getOutExtensions());
-        update("out-arguments", config.getOutArguments());
+        updateMap("in-arguments", config.getInArguments());
+        updateMap("out-attributes", config.getOutAttributes());
+        updateMap("out-extensions", config.getOutExtensions());
+        updateMap("out-arguments", config.getOutArguments());
     }
 
-    private void update(String name, Map<String, Object> m) {
-        CollectionUtils.updateByProperties(m, app.pathOf(name + NAME_SUFFIX), getClass().getClassLoader());
+    private void updateMap(String name, Map<String, Object> m) {
+        try {
+            update(m, propertiesFor(app.pathOf(name + NAME_SUFFIX), getClass().getClassLoader()));
+        } catch (IOException e) {
+            Log.e(TAG, e);
+        }
     }
 }

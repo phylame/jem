@@ -39,6 +39,7 @@
         <module>scj</module>
         <module>imabw</module>
         <module>scj-addons</module>
+        <module>crawling</module>
         <module>crawler-addons</module>
     </modules>
 

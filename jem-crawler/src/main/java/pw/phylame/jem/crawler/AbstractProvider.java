@@ -75,7 +75,7 @@ public abstract class AbstractProvider implements CrawlerProvider {
     public final String fetchText(Chapter chapter, String url) {
         ensureInitialized();
         if (config.fetchingListener != null) {
-            config.fetchingListener.fetching(chapterCount, chapterIndex++, chapter);
+            config.fetchingListener.fetchingText(chapterCount, chapterIndex++, chapter);
         }
         return url.isEmpty() ? StringUtils.EMPTY_TEXT : fetchText(url);
     }
@@ -86,7 +86,7 @@ public abstract class AbstractProvider implements CrawlerProvider {
         return Jsoup.connect(url).timeout(config.timeout).get();
     }
 
-    protected JSONObject getJson(String url, String encoding) throws IOException {
+    protected final JSONObject getJson(String url, String encoding) throws IOException {
         val conn = HttpUtils.Request.builder()
                 .url(url)
                 .method("get")
@@ -96,7 +96,7 @@ public abstract class AbstractProvider implements CrawlerProvider {
         return new JSONObject(new JSONTokener(IOUtils.readerFor(conn.getInputStream(), encoding)));
     }
 
-    protected JSONObject postJson(String url, String encoding) throws IOException {
+    protected final JSONObject postJson(String url, String encoding) throws IOException {
         val conn = HttpUtils.Request.builder()
                 .url(url)
                 .method("post")
@@ -106,7 +106,7 @@ public abstract class AbstractProvider implements CrawlerProvider {
         return new JSONObject(new JSONTokener(IOUtils.readerFor(conn.getInputStream(), encoding)));
     }
 
-    protected String joinString(Elements soup, String separator) {
+    protected final String joinString(Elements soup, String separator) {
         return StringUtils.join(separator, CollectionUtils.map(soup, new Function<Element, String>() {
             @Override
             public String apply(Element e) {

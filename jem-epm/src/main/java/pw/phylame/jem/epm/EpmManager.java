@@ -18,21 +18,27 @@
 
 package pw.phylame.jem.epm;
 
+import static pw.phylame.ycl.util.CollectionUtils.isEmpty;
+import static pw.phylame.ycl.util.CollectionUtils.setOf;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import lombok.NonNull;
 import lombok.val;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.util.JemException;
 import pw.phylame.jem.util.UnsupportedFormatException;
-import pw.phylame.ycl.io.IOUtils;
 import pw.phylame.ycl.io.PathUtils;
 import pw.phylame.ycl.log.Log;
-import pw.phylame.ycl.util.CollectionUtils;
+import pw.phylame.ycl.util.BiFunction;
 import pw.phylame.ycl.util.Implementor;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import pw.phylame.ycl.util.MiscUtils;
 
 public final class EpmManager {
     private EpmManager() {
@@ -58,7 +64,7 @@ public final class EpmManager {
     /**
      * Name of system property to auto load customized parsers and parsers.
      */
-    public static final String AUTO_LOAD_CUSTOMIZED_KEY = "jem.epm.autoLoad";
+    public static final String AUTO_LOAD_KEY = "jem.epm.autoLoad";
 
     /**
      * Holds registered {@code Parser} class information.
@@ -71,14 +77,14 @@ public final class EpmManager {
     private static final Implementor<Maker> makers = new Implementor<>(Maker.class, true, null);
 
     /**
-     * Mapping parser and maker name to file extension names.
+     * Mapping parser and maker name to file extension nameMap.
      */
-    private static final Map<String, Set<String>> extensions = new ConcurrentHashMap<>();
+    private static final Map<String, Set<String>> extensionMap = new ConcurrentHashMap<>();
 
     /**
      * Mapping file extension name to parser and maker name.
      */
-    private static final Map<String, String> names = new ConcurrentHashMap<>();
+    private static final Map<String, String> nameMap = new ConcurrentHashMap<>();
 
     /**
      * Registers parser class with specified name.
@@ -89,9 +95,12 @@ public final class EpmManager {
      * NOTE: old parser and cached parser with the name will be removed.
      * </p>
      *
-     * @param name name of the parser (normally the extension name of book file)
-     * @param path path of the parser class
-     * @throws IllegalArgumentException if the <code>name</code> or <code>path</code> is {@literal null} or empty string
+     * @param name
+     *            name of the parser (normally the extension name of book file)
+     * @param path
+     *            path of the parser class
+     * @throws IllegalArgumentException
+     *             if the <code>name</code> or <code>path</code> is {@literal null} or empty string
      */
     public static void registerParser(String name, String path) {
         parsers.register(name, path);
@@ -103,10 +112,14 @@ public final class EpmManager {
      * If parser class with same name exists, replaces the old with the new parser class.
      * </p>
      *
-     * @param name  name of the parser (normally the extension name of book file)
-     * @param clazz the {@code Parser} class
-     * @throws IllegalArgumentException if the <code>name</code> is {@literal null} or empty string
-     * @throws NullPointerException     if the <code>clazz</code> is {@literal null}
+     * @param name
+     *            name of the parser (normally the extension name of book file)
+     * @param clazz
+     *            the {@code Parser} class
+     * @throws IllegalArgumentException
+     *             if the <code>name</code> is {@literal null} or empty string
+     * @throws NullPointerException
+     *             if the <code>clazz</code> is {@literal null}
      */
     public static void registerParser(String name, Class<? extends Parser> clazz) {
         parsers.register(name, clazz);
@@ -115,7 +128,8 @@ public final class EpmManager {
     /**
      * Removes registered parser with specified name.
      *
-     * @param name name of the parser
+     * @param name
+     *            name of the parser
      */
     public static void removeParser(String name) {
         parsers.remove(name);
@@ -124,7 +138,8 @@ public final class EpmManager {
     /**
      * Tests parser with specified name is registered or not.
      *
-     * @param name the name of format
+     * @param name
+     *            the name of format
      * @return <code>true</code> if the parser is registered otherwise <code>false</code>
      */
     public static boolean hasParser(String name) {
@@ -132,9 +147,9 @@ public final class EpmManager {
     }
 
     /**
-     * Returns names of registered parser class.
+     * Returns nameMap of registered parser class.
      *
-     * @return sequence of format names
+     * @return sequence of format nameMap
      */
     public static String[] supportedParsers() {
         return parsers.names();
@@ -143,12 +158,17 @@ public final class EpmManager {
     /**
      * Returns parser instance with specified name.
      *
-     * @param name name of the parser
+     * @param name
+     *            name of the parser
      * @return {@code Parser} instance or {@literal null} if parser not registered
-     * @throws NullPointerException   if the <code>name</code> is {@literal null}
-     * @throws IllegalAccessException cannot access the parser class
-     * @throws InstantiationException cannot create new instance of parser class
-     * @throws ClassNotFoundException if registered class path is invalid
+     * @throws NullPointerException
+     *             if the <code>name</code> is {@literal null}
+     * @throws IllegalAccessException
+     *             cannot access the parser class
+     * @throws InstantiationException
+     *             cannot create new instance of parser class
+     * @throws ClassNotFoundException
+     *             if registered class path is invalid
      */
     public static Parser parserFor(String name)
             throws IllegalAccessException, InstantiationException, ClassNotFoundException {
@@ -164,9 +184,12 @@ public final class EpmManager {
      * NOTE: old maker and cached maker with the name will be removed.
      * </p>
      *
-     * @param name name of the maker (normally the extension name of book file)
-     * @param path class path of the maker class
-     * @throws IllegalArgumentException if the <code>name</code> or <code>path</code> is {@literal null} or empty string
+     * @param name
+     *            name of the maker (normally the extension name of book file)
+     * @param path
+     *            class path of the maker class
+     * @throws IllegalArgumentException
+     *             if the <code>name</code> or <code>path</code> is {@literal null} or empty string
      */
     public static void registerMaker(String name, String path) {
         makers.register(name, path);
@@ -178,10 +201,14 @@ public final class EpmManager {
      * If maker class with same name exists, replaces the old with the new maker class.
      * </p>
      *
-     * @param name  name of the maker (normally the extension name of book file)
-     * @param clazz the {@code Maker} class
-     * @throws IllegalArgumentException if the <code>name</code> is {@literal null} or empty string
-     * @throws NullPointerException     if the <code>clazz</code> is {@literal null}
+     * @param name
+     *            name of the maker (normally the extension name of book file)
+     * @param clazz
+     *            the {@code Maker} class
+     * @throws IllegalArgumentException
+     *             if the <code>name</code> is {@literal null} or empty string
+     * @throws NullPointerException
+     *             if the <code>clazz</code> is {@literal null}
      */
     public static void registerMaker(String name, Class<? extends Maker> clazz) {
         makers.register(name, clazz);
@@ -190,7 +217,8 @@ public final class EpmManager {
     /**
      * Removes registered maker with specified name.
      *
-     * @param name name of the maker
+     * @param name
+     *            name of the maker
      */
     public static void removeMaker(String name) {
         makers.remove(name);
@@ -199,7 +227,8 @@ public final class EpmManager {
     /**
      * Tests maker with specified name is registered or not.
      *
-     * @param name the name of format
+     * @param name
+     *            the name of format
      * @return <code>true</code> if the maker is registered otherwise <code>false</code>
      */
     public static boolean hasMaker(String name) {
@@ -207,9 +236,9 @@ public final class EpmManager {
     }
 
     /**
-     * Returns names of registered maker class.
+     * Returns nameMap of registered maker class.
      *
-     * @return sequence of format names
+     * @return sequence of format nameMap
      */
     public static String[] supportedMakers() {
         return makers.names();
@@ -218,12 +247,17 @@ public final class EpmManager {
     /**
      * Returns maker instance with specified name.
      *
-     * @param name name of the maker
+     * @param name
+     *            name of the maker
      * @return {@code Maker} instance or {@literal null} if maker not registered
-     * @throws NullPointerException   if the <code>name</code> is {@literal null}
-     * @throws IllegalAccessException cannot access the maker class
-     * @throws InstantiationException cannot create new instance of maker class
-     * @throws ClassNotFoundException if registered class path is invalid
+     * @throws NullPointerException
+     *             if the <code>name</code> is {@literal null}
+     * @throws IllegalAccessException
+     *             cannot access the maker class
+     * @throws InstantiationException
+     *             cannot create new instance of maker class
+     * @throws ClassNotFoundException
+     *             if registered class path is invalid
      */
     public static Maker makerFor(String name)
             throws IllegalAccessException, InstantiationException, ClassNotFoundException {
@@ -231,57 +265,61 @@ public final class EpmManager {
     }
 
     /**
-     * Maps specified file extension names to parser (or maker) name.
+     * Maps specified file extension nameMap to parser (or maker) name.
      *
-     * @param name       the name of parser or maker
-     * @param extensions file extension names supported by the parser (or maker), if {@literal null} use the parser name as
-     *                   one extension
-     * @throws NullPointerException if the <code>name</code> is {@literal null}
+     * @param name
+     *            the name of parser or maker
+     * @param extensionMap
+     *            file extension nameMap supported by the parser (or maker), do nothing if {@literal null}
+     * @throws NullPointerException
+     *             if the <code>name</code> is {@literal null}
      */
     public static void mapExtensions(@NonNull String name, Collection<String> extensions) {
-        Set<String> current = EpmManager.extensions.get(name);
+        if (isEmpty(extensions)) {
+            return;
+        }
+        Set<String> current = extensionMap.get(name);
         if (current == null) {
-            EpmManager.extensions.put(name, current = new HashSet<>());
+            extensionMap.put(name, current = new LinkedHashSet<>());
         }
-        if (CollectionUtils.isEmpty(extensions)) {
-            current.add(name);
-        } else {
-            current.addAll(extensions);
-        }
+        current.addAll(extensions);
         for (val ext : current) {
-            names.put(ext, name);
+            nameMap.put(ext, name);
         }
     }
 
     /**
-     * Gets supported file extension names of specified parser or maker name.
+     * Gets supported file extension nameMap of specified parser or maker name.
      *
-     * @param name the name of parser or maker
+     * @param name
+     *            the name of parser or maker
      * @return the string set of extension name
      */
     public static String[] extensionsOfName(String name) {
-        val result = extensions.get(name);
-        return result.toArray(new String[result.size()]);
+        val extensions = extensionMap.get(name);
+        return extensions.toArray(new String[extensions.size()]);
     }
 
     /**
      * Gets parser or maker name by file extension name.
      *
-     * @param extension the extension name
+     * @param extension
+     *            the extension name
      * @return the name or {@literal null} if the extension name is unknown.
      */
     public static String nameOfExtension(String extension) {
-        return names.get(extension);
+        return nameMap.get(extension);
     }
 
     /**
      * Gets the format of specified file path.
      *
-     * @param path the path string
+     * @param path
+     *            the path string
      * @return string represent the format
      */
     public static String formatOfFile(String path) {
-        return nameOfExtension(PathUtils.extName(path).toLowerCase());
+        return nameOfExtension(PathUtils.extName(path));
     }
 
     public static Parser parserForFormat(@NonNull String format) throws UnsupportedFormatException {
@@ -292,7 +330,7 @@ public final class EpmManager {
             Log.e(TAG, e);
         }
         if (parser == null) {
-            throw new UnsupportedFormatException(format, "Unsupported format '" + format + '\'');
+            throw new UnsupportedFormatException(format, "Unsupported format '" + format + "'");
         }
         return parser;
     }
@@ -300,30 +338,41 @@ public final class EpmManager {
     /**
      * Reads {@code Book} from book file.
      *
-     * @param input  book file to be read
-     * @param format format of the book file
-     * @param args   arguments to parser
+     * @param input
+     *            book file to be read
+     * @param format
+     *            format of the book file
+     * @param args
+     *            arguments to parser
      * @return {@code Book} instance represents the book file
-     * @throws NullPointerException if the file or format is {@literal null}
-     * @throws IOException          if occurs I/O errors
-     * @throws JemException         if occurs errors when parsing book file
+     * @throws NullPointerException
+     *             if the file or format is {@literal null}
+     * @throws IOException
+     *             if occurs I/O errors
+     * @throws JemException
+     *             if occurs errors when parsing book file
      */
     public static Book readBook(@NonNull File input, String format, Map<String, Object> args)
             throws IOException, JemException {
         return parserForFormat(format).parse(input, args);
     }
 
-
     /**
      * Reads {@code Book} from input path.
      *
-     * @param input  path to input
-     * @param format format of the book file
-     * @param args   arguments to parser
+     * @param input
+     *            path to input
+     * @param format
+     *            format of the book file
+     * @param args
+     *            arguments to parser
      * @return {@code Book} instance represents the book file
-     * @throws NullPointerException if the file or format is {@literal null}
-     * @throws IOException          if occurs I/O errors
-     * @throws JemException         if occurs errors when parsing book file
+     * @throws NullPointerException
+     *             if the file or format is {@literal null}
+     * @throws IOException
+     *             if occurs I/O errors
+     * @throws JemException
+     *             if occurs errors when parsing book file
      * @since 3.2.0
      */
     public static Book readBook(@NonNull String input, String format, Map<String, Object> args)
@@ -347,21 +396,28 @@ public final class EpmManager {
     /**
      * Writes {@code Book} to output file with specified format.
      *
-     * @param book   the {@code Book} to be written
-     * @param output output book file
-     * @param format output format
-     * @param args   arguments to maker
-     * @throws NullPointerException if the book, output or format is {@literal null}
-     * @throws IOException          if occurs I/O errors
-     * @throws JemException         if occurs errors when making book file
+     * @param book
+     *            the {@code Book} to be written
+     * @param output
+     *            output book file
+     * @param format
+     *            output format
+     * @param args
+     *            arguments to maker
+     * @throws NullPointerException
+     *             if the book, output or format is {@literal null}
+     * @throws IOException
+     *             if occurs I/O errors
+     * @throws JemException
+     *             if occurs errors when making book file
      */
     public static void writeBook(@NonNull Book book, @NonNull File output, String format, Map<String, Object> args)
             throws IOException, JemException {
         makerForFormat(format).make(book, output, args);
     }
 
-    public static void loadCustomizedImplementors() {
-        val loader = Thread.currentThread().getContextClassLoader();
+    public static void loadImplementors() {
+        val loader = MiscUtils.getContextClassLoader();
         loadRegisters(loader, PARSER_DEFINE_FILE, parsers);
         loadRegisters(loader, MAKER_DEFINE_FILE, makers);
     }
@@ -370,33 +426,24 @@ public final class EpmManager {
     private static final String EXTENSION_SEPARATOR = " ";
 
     private static <T> void loadRegisters(ClassLoader loader, String path, Implementor<T> factory) {
-        val urls = IOUtils.resourcesFor(path, loader);
-        if (urls == null) {
-            return;
-        }
-        while (urls.hasMoreElements()) {
-            try (val in = urls.nextElement().openStream()) {
-                val prop = new Properties();
-                prop.load(in);
-                for (val e : prop.entrySet()) {
-                    String name = e.getKey().toString();
-                    String[] parts = e.getValue().toString().split(NAME_EXTENSION_SEPARATOR, 2);
-                    factory.register(name, parts[0]);
-                    if (parts.length > 1) {
-                        mapExtensions(name, CollectionUtils.setOf(parts[1].toLowerCase().split(EXTENSION_SEPARATOR)));
-                    } else {
-                        mapExtensions(name, null);
-                    }
+        factory.load(path, loader, new BiFunction<String, String, String>() {
+            @Override
+            public String apply(String name, String value) {
+                val parts = value.split(NAME_EXTENSION_SEPARATOR, 2);
+                if (parts.length > 1) {
+                    val ext = parts[1].trim();
+                    mapExtensions(name, ext.isEmpty() ? setOf(name) : setOf(ext.split(EXTENSION_SEPARATOR)));
+                } else {
+                    mapExtensions(name, setOf(name));
                 }
-            } catch (IOException e) {
-                Log.e(TAG, e);
+                return parts[0];
             }
-        }
+        });
     }
 
     static {
-        if (Boolean.getBoolean(AUTO_LOAD_CUSTOMIZED_KEY)) {
-            loadCustomizedImplementors();
+        if (Boolean.getBoolean(AUTO_LOAD_KEY)) {
+            loadImplementors();
         }
     }
 

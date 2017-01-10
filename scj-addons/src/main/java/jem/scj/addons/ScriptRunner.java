@@ -18,25 +18,36 @@
 
 package jem.scj.addons;
 
-import lombok.val;
+import java.io.File;
+import java.io.FileReader;
+
+import javax.script.ScriptEngine;
+
 import org.apache.commons.cli.Option;
+
+import jem.scj.app.AppConfig;
+import jem.scj.app.SCI;
+import jem.scj.app.SCJPlugin;
+import lombok.val;
 import pw.phylame.qaf.cli.CLIDelegate;
 import pw.phylame.qaf.cli.Command;
 import pw.phylame.qaf.cli.TypedFetcher;
+import pw.phylame.qaf.core.App;
+import pw.phylame.qaf.core.Metadata;
 import pw.phylame.ycl.log.Log;
 import pw.phylame.ycl.util.Reflections;
 import pw.phylame.ycl.util.StringUtils;
 
-import javax.script.ScriptEngine;
-import java.io.File;
-import java.io.FileReader;
-
-public class ScriptRunner extends AbstractPlugin {
+public class ScriptRunner extends SCJPlugin {
     private static final String TAG = "CSR";
 
     private static final String OPTION = "R";
 
     private static final String DEFAULT_ENGINE = "JavaScript";
+
+    private SCI sci = getSci();
+    private App app = getApp();
+    private AppConfig config = getConfig();
 
     public ScriptRunner() {
         super(new Metadata("ff6369df-2b11-4d9d-80e2-1197fc9e088f", "Script Runner", "1.0", "PW"));

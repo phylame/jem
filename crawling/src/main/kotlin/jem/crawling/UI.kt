@@ -1,15 +1,14 @@
 package jem.crawling
 
+import pw.phylame.qaf.core.App
 import pw.phylame.qaf.ixin.IForm
-import pw.phylame.qaf.ixin.IStatusBar
 import java.awt.BorderLayout
-import java.awt.Dimension
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
-import javax.swing.*
+import javax.swing.WindowConstants
 
-object Board : IForm("PW Crawling") {
-    lateinit var outputPane: JTextArea
+object MainForm : IForm("PW Crawling ${App.assembly.version}") {
+    val board = Board()
 
     init {
         defaultCloseOperation = WindowConstants.DO_NOTHING_ON_CLOSE
@@ -18,23 +17,10 @@ object Board : IForm("PW Crawling") {
                 Crawling.exit()
             }
         })
-        initComps()
-    }
-
-    private fun initComps() {
-        val content = JPanel()
-
-        val splitPane = JSplitPane(JSplitPane.VERTICAL_SPLIT)
-        splitPane.topComponent = content
-
-        outputPane = JTextArea()
-        outputPane.border = BorderFactory.createTitledBorder("Output")
-        splitPane.bottomComponent = outputPane
-        contentPane.add(splitPane, BorderLayout.CENTER)
-
-        statusBar = IStatusBar()
-        contentPane.add(statusBar, BorderLayout.PAGE_END)
-        size = Dimension(800, 600)
+        board.init()
+        contentPane.add(board.root, BorderLayout.CENTER)
+        pack()
         setLocationRelativeTo(null)
+        isResizable = false
     }
 }

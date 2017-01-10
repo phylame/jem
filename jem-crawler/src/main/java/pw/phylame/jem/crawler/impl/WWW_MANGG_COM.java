@@ -41,6 +41,7 @@ import pw.phylame.jem.crawler.Identifiable;
 import pw.phylame.jem.crawler.util.HtmlText;
 import pw.phylame.jem.util.flob.Flobs;
 import pw.phylame.ycl.util.DateUtils;
+import pw.phylame.ycl.util.Function;
 
 public class WWW_MANGG_COM extends AbstractProvider implements Identifiable {
     public static final String HOST = "http://www.mangg.com";
@@ -59,7 +60,12 @@ public class WWW_MANGG_COM extends AbstractProvider implements Identifiable {
         Attributes.setDate(book, DateUtils.parse(text, "yyyy-m-D H:M:S", new Date()));
         val lines = new LinkedList<String>();
         for (val p : doc.select("div#intro").select("p")) {
-            lines.add(trimmed(p.text()));
+            lines.add(join(config.lineSeparator, p.textNodes(), new Function<TextNode, String>() {
+                @Override
+                public String apply(TextNode arg) {
+                    return trimmed(arg.text());
+                }
+            }));
         }
         Attributes.setIntro(book, join(config.lineSeparator, lines));
         val cover = Flobs.forURL(new URL(doc.select("div#fmimg").select("img").attr("src")), null);

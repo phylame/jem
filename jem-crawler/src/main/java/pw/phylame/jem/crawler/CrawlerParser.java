@@ -18,11 +18,6 @@
 
 package pw.phylame.jem.crawler;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.Map;
-
 import lombok.val;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.crawler.util.M;
@@ -30,6 +25,11 @@ import pw.phylame.jem.epm.Parser;
 import pw.phylame.jem.epm.impl.EpmBase;
 import pw.phylame.jem.epm.util.ParserException;
 import pw.phylame.jem.util.JemException;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.Map;
 
 public class CrawlerParser extends EpmBase<CrawlerConfig> implements Parser {
     public CrawlerParser() {

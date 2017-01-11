@@ -12,6 +12,7 @@ import pw.phylame.jem.title
 import pw.phylame.jem.util.Variants
 import pw.phylame.jem.util.text.Text
 import pw.phylame.qaf.core.App
+import pw.phylame.qaf.core.dumpToString
 import pw.phylame.qaf.ixin.IDelegate
 import pw.phylame.qaf.ixin.Ixin
 import pw.phylame.ycl.util.DateUtils
@@ -44,6 +45,13 @@ object Crawling : IDelegate<MainForm>(), OnFetchingListener {
     }
 
     fun exit() {
+        if (!(subscription?.isUnsubscribed ?: true)) {
+            val i = JOptionPane.showConfirmDialog(form, "当前任务未完成，继续退出？", "退出",
+                    JOptionPane.OK_CANCEL_OPTION)
+            if (i != JOptionPane.OK_OPTION) {
+                return
+            }
+        }
         stop()
         AbstractProvider.cleanup()
         App.exit(0)
@@ -105,6 +113,7 @@ object Crawling : IDelegate<MainForm>(), OnFetchingListener {
                 .subscribe(object : Observer<String> {
                     override fun onError(e: Throwable) {
                         form.board.note("保存小说", e.message, JOptionPane.ERROR_MESSAGE)
+                        form.board.print(e.dumpToString())
                         stop()
                         form.board.setStartIcon()
                     }
@@ -128,8 +137,10 @@ object Crawling : IDelegate<MainForm>(), OnFetchingListener {
 
     override fun attributeFetched(book: Book) {
         val b = StringBuilder("已获取电子书\n")
+        val sep = StringUtils.multiplyOf("-", 81)
+        b.append(sep).append("\n")
         for ((key, value) in book.attributes.entries()) {
-            b.append(" - ").append(Attributes.titleOf(key)).append("=")
+            b.append(" - ").append(Attributes.titleOf(key)).append("：")
             when (value) {
                 is Text -> {
                     for ((i, line) in value.text.lines().withIndex()) {
@@ -139,7 +150,7 @@ object Crawling : IDelegate<MainForm>(), OnFetchingListener {
                 else -> b.append(Variants.printable(value)).append("\n")
             }
         }
-        b.append(StringUtils.multiplyOf("-", 47)).append("\n")
+        b.append(sep).append("\n")
         b.append(makeText("读取目录……\n"))
         subscriber.onNext(b.toString())
     }

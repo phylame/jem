@@ -10,9 +10,13 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Properties;
 
 import static pw.phylame.ycl.util.CollectionUtils.propertiesFor;
@@ -50,6 +54,7 @@ public class Board implements ActionListener {
         btnDownload.addActionListener(this);
         btnMore.addActionListener(this);
         tfUrl.addActionListener(this);
+        tfOutput.addActionListener(this);
         tfOutput.setText(System.getProperty("user.dir"));
     }
 
@@ -81,7 +86,7 @@ public class Board implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         Object src = e.getSource();
-        if (src == btnDownload || src == tfUrl) {
+        if (src == btnDownload || src == tfUrl || src == tfOutput) {
             downloadFile();
         } else if (src == btnClean) {
             taConsole.setText(null);
@@ -154,20 +159,29 @@ public class Board implements ActionListener {
     }
 
     private void aboutApp() {
-        StringBuilder b = new StringBuilder("<html>");
-        b.append("<p>").append("支持的网址：").append("</p>");
-        b.append("<ul style=\"list-style-type: none;padding:0;margin:0;\">");
-        for (String host : ProviderManager.knownHosts()) {
-            b.append("<li>").append("&nbsp;&nbsp;- ").append(host).append("</li>");
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
+        for (final String host : ProviderManager.knownHosts()) {
+            JLabel label = new JLabel(String.format("<html>&nbsp;<a href='%s'>%s</a></html>", host, host));
+            label.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    try {
+                        Desktop.getDesktop().browse(new URI(host));
+                    } catch (IOException | URISyntaxException ignored) {
+                    }
+                }
+            });
+            panel.add(label);
         }
-        b.append("</ul>");
-        b.append("</html>");
-        note("PW Crawling", b, JOptionPane.PLAIN_MESSAGE);
+        Object[] message = {"支持的网址：", panel};
+        note("PW Crawling", message, JOptionPane.PLAIN_MESSAGE);
     }
 
     public void note(String title, Object message, int type) {
         JOptionPane.showMessageDialog(Crawling.INSTANCE.getForm(), message, title, type);
     }
+
 
     private static class Item {
         private static Properties prop;

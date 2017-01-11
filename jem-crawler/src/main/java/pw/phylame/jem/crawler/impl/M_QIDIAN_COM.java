@@ -19,8 +19,6 @@ import pw.phylame.jem.core.Chapter;
 import pw.phylame.jem.crawler.Identifiable;
 import pw.phylame.jem.crawler.util.HtmlText;
 import pw.phylame.jem.util.flob.Flobs;
-import pw.phylame.ycl.util.CollectionUtils;
-import pw.phylame.ycl.util.Function;
 
 public class M_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
     private static final String HOST = "http://m.qidian.com";
@@ -84,13 +82,7 @@ public class M_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
         } catch (IOException e) {
             return EMPTY_TEXT;
         }
-        return join(config.lineSeparator,
-                CollectionUtils.map(doc.select("div.read-section").select("p"), new Function<Element, String>() {
-                    @Override
-                    public String apply(Element p) {
-                        return trimmed(p.text());
-                    }
-                }));
+        return joinString(doc.select("div.read-section").select("p"), config.lineSeparator);
     }
 
     @Override

@@ -76,11 +76,7 @@ public class H5_17K_COM extends AbstractProvider implements Searchable, Identifi
         Attributes.setGenre(book, section.select("span").text());
         Attributes.setState(book, section.select("i").get(1).text());
         section = doc.select("section.description");
-        val lines = new LinkedList<String>();
-        for (val e : section.select("p").first().textNodes()) {
-            lines.add(trimmed(e.text()));
-        }
-        Attributes.setIntro(book, join(config.lineSeparator, lines));
+        Attributes.setIntro(book, joinString(section.select("p").first().textNodes(), config.lineSeparator));
     }
 
     @Override

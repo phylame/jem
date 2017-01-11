@@ -42,10 +42,10 @@ import pw.phylame.qaf.cli.PropertiesFetcher;
 import pw.phylame.qaf.core.App;
 import pw.phylame.qaf.core.Metadata;
 import pw.phylame.qaf.core.Plugin;
+import pw.phylame.ycl.function.Prediction;
+import pw.phylame.ycl.function.Provider;
 import pw.phylame.ycl.log.LogLevel;
 import pw.phylame.ycl.util.CollectionUtils;
-import pw.phylame.ycl.util.Prediction;
-import pw.phylame.ycl.util.Provider;
 import pw.phylame.ycl.util.StringUtils;
 import pw.phylame.ycl.value.Lazy;
 
@@ -146,13 +146,13 @@ public class AppInspector extends SCJPlugin {
                         return CollectionUtils.<String, Prediction<String>>mapOf(
                                 "app.debug.level", new Prediction<String>() {
                                     @Override
-                                    public Boolean apply(String i) {
+                                    public boolean test(String i) {
                                         return AppKt.checkDebugLevel(i);
                                     }
                                 },
                                 "app.log.level", new Prediction<String>() {
                                     @Override
-                                    public Boolean apply(String i) {
+                                    public boolean test(String i) {
                                         if (LogLevel.forName(i, null) == null) {
                                             app.error(tr("logSetter.invalidLevel", i, LogSetter.makeLevelList()));
                                             return false;
@@ -173,12 +173,10 @@ public class AppInspector extends SCJPlugin {
             for (val e : prop.entrySet()) {
                 val key = e.getKey().toString();
                 val value = e.getValue().toString();
-
-                val fun = validators.get().get(key);
-                if (fun != null && !fun.apply(value)) {
+                val prediction = validators.get().get(key);
+                if (prediction != null && !prediction.test(value)) {
                     continue;
                 }
-
                 config.set(key, value, String.class);
             }
             return 0;

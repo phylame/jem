@@ -1,21 +1,25 @@
 package jem.crawling;
 
-import org.jetbrains.annotations.NotNull;
+import pw.phylame.jem.crawler.ProviderManager;
 import pw.phylame.jem.epm.EpmManager;
+import pw.phylame.ycl.io.IOUtils;
+import pw.phylame.ycl.log.Log;
 import pw.phylame.ycl.util.StringUtils;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
+import java.net.MalformedURLException;
 import java.util.Properties;
 
 import static pw.phylame.ycl.util.CollectionUtils.propertiesFor;
 
 public class Board implements ActionListener {
+    private static final String TAG = "Board";
+
     JPanel root;
     private JTextArea taConsole;
     private JComboBox<Item> cbFormat;
@@ -27,6 +31,7 @@ public class Board implements ActionListener {
     private JButton btnOutput;
     private JButton btnSearch;
     private JButton btnClean;
+    private JButton btnMore;
 
     void init() {
         int index = 0, selected = -1;
@@ -43,23 +48,34 @@ public class Board implements ActionListener {
         btnAbout.addActionListener(this);
         btnClean.addActionListener(this);
         btnDownload.addActionListener(this);
+        btnMore.addActionListener(this);
         tfUrl.addActionListener(this);
         tfOutput.setText(System.getProperty("user.dir"));
     }
 
-    void redirectOutput() {
-        PrintStream ps = new PrintStream(new OutputStream() {
-            @Override
-            public void write(int b) throws IOException {
-            }
+    void print(String text) {
+        taConsole.append(text);
+        taConsole.setCaretPosition(taConsole.getDocument().getLength());
+    }
 
-            @Override
-            public void write(@NotNull byte[] b, int off, int len) throws IOException {
-                taConsole.append(new String(b, off, len));
-                taConsole.setCaretPosition(taConsole.getDocument().getLength());
-            }
-        });
-        System.setOut(ps);
+    void setStartIcon() {
+        btnDownload.setToolTipText("开始下载电子书");
+        try {
+            btnDownload.setIcon(new ImageIcon(IOUtils.resourceFor("!jem/crawling/start.png")));
+        } catch (MalformedURLException e) {
+            Log.e(TAG, e);
+            btnDownload.setText("开始");
+        }
+    }
+
+    void setStopIcon() {
+        btnDownload.setToolTipText("停止操作");
+        try {
+            btnDownload.setIcon(new ImageIcon(IOUtils.resourceFor("!jem/crawling/stop.png")));
+        } catch (MalformedURLException e) {
+            Log.e(TAG, e);
+            btnDownload.setText("停止");
+        }
     }
 
     @Override
@@ -75,10 +91,25 @@ public class Board implements ActionListener {
             selectFile();
         } else if (src == btnSearch) {
             searchBook();
+        } else if (src == btnMore) {
+            String path = tfOutput.getText();
+            if (StringUtils.isNotBlank(path)) {
+                try {
+                    Desktop.getDesktop().browse(new File(path).toURI());
+                } catch (IOException ex) {
+                    Log.e(TAG, ex);
+                }
+            }
         }
     }
 
     private void downloadFile() {
+        Crawling app = Crawling.INSTANCE;
+        if (app.stop()) {
+            app.echo("已经取消操作\n");
+            setStartIcon();
+            return;
+        }
         String url = tfUrl.getText().trim();
         if (url.isEmpty()) {
             note("下载电子书", "请输入链接地址", JOptionPane.ERROR_MESSAGE);
@@ -91,12 +122,8 @@ public class Board implements ActionListener {
             tfOutput.requestFocus();
             return;
         }
-        String format = ((Item) cbFormat.getSelectedItem()).name;
-        fetchBook(url, path, format);
-    }
-
-    private void fetchBook(String url, String output, String format) {
-        Crawling.INSTANCE.fetchBook(url, output, format);
+        app.fetchBook(url, path, ((Item) cbFormat.getSelectedItem()).name, cbBackup.isSelected());
+        setStopIcon();
     }
 
     private JFileChooser fileChooser = new JFileChooser();
@@ -127,10 +154,18 @@ public class Board implements ActionListener {
     }
 
     private void aboutApp() {
-
+        StringBuilder b = new StringBuilder("<html>");
+        b.append("<p>").append("支持的网址：").append("</p>");
+        b.append("<ul style=\"list-style-type: none;padding:0;margin:0;\">");
+        for (String host : ProviderManager.knownHosts()) {
+            b.append("<li>").append("&nbsp;&nbsp;- ").append(host).append("</li>");
+        }
+        b.append("</ul>");
+        b.append("</html>");
+        note("PW Crawling", b, JOptionPane.PLAIN_MESSAGE);
     }
 
-    private void note(String title, Object message, int type) {
+    public void note(String title, Object message, int type) {
         JOptionPane.showMessageDialog(Crawling.INSTANCE.getForm(), message, title, type);
     }
 

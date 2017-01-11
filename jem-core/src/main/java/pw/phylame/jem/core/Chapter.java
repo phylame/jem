@@ -18,20 +18,26 @@
 
 package pw.phylame.jem.core;
 
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;
 import pw.phylame.jem.util.VariantMap;
 import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.jem.util.text.Text;
+import pw.phylame.ycl.function.Consumer;
 import pw.phylame.ycl.log.Log;
-import pw.phylame.ycl.util.Consumer;
 import pw.phylame.ycl.util.Hierarchical;
 import pw.phylame.ycl.util.StringUtils;
 import pw.phylame.ycl.util.Validate;
-
-import java.lang.ref.WeakReference;
-import java.util.*;
 
 /**
  * <p>
@@ -135,6 +141,7 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
      *
      * @return the parent or <code>null</code> if not present
      */
+    @Override
     public final Chapter getParent() {
         return parent != null ? parent.get() : null;
     }
@@ -303,7 +310,7 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
     /**
      * Clean works
      */
-    private final Set<Consumer<Chapter>> cleaners = new LinkedHashSet<>();
+    private final Set<Consumer<? super Chapter>> cleaners = new LinkedHashSet<>();
 
     /**
      * Registers the specified clean task to clean works list.
@@ -311,7 +318,7 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
      * @param task the clean task instance
      * @throws NullPointerException if the specified clean task is <code>null</code>
      */
-    public void registerCleanup(@NonNull Consumer<Chapter> task) {
+    public void registerCleanup(@NonNull Consumer<? super Chapter> task) {
         cleaners.add(task);
     }
 
@@ -320,7 +327,7 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
      *
      * @param task the clean task to be removed, if <code>null</code> do nothing
      */
-    public void removeCleanup(Consumer<Chapter> task) {
+    public void removeCleanup(Consumer<? super Chapter> task) {
         if (task != null) {
             cleaners.remove(task);
         }

@@ -30,11 +30,10 @@ import lombok.val;
 import pw.phylame.qaf.cli.CLIDelegate;
 import pw.phylame.qaf.cli.Initializer;
 import pw.phylame.qaf.core.Metadata;
+import pw.phylame.ycl.format.Render;
 import pw.phylame.ycl.log.Log;
 import pw.phylame.ycl.log.LogLevel;
-import pw.phylame.ycl.util.Function;
 import pw.phylame.ycl.util.StringUtils;
-import pw.phylame.ycl.util.StringUtils.StringJoiner;
 
 public class LogSetter extends SCJPlugin implements Initializer {
     private static final String OPTION = "L";
@@ -76,17 +75,12 @@ public class LogSetter extends SCJPlugin implements Initializer {
     }
 
     public static String makeLevelList() {
-        return StringJoiner.builder()
-                .separator(", ")
-                .iterator(Arrays.asList(LogLevel.values()).iterator())
-                .convertor(new Function<Object, String>() {
-                    @Override
-                    public String apply(Object level) {
-                        return '\"' + ((LogLevel) level).getName() + '\"';
-                    }
-                })
-                .build()
-                .join();
+        return StringUtils.join(", ", Arrays.asList(LogLevel.values()), new Render<LogLevel>() {
+            @Override
+            public String render(LogLevel level) {
+                return '\"' + level.getName() + '\"';
+            }
+        });
     }
 
     private void setByConfig() {

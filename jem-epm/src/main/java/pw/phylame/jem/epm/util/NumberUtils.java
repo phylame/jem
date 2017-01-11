@@ -18,12 +18,12 @@
 
 package pw.phylame.jem.epm.util;
 
-import pw.phylame.ycl.util.Provider;
-import pw.phylame.ycl.value.Lazy;
-
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.Random;
+
+import pw.phylame.ycl.function.Provider;
+import pw.phylame.ycl.value.Lazy;
 
 /**
  * Utility class for number operations.

@@ -28,9 +28,9 @@ import lombok.val;
 import pw.phylame.jem.epm.util.E;
 import pw.phylame.jem.epm.util.M;
 import pw.phylame.ycl.format.Converters;
+import pw.phylame.ycl.function.Prediction;
 import pw.phylame.ycl.log.Log;
 import pw.phylame.ycl.util.CollectionUtils;
-import pw.phylame.ycl.util.Prediction;
 import pw.phylame.ycl.util.Reflections;
 
 /**
@@ -95,7 +95,7 @@ public final class ConfigUtils {
     private static void fetchFields(EpmConfig config, Map<String, Object> m, String prefix) throws BadConfigException {
         val fields = Reflections.getFields(config.getClass(), new Prediction<Field>() {
             @Override
-            public Boolean apply(Field field) {
+            public boolean test(Field field) {
                 int mod = field.getModifiers();
                 return Modifier.isPublic(mod) && !Modifier.isStatic(mod);
             }

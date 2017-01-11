@@ -18,19 +18,19 @@
 
 package pw.phylame.jem.formats.util.html;
 
+import java.io.IOException;
+import java.lang.reflect.Modifier;
+import java.util.Properties;
+
 import lombok.val;
 import pw.phylame.jem.formats.util.M;
 import pw.phylame.jem.util.flob.Flob;
 import pw.phylame.jem.util.flob.Flobs;
+import pw.phylame.ycl.function.Provider;
 import pw.phylame.ycl.io.IOUtils;
 import pw.phylame.ycl.util.CollectionUtils;
-import pw.phylame.ycl.util.Provider;
 import pw.phylame.ycl.util.StringUtils;
 import pw.phylame.ycl.value.Lazy;
-
-import java.io.IOException;
-import java.lang.reflect.Modifier;
-import java.util.Properties;
 
 /**
  * CSS config for rendering HTML.
@@ -58,7 +58,7 @@ public class StyleProvider {
     public String chapterIntro;
     public String chapterText;
 
-    private static final Lazy<StyleProvider> defaults = new Lazy<StyleProvider>(new Provider<StyleProvider>() {
+    private static final Lazy<StyleProvider> defaults = new Lazy<>(new Provider<StyleProvider>() {
         @Override
         public StyleProvider provide() throws Exception {
             return loadDefaultInstance();

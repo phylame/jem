@@ -18,22 +18,34 @@
 
 package pw.phylame.jem.crawler;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 
+import lombok.SneakyThrows;
 import lombok.val;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.core.Chapter;
+import pw.phylame.jem.epm.util.FileDeleter;
+import pw.phylame.jem.util.flob.Flob;
+import pw.phylame.jem.util.flob.Flobs;
+import pw.phylame.ycl.format.Render;
 import pw.phylame.ycl.io.HttpUtils;
 import pw.phylame.ycl.io.IOUtils;
-import pw.phylame.ycl.util.CollectionUtils;
-import pw.phylame.ycl.util.Function;
+import pw.phylame.ycl.log.Log;
 import pw.phylame.ycl.util.StringUtils;
 import pw.phylame.ycl.util.Validate;
 
@@ -45,7 +57,18 @@ public abstract class AbstractProvider implements CrawlerProvider {
     protected int chapterCount = -1;
     private int chapterIndex = 1;
 
+    // for cache fetched text
+    private static final String CACHE_ENCODING = "UTF-16BE";
+    private File cacheFile;
+    private RandomAccessFile cacheRaf;
+    private Map<String, Flob> texts = new ConcurrentHashMap<>();
+    private static final ThreadPoolExecutor cacheService = (ThreadPoolExecutor) Executors.newFixedThreadPool(4);
+
     private boolean initialized = false;
+
+    public static void cleanup() {
+        cacheService.shutdown();
+    }
 
     protected final void ensureInitialized() {
         Validate.check(initialized, "provider is not initialized");
@@ -58,6 +81,14 @@ public abstract class AbstractProvider implements CrawlerProvider {
         book = context.getBook();
         config = context.getConfig();
         initialized = true;
+        // init cache
+        try {
+            cacheFile = File.createTempFile("jem-crawling", ".tmp");
+            cacheRaf = new RandomAccessFile(cacheFile, "rw");
+            book.registerCleanup(new FileDeleter(cacheRaf, cacheFile));
+        } catch (IOException e) {
+            Log.e("AbstractProvider", "cannot create cache file: {0}", e.getMessage());
+        }
     }
 
     protected final void fetchContentsPaged() throws IOException {
@@ -72,15 +103,50 @@ public abstract class AbstractProvider implements CrawlerProvider {
     }
 
     @Override
-    public final String fetchText(Chapter chapter, String url) {
+    @SneakyThrows(IOException.class)
+    public final String fetchText(Chapter chapter, final String url) {
         ensureInitialized();
         if (config.fetchingListener != null) {
+            if (chapterIndex > chapterCount) {
+                chapterIndex = 1;
+            }
             config.fetchingListener.fetchingText(chapterCount, chapterIndex++, chapter);
         }
-        return url.isEmpty() ? StringUtils.EMPTY_TEXT : fetchText(url);
+        if (StringUtils.isEmpty(url)) {
+            return StringUtils.EMPTY_TEXT;
+        }
+        val flob = texts.get(url); // find in cache
+        if (flob != null) {
+            return new String(flob.readAll(), CACHE_ENCODING);
+        }
+        val str = fetchText(url); // fetch from url
+        if (StringUtils.isEmpty(str)) {
+            return str;
+        }
+        cacheService.submit(new Runnable() { // executed in other thread
+            @Override
+            public void run() {
+                val flob = cacheText(url, str); // cache to file
+                if (flob != null) {
+                    texts.put(url, flob);
+                }
+            }
+        });
+        return str;
     }
 
     protected abstract String fetchText(String url);
+
+    @SneakyThrows(IOException.class)
+    private Flob cacheText(String url, String str) {
+        if (cacheRaf == null) {
+            return null;
+        }
+        val offset = cacheRaf.getFilePointer();
+        cacheRaf.write(str.getBytes(CACHE_ENCODING));
+        val flob = Flobs.forBlock("tmp.txt", cacheRaf, offset, str.length() * 2, "text/plain");
+        return flob;
+    }
 
     protected final Document getSoup(String url) throws IOException {
         return Jsoup.connect(url).timeout(config.timeout).get();
@@ -106,12 +172,20 @@ public abstract class AbstractProvider implements CrawlerProvider {
         return new JSONObject(new JSONTokener(IOUtils.readerFor(conn.getInputStream(), encoding)));
     }
 
-    protected final String joinString(Elements soup, String separator) {
-        return StringUtils.join(separator, CollectionUtils.map(soup, new Function<Element, String>() {
+    protected final String joinString(Collection<? extends Node> nodes, String separator) {
+        return StringUtils.join(separator, nodes, new Render<Node>() {
             @Override
-            public String apply(Element e) {
-                return StringUtils.trimmed(e.text());
+            public String render(Node node) {
+                String text;
+                if (node instanceof Element) {
+                    text = ((Element) node).text();
+                } else if (node instanceof TextNode) {
+                    text = ((TextNode) node).text().replace("\u00a0", "");
+                } else {
+                    text = node.toString();
+                }
+                return StringUtils.trimmed(text);
             }
-        }));
+        });
     }
 }

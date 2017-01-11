@@ -32,12 +32,12 @@ import lombok.val;
 import pw.phylame.jem.util.flob.Flobs;
 import pw.phylame.jem.util.text.Text;
 import pw.phylame.jem.util.text.Texts;
+import pw.phylame.ycl.function.Function;
 import pw.phylame.ycl.io.PathUtils;
 import pw.phylame.ycl.log.Log;
 import pw.phylame.ycl.util.CollectionUtils;
 import pw.phylame.ycl.util.DateUtils;
 import pw.phylame.ycl.util.Exceptions;
-import pw.phylame.ycl.util.Function;
 import pw.phylame.ycl.util.StringUtils;
 
 public final class Variants {

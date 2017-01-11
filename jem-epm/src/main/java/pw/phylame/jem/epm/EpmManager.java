@@ -34,9 +34,9 @@ import lombok.val;
 import pw.phylame.jem.core.Book;
 import pw.phylame.jem.util.JemException;
 import pw.phylame.jem.util.UnsupportedFormatException;
+import pw.phylame.ycl.function.BiFunction;
 import pw.phylame.ycl.io.PathUtils;
 import pw.phylame.ycl.log.Log;
-import pw.phylame.ycl.util.BiFunction;
 import pw.phylame.ycl.util.Implementor;
 import pw.phylame.ycl.util.MiscUtils;
 

@@ -18,17 +18,15 @@
 
 package pw.phylame.jem.epm.util;
 
-import lombok.AllArgsConstructor;
-import lombok.NonNull;
-import pw.phylame.jem.core.Chapter;
-import pw.phylame.ycl.io.IOUtils;
-import pw.phylame.ycl.util.Consumer;
-
 import java.io.Closeable;
 
-@AllArgsConstructor
+import lombok.RequiredArgsConstructor;
+import pw.phylame.jem.core.Chapter;
+import pw.phylame.ycl.function.Consumer;
+import pw.phylame.ycl.io.IOUtils;
+
+@RequiredArgsConstructor
 public class InputCleaner implements Consumer<Chapter> {
-    @NonNull
     private final Closeable in;
 
     private final Runnable addon;

@@ -1,7 +1,6 @@
 package pw.phylame.jem.crawler.impl;
 
 import static pw.phylame.ycl.util.StringUtils.EMPTY_TEXT;
-import static pw.phylame.ycl.util.StringUtils.join;
 import static pw.phylame.ycl.util.StringUtils.secondPartOf;
 import static pw.phylame.ycl.util.StringUtils.trimmed;
 
@@ -9,7 +8,6 @@ import java.io.IOException;
 import java.net.URL;
 
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import lombok.val;
@@ -21,8 +19,6 @@ import pw.phylame.jem.crawler.Identifiable;
 import pw.phylame.jem.crawler.util.HtmlText;
 import pw.phylame.jem.util.flob.Flobs;
 import pw.phylame.ycl.io.PathUtils;
-import pw.phylame.ycl.util.CollectionUtils;
-import pw.phylame.ycl.util.Function;
 
 public class M_MOTIE_COM extends AbstractProvider implements Identifiable {
     private static final String HOST = "http://m.motie.com";
@@ -105,14 +101,7 @@ public class M_MOTIE_COM extends AbstractProvider implements Identifiable {
             context.setError(e);
             return EMPTY_TEXT;
         }
-
-        return join(config.lineSeparator,
-                CollectionUtils.map(doc.select("div.intro").first().children(), new Function<Element, String>() {
-                    @Override
-                    public String apply(Element div) {
-                        return trimmed(div.text());
-                    }
-                }));
+        return joinString(doc.select("div.intro").first().children(), config.lineSeparator);
     }
 
     @Override

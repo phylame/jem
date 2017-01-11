@@ -60,10 +60,7 @@ public class M_ZONGHENG_COM extends AbstractProvider implements Identifiable {
             lines.add(str);
         }
         Attributes.setIntro(book, join(config.lineSeparator, lines));
-        val tags = new LinkedList<String>();
-        for (val a : doc.select("div.tags_wap").first().children()) {
-            tags.add(a.text().trim());
-        }
+        val tags = joinString(doc.select("div.tags_wap").first().children(), Attributes.VALUES_SEPARATOR);
         if (!tags.isEmpty()) {
             Attributes.setKeywords(book, tags);
         }

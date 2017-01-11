@@ -1,11 +1,15 @@
 package pw.phylame.jem.crawler.impl;
 
+import static pw.phylame.ycl.util.StringUtils.EMPTY_TEXT;
+import static pw.phylame.ycl.util.StringUtils.join;
+import static pw.phylame.ycl.util.StringUtils.secondPartOf;
+import static pw.phylame.ycl.util.StringUtils.trimmed;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.LinkedList;
 
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 
@@ -15,10 +19,6 @@ import pw.phylame.jem.core.Chapter;
 import pw.phylame.jem.crawler.Identifiable;
 import pw.phylame.jem.crawler.util.HtmlText;
 import pw.phylame.jem.util.flob.Flobs;
-import pw.phylame.ycl.util.CollectionUtils;
-import pw.phylame.ycl.util.Function;
-
-import static pw.phylame.ycl.util.StringUtils.*;
 
 public class BOOK_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
     private static final String HOST = "http://book.qidian.com";
@@ -78,13 +78,7 @@ public class BOOK_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
             context.setError(e);
             return EMPTY_TEXT;
         }
-        return join(config.lineSeparator,
-                CollectionUtils.map(doc.select("div.read-content>p"), new Function<Element, String>() {
-                    @Override
-                    public String apply(Element p) {
-                        return trimmed(p.text());
-                    }
-                }));
+        return joinString(doc.select("div.read-content>p"), config.lineSeparator);
     }
 
     @Override

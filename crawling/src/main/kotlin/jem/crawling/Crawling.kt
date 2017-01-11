@@ -3,6 +3,7 @@ package jem.crawling
 import pw.phylame.jem.core.Attributes
 import pw.phylame.jem.core.Book
 import pw.phylame.jem.core.Chapter
+import pw.phylame.jem.crawler.AbstractProvider
 import pw.phylame.jem.crawler.CrawlerConfig
 import pw.phylame.jem.crawler.OnFetchingListener
 import pw.phylame.jem.crawler.ProviderManager
@@ -18,12 +19,14 @@ import pw.phylame.ycl.util.StringUtils
 import rx.Observable
 import rx.Observer
 import rx.Subscriber
+import rx.Subscription
 import rx.schedulers.Schedulers
 import rx.schedulers.SwingScheduler
 import java.awt.Font
 import java.io.File
-import java.net.MalformedURLException
+import java.io.IOException
 import java.util.*
+import javax.swing.JOptionPane
 
 object Crawling : IDelegate<MainForm>(), OnFetchingListener {
     override fun onStart() {
@@ -33,75 +36,94 @@ object Crawling : IDelegate<MainForm>(), OnFetchingListener {
     }
 
     override fun createForm(): MainForm {
-        Ixin.init(true,
-                false,
-                System.getProperty("crawling.theme", "Nimbus"),
+        Ixin.init(true, false, System.getProperty("crawling.theme", "Nimbus"),
                 Font.getFont("crawling.font", Font(Font.DIALOG, Font.PLAIN, 14))
         )
+        MainForm.isVisible = true
         return MainForm
     }
 
-    override fun onReady() {
-        form.isVisible = true
-        form.statusText = "Ready"
-        form.board.redirectOutput()
-    }
-
     fun exit() {
+        stop()
+        AbstractProvider.cleanup()
         App.exit(0)
     }
 
+    fun stop(): Boolean {
+        book?.cleanup()
+        book = null
+        if (subscription != null) {
+            subscription!!.unsubscribe()
+            subscription = null
+            return true
+        } else {
+            return false
+        }
+    }
+
     fun echo(msg: String) {
-        println(makeText(msg))
+        form.board.print(makeText(msg))
     }
 
     fun makeText(msg: String): String {
         return "[${DateUtils.format(Date(), "hh:mm:ss.SSS")}] $msg"
     }
 
-    fun fetchBook(url: String, output: String, format: String) {
-        echo("读取详情链接：$url")
-        Observable.create<Any> {
+    var book: Book? = null
+    var subscription: Subscription? = null
+    lateinit var subscriber: Subscriber<in String>
+
+    fun fetchBook(url: String, output: String, format: String, backup: Boolean) {
+        echo("读取详情链接：$url\n")
+        val args = mapOf<String, Any>(
+                "crawler.parse.${CrawlerConfig.FETCH_LISTENER}" to this
+        )
+        subscription = Observable.create<String> {
             subscriber = it
-            val args = mapOf<String, Any>(
-                    "crawler.parse.${CrawlerConfig.FETCH_LISTENER}" to this
-            )
-            val book = EpmManager.readBook(url, "crawler", args)
             var file = File(output)
+            if (!file.isDirectory && file.exists()) {
+                it.onError(IOException("文件已存在：$output"))
+            }
+            val book = EpmManager.readBook(url, "crawler", args)
+            this.book = book
             if (file.isDirectory) {
                 file = File(file, "${book.title}.${EpmManager.extensionsOfName(format)?.get(0) ?: format}")
+                if (file.exists()) {
+                    it.onError(IOException("文件已存在：${file.path}"))
+                }
             }
+            it.onNext("写入小说到文件……\n")
             EpmManager.writeBook(book, file, format, null)
+            if (backup && format != "pmab") {
+                file = File("${file.path}.pmab")
+                EpmManager.writeBook(book, file, EpmManager.PMAB, null)
+                it.onNext("备份小说到：$file\n")
+            }
             it.onCompleted()
         }.subscribeOn(Schedulers.io())
                 .observeOn(SwingScheduler.getInstance())
-                .subscribe(object : Observer<Any> {
+                .subscribe(object : Observer<String> {
                     override fun onError(e: Throwable) {
-                        when (e) {
-                            is MalformedURLException -> error("无效链接地址")
-                        }
+                        form.board.note("保存小说", e.message, JOptionPane.ERROR_MESSAGE)
+                        stop()
+                        form.board.setStartIcon()
                     }
 
-                    override fun onNext(o: Any) {
-                        when (o) {
-                            is String -> {
-                                echo(o)
-                            }
-                            is Pair<*, *> -> {
-                                println(o.first)
-                            }
-                        }
+                    override fun onNext(o: String) {
+                        echo(o)
                     }
 
                     override fun onCompleted() {
+                        echo("完成！\n")
+                        stop()
+                        form.board.setStartIcon()
                     }
                 })
     }
 
-    lateinit var subscriber: Subscriber<in Any>
 
     override fun fetchingText(total: Int, current: Int, chapter: Chapter) {
-        subscriber.onNext("$current/$total: ${chapter.title}")
+        subscriber.onNext("$current/$total: ${chapter.title}\n")
     }
 
     override fun attributeFetched(book: Book) {
@@ -118,13 +140,12 @@ object Crawling : IDelegate<MainForm>(), OnFetchingListener {
             }
         }
         b.append(StringUtils.multiplyOf("-", 47)).append("\n")
-        b.append(makeText("读取目录……"))
+        b.append(makeText("读取目录……\n"))
         subscriber.onNext(b.toString())
     }
 
     override fun contentsFetched(book: Book) {
-        subscriber.onNext("获取目录成功")
-        subscriber.onNext("写入小说到文件……")
+        subscriber.onNext("获取目录成功\n")
     }
 }
 

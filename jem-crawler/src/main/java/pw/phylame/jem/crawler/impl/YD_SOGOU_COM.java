@@ -20,7 +20,6 @@ package pw.phylame.jem.crawler.impl;
 
 import static pw.phylame.ycl.util.StringUtils.EMPTY_TEXT;
 import static pw.phylame.ycl.util.StringUtils.isNotEmpty;
-import static pw.phylame.ycl.util.StringUtils.join;
 import static pw.phylame.ycl.util.StringUtils.valueOfName;
 
 import java.io.IOException;
@@ -48,9 +47,7 @@ import pw.phylame.jem.crawler.Searchable;
 import pw.phylame.jem.crawler.util.HtmlText;
 import pw.phylame.jem.crawler.util.SoupUtils;
 import pw.phylame.jem.util.flob.Flobs;
-import pw.phylame.ycl.util.CollectionUtils;
 import pw.phylame.ycl.util.DateUtils;
-import pw.phylame.ycl.util.Function;
 
 public class YD_SOGOU_COM extends AbstractProvider implements Searchable, Identifiable {
     private static final String ENCODING = "UTF-8";
@@ -113,13 +110,7 @@ public class YD_SOGOU_COM extends AbstractProvider implements Searchable, Identi
             context.setError(e);
             return EMPTY_TEXT;
         }
-        val i = CollectionUtils.map(doc.select("div#text").first().children(), new Function<Element, String>() {
-            @Override
-            public String apply(Element elem) {
-                return elem.text().trim();
-            }
-        });
-        return join(config.lineSeparator, i);
+        return joinString(doc.select("div#text").first().children(), config.lineSeparator);
     }
 
     @Override

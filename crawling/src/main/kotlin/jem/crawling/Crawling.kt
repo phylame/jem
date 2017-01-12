@@ -29,19 +29,18 @@ import java.io.IOException
 import java.util.*
 import javax.swing.JOptionPane
 
-object Crawling : IDelegate<MainForm>(), OnFetchingListener {
+object Crawling : IDelegate<Form>(), OnFetchingListener {
     override fun onStart() {
         super.onStart()
         System.setProperty(EpmManager.AUTO_LOAD_KEY, "true")
         System.setProperty(ProviderManager.AUTO_LOAD_KEY, "true")
     }
 
-    override fun createForm(): MainForm {
+    override fun createForm(): Form {
         Ixin.init(true, false, System.getProperty("crawling.theme", "Nimbus"),
-                Font.getFont("crawling.font", Font(Font.DIALOG, Font.PLAIN, 14))
-        )
-        MainForm.isVisible = true
-        return MainForm
+                Font.getFont("crawling.font", Font(Font.DIALOG, Font.PLAIN, 14)))
+        Form.isVisible = true
+        return Form
     }
 
     fun exit() {
@@ -70,7 +69,7 @@ object Crawling : IDelegate<MainForm>(), OnFetchingListener {
     }
 
     fun echo(msg: String) {
-        form.board.print(makeText(msg))
+        form.print(makeText(msg))
     }
 
     fun makeText(msg: String): String {
@@ -112,10 +111,10 @@ object Crawling : IDelegate<MainForm>(), OnFetchingListener {
                 .observeOn(SwingScheduler.getInstance())
                 .subscribe(object : Observer<String> {
                     override fun onError(e: Throwable) {
-                        form.board.note("保存小说", e.message, JOptionPane.ERROR_MESSAGE)
-                        form.board.print(e.dump())
+                        form.note("保存小说", e.message ?: "", JOptionPane.ERROR_MESSAGE)
+                        form.print(e.dump())
                         stop()
-                        form.board.setStartIcon()
+                        form.setStartIcon()
                     }
 
                     override fun onNext(o: String) {
@@ -125,7 +124,7 @@ object Crawling : IDelegate<MainForm>(), OnFetchingListener {
                     override fun onCompleted() {
                         echo("完成！\n")
                         stop()
-                        form.board.setStartIcon()
+                        form.setStartIcon()
                     }
                 })
     }

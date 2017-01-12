@@ -17,7 +17,6 @@ buildscript {
     }
 }
 
-apply plugin: 'idea'
 apply plugin: 'kotlin'
 
 repositories {
@@ -34,5 +33,4 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compile group: 'io.reactivex', name: 'rxjava', version: '1.2.5'
     compile group: 'io.reactivex', name: 'rxswing', version: '0.27.0'
-    compile group: 'com.intellij', name: 'forms_rt', version: '7.0.3'
 }

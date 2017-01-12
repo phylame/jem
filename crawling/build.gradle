@@ -1,0 +1,38 @@
+group 'pw.phylame.jem'
+version '1.0.0'
+
+buildscript {
+    ext {
+        jem_version = '3.2.0'
+        qaf_version = '1.1.0'
+        kotlin_version = '1.0.6'
+    }
+
+    repositories {
+        mavenLocal()
+        jcenter()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+apply plugin: 'idea'
+apply plugin: 'kotlin'
+
+repositories {
+    mavenLocal()
+    jcenter()
+}
+
+dependencies {
+    compile "pw.phylame.qaf:qaf-ixin:$qaf_version"
+    compile "pw.phylame.qaf:kotlin-swing:$qaf_version"
+    compile "pw.phylame.jem:jem-kotlin:$jem_version"
+    compile "pw.phylame.jem:jem-crawler:$jem_version"
+    compile "pw.phylame.jem:jem-formats:$jem_version"
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile group: 'io.reactivex', name: 'rxjava', version: '1.2.5'
+    compile group: 'io.reactivex', name: 'rxswing', version: '0.27.0'
+    compile group: 'com.intellij', name: 'forms_rt', version: '7.0.3'
+}

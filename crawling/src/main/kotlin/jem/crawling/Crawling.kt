@@ -12,7 +12,7 @@ import pw.phylame.jem.title
 import pw.phylame.jem.util.Variants
 import pw.phylame.jem.util.text.Text
 import pw.phylame.qaf.core.App
-import pw.phylame.qaf.core.dumpToString
+import pw.phylame.qaf.core.dump
 import pw.phylame.qaf.ixin.IDelegate
 import pw.phylame.qaf.ixin.Ixin
 import pw.phylame.ycl.util.DateUtils
@@ -113,7 +113,7 @@ object Crawling : IDelegate<MainForm>(), OnFetchingListener {
                 .subscribe(object : Observer<String> {
                     override fun onError(e: Throwable) {
                         form.board.note("保存小说", e.message, JOptionPane.ERROR_MESSAGE)
-                        form.board.print(e.dumpToString())
+                        form.board.print(e.dump())
                         stop()
                         form.board.setStartIcon()
                     }
@@ -161,5 +161,5 @@ object Crawling : IDelegate<MainForm>(), OnFetchingListener {
 }
 
 fun main(args: Array<String>) {
-    App.run("crawling", "1.0", args, Crawling)
+    App.run("crawling", "1.0", Crawling, args)
 }

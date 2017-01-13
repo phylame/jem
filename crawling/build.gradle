@@ -12,6 +12,7 @@ buildscript {
         mavenLocal()
         jcenter()
     }
+
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
@@ -33,4 +34,13 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compile group: 'io.reactivex', name: 'rxjava', version: '1.2.5'
     compile group: 'io.reactivex', name: 'rxswing', version: '0.27.0'
+}
+
+task fatjar(dependsOn: 'build') {
+    copy {
+        into buildDir.path + '/deps'
+        from configurations.compile.findAll {
+            it.name.endsWith('.jar')
+        }
+    }
 }

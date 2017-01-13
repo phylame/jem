@@ -106,7 +106,7 @@ class Viewer() : IForm(tr("app.name"), Settings("$SETTINGS_DIR/snap")) {
                 Imabw.performed(EXIT_APP)
             }
         })
-        iconImage = localizedImageFor("app.icon")
+        iconImage = imageFor("app.icon")
         createActions()
         createComponents(JSONDesigner(DESIGNER_NAME), Imabw)
         createContent()

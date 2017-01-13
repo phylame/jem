@@ -39,7 +39,7 @@ import com.toedter.components.JLocaleChooser
 import pw.phylame.jem.core.Book
 import pw.phylame.jem.core.Chapter
 import pw.phylame.qaf.core.App
-import pw.phylame.qaf.core.dumpToString
+import pw.phylame.qaf.core.dump
 import pw.phylame.qaf.core.tr
 import pw.phylame.qaf.ixin.*
 import pw.phylame.ycl.io.PathUtils
@@ -102,7 +102,7 @@ internal class MessageDialog : IOptionDialog {
     var style: MessageStyle = MessageStyle.None
         set(value) {
             if (value.icon.isNotEmpty()) {
-                icon = iconFor("dialog/" + value.icon + ".png")
+                icon = iconFor("!dialog/" + value.icon + ".png")
             }
             setDecorationIfNeed(value.decoration)
             field = value
@@ -352,7 +352,7 @@ internal class ErrorDialog : BaseDialog<Int> {
 
     private fun createTextArea(e: Throwable): JTextArea {
         val text = JTextArea()
-        text.text = e.dumpToString()
+        text.text = e.dump()
         text.isEditable = false
         text.caretPosition = 0
         return text

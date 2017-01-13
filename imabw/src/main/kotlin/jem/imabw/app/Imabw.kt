@@ -20,7 +20,7 @@ import jem.imabw.app.ui.Dialogs
 import jem.imabw.app.ui.Viewer
 import pw.phylame.jem.epm.EpmManager
 import pw.phylame.qaf.core.App
-import pw.phylame.qaf.core.lines
+import pw.phylame.qaf.core.DebugLevel
 import pw.phylame.qaf.core.tr
 import pw.phylame.qaf.ixin.*
 import pw.phylame.ycl.io.IOUtils
@@ -36,7 +36,7 @@ object Imabw : IDelegate<Viewer>() {
         proxy = CommandDispatcher(arrayOf(this))
 
         Log.setLevel(LogLevel.forName(AppSettings.logLevel, LogLevel.INFO))
-        App.debug = App.Debug.valueOf(AppSettings.debugLevel)
+        App.debugLevel = DebugLevel.valueOf(AppSettings.debugLevel)
         Locale.setDefault(AppSettings.appLocale)
         resource = Resource(RESOURCE_DIR, "${IMAGE_DIR}/${UISettings.iconSets}", I18N_DIR, javaClass.classLoader)
         App.translator = resource.translatorFor(TRANSLATOR_NAME)
@@ -44,7 +44,9 @@ object Imabw : IDelegate<Viewer>() {
         if (PluginSettings.enable) {
             val blacklist = if (PluginSettings.blacklist.isNotBlank())
                 IOUtils.resourceFor(PluginSettings.blacklist, javaClass.classLoader)
-                        ?.lines()
+                        ?.openStream()
+                        ?.bufferedReader()
+                        ?.lineSequence()
                         ?.toSet()
                         ?: emptySet<String>()
             else emptySet<String>()
@@ -98,5 +100,5 @@ object Imabw : IDelegate<Viewer>() {
 }
 
 fun main(args: Array<String>) {
-    App.run(APP_NAME, APP_VERSION, args, Imabw)
+    App.run(APP_NAME, APP_VERSION, Imabw, args)
 }

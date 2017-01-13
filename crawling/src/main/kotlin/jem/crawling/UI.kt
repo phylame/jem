@@ -6,8 +6,8 @@ import pw.phylame.qaf.core.App
 import pw.phylame.qaf.ixin.IForm
 import pw.phylame.qaf.ixin.addGroupedComponents
 import pw.phylame.qaf.ixin.title
+import pw.phylame.qaf.ixin.x
 import pw.phylame.qaf.swing.*
-import pw.phylame.ycl.io.IOUtils
 import pw.phylame.ycl.log.Log
 import pw.phylame.ycl.util.CollectionUtils
 import java.awt.Desktop
@@ -22,7 +22,15 @@ import java.net.URL
 import java.util.*
 import javax.swing.*
 
-object Form : IForm("PW Crawling ${App.assembly.version}"), ActionListener {
+fun note(title: String, message: Any, type: Int) {
+    JOptionPane.showMessageDialog(Crawler.form, message, title, type)
+}
+
+fun confirm(title: String, message: Any): Boolean {
+    return JOptionPane.showConfirmDialog(Crawler.form, message, title, JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION
+}
+
+object Form : IForm("PW Crawler ${App.assembly.version}"), ActionListener {
     private const val TAG = "Forms"
 
     private lateinit var tfUrl: JTextField
@@ -45,20 +53,20 @@ object Form : IForm("PW Crawling ${App.assembly.version}"), ActionListener {
         taConsole.caretPosition = taConsole.document.length
     }
 
-    fun setStartIcon() {
+    internal fun setStartIcon() {
         btnStart.toolTipText = "开始下载电子书"
         try {
-            btnStart.icon = ImageIcon(IOUtils.resourceFor("!jem/crawling/start.png"))
+            btnStart.icon = ImageIcon(resourceFor("start.png"))
         } catch (e: MalformedURLException) {
             Log.e(TAG, e)
             btnStart.text = "开始"
         }
     }
 
-    fun setStopIcon() {
+    private fun setStopIcon() {
         btnStart.toolTipText = "停止操作"
         try {
-            btnStart.icon = ImageIcon(IOUtils.resourceFor("!jem/crawling/stop.png"))
+            btnStart.icon = ImageIcon(resourceFor("stop.png"))
         } catch (e: MalformedURLException) {
             Log.e(TAG, e)
             btnStart.text = "停止"
@@ -66,9 +74,9 @@ object Form : IForm("PW Crawling ${App.assembly.version}"), ActionListener {
     }
 
     private fun downloadFile() {
-        val app = Crawling
-        if (app.stop()) {
-            app.echo("已经取消操作\n")
+        val app = Crawler
+        if (app.stopTasks()) {
+            app.log("已经取消操作\n")
             setStartIcon()
             return
         }
@@ -106,7 +114,7 @@ object Form : IForm("PW Crawling ${App.assembly.version}"), ActionListener {
                 }
             }
         }
-        if (fileChooser.showSaveDialog(Crawling.form) == JFileChooser.APPROVE_OPTION) {
+        if (fileChooser.showSaveDialog(Crawler.form) == JFileChooser.APPROVE_OPTION) {
             tfOutput.text = fileChooser.selectedFile.path
         }
     }
@@ -116,8 +124,8 @@ object Form : IForm("PW Crawling ${App.assembly.version}"), ActionListener {
     }
 
     private fun aboutApp() {
-        val panel = JPanel()
-        panel.layout = BoxLayout(panel, BoxLayout.PAGE_AXIS)
+        val pane = JPanel()
+        pane.layout = BoxLayout(pane, BoxLayout.PAGE_AXIS)
         for (host in ProviderManager.knownHosts()) {
             val label = JLabel("<html>&nbsp;<a href='$host'>$host</a></html>")
             label.addMouseListener(object : MouseAdapter() {
@@ -130,14 +138,10 @@ object Form : IForm("PW Crawling ${App.assembly.version}"), ActionListener {
 
                 }
             })
-            panel.add(label)
+            pane.add(label)
         }
-        val message = arrayOf<Any>("支持的网址：", panel)
-        note("PW Crawling", message, JOptionPane.PLAIN_MESSAGE)
-    }
-
-    fun note(title: String, message: Any, type: Int) {
-        JOptionPane.showMessageDialog(Crawling.form, message, title, type)
+        val message = arrayOf<Any>("支持的网址：", pane)
+        note("PW Crawler", message, JOptionPane.PLAIN_MESSAGE)
     }
 
     override fun actionPerformed(e: ActionEvent) {
@@ -168,7 +172,7 @@ object Form : IForm("PW Crawling ${App.assembly.version}"), ActionListener {
         defaultCloseOperation = WindowConstants.DO_NOTHING_ON_CLOSE
         addWindowListener(object : WindowAdapter() {
             override fun windowClosing(e: WindowEvent) {
-                Crawling.exit()
+                Crawler.exit()
             }
         })
         setupUI()
@@ -181,12 +185,12 @@ object Form : IForm("PW Crawling ${App.assembly.version}"), ActionListener {
         val etchedBorder = BorderFactory.createEtchedBorder()
         val emptyBorder = BorderFactory.createEmptyBorder(margin, margin, margin, margin)
 
-        contentPane = panel(false) {
+        contentPane = pane(false) {
             border = emptyBorder
             boxLayout(BoxLayout.PAGE_AXIS) {
                 val rigidO = 0 x margin
 
-                panel {
+                pane {
                     border = BorderFactory.createEmptyBorder(2, margin, 2, margin) + etchedBorder
 
                     var lbUrl: JLabel? = null
@@ -197,7 +201,7 @@ object Form : IForm("PW Crawling ${App.assembly.version}"), ActionListener {
                                 lbUrl = this
                                 title = "链接(&U):"
                             },
-                            panel(false) {
+                            pane(false) {
                                 boxLayout(BoxLayout.LINE_AXIS) {
                                     textField {
                                         tfUrl = this
@@ -232,7 +236,7 @@ object Form : IForm("PW Crawling ${App.assembly.version}"), ActionListener {
                                 lbOutput = this
                                 title = "路径(&O):"
                             },
-                            panel(false) {
+                            pane(false) {
                                 boxLayout(BoxLayout.LINE_AXIS) {
                                     textField {
                                         tfOutput = this
@@ -250,7 +254,7 @@ object Form : IForm("PW Crawling ${App.assembly.version}"), ActionListener {
 
                 add(Box.createRigidArea(rigidO))
 
-                panel {
+                pane {
                     border = emptyBorder + etchedBorder
                     boxLayout(BoxLayout.LINE_AXIS) {
                         val rigidI = margin x 0
@@ -294,7 +298,7 @@ object Form : IForm("PW Crawling ${App.assembly.version}"), ActionListener {
 
                 add(Box.createRigidArea(rigidO))
 
-                panel {
+                pane {
                     border = etchedBorder
                     borderLayout {
                         center = scrollPane(false) {
@@ -315,7 +319,7 @@ object Form : IForm("PW Crawling ${App.assembly.version}"), ActionListener {
         setLocationRelativeTo(null)
     }
 
-    fun resourceFor(name: String): URL = Crawling::class.java.getResource("/jem/crawling/$name")
+    fun resourceFor(name: String): URL = Crawler::class.java.getResource("/jem/crawling/$name")
 
     private fun JButton.init(icon: String, tip: String) {
         toolTipText = tip

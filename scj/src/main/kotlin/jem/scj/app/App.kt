@@ -30,6 +30,7 @@ import pw.phylame.ycl.log.Log
 import pw.phylame.ycl.util.CollectionUtils
 import java.io.File
 import java.util.*
+import kotlin.reflect.KProperty
 
 const val NAME = "scj"
 val VERSION = Build.VERSION
@@ -135,9 +136,9 @@ fun checkOutputFormat(format: String): Boolean = if (!EpmManager.hasMaker(format
 
 fun checkDebugLevel(level: String): Boolean {
     when (level) {
-        DEBUG_ECHO -> App.debug = App.Debug.ECHO
-        DEBUG_TRACE -> App.debug = App.Debug.TRACE
-        DEBUG_NONE -> App.debug = App.Debug.NONE
+        DEBUG_ECHO -> App.debugLevel = DebugLevel.ECHO
+        DEBUG_TRACE -> App.debugLevel = DebugLevel.TRACE
+        DEBUG_NONE -> App.debugLevel = DebugLevel.NONE
         else -> {
             App.error(tr("error.invalidDebugLevel", level))
             return false
@@ -198,7 +199,7 @@ object SCI : CLIDelegate() {
                 .hasArg()
                 .desc(tr("help.debug", AppConfig.debugLevel))
                 .build(),
-                fetcherOf(OPTION_DEBUG_LEVEL, String::class.java, ::checkDebugLevel)
+                TypedFetcher(OPTION_DEBUG_LEVEL, String::class.java, ::checkDebugLevel)
         )
         // input format
         addOption(Option.builder(OPTION_INPUT_FORMAT)
@@ -207,7 +208,7 @@ object SCI : CLIDelegate() {
                 .hasArg()
                 .desc(tr("help.inputFormat"))
                 .build(),
-                fetcherOf(OPTION_INPUT_FORMAT, String::class.java, ::checkInputFormat)
+                TypedFetcher(OPTION_INPUT_FORMAT, String::class.java, ::checkInputFormat)
         )
         // parser arguments
         addOption(Option.builder(OPTION_IN_ARGUMENTS)
@@ -251,7 +252,7 @@ object SCI : CLIDelegate() {
                 .hasArg()
                 .desc(tr("help.outputFormat", AppConfig.outputFormat))
                 .build(),
-                fetcherOf(OPTION_OUTPUT_FORMAT, String::class.java, ::checkOutputFormat)
+                TypedFetcher(OPTION_OUTPUT_FORMAT, String::class.java, ::checkOutputFormat)
         )
         // maker arguments
         addOption(Option.builder(OPTION_OUT_ARGUMENTS)
@@ -406,5 +407,5 @@ class ViewBook(option: String) : ListFetcher(option), ConsumerCommand {
 }
 
 fun main(args: Array<String>) {
-    App.run(NAME, VERSION, args, SCI)
+    App.run(NAME, VERSION, SCI, args)
 }

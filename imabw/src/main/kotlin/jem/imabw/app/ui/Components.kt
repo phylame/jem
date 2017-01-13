@@ -16,10 +16,10 @@
 
 package jem.imabw.app.ui
 
-import org.jdesktop.swingx.JXLabel
-import org.jdesktop.swingx.JXPanel
 import jem.imabw.app.GOTO
 import jem.imabw.app.Imabw
+import org.jdesktop.swingx.JXLabel
+import org.jdesktop.swingx.JXPanel
 import pw.phylame.qaf.core.tr
 import pw.phylame.qaf.ixin.iconFor
 import java.awt.BorderLayout
@@ -62,8 +62,8 @@ class StatusIndicator(val viewer: Viewer) : JXPanel() {
         words = JXLabel()
         words.toolTipText = tr("status.words.tip")
 
-        readonly = JXLabel(iconFor("status/readwrite.png"))
-        readonly.toolTipText = tr("status.readonly.tip")
+        readonly = JXLabel(iconFor("!status/readwrite.png"))
+        readonly.toolTipText = tr("!status.readonly.tip")
         readonly.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
                 if (!readonly.isEnabled || e.isMetaDown) {
@@ -80,7 +80,7 @@ class StatusIndicator(val viewer: Viewer) : JXPanel() {
             }
         })
 
-        val message = JXLabel(iconFor("status/message.png"))
+        val message = JXLabel(iconFor("!status/message.png"))
         message.toolTipText = tr("status.message.tip")
         message.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent?) {
@@ -128,9 +128,9 @@ class StatusIndicator(val viewer: Viewer) : JXPanel() {
 
     fun setReadonly(readonly: Boolean) {
         if (readonly) {
-            this.readonly.icon = iconFor("status/readonly.png")
+            this.readonly.icon = iconFor("!status/readonly.png")
         } else {
-            this.readonly.icon = iconFor("status/readwrite.png")
+            this.readonly.icon = iconFor("!status/readwrite.png")
         }
     }
 

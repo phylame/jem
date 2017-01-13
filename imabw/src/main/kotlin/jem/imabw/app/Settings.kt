@@ -17,6 +17,7 @@
 package jem.imabw.app
 
 import pw.phylame.qaf.core.App
+import pw.phylame.qaf.core.DebugLevel
 import pw.phylame.qaf.core.Settings
 import pw.phylame.qaf.ixin.Ixin
 import pw.phylame.ycl.io.IOUtils
@@ -39,7 +40,7 @@ object AppSettings : Settings("${SETTINGS_DIR}/settings") {
 
     var logLevel by delegated(LogLevel.INFO.name, "app.log.level")
 
-    val debugLevel by delegated(App.Debug.ECHO.name, "app.debug.level")
+    val debugLevel by delegated(DebugLevel.ECHO.name, "app.debug.level")
 
     var historyEnable by delegated(true, "app.history.enable")
 

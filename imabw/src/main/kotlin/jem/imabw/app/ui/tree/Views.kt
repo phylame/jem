@@ -58,7 +58,7 @@ class ContentsTree(override val viewer: Viewer) : JXPanel(BorderLayout()), Edita
         tree.dragEnabled = true
         tree.dropMode = DropMode.USE_SELECTION
 
-        fileFor("ui/contents.json")?.openStream()?.use {
+        fileFor("!ui/contents.json")?.openStream()?.use {
             var items = LinkedList<Item>()
             val jo = JSONObject(JSONTokener(it))
             var array = jo.optJSONArray("menu");
@@ -239,7 +239,7 @@ class ControlsPane(val tree: ContentsTree, items: Array<Item>) : JXPanel(BorderL
                 comp.icon = comp.action[Action.SMALL_ICON]
             }
         }
-        add(JXLabel(tr("contents.title"), iconFor("tree/contents.png"), JXLabel.LEADING), BorderLayout.LINE_START)
+        add(JXLabel(tr("contents.title"), iconFor("!tree/contents.png"), JXLabel.LEADING), BorderLayout.LINE_START)
         add(toolbar, BorderLayout.LINE_END)
     }
 }

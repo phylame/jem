@@ -16,7 +16,7 @@
 
 package jem.imabw.app.ui.tree
 
-import pw.phylame.jem.core.Chapter
+import jem.core.Chapter
 import java.util.*
 import javax.swing.event.EventListenerList
 import javax.swing.event.TreeModelEvent

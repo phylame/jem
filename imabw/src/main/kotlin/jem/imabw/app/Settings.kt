@@ -16,16 +16,16 @@
 
 package jem.imabw.app
 
+import pw.phylame.commons.io.IOUtils
+import pw.phylame.commons.log.LogLevel
 import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.DebugLevel
 import pw.phylame.qaf.core.Settings
 import pw.phylame.qaf.ixin.Ixin
-import pw.phylame.ycl.io.IOUtils
-import pw.phylame.ycl.log.LogLevel
 import java.awt.Font
 import java.util.*
 
-object AppSettings : Settings("${SETTINGS_DIR}/settings") {
+object AppSettings : Settings("$SETTINGS_DIR/settings") {
     override fun reset() {
         super.reset()
         comment = "Common settings for Imabw"
@@ -47,13 +47,13 @@ object AppSettings : Settings("${SETTINGS_DIR}/settings") {
     var historyLimits by delegated(DEFAULT_HISTORY_LIMITS, "app.history.limits")
 
     val supportedLocales by lazy {
-        IOUtils.openResource("${RESOURCE_DIR}${I18N_DIR}/all.txt", javaClass.classLoader)?.bufferedReader()?.useLines {
+        IOUtils.openResource("$RESOURCE_DIR$I18N_DIR/all.txt", javaClass.classLoader)?.bufferedReader()?.useLines {
             it.filter { it.isNotEmpty() && !it.startsWith('#') }.toList()
         } ?: emptyList<String>()
     }
 }
 
-object PluginSettings : Settings("${SETTINGS_DIR}/plugins") {
+object PluginSettings : Settings("$SETTINGS_DIR/plugins") {
     override fun reset() {
         super.reset()
         comment = "Plugin settings"
@@ -67,7 +67,7 @@ object PluginSettings : Settings("${SETTINGS_DIR}/plugins") {
     var blacklist by delegated(App.pathOf("plugins/blacklist.lst"), "app.plugin.blacklist")
 }
 
-object UISettings : Settings("${SETTINGS_DIR}/ui") {
+object UISettings : Settings("$SETTINGS_DIR/ui") {
     override fun reset() {
         super.reset()
         comment = "UI components settings"

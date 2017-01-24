@@ -36,18 +36,18 @@ import jem.scj.app.SCJPlugin;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 import lombok.val;
+import pw.phylame.commons.function.Prediction;
+import pw.phylame.commons.function.Provider;
+import pw.phylame.commons.log.LogLevel;
+import pw.phylame.commons.util.CollectionUtils;
+import pw.phylame.commons.util.StringUtils;
+import pw.phylame.commons.value.Lazy;
 import pw.phylame.qaf.cli.CLIDelegate;
 import pw.phylame.qaf.cli.Command;
 import pw.phylame.qaf.cli.PropertiesFetcher;
 import pw.phylame.qaf.core.App;
 import pw.phylame.qaf.core.Metadata;
 import pw.phylame.qaf.core.Plugin;
-import pw.phylame.ycl.function.Prediction;
-import pw.phylame.ycl.function.Provider;
-import pw.phylame.ycl.log.LogLevel;
-import pw.phylame.ycl.util.CollectionUtils;
-import pw.phylame.ycl.util.StringUtils;
-import pw.phylame.ycl.value.Lazy;
 
 public class AppInspector extends SCJPlugin {
 

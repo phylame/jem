@@ -16,15 +16,15 @@
 
 package jem.imabw.app.ui.tree
 
+import jem.core.Chapter
+import jem.imabw.app.Imabw
+import jem.imabw.app.ui.Editable
+import jem.imabw.app.ui.Viewer
 import org.jdesktop.swingx.JXLabel
 import org.jdesktop.swingx.JXPanel
 import org.jdesktop.swingx.JXTree
 import org.json.JSONObject
 import org.json.JSONTokener
-import pw.phylame.jem.core.Chapter
-import jem.imabw.app.Imabw
-import jem.imabw.app.ui.Editable
-import jem.imabw.app.ui.Viewer
 import pw.phylame.qaf.core.tr
 import pw.phylame.qaf.ixin.*
 import java.awt.BorderLayout

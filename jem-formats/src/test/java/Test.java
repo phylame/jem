@@ -1,12 +1,13 @@
 import lombok.val;
-import pw.phylame.jem.epm.EpmManager;
-import pw.phylame.jem.util.JemException;
-import pw.phylame.ycl.log.Log;
-import pw.phylame.ycl.log.LogLevel;
+import pw.phylame.commons.log.Log;
+import pw.phylame.commons.log.LogLevel;
+
+import static jem.epm.util.DebugUtils.*;
 
 import java.io.IOException;
 
-import static pw.phylame.jem.epm.util.DebugUtils.*;
+import jem.epm.EpmManager;
+import jem.util.JemException;
 
 public class Test {
     public static void main(String[] args) throws IOException, JemException {

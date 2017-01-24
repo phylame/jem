@@ -16,10 +16,10 @@
 
 package jem.imabw.app
 
+import jem.core.Book
+import jem.core.Chapter
+import jem.epm.EpmManager
 import jem.imabw.app.ui.Dialogs
-import pw.phylame.jem.core.Book
-import pw.phylame.jem.core.Chapter
-import pw.phylame.jem.epm.EpmManager
 import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.tr
 import pw.phylame.qaf.ixin.Command

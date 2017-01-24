@@ -18,7 +18,7 @@
 
 package jem.scj.addons;
 
-import pw.phylame.ycl.util.Linguist;
+import pw.phylame.commons.util.Linguist;
 
 final class M {
     public static final String MESSAGES_PATH = "jem/scj/addons/messages";

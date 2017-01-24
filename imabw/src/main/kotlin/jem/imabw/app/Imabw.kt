@@ -16,16 +16,16 @@
 
 package jem.imabw.app
 
+import jem.epm.EpmManager
 import jem.imabw.app.ui.Dialogs
 import jem.imabw.app.ui.Viewer
-import pw.phylame.jem.epm.EpmManager
 import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.DebugLevel
 import pw.phylame.qaf.core.tr
 import pw.phylame.qaf.ixin.*
-import pw.phylame.ycl.io.IOUtils
-import pw.phylame.ycl.log.Log
-import pw.phylame.ycl.log.LogLevel
+import pw.phylame.commons.io.IOUtils
+import pw.phylame.commons.log.Log
+import pw.phylame.commons.log.LogLevel
 import java.util.*
 
 object Imabw : IDelegate<Viewer>() {
@@ -38,7 +38,7 @@ object Imabw : IDelegate<Viewer>() {
         Log.setLevel(LogLevel.forName(AppSettings.logLevel, LogLevel.INFO))
         App.debugLevel = DebugLevel.valueOf(AppSettings.debugLevel)
         Locale.setDefault(AppSettings.appLocale)
-        resource = Resource(RESOURCE_DIR, "${IMAGE_DIR}/${UISettings.iconSets}", I18N_DIR, javaClass.classLoader)
+        resource = Resource(RESOURCE_DIR, "$IMAGE_DIR/${UISettings.iconSets}", I18N_DIR, javaClass.classLoader)
         App.translator = resource.translatorFor(TRANSLATOR_NAME)
 
         if (PluginSettings.enable) {

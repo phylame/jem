@@ -25,7 +25,7 @@
     </scm>
 
     <properties>
-        <ycl.version>1.1.0</ycl.version>
+        <commons.version>1.1.0</commons.version>
         <qaf.version>1.1.0</qaf.version>
         <xpp3.version>1.1.4c</xpp3.version>
         <kotlin.version>1.0.6</kotlin.version>
@@ -47,8 +47,8 @@
         <dependencies>
             <dependency>
                 <groupId>pw.phylame.util</groupId>
-                <artifactId>ycl</artifactId>
-                <version>${ycl.version}</version>
+                <artifactId>commons</artifactId>
+                <version>${commons.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.projectlombok</groupId>
@@ -63,7 +63,7 @@
                 <exclusions>
                     <exclusion>
                         <groupId>pw.phylame.util</groupId>
-                        <artifactId>ycl</artifactId>
+                        <artifactId>commons</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -74,7 +74,7 @@
                 <exclusions>
                     <exclusion>
                         <groupId>pw.phylame.util</groupId>
-                        <artifactId>ycl</artifactId>
+                        <artifactId>commons</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>

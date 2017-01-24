@@ -19,15 +19,15 @@
 package jem.scj.app
 
 import org.apache.commons.cli.*
-import pw.phylame.jem.crawler.ProviderManager
-import pw.phylame.jem.epm.EpmManager
-import pw.phylame.jem.util.Build
+import jem.crawler.ProviderManager
+import jem.epm.EpmManager
+import jem.util.Build
 import pw.phylame.qaf.cli.*
 import pw.phylame.qaf.core.*
-import pw.phylame.ycl.io.IOUtils
-import pw.phylame.ycl.io.PathUtils
-import pw.phylame.ycl.log.Log
-import pw.phylame.ycl.util.CollectionUtils
+import pw.phylame.commons.io.IOUtils
+import pw.phylame.commons.io.PathUtils
+import pw.phylame.commons.log.Log
+import pw.phylame.commons.util.CollectionUtils
 import java.io.File
 import java.util.*
 import kotlin.reflect.KProperty

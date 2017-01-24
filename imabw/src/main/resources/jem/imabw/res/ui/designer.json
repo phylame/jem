@@ -5,15 +5,21 @@
       "items": [
         {
           "id": "menu.new",
-          "items": [ "newFile", "newChapter"]
+          "items": [
+            "newFile",
+            "newChapter"
+          ]
         },
         "openFile",
         {
           "id": "menu.history",
-          "items": ["clearHistory"]
+          "items": [
+            "clearHistory"
+          ]
         },
         null,
-        "saveFile", "saveAsFile",
+        "saveFile",
+        "saveAsFile",
         null,
         "editSettings",
         null,
@@ -24,15 +30,22 @@
     },
     {
       "id": "menu.edit",
-      "items":[
-        "undo", "redo",
+      "items": [
+        "undo",
+        "redo",
         null,
-        "cut", "copy", "paste", "delete",
+        "cut",
+        "copy",
+        "paste",
+        "delete",
         null,
         {
           "id": "menu.find",
           "items": [
-            "find", "replace", "findPrevious", "findNext"
+            "find",
+            "replace",
+            "findPrevious",
+            "findNext"
           ]
         },
         "selectAll",
@@ -42,7 +55,10 @@
         {
           "id": "menu.transformations",
           "items": [
-            "toUpper", "toLower", "toCapitalized", "toTitled"
+            "toUpper",
+            "toLower",
+            "toCapitalized",
+            "toTitled"
           ]
         },
         null,
@@ -71,7 +87,8 @@
       "items": [
         "insertChapter",
         null,
-        "importChapter", "exportChapter",
+        "importChapter",
+        "exportChapter",
         null,
         "renameChapter",
         null,
@@ -81,7 +98,8 @@
           "style": "check"
         },
         null,
-        "editAttributes", "editExtensions"
+        "editAttributes",
+        "editExtensions"
       ]
     },
     {
@@ -96,9 +114,13 @@
         {
           "id": "menu.tab",
           "items": [
-            "previousTab", "nextTab",
+            "previousTab",
+            "nextTab",
             null,
-            "closeActiveTab", "closeOtherTabs", "closeAllTabs", "closeUnmodifiedTabs"
+            "closeActiveTab",
+            "closeOtherTabs",
+            "closeAllTabs",
+            "closeUnmodifiedTabs"
           ]
         }
       ]
@@ -106,17 +128,26 @@
     {
       "id": "menu.help",
       "items": [
-        "helpContents", "aboutApp"
+        "helpContents",
+        "aboutApp"
       ]
     }
   ],
   "toolbar": [
-    "newFile", "openFile", "saveFile",
+    "newFile",
+    "openFile",
+    "saveFile",
     null,
-    "undo", "redo",
+    "undo",
+    "redo",
     null,
-    "cut", "copy", "paste",
+    "cut",
+    "copy",
+    "paste",
     null,
-    "find", "replace", "findPrevious", "findNext"
+    "find",
+    "replace",
+    "findPrevious",
+    "findNext"
   ]
 }

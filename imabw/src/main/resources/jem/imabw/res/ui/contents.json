@@ -2,11 +2,15 @@
   "menu": [
     {
       "id": "contents.menu.new",
-      "items": [ "newChapter", "importChapter"]
+      "items": [
+        "newChapter",
+        "importChapter"
+      ]
     },
     "insertChapter",
     null,
-    "cut", "paste",
+    "cut",
+    "paste",
     null,
     "exportChapter",
     null,
@@ -20,7 +24,8 @@
   ],
   "toolbar": [
     null,
-    "newChapter", "editAttributes",
+    "newChapter",
+    "editAttributes",
     {
       "id": "lockContents",
       "style": "toggle"

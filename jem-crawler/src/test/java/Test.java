@@ -1,15 +1,15 @@
 import java.util.Arrays;
 
+import jem.core.Attributes;
+import jem.core.Book;
+import jem.core.Chapter;
+import jem.crawler.CrawlerConfig;
+import jem.crawler.OnFetchingListener;
+import jem.crawler.ProviderManager;
+import jem.epm.EpmManager;
+import jem.epm.util.DebugUtils;
 import lombok.val;
-import pw.phylame.jem.core.Attributes;
-import pw.phylame.jem.core.Book;
-import pw.phylame.jem.core.Chapter;
-import pw.phylame.jem.crawler.CrawlerConfig;
-import pw.phylame.jem.crawler.OnFetchingListener;
-import pw.phylame.jem.crawler.ProviderManager;
-import pw.phylame.jem.epm.EpmManager;
-import pw.phylame.jem.epm.util.DebugUtils;
-import pw.phylame.ycl.util.CollectionUtils;
+import pw.phylame.commons.util.CollectionUtils;
 
 public class Test {
     public static void main(String[] args) throws Exception {

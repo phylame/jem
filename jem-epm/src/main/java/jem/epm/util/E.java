@@ -1,0 +1,36 @@
+/*
+ * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ *
+ * This file is part of Jem.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package jem.epm.util;
+
+import jem.epm.util.config.BadConfigException;
+import pw.phylame.commons.util.Exceptions;
+
+public class E extends Exceptions {
+    public static BadConfigException forBadConfig(String key, Object value, String format, Object... args) {
+        return new BadConfigException(key, value, String.format(format, args));
+    }
+
+    public static ParserException forParser(String format, Object... args) {
+        return new ParserException(String.format(format, args));
+    }
+
+    public static MakerException forMaker(String format, Object... args) {
+        return new MakerException(String.format(format, args));
+    }
+}

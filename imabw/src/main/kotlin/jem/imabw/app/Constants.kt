@@ -16,7 +16,7 @@
 
 package jem.imabw.app
 
-import pw.phylame.jem.util.Build
+import jem.util.Build
 import pw.phylame.qaf.ixin.Ixin
 
 // meta data

@@ -32,13 +32,13 @@ import jem.scj.app.AppConfig;
 import jem.scj.app.SCI;
 import jem.scj.app.SCJPlugin;
 import lombok.val;
+import pw.phylame.commons.io.IOUtils;
+import pw.phylame.commons.log.Log;
+import pw.phylame.commons.util.CollectionUtils;
 import pw.phylame.qaf.cli.CLIDelegate;
 import pw.phylame.qaf.cli.Command;
 import pw.phylame.qaf.cli.Initializer;
 import pw.phylame.qaf.core.Metadata;
-import pw.phylame.ycl.io.IOUtils;
-import pw.phylame.ycl.log.Log;
-import pw.phylame.ycl.util.CollectionUtils;
 
 public class DisablePlugin extends SCJPlugin implements Initializer, Command {
     private static final String TAG = DisablePlugin.class.getSimpleName();

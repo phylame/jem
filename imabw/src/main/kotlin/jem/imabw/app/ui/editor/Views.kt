@@ -16,12 +16,11 @@
 
 package jem.imabw.app.ui.editor
 
-import jem.imabw.app.REPLACE
-import org.jdesktop.swingx.JXPanel
 import jem.imabw.app.Imabw
 import jem.imabw.app.REPLACE
 import jem.imabw.app.ui.Editable
 import jem.imabw.app.ui.Viewer
+import org.jdesktop.swingx.JXPanel
 import pw.phylame.qaf.ixin.Command
 
 class TabbedEditor(override val viewer: Viewer) : JXPanel(), Editable {

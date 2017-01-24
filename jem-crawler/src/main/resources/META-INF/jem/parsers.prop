@@ -19,4 +19,4 @@
 # syntax: name=[path to class][;extension]
 
 # Crawler parser
-crawler=pw.phylame.jem.crawler.CrawlerParser
+crawler=jem.crawler.CrawlerParser

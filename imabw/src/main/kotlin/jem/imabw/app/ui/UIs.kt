@@ -16,7 +16,7 @@
 
 package jem.imabw.app.ui
 
-import pw.phylame.jem.core.Chapter
+import jem.core.Chapter
 import jem.imabw.app.*
 import jem.imabw.app.ui.editor.TabbedEditor
 import jem.imabw.app.ui.tree.ContentsTree

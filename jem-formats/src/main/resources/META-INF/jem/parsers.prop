@@ -19,22 +19,22 @@
 # syntax: name=[path to class][;extension]
 
 # PMAB parser
-pmab=pw.phylame.jem.formats.pmab.PmabParser
+pmab=jem.formats.pmab.PmabParser
 
 # JAR parser
-jar=pw.phylame.jem.formats.jar.JarParser
+jar=jem.formats.jar.JarParser
 
 # UMD parser
-umd=pw.phylame.jem.formats.umd.UmdParser
+umd=jem.formats.umd.UmdParser
 
 # TXT parser
-txt=pw.phylame.jem.formats.txt.TxtParser
+txt=jem.formats.txt.TxtParser
 
 # EBK2 parser
-ebk2=pw.phylame.jem.formats.ebk.Ebk2Parser
+ebk2=jem.formats.ebk.Ebk2Parser
 
 # ePub parser
-epub=pw.phylame.jem.formats.epub.EpubParser
+epub=jem.formats.epub.EpubParser
 
 # Mobi parser
-mobi=pw.phylame.jem.formats.mobi.MobiParser;mobi prc
+mobi=jem.formats.mobi.MobiParser;mobi prc

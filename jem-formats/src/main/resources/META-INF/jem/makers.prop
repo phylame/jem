@@ -19,16 +19,16 @@
 # syntax: name=[path to class][;extension]
 
 # PMAB maker
-pmab=pw.phylame.jem.formats.pmab.PmabMaker
+pmab=jem.formats.pmab.PmabMaker
 
 # Jar maker
-jar=pw.phylame.jem.formats.jar.JarMaker
+jar=jem.formats.jar.JarMaker
 
 # UMD maker
-umd=pw.phylame.jem.formats.umd.UmdMaker
+umd=jem.formats.umd.UmdMaker
 
 # TXT maker
-txt=pw.phylame.jem.formats.txt.TxtMaker
+txt=jem.formats.txt.TxtMaker
 
 # ePub maker
-epub=pw.phylame.jem.formats.epub.EpubMaker
+epub=jem.formats.epub.EpubMaker

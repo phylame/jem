@@ -20,8 +20,8 @@ import jem.util.Build
 import pw.phylame.qaf.ixin.Ixin
 
 // meta data
-val APP_NAME = System.getProperty("app.name", "imabw")
-val APP_VERSION = System.getProperty("app.version", Build.VERSION)
+val APP_NAME: String = System.getProperty("app.name", "imabw")
+val APP_VERSION: String = System.getProperty("app.version", Build.VERSION)
 const val DOCUMENT_URL = "https://github.com/phylame/jem"
 
 const val SETTINGS_DIR = "config/"
@@ -38,6 +38,10 @@ const val DEFAULT_HISTORY_LIMITS = 18
 const val DEFAULT_LAF_THEME = Ixin.DEFAULT_THEME
 const val DEFAULT_ICON_SET = "default"
 const val DEFAULT_KEY_BINDINGS = "default"
+
+// ************************************************** //
+// **              Action & Commands               ** //
+// ************************************************** //
 
 // view operations
 const val SHOW_TOOL_BAR = "showToolbar"
@@ -86,9 +90,10 @@ const val JOIN_LINES = "joinLines"
 
 val TEXT_COMMANDS = arrayOf(REPLACE, TO_LOWER, TO_UPPER, TO_TITLED, TO_CAPITALIZED, JOIN_LINES)
 
+// tools
 const val MORE_TOOLS = "moreTools"
 
-// book operations
+// book & book operations
 const val NEW_CHAPTER = "newChapter"
 const val INSERT_CHAPTER = "insertChapter"
 const val IMPORT_CHAPTER = "importChapter"
@@ -99,7 +104,8 @@ const val LOCK_CONTENTS = "lockContents"
 const val EDIT_ATTRIBUTES = "editAttributes"
 const val EDIT_EXTENSIONS = "editExtensions"
 
-val TREE_COMMANDS = arrayOf(NEW_CHAPTER, INSERT_CHAPTER, IMPORT_CHAPTER, EXPORT_CHAPTER, RENAME_CHAPTER, MERGE_CHAPTER, LOCK_CONTENTS, EDIT_ATTRIBUTES, EDIT_EXTENSIONS)
+val BOOK_COMMANDS = arrayOf(NEW_CHAPTER, INSERT_CHAPTER, IMPORT_CHAPTER, EXPORT_CHAPTER, RENAME_CHAPTER, MERGE_CHAPTER,
+        LOCK_CONTENTS, EDIT_ATTRIBUTES, EDIT_EXTENSIONS)
 
 // tab operations
 const val GOTO_NEXT_TAB = "nextTab"
@@ -109,7 +115,8 @@ const val CLOSE_OTHER_TABS = "closeOtherTabs"
 const val CLOSE_ALL_TABS = "closeAllTabs"
 const val CLOSE_UNMODIFIED_TABS = "closeUnmodifiedTabs"
 
-val TAB_COMMANDS = arrayOf(GOTO_NEXT_TAB, GOTO_PREVIOUS_TAB, CLOSE_ACTIVE_TAB, CLOSE_OTHER_TABS, CLOSE_ALL_TABS, CLOSE_UNMODIFIED_TABS)
+val TAB_COMMANDS = arrayOf(GOTO_NEXT_TAB, GOTO_PREVIOUS_TAB, CLOSE_ACTIVE_TAB, CLOSE_OTHER_TABS, CLOSE_ALL_TABS,
+        CLOSE_UNMODIFIED_TABS)
 
 // application operations
 const val ABOUT_APP = "aboutApp"

@@ -19,13 +19,13 @@ package jem.imabw.app
 import jem.epm.EpmManager
 import jem.imabw.app.ui.Dialogs
 import jem.imabw.app.ui.Viewer
+import pw.phylame.commons.io.IOUtils
+import pw.phylame.commons.log.Log
+import pw.phylame.commons.log.LogLevel
 import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.DebugLevel
 import pw.phylame.qaf.core.tr
 import pw.phylame.qaf.ixin.*
-import pw.phylame.commons.io.IOUtils
-import pw.phylame.commons.log.Log
-import pw.phylame.commons.log.LogLevel
 import java.util.*
 
 object Imabw : IDelegate<Viewer>() {
@@ -41,7 +41,7 @@ object Imabw : IDelegate<Viewer>() {
         resource = Resource(RESOURCE_DIR, "$IMAGE_DIR/${UISettings.iconSets}", I18N_DIR, javaClass.classLoader)
         App.translator = resource.translatorFor(TRANSLATOR_NAME)
 
-        if (PluginSettings.enable) {
+        if (PluginSettings.isEnable) {
             val blacklist = if (PluginSettings.blacklist.isNotBlank())
                 IOUtils.resourceFor(PluginSettings.blacklist, javaClass.classLoader)
                         ?.openStream()
@@ -58,13 +58,10 @@ object Imabw : IDelegate<Viewer>() {
 
     override fun createForm(): Viewer {
         // init global swing environment
-        Ixin.isMnemonicEnable = UISettings.mnemonicEnable
-        Ixin.init(UISettings.antiAliasing, UISettings.windowDecorated, UISettings.lafTheme, UISettings.globalFont)
+        Ixin.isMnemonicEnable = UISettings.isMnemonicEnable
+        Ixin.init(UISettings.isAntiAliasing, UISettings.isWindowDecorated, UISettings.lafTheme, UISettings.globalFont)
         // create viewer
-        val viewer = Viewer()
-        viewer.statusText = tr("viewer.status.ready")
-        viewer.isVisible = true
-        return viewer
+        return Viewer
     }
 
     fun addProxy(proxy: Any) {
@@ -72,6 +69,8 @@ object Imabw : IDelegate<Viewer>() {
     }
 
     override fun onReady() {
+        form.statusText = tr("viewer.status.ready")
+        form.isVisible = true
         Manager.newFile(tr("d.newBook.defaultTitle"))
     }
 
@@ -79,22 +78,22 @@ object Imabw : IDelegate<Viewer>() {
         form.statusText = tr(id)
     }
 
-    fun message(id: String, vararg args: Any) {
-        form.statusText = tr(id, args)
+    fun message(id: String, vararg args: Any?) {
+        form.statusText = tr(id, *args)
     }
 
     @Command(EDIT_SETTINGS)
-    fun editSettings() {
+    fun settings() {
         Dialogs.editSettings(form)
     }
 
     @Command(HELP_CONTENTS)
-    fun showHelp() {
+    fun help() {
         Dialogs.browse(DOCUMENT_URL)
     }
 
     @Command(ABOUT_APP)
-    fun aboutApp() {
+    fun about() {
         Dialogs.showAbout(form)
     }
 }

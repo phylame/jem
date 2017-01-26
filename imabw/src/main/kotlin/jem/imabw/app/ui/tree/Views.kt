@@ -18,8 +18,10 @@ package jem.imabw.app.ui.tree
 
 import jem.core.Chapter
 import jem.imabw.app.Imabw
+import jem.imabw.app.Manager
 import jem.imabw.app.ui.Editable
 import jem.imabw.app.ui.Viewer
+import jem.title
 import org.jdesktop.swingx.JXLabel
 import org.jdesktop.swingx.JXPanel
 import org.jdesktop.swingx.JXTree
@@ -27,17 +29,96 @@ import org.json.JSONObject
 import org.json.JSONTokener
 import pw.phylame.qaf.core.tr
 import pw.phylame.qaf.ixin.*
+import pw.phylame.qaf.swing.center
+import pw.phylame.qaf.swing.east
+import pw.phylame.qaf.swing.north
+import pw.phylame.qaf.swing.west
 import java.awt.BorderLayout
+import java.awt.Color
+import java.awt.Component
+import java.awt.Font
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.util.*
 import javax.swing.*
+import javax.swing.tree.DefaultTreeCellRenderer
 import javax.swing.tree.TreePath
 
-class ContentsTree(override val viewer: Viewer) : JXPanel(BorderLayout()), Editable {
+object BookRender : DefaultTreeCellRenderer() {
+    private val bookIcon by lazy {
+        iconFor(":tree/book.png")
+    }
 
-    private var model = BookModel()
+    private val sectionIcon by lazy {
+        iconFor(":tree/section.png")
+    }
 
+    private val chapterIcon by lazy {
+        iconFor(":tree/book.png")
+    }
+
+    private val highlightColor = Color.BLUE
+
+    private val copyingColor = Color.LIGHT_GRAY
+
+    private val cuttingColor = Color.DARK_GRAY
+
+    private val defaultFont by lazy {
+        font
+    }
+
+    init {
+        leafIcon = chapterIcon
+        openIcon = sectionIcon
+        closedIcon = sectionIcon
+    }
+
+    override fun getTreeCellRendererComponent(tree: JTree,
+                                              value: Any,
+                                              selected: Boolean,
+                                              expanded: Boolean,
+                                              leaf: Boolean,
+                                              row: Int,
+                                              hasFocus: Boolean): Component {
+        super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus)
+        val chapter = value as Chapter
+        if (chapter.isRoot) {
+            icon = bookIcon
+        } else if (Manager.task?.isModifiedOf(chapter) ?: false) {
+            foreground = highlightColor
+            font = defaultFont.deriveFont(Font.BOLD)
+        } else if (chapter in Clipboard) { // in clipboard
+            foreground = if (Clipboard.isCopying) copyingColor else cuttingColor
+        } else {
+            font = defaultFont
+        }
+        text = chapter.title
+        return this
+    }
+}
+
+object ControlsPane : JXPanel(BorderLayout()) {
+    private val toolbar = JToolBar()
+
+    init {
+        toolbar.isRollover = true
+        toolbar.isLocked = true
+        toolbar.isBorderPainted = false
+        west = JXLabel(tr("contents.title"), iconFor(":tree/contents.png"), JXLabel.LEADING)
+        east = toolbar
+    }
+
+    internal fun initTools(items: Array<Item>) {
+        toolbar.addItems(items, Viewer.actions, Imabw)
+        toolbar.components
+                .filterIsInstance<AbstractButton>()
+                .forEach {
+                    it.icon = it.action[Action.SMALL_ICON]
+                }
+    }
+}
+
+object ContentsTree : JXPanel(BorderLayout()), Editable {
     lateinit var tree: JXTree
         private set
 
@@ -50,27 +131,30 @@ class ContentsTree(override val viewer: Viewer) : JXPanel(BorderLayout()), Edita
     }
 
     private fun initUI() {
-        tree = JXTree(model)
-        add(JScrollPane(tree), BorderLayout.CENTER)
+        tree = JXTree(BookModel)
+        center = JScrollPane(tree)
 
         tree.isEditable = false
-        tree.isRolloverEnabled = true
         tree.dragEnabled = true
+        tree.isRolloverEnabled = true
         tree.dropMode = DropMode.USE_SELECTION
 
-        fileFor("!ui/contents.json")?.openStream()?.use {
+        tree.cellRenderer = BookRender
+
+        fileFor(":ui/contents.json")?.openStream()?.use {
             var items = LinkedList<Item>()
-            val jo = JSONObject(JSONTokener(it))
-            var array = jo.optJSONArray("menu");
+            val json = JSONObject(JSONTokener(it))
+            var array = json.optJSONArray("menu")
             if (array != null) {
                 JSONDesigner.parseItems(array, items)
-                menu = viewer.createPopupMenu(items.toTypedArray())
+                menu = Viewer.popupMenu("", *items.toTypedArray())
             }
             items = LinkedList<Item>()
-            array = jo.optJSONArray("toolbar")
+            array = json.optJSONArray("toolbar")
             if (array != null) {
                 JSONDesigner.parseItems(array, items)
-                add(ControlsPane(this, items.toTypedArray()), BorderLayout.PAGE_START)
+                ControlsPane.initTools(items.toTypedArray())
+                north = ControlsPane
             }
         }
 
@@ -79,7 +163,7 @@ class ContentsTree(override val viewer: Viewer) : JXPanel(BorderLayout()), Edita
                 if (e.clickCount !== 1) {
                     return
                 }
-                if (SwingUtilities.isLeftMouseButton(e)) {
+                if (e.isLeft) {
                     if (!tree.isFocusOwner) {
                         tree.requestFocus()
                     }
@@ -91,40 +175,40 @@ class ContentsTree(override val viewer: Viewer) : JXPanel(BorderLayout()), Edita
                         tree.selectionPath = path
                     }
                 }
-                if (SwingUtilities.isRightMouseButton(e)) {
+                if (e.isRight) {
                     menu.show(tree, e.x, e.y)
                 }
             }
 
             override fun mousePressed(e: MouseEvent) {
-                if (e.clickCount === 2 && SwingUtilities.isLeftMouseButton(e)) {
+                if (e.clickCount === 2 && e.isLeft) {
                     val path = tree.getPathForLocation(e.x, e.y)
                     if (path != null) {
                         editContent(path)
                     }
                 }
-
             }
         })
     }
 
     fun updateBook(chapter: Chapter) {
-        model.update(chapter)
+        BookModel.book = chapter
+        tree.setSelectionRow(0)
     }
 
     fun editContent(chapter: Chapter) {
         if (!chapter.isSection) {
 //            val tabbedEditor = viewer.getTabbedEditor()
-//            var tab = tabbedEditor.findTab(chapter)
+//            var tab = tabbedEditor.findTab(book)
 //            if (tab == null) {
-//                tab = tabbedEditor.newTab(chapter, generateChapterTip(chapter))
+//                tab = tabbedEditor.newTab(book, generateChapterTip(book))
 //            }
 //            tabbedEditor.activateTab(tab)
         }
     }
 
     fun editContent(path: TreePath) {
-        editContent(path.myChapter!!)
+        editContent(path.chapter!!)
     }
 
     override fun undo() {
@@ -172,75 +256,3 @@ class ContentsTree(override val viewer: Viewer) : JXPanel(BorderLayout()), Edita
     }
 
 }
-
-class Clipboard {
-    operator fun contains(chapter: Chapter): Boolean = true
-
-    val isCopying = true
-}
-//
-//class BookCellRender : DefaultTreeCellRenderer() {
-//    companion object {
-//        val bookIcon = iconFor("tree/book.png")
-//
-//        val sectionIcon = iconFor("tree/section.png")
-//        val chapterIcon = iconFor("tree/chapter.png")
-//    }
-//
-//    private val defaultColor = foreground
-//
-//    internal var clipboard: Clipboard? = null
-//
-//    fun getTreeCellRendererComponent(tree: JTree,
-//                                     value: Any,
-//                                     selected: Boolean,
-//                                     expanded: Boolean,
-//                                     leaf: Boolean,
-//                                     row: Int,
-//                                     hasFocus: Boolean): Component {
-//        super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus)
-//        val chapter = value as Chapter
-//        if (chapter.isRoot) {   // book
-//            icon = bookIcon
-//        } else if (leaf) {
-//            icon = chapterIcon
-//        } else {
-//            icon = sectionIcon
-//        }
-//        val color: Color
-//        if (app.getManager().getActiveTask().isChapterModified(chapter)) {
-//            color = highlightColor
-//        } else if (clipboard!!.contains(chapter)) {
-//            color = if (clipboard!!.isCopying) copyColor else cutColor
-//        } else {
-//            color = defaultColor
-//        }
-//        foreground = color
-//        return this
-//    }
-//
-//    companion object {
-//        private val highlightColor = Color.BLUE
-//        private val copyColor = Color.LIGHT_GRAY
-//        private val cutColor = Color.DARK_GRAY
-//    }
-//}
-
-class ControlsPane(val tree: ContentsTree, items: Array<Item>) : JXPanel(BorderLayout()) {
-    val toolbar = JToolBar()
-
-    init {
-        toolbar.isRollover = true
-        toolbar.isLocked = true
-        toolbar.isBorderPainted = false
-        toolbar.addItems(items, tree.viewer.actions, Imabw)
-        for (comp in toolbar.components) {
-            if (comp is AbstractButton) {
-                comp.icon = comp.action[Action.SMALL_ICON]
-            }
-        }
-        add(JXLabel(tr("contents.title"), iconFor("!tree/contents.png"), JXLabel.LEADING), BorderLayout.LINE_START)
-        add(toolbar, BorderLayout.LINE_END)
-    }
-}
-

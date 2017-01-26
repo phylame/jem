@@ -16,14 +16,14 @@
 
 package jem.imabw.app.ui.editor
 
+import jem.imabw.app.CLOSE_ALL_TABS
 import jem.imabw.app.Imabw
 import jem.imabw.app.REPLACE
 import jem.imabw.app.ui.Editable
-import jem.imabw.app.ui.Viewer
 import org.jdesktop.swingx.JXPanel
 import pw.phylame.qaf.ixin.Command
 
-class TabbedEditor(override val viewer: Viewer) : JXPanel(), Editable {
+object TabbedEditor : JXPanel(), Editable {
     init {
         Imabw.addProxy(this)
     }
@@ -65,6 +65,15 @@ class TabbedEditor(override val viewer: Viewer) : JXPanel(), Editable {
 
     @Command(REPLACE)
     fun replace() {
+
+    }
+
+    @Command(CLOSE_ALL_TABS)
+    fun closeAllTabs() {
+        clearTabs(true)
+    }
+
+    fun clearTabs(caching: Boolean) {
 
     }
 }

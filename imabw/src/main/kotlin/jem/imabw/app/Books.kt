@@ -21,14 +21,16 @@ import jem.core.Chapter
 import jem.epm.EpmManager
 import jem.imabw.app.ui.Dialogs
 import jem.imabw.app.ui.OpenResult
+import jem.imabw.app.ui.Viewer
+import jem.imabw.app.ui.WaitingDialog
 import jem.util.UnsupportedFormatException
 import pw.phylame.commons.io.IOUtils
 import pw.phylame.commons.io.PathUtils
 import pw.phylame.commons.log.Log
-import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.tr
 import rx.Observable
 import rx.Observer
+import rx.functions.Action0
 import rx.schedulers.Schedulers
 import rx.schedulers.SwingScheduler
 import java.awt.Component
@@ -37,43 +39,60 @@ import java.io.FileNotFoundException
 import java.io.IOException
 import java.util.*
 
-class EpmInParam(var file: File, extension: String?, var arguments: Map<String, Any>, var cached: Boolean) {
+// keeps parameters for Jem epm parser
+class EpmInParam(var file: File, extension: String?, var arguments: Map<String, Any>, var cache: File? = null) {
+    // name of the epm parser
     var format: String? = if (extension.isNullOrEmpty()) {
         Books.detectFormat(file)
     } else {
         EpmManager.nameOfExtension(extension) ?: extension
     }
-
-    companion object {
-        fun getOrSelect(parent: Component?,
-                        title: String,
-                        file: File? = null,
-                        format: String? = null,
-                        arguments: Map<String, Any>? = null): EpmInParam? {
-            var _file: File? = file
-            val _format: String?
-            if (file == null) {
-                val result = Books.selectOpenBook(parent, title, null, format, false) ?: return null
-                _file = result.file
-                _format = result.format
-            } else {
-                _format = null
-            }
-            var args: Map<String, Any>? = arguments
-            if (args == null) {
-                args = Books.getParseArguments(parent, format) ?: return null
-            }
-            return EpmInParam(_file!!, _format, args, false)
-        }
-    }
 }
 
+// keeps parameters for Jem epm maker
 class EpmOutParam(var book: Book, var file: File, extension: String, var arguments: Map<String, Any>) {
+    // name of epm maker
     var format: String = EpmManager.nameOfExtension(extension) ?: extension
 }
 
+open class OpeningObserver : Observer<Any>, Action0 {
+    internal var dialog: WaitingDialog? = null
+
+    override fun onNext(r: Any) {
+        when (r) {
+            is EpmInParam -> {
+                dialog?.updateWaiting(r.file.path)
+            }
+            is Pair<*, *> -> {
+                onBook(r.first as Book, r.second as EpmInParam)
+            }
+        }
+    }
+
+    override fun onCompleted() {
+        dialog?.isVisible = false
+    }
+
+    override fun onError(e: Throwable) {
+        dialog?.isVisible = false
+    }
+
+    override fun call() {
+        onCancel()
+    }
+
+    open fun onBook(book: Book, param: EpmInParam) {
+
+    }
+
+    open fun onCancel() {
+
+    }
+}
+
+// utilities for book
 object Books {
-    val TAG: String = javaClass.name
+    val TAG = "Books"
 
     private fun deleteFile(file: File?) {
         if (file?.delete() ?: false) {
@@ -88,7 +107,7 @@ object Books {
         } else if (err is FileNotFoundException) {
             str = tr("d.error.fileNotExists")
         } else {
-            str = err.message!!
+            str = err.message ?: ""
         }
         return str
     }
@@ -103,22 +122,42 @@ object Books {
         Dialogs.trace(parent, title, str, e)
     }
 
-    fun readBook(param: EpmInParam): Pair<Book, File?> {
-        var input: File
+    fun selectBook(parent: Component?,
+                   title: String,
+                   file: File? = null,
+                   format: String? = null,
+                   arguments: Map<String, Any>? = null): EpmInParam? {
+        var _file: File? = file
+        val _format: String?
+        if (file == null) {
+            val result = Books.selectOpenBook(parent, title, null, format, false) ?: return null
+            _file = result.file
+            _format = result.format
+        } else {
+            _format = null
+        }
+        var args: Map<String, Any>? = arguments
+        if (args == null || args.isEmpty()) {
+            args = Books.getParseArguments(parent, format) ?: return null
+        }
+        return EpmInParam(_file!!, _format, args)
+    }
+
+    fun readBook(param: EpmInParam, cached: Boolean = false): Book {
+        var input: File = param.file
         var cache: File? = null
-        if (param.cached) {
+        if (cached) {
             try {
-                cache = File.createTempFile("imabw_", ".tmp")
+                cache = File.createTempFile("_imabw_book_", ".tmp")
                 IOUtils.copyFile(param.file, cache)
                 input = cache
             } catch (e: IOException) {
-                App.error("cannot create cache file", e)
                 Log.e(TAG, e)
-                cache = null
-                input = param.file
+                if (cache != null) {
+                    deleteFile(cache)
+                    cache = null
+                }
             }
-        } else {
-            input = param.file
         }
 
         val book: Book
@@ -130,23 +169,35 @@ object Books {
         }
 
         if (cache != null) {
+            param.cache = cache
             book.registerCleanup { deleteFile(cache) }
         }
 
-        return book to cache
+        return book
     }
 
-    fun openBook(params: Array<out EpmInParam>, task: (() -> Unit)? = null, observer: Observer<Triple<Book, File?, EpmInParam>>) {
-        Observable.create<Triple<Book, File?, EpmInParam>> {
+    fun openBook(title: String,
+                 cached: Boolean,
+                 params: Array<EpmInParam>,
+                 observer: OpeningObserver) {
+        val dialog = Dialogs.waiting(Viewer, title, tr("d.openBook.tip"), "")
+        dialog.cancellable = true
+        dialog.progressable = true
+        observer.dialog = dialog
+        val subscription = Observable.create<Any> {
             for (param in params) {
-                val result = readBook(param)
-                it.onNext(Triple(result.first, result.second, param))
+                it.onNext(param)
+                it.onNext(readBook(param, cached) to param)
             }
-            task?.invoke()
             it.onCompleted()
         }.subscribeOn(Schedulers.io())
                 .observeOn(SwingScheduler.getInstance())
+                .doOnUnsubscribe(observer)
                 .subscribe(observer)
+        dialog.cancelAction = {
+            subscription.unsubscribe()
+        }
+        dialog.showForResult(false)
     }
 
     private val parserExtensions: Array<Any> by lazy {
@@ -219,11 +270,11 @@ object Books {
         return EpmManager.nameOfExtension(extension) ?: extension
     }
 
-    val defaultInParam: Map<String, Any> by lazy {
+    val defaultInArguments: Map<String, Any> by lazy {
         emptyMap<String, Any>()
     }
 
-    val defaultOutParam: Map<String, Any> by lazy {
+    val defaultOutArguments: Map<String, Any> by lazy {
         emptyMap<String, Any>()
     }
 

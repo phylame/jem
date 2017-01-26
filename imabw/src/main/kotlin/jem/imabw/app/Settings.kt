@@ -16,14 +16,16 @@
 
 package jem.imabw.app
 
-import pw.phylame.commons.io.IOUtils
 import pw.phylame.commons.log.LogLevel
 import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.DebugLevel
 import pw.phylame.qaf.core.Settings
 import pw.phylame.qaf.ixin.Ixin
+import pw.phylame.qaf.ixin.fileFor
+import java.awt.Color
 import java.awt.Font
 import java.util.*
+import javax.swing.JTabbedPane
 
 object AppSettings : Settings("$SETTINGS_DIR/settings") {
     override fun reset() {
@@ -32,7 +34,7 @@ object AppSettings : Settings("$SETTINGS_DIR/settings") {
 
         appLocale = appLocale
         logLevel = logLevel
-        historyEnable = historyEnable
+        isHistoryEnable = isHistoryEnable
         historyLimits = historyLimits
     }
 
@@ -42,27 +44,31 @@ object AppSettings : Settings("$SETTINGS_DIR/settings") {
 
     val debugLevel by delegated(DebugLevel.ECHO.name, "app.debug.level")
 
-    var historyEnable by delegated(true, "app.history.enable")
+    var isHistoryEnable by delegated(true, "app.history.enable")
 
     var historyLimits by delegated(DEFAULT_HISTORY_LIMITS, "app.history.limits")
 
     val supportedLocales by lazy {
-        IOUtils.openResource("$RESOURCE_DIR$I18N_DIR/all.txt", javaClass.classLoader)?.bufferedReader()?.useLines {
-            it.filter { it.isNotEmpty() && !it.startsWith('#') }.toList()
-        } ?: emptyList<String>()
+        fileFor("$I18N_DIR/all.txt")
+                ?.openStream()
+                ?.bufferedReader()
+                ?.lineSequence()
+                ?.filter { it.isNotEmpty() && !it.startsWith('#') }
+                ?.toList()
+                ?: emptyList<String>()
     }
 }
 
 object PluginSettings : Settings("$SETTINGS_DIR/plugins") {
     override fun reset() {
         super.reset()
-        comment = "Plugin settings"
+        comment = "Plugin settings for Imabw"
 
-        enable = enable
+        isEnable = isEnable
         blacklist = blacklist
     }
 
-    var enable by delegated(true, "app.plugin.enable")
+    var isEnable by delegated(true, "app.plugin.enable")
 
     var blacklist by delegated(App.pathOf("plugins/blacklist.lst"), "app.plugin.blacklist")
 }
@@ -70,33 +76,33 @@ object PluginSettings : Settings("$SETTINGS_DIR/plugins") {
 object UISettings : Settings("$SETTINGS_DIR/ui") {
     override fun reset() {
         super.reset()
-        comment = "UI components settings"
+        comment = "UI settings for Imabw"
 
         lafTheme = lafTheme
         iconSets = iconSets
         globalFont = globalFont
         keyBindings = keyBindings
-        antiAliasing = antiAliasing
-        mnemonicEnable = mnemonicEnable
-        windowDecorated = windowDecorated
+        isAntiAliasing = isAntiAliasing
+        isMnemonicEnable = isMnemonicEnable
+        isWindowDecorated = isWindowDecorated
     }
 
-    var lafTheme by delegated(System.getProperty("ixin.theme") ?: DEFAULT_LAF_THEME, "ui.laf")
+    var lafTheme by delegated(System.getProperty("imabw.theme") ?: DEFAULT_LAF_THEME, "ui.laf")
 
-    var windowDecorated by delegated(false, "ui.laf.decorated")
+    var isWindowDecorated by delegated(false, "ui.laf.decorated")
 
-    var globalFont: Font? get() = this["ui.font"] ?: Font.getFont("ixin.font")
+    var globalFont: Font? get() = this["ui.font"] ?: Font.getFont("imabw.font")
         set(value) {
             if (value != null) {
                 this["ui.font"] = value
             }
         }
 
-    var antiAliasing by delegated(true, "ui.font.anti")
+    var isAntiAliasing by delegated(true, "ui.font.anti")
 
-    var iconSets by delegated(System.getProperty("ixin.icons") ?: DEFAULT_ICON_SET, "ui.icons")
+    var iconSets by delegated(System.getProperty("imabw.icons") ?: DEFAULT_ICON_SET, "ui.icons")
 
-    var mnemonicEnable by delegated(Ixin.isMnemonicSupport, "ui.mnemonic.enable")
+    var isMnemonicEnable by delegated(Ixin.isMnemonicSupport, "ui.mnemonic.enable")
 
     var keyBindings by delegated(DEFAULT_KEY_BINDINGS, "ui.key.bindings")
 
@@ -107,4 +113,46 @@ object UISettings : Settings("$SETTINGS_DIR/ui") {
     val supportedIcons by lazy {
         listOf(DEFAULT_ICON_SET)
     }
+}
+
+object EditorSettings : Settings("$SETTINGS_DIR/editor") {
+    override fun reset() {
+        super.reset()
+        comment = "Text editor settings for Imabw"
+
+        font = null
+        background = background
+        foreground = foreground
+        highlight = highlight
+        isLineWrap = isLineWrap
+        isWordWrap = isWordWrap
+        isLineNumberVisible = isLineNumberVisible
+        tabPlacement = tabPlacement
+        tabLayout = tabLayout
+    }
+
+    var font: Font? get() = get("editor.font", null, Font::class.java)
+        set(value) {
+            if (value != null) {
+                set("editor.font", value)
+            } else {
+                set("editor.font", "")
+            }
+        }
+
+    var background by delegated(Color.WHITE, "editor.background")
+
+    var foreground by delegated(Color.BLACK, "editor.foreground")
+
+    var highlight by delegated(Color.BLACK, "editor.highlight")
+
+    var isLineWrap by delegated(true, "editor.lineWrap")
+
+    var isWordWrap by delegated(true, "editor.wordWrap")
+
+    var isLineNumberVisible by delegated(false, "editor.showLineNumber")
+
+    var tabPlacement by delegated(JTabbedPane.TOP, "editor.tab.placement")
+
+    var tabLayout by delegated(JTabbedPane.SCROLL_TAB_LAYOUT, "editor.tab.layout")
 }

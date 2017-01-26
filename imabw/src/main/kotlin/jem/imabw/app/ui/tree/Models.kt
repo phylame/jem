@@ -24,7 +24,6 @@ import javax.swing.event.TreeModelListener
 import javax.swing.tree.TreeModel
 import javax.swing.tree.TreePath
 
-
 val Chapter.isRoot: Boolean get() = parent == null
 
 fun Chapter.pathToRoot(): Array<Chapter> {
@@ -37,17 +36,14 @@ fun Chapter.pathToRoot(): Array<Chapter> {
     return paths.toTypedArray()
 }
 
-val TreePath.myChapter: Chapter? get() = lastPathComponent as? Chapter
+val TreePath.chapter: Chapter? get() = lastPathComponent as? Chapter
 
-class BookModel(var book: Chapter? = null) : TreeModel {
-    private val listeners = EventListenerList()
-
-    fun update(book: Chapter) {
-        this.book = book
-        childrenChanged(book);
-    }
-
-    override fun getChild(parent: Any, index: Int): Chapter = (parent as Chapter).chapterAt(index)
+object BookModel : TreeModel {
+    var book: Chapter? = null
+        set(value) {
+            field = value
+            onContentsChanged(value)
+        }
 
     override fun getRoot(): Chapter? = book
 
@@ -55,11 +51,15 @@ class BookModel(var book: Chapter? = null) : TreeModel {
 
     override fun getChildCount(parent: Any): Int = (parent as Chapter).size()
 
+    override fun getChild(parent: Any, index: Int): Chapter = (parent as Chapter).chapterAt(index)
+
     override fun getIndexOfChild(parent: Any, child: Any): Int = (parent as Chapter).indexOf(child as Chapter)
 
-    override fun valueForPathChanged(path: TreePath, newValue: Any) {
+    override fun valueForPathChanged(path: TreePath, value: Any) {
         throw UnsupportedOperationException()
     }
+
+    private val listeners = EventListenerList()
 
     override fun addTreeModelListener(l: TreeModelListener) {
         listeners.add(TreeModelListener::class.java, l)
@@ -71,61 +71,61 @@ class BookModel(var book: Chapter? = null) : TreeModel {
 
     /**
      * Invoke this method after you've inserted some chapters into
-     * parent.  indices should be the index of the new chapters and
+     * parent. indices should be the index of the new chapters and
      * must be sorted in ascending order.
      */
-    fun chaptersInserted(parent: Chapter?, indices: IntArray?, children: Array<Chapter>) {
-        if (parent != null && indices != null && indices.size > 0) {
-            fireChaptersInserted(this, parent.pathToRoot(), indices, children)
+    fun onChaptersInserted(parent: Chapter?, indices: IntArray?, chapters: Array<Chapter>?) {
+        if (parent != null && indices != null && indices.isNotEmpty()) {
+            fireChaptersInserted(this, parent.pathToRoot(), indices, chapters)
         }
     }
 
     /**
      * Invoke this method after you've removed some chapters from
-     * parent.  indices should be the index of the removed chapters and
-     * must be sorted in ascending order. And children should be
-     * the array of the children chapters that were removed.
+     * parent. indices should be the index of the removed chapters and
+     * must be sorted in ascending order. And chapters should be
+     * the array of the chapters chapters that were removed.
      */
-    fun chaptersRemoved(parent: Chapter?, indices: IntArray?, children: Array<Chapter>) {
-        if (parent != null && indices != null) {
-            fireChaptersRemoved(this, parent.pathToRoot(), indices, children)
+    fun onChaptersRemoved(parent: Chapter?, indices: IntArray?, chapters: Array<Chapter>?) {
+        if (parent != null && indices != null && indices.isNotEmpty()) {
+            fireChaptersRemoved(this, parent.pathToRoot(), indices, chapters)
+        }
+    }
+
+    fun onChapterUpdated(chapter: Chapter) {
+        val parent = chapter.parent
+        if (parent != null) {
+            val index = parent.indexOf(chapter)
+            if (index != -1) {
+                onChapterUpdated(parent, intArrayOf(index), arrayOf(chapter))
+            }
+        } else if (chapter === book) {
+            onChapterUpdated(chapter, null, null)
         }
     }
 
     /**
-     * Invoke this method after you've changed how the children identified by
+     * Invoke this method after you've changed how the chapters identified by
      * indices are to be represented in the tree.
      */
-    fun chapterUpdated(parent: Chapter?, indices: IntArray?, children: Array<Chapter>?) {
+    fun onChapterUpdated(parent: Chapter?, indices: IntArray?, chapters: Array<Chapter>?) {
         if (parent != null) {
-            if (indices != null && indices.size > 0) {
-                fireChapterUpdated(this, parent.pathToRoot(), indices, children)
-            } else if (parent === root) {
+            if (indices != null && indices.isNotEmpty()) {
+                fireChapterUpdated(this, parent.pathToRoot(), indices, chapters)
+            } else if (parent === book) {
                 fireChapterUpdated(this, parent.pathToRoot(), null, null)
             }
         }
     }
 
-    fun chapterUpdated(chapter: Chapter) {
-        val parent = chapter.parent
-        if (parent != null) {
-            val index = parent.indexOf(chapter)
-            if (index != -1) {
-                chapterUpdated(parent, intArrayOf(index), arrayOf(chapter))
-            }
-        } else if (chapter === root) {
-            chapterUpdated(chapter, null, null)
-        }
-    }
-
     /**
      * Invoke this method if you've totally changed the children of
-     * chapter and its children's children...  This will post a
+     * book and its children's children...  This will post a
      * treeStructureChanged event.
      */
-    fun childrenChanged(parent: Chapter?) {
+    fun onContentsChanged(parent: Chapter?) {
         if (parent != null) {
-            fireChildrenChanged(this, parent.pathToRoot(), null, null)
+            fireContentsChanged(this, parent.pathToRoot(), null, null)
         }
     }
 
@@ -135,31 +135,14 @@ class BookModel(var book: Chapter? = null) : TreeModel {
      * is lazily created using the parameters passed into
      * the fire method.
 
-     * @param source   the source of the `TreeModelEvent`;
-     * *                 typically `this`
-     * *
-     * @param path     the path to the parent chapter that changed; use
-     * *                 `null` to identify the root has changed
-     * *
+     * @param source   the source of the `TreeModelEvent`; typically `this`
+     * @param path     the path to the parent book that changed; use `null` to identify the book has changed
      * @param indices  the indices of the changed chapters
-     * *
-     * @param children the updated chapters
+     * @param chapters the updated chapters
      */
-    private fun fireChapterUpdated(source: Any, path: Array<Chapter>, indices: IntArray?, children: Array<Chapter>?) {
-        // Guaranteed to return a non-null array
-        val listeners = listeners.listenerList
-        var e: TreeModelEvent? = null
-        // Process the listeners last to first, notifying
-        // those that are interested in this event
-        var i = listeners.size - 2
-        while (i >= 0) {
-            if (listeners[i] === TreeModelListener::class.java) {
-                // Lazily create the event:
-                if (e == null)
-                    e = TreeModelEvent(source, path, indices, children)
-                (listeners[i + 1] as TreeModelListener).treeNodesChanged(e)
-            }
-            i -= 2
+    private fun fireChapterUpdated(source: Any, path: Array<Chapter>, indices: IntArray?, chapters: Array<Chapter>?) {
+        postEventToListeners(source, path, indices, chapters) {
+            treeNodesChanged(it)
         }
     }
 
@@ -169,30 +152,14 @@ class BookModel(var book: Chapter? = null) : TreeModel {
      * is lazily created using the parameters passed into
      * the fire method.
 
-     * @param source   the source of the `TreeModelEvent`;
-     * *                 typically `this`
-     * *
-     * @param path     the path to the parent chapter were added to
-     * *
+     * @param source   the source of the `TreeModelEvent`; typically `this`
+     * @param path     the path to the parent book were added to
      * @param indices  the indices of the new chapters
-     * *
-     * @param children the new chapters
+     * @param chapters the new chapters
      */
-    private fun fireChaptersInserted(source: Any, path: Array<Chapter>, indices: IntArray, children: Array<Chapter>) {
-        // Guaranteed to return a non-null array
-        val listeners = listeners.listenerList
-        var e: TreeModelEvent? = null
-        // Process the listeners last to first, notifying
-        // those that are interested in this event
-        var i = listeners.size - 2
-        while (i >= 0) {
-            if (listeners[i] === TreeModelListener::class.java) {
-                // Lazily create the event:
-                if (e == null)
-                    e = TreeModelEvent(source, path, indices, children)
-                (listeners[i + 1] as TreeModelListener).treeNodesInserted(e)
-            }
-            i -= 2
+    private fun fireChaptersInserted(source: Any, path: Array<Chapter>, indices: IntArray?, chapters: Array<Chapter>?) {
+        postEventToListeners(source, path, indices, chapters) {
+            treeNodesInserted(it)
         }
     }
 
@@ -202,30 +169,14 @@ class BookModel(var book: Chapter? = null) : TreeModel {
      * is lazily created using the parameters passed into
      * the fire method.
 
-     * @param source   the source of the `TreeModelEvent`;
-     * *                 typically `this`
-     * *
-     * @param path     the path to the parent chapter were removed from
-     * *
+     * @param source   the source of the `TreeModelEvent`; typically `this`
+     * @param path     the path to the parent book were removed from
      * @param indices  the indices of the removed chapters
-     * *
-     * @param children the removed chapters
+     * @param chapters the removed chapters
      */
-    private fun fireChaptersRemoved(source: Any, path: Array<Chapter>, indices: IntArray, children: Array<Chapter>) {
-        // Guaranteed to return a non-null array
-        val listeners = listeners.listenerList
-        var e: TreeModelEvent? = null
-        // Process the listeners last to first, notifying
-        // those that are interested in this event
-        var i = listeners.size - 2
-        while (i >= 0) {
-            if (listeners[i] === TreeModelListener::class.java) {
-                // Lazily create the event:
-                if (e == null)
-                    e = TreeModelEvent(source, path, indices, children)
-                (listeners[i + 1] as TreeModelListener).treeNodesRemoved(e)
-            }
-            i -= 2
+    private fun fireChaptersRemoved(source: Any, path: Array<Chapter>, indices: IntArray?, chapters: Array<Chapter>?) {
+        postEventToListeners(source, path, indices, chapters) {
+            treeNodesRemoved(it)
         }
     }
 
@@ -235,17 +186,22 @@ class BookModel(var book: Chapter? = null) : TreeModel {
      * is lazily created using the parameters passed into
      * the fire method.
 
-     * @param source   the source of the `TreeModelEvent`;
-     * *                 typically `this`
-     * *
-     * @param path     the path to the parent of the structure that has changed;
-     * *                 use `null` to identify the root has changed
-     * *
-     * @param indices  the indices of the affected chapter
-     * *
-     * @param children the affected chapter
+     * @param source   the source of the `TreeModelEvent`; typically `this`
+     * @param path     the path to the parent of the structure that has changed; use `null` to identify the book has changed
+     * @param indices  the indices of the affected book
+     * @param chapters the affected book
      */
-    private fun fireChildrenChanged(source: Any, path: Array<Chapter>, indices: IntArray?, children: Array<Chapter>?) {
+    private fun fireContentsChanged(source: Any, path: Array<Chapter>, indices: IntArray?, chapters: Array<Chapter>?) {
+        postEventToListeners(source, path, indices, chapters) {
+            treeStructureChanged(it)
+        }
+    }
+
+    private fun postEventToListeners(source: Any,
+                                     path: Array<Chapter>,
+                                     indices: IntArray?,
+                                     chapters: Array<Chapter>?,
+                                     action: TreeModelListener.(TreeModelEvent) -> Unit) {
         // Guaranteed to return a non-null array
         val listeners = listeners.listenerList
         var e: TreeModelEvent? = null
@@ -255,12 +211,18 @@ class BookModel(var book: Chapter? = null) : TreeModel {
         while (i >= 0) {
             if (listeners[i] === TreeModelListener::class.java) {
                 // Lazily create the event:
-                if (e == null)
-                    e = TreeModelEvent(source, path, indices, children)
-                (listeners[i + 1] as TreeModelListener).treeStructureChanged(e)
+                if (e == null) {
+                    e = TreeModelEvent(source, path, indices, chapters)
+                }
+                (listeners[i + 1] as TreeModelListener).action(e)
             }
             i -= 2
         }
     }
+}
 
+object Clipboard {
+    operator fun contains(chapter: Chapter): Boolean = false
+
+    val isCopying = true
 }

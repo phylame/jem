@@ -22,6 +22,8 @@ import org.jdesktop.swingx.JXLabel
 import org.jdesktop.swingx.JXPanel
 import pw.phylame.qaf.core.tr
 import pw.phylame.qaf.ixin.iconFor
+import pw.phylame.qaf.swing.label
+import pw.phylame.qaf.swing.north
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Dimension
@@ -29,25 +31,26 @@ import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import javax.swing.*
 
-class Dashboard(val viewer: Viewer) : JXPanel(BorderLayout()) {
+object Dashboard : JXPanel(BorderLayout()) {
     init {
-        val label = JXLabel(tr("welcome.text"))
-        label.horizontalAlignment = SwingConstants.CENTER
-        add(label, BorderLayout.PAGE_START)
+        north = label(false) {
+            text = tr("welcome.text")
+            horizontalAlignment = SwingConstants.CENTER
+        }
     }
 }
 
-class StatusIndicator(val viewer: Viewer) : JXPanel() {
+object Indicator : JXPanel() {
     private lateinit var ruler: JLabel
     private lateinit var words: JLabel
     private lateinit var readonly: JLabel
 
     init {
-        createComponents()
-        setEditorStatus(false)
+        initUI()
+        resetEditor(false)
     }
 
-    private fun createComponents() {
+    private fun initUI() {
         ruler = JXLabel()
         ruler.toolTipText = tr("status.ruler.tip")
         ruler.addMouseListener(object : MouseAdapter() {
@@ -62,8 +65,8 @@ class StatusIndicator(val viewer: Viewer) : JXPanel() {
         words = JXLabel()
         words.toolTipText = tr("status.words.tip")
 
-        readonly = JXLabel(iconFor("!status/readwrite.png"))
-        readonly.toolTipText = tr("!status.readonly.tip")
+        readonly = JXLabel(iconFor(":status/readwrite.png"))
+        readonly.toolTipText = tr(":status.readonly.tip")
         readonly.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
                 if (!readonly.isEnabled || e.isMetaDown) {
@@ -80,11 +83,11 @@ class StatusIndicator(val viewer: Viewer) : JXPanel() {
             }
         })
 
-        val message = JXLabel(iconFor("!status/message.png"))
+        val message = JXLabel(iconFor(":status/message.png"))
         message.toolTipText = tr("status.message.tip")
         message.addMouseListener(object : MouseAdapter() {
-            override fun mouseClicked(e: MouseEvent?) {
-
+            override fun mouseClicked(e: MouseEvent) {
+                // todo: show message window
             }
         })
 
@@ -95,7 +98,6 @@ class StatusIndicator(val viewer: Viewer) : JXPanel() {
                 JSeparator(JSeparator.VERTICAL), readonly,
                 JSeparator(JSeparator.VERTICAL), message
         )
-
     }
 
     private fun addComponents(vararg components: Component) {
@@ -128,17 +130,17 @@ class StatusIndicator(val viewer: Viewer) : JXPanel() {
 
     fun setReadonly(readonly: Boolean) {
         if (readonly) {
-            this.readonly.icon = iconFor("!status/readonly.png")
+            this.readonly.icon = iconFor(":status/readonly.png")
         } else {
-            this.readonly.icon = iconFor("!status/readwrite.png")
+            this.readonly.icon = iconFor(":status/readwrite.png")
         }
     }
 
-    fun notify(msg: String) {
+    fun message(msg: String) {
 
     }
 
-    fun setEditorStatus(enable: Boolean) {
+    fun resetEditor(enable: Boolean) {
         if (!enable) {
             setRuler(-1, -1, -1)
             setWords(-1)

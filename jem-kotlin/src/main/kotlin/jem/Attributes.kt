@@ -22,8 +22,7 @@ import jem.core.Attributes
 import jem.core.Chapter
 import jem.util.flob.Flob
 import jem.util.text.Text
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
 var Chapter.title: String get() = Attributes.getTitle(this)
     set(value) {
@@ -89,3 +88,9 @@ var Chapter.vendor: String get() = Attributes.getVendor(this)
     set(value) {
         Attributes.setVendor(this, value)
     }
+
+operator inline fun <reified T : Any> Chapter.get(name: String): T? = attributes.get(name, T::class.java, null)
+
+operator fun Chapter.set(name: String, value: Any) {
+    attributes[name] = value
+}

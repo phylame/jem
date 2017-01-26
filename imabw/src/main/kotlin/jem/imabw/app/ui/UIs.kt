@@ -16,25 +16,25 @@
 
 package jem.imabw.app.ui
 
+import jem.author
 import jem.core.Chapter
 import jem.imabw.app.*
 import jem.imabw.app.ui.editor.TabbedEditor
 import jem.imabw.app.ui.tree.ContentsTree
+import jem.title
 import pw.phylame.qaf.core.Settings
 import pw.phylame.qaf.core.tr
 import pw.phylame.qaf.ixin.*
-import java.awt.BorderLayout
+import pw.phylame.qaf.swing.center
+import pw.phylame.qaf.swing.east
 import java.awt.Component
 import java.awt.event.ActionEvent
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
-import javax.swing.JComponent
-import javax.swing.JSplitPane
-import javax.swing.WindowConstants
+import java.io.File
+import javax.swing.*
 
 interface Editable {
-    val viewer: Viewer
-
     fun undo()
 
     fun redo()
@@ -49,38 +49,34 @@ interface Editable {
 
     fun selectAll()
 
+    fun goto()
+
     fun find()
 
     fun findNext()
 
     fun findPrevious()
 
-    fun goto()
-
     fun updateEditActions(enable: Boolean) {
-        val viewer = viewer
         for (command in EDIT_COMMANDS) {
-            viewer.actions[command]?.isEnabled = enable
+            Viewer.actions[command]?.isEnabled = enable
         }
     }
 
     fun updateFindActions(enable: Boolean) {
-        val viewer = viewer
         for (command in FIND_COMMANDS) {
-            viewer.actions[command]?.isEnabled = enable
+            Viewer.actions[command]?.isEnabled = enable
         }
     }
 }
 
-class Viewer() : IForm(tr("app.name"), Settings("$SETTINGS_DIR/snap")) {
-    companion object {
-        private const val DIVIDER_SIZE_KEY = "form.divider.size"
-        private const val DIVIDER_LOCATION_KEY = "form.divider.location"
-        private const val SIDE_BAR_VISIBLE_KEY = "form.sidebar.visible"
+object Viewer : IForm(tr("app.name"), Settings("$SETTINGS_DIR/snap")) {
+    private const val DIVIDER_SIZE_KEY = "form.divider.size"
+    private const val DIVIDER_LOCATION_KEY = "form.divider.location"
+    private const val SIDE_BAR_VISIBLE_KEY = "form.sidebar.visible"
 
-        private const val dividerSize = 7
-        private const val dividerLocation = 171
-    }
+    private const val dividerSize = 7
+    private const val dividerLocation = 171
 
     lateinit var splitPane: JSplitPane
         private set
@@ -94,7 +90,7 @@ class Viewer() : IForm(tr("app.name"), Settings("$SETTINGS_DIR/snap")) {
     lateinit var dashboard: Dashboard
         private set
 
-    lateinit var indicator: StatusIndicator
+    lateinit var indicator: Indicator
         private set
 
     private var activeComponent: JComponent? = null
@@ -129,13 +125,13 @@ class Viewer() : IForm(tr("app.name"), Settings("$SETTINGS_DIR/snap")) {
         splitPane.dividerSize = snap?.get(DIVIDER_SIZE_KEY) ?: dividerSize
         splitPane.dividerLocation = snap?.get(DIVIDER_LOCATION_KEY) ?: dividerLocation
 
-        tree = ContentsTree(this)
-        editor = TabbedEditor(this)
-        dashboard = Dashboard(this)
+        tree = ContentsTree
+        editor = TabbedEditor
+        dashboard = Dashboard
 
         splitPane.leftComponent = tree
         splitPane.rightComponent = dashboard
-        contentPane.add(splitPane, BorderLayout.CENTER)
+        contentPane.center = splitPane
     }
 
     private fun setRightComponent(com: Component) {
@@ -178,21 +174,18 @@ class Viewer() : IForm(tr("app.name"), Settings("$SETTINGS_DIR/snap")) {
         }
         val toolbar = toolBar
         if (toolbar != null) {
-            toolbar.componentPopupMenu = createPopupMenu(
-                    arrayOf(
-                            Item(LOCK_TOOL_BAR, selected = snap?.get(TOOL_BAR_LOCKED) ?: true, style = Style.CHECK),
-                            Item(HIDE_TOOL_BAR_TEXT, selected = snap?.get(TOOL_BAR_TEXT_HIDDEN) ?: true, style = Style.CHECK)
-                    ),
-                    title)
-
+            toolbar.componentPopupMenu = popupMenu(title,
+                    Item(LOCK_TOOL_BAR, selected = snap?.get(TOOL_BAR_LOCKED) ?: true, style = Style.CHECK),
+                    Item(HIDE_TOOL_BAR_TEXT, selected = snap?.get(TOOL_BAR_TEXT_HIDDEN) ?: true, style = Style.CHECK)
+            )
             actions[SHOW_TOOL_BAR]?.isSelected = toolbar.isVisible
             actions[LOCK_TOOL_BAR]?.isSelected = toolbar.isLocked
         }
         val statusbar = statusBar
         if (statusbar != null) {
             actions[SHOW_STATUS_BAR]?.isSelected = statusbar.isVisible
-            indicator = StatusIndicator(this)
-            statusbar.add(indicator, BorderLayout.LINE_END)
+            indicator = Indicator
+            statusbar.east = indicator
         }
 
         isSidebarVisible = snap?.get(SIDE_BAR_VISIBLE_KEY) ?: true
@@ -207,12 +200,55 @@ class Viewer() : IForm(tr("app.name"), Settings("$SETTINGS_DIR/snap")) {
     }
 
     fun updateBook(chapter: Chapter) {
+        editor.clearTabs(false)
         tree.updateBook(chapter)
         updateTitle()
     }
 
-    fun updateTitle() {
+    fun updateHistory() {
+        val menu = menus["menu.history"] ?: return
+        menu.removeAll()
 
+        var count = 0
+        for (path in History.items) {
+            menu.add(OpenHistortAction(path).asMenuItem(Style.PLAIN, this))
+            ++count
+        }
+
+        val action = actions[CLEAR_HISTORY] ?: return
+        if (count > 0) {
+            menu.addSeparator()
+            action.isEnabled = true
+        } else {
+            action.isEnabled = false
+        }
+
+        menu.add(action.asMenuItem(Style.PLAIN, this))
+    }
+
+    fun updateTitle() {
+        val b = StringBuilder()
+        val task = Manager.task
+        if (task != null) {
+            b.append(task.book.title)
+            if (task.isModified) {
+                b.append('*')
+            }
+            b.append(" - ")
+            val author = task.book.author
+            if (author.isNotEmpty()) {
+                b.append('[').append(author).append("] - ")
+            }
+            val file = task.inParam?.file
+            if (file != null) {
+                if (task.inParam?.format == null) {
+                    b.append('[').append(tr("viewer.title.imported")).append("] - ")
+                }
+                b.append(file.path).append(" - ")
+            }
+        }
+        b.append(tr("app.name")).append(" ").append(APP_VERSION)
+        title = b.toString()
     }
 
     @Command(SHOW_TOOL_BAR)
@@ -252,7 +288,18 @@ class Viewer() : IForm(tr("app.name"), Settings("$SETTINGS_DIR/snap")) {
         isSidebarVisible = !isSidebarVisible
     }
 
-    private inner class EditAction(val id: String) : IAction(id) {
+    private class OpenHistortAction(val path: String) : AbstractAction() {
+        init {
+            this[Action.NAME] = path
+            this[Action.LONG_DESCRIPTION] = tr("openHistory.details", path)
+        }
+
+        override fun actionPerformed(e: ActionEvent) {
+            Manager.openFile(File(path))
+        }
+    }
+
+    private class EditAction(val id: String) : IAction(id) {
         override fun actionPerformed(e: ActionEvent) {
             val comp = activeComponent
             if (comp == null || comp !is Editable) {

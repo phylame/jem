@@ -1,7 +1,7 @@
 {
   "menu": [
     {
-      "id": "contents.menu.new",
+      "id": "chapters.menu.new",
       "items": [
         "newChapter",
         "importChapter"

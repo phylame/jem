@@ -102,7 +102,7 @@ internal class MessageDialog : IOptionDialog {
     var style: MessageStyle = MessageStyle.None
         set(value) {
             if (value.icon.isNotEmpty()) {
-                icon = iconFor("!dialog/" + value.icon + ".png")
+                icon = iconFor(":dialog/" + value.icon + ".png")
             }
             setDecorationIfNeed(value.decoration)
             field = value
@@ -368,13 +368,27 @@ class WaitingDialog : BaseDialog<Unit> {
     constructor(owner: Dialog, title: String, modal: Boolean) : super(owner, title, modal) {
     }
 
-    lateinit var progressBar: JProgressBar
-    lateinit var tipLabel: JLabel
+    private lateinit var progressBar: JProgressBar
+    private lateinit var tipLabel: JLabel
 
     var tip = ""
     var waiting = ""
     var cancellable = false
     var progressable = false
+    var cancelAction: (() -> Unit)? = null
+
+    fun updateTip(str: String) {
+        tipLabel.text = str
+    }
+
+    fun updateWaiting(str: String) {
+        progressBar.string = str
+    }
+
+    var progress: Int get() = progressBar.value
+        set(value) {
+            progressBar.value = value
+        }
 
     override fun createComponents(userPane: JPanel) {
         tipLabel = JLabel(tip)
@@ -399,6 +413,7 @@ class WaitingDialog : BaseDialog<Unit> {
 
     override fun cancelling() {
         if (cancellable) {
+            cancelAction?.invoke()
             super.cancelling()
         }
     }
@@ -620,7 +635,7 @@ object Dialogs {
         return file
     }
 
-    fun setCurrentDirectory(dir: File?) {
+    fun setDirectory(dir: File?) {
         if (dir != null) {
             fileChooser.currentDirectory = dir
         }
@@ -790,9 +805,9 @@ object Dialogs {
 
     fun editAttributes(parent: Component?, chapter: Chapter) {
 //        val dialog = createDialog(parent,
-//                app.getText("attributes.title", chapter.getTitle()),
+//                app.getText("attributes.title", book.getTitle()),
 //                true, ChapterAttributes::class.java)
-//        dialog.setChapter(chapter)
+//        dialog.setBook(book)
 //        dialog.makeShow(true)
     }
 

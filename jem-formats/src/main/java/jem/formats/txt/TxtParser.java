@@ -18,6 +18,15 @@
 
 package jem.formats.txt;
 
+import jem.core.Attributes;
+import jem.core.Book;
+import jem.core.Chapter;
+import jem.epm.impl.AbstractParser;
+import jem.epm.util.InputCleaner;
+import jem.epm.util.ParserException;
+import jem.formats.util.M;
+import jem.util.flob.Flobs;
+import jem.util.text.Texts;
 import lombok.NonNull;
 import lombok.val;
 import pw.phylame.commons.io.BufferedRandomAccessFile;
@@ -29,16 +38,6 @@ import pw.phylame.commons.value.Triple;
 import java.io.*;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-
-import jem.core.Attributes;
-import jem.core.Book;
-import jem.core.Chapter;
-import jem.epm.impl.AbstractParser;
-import jem.epm.util.FileDeleter;
-import jem.epm.util.ParserException;
-import jem.formats.util.M;
-import jem.util.flob.Flobs;
-import jem.util.text.Texts;
 
 /**
  * <tt>Parser</tt> implement for TXT book.
@@ -133,7 +132,7 @@ public class TxtParser extends AbstractParser<Reader, TxtInConfig> {
             }
             throw e;
         }
-        book.registerCleanup(new FileDeleter(source, cache));
+        book.registerCleanup(new InputCleaner(source, cache));
         System.gc();
         return book;
     }
@@ -141,7 +140,7 @@ public class TxtParser extends AbstractParser<Reader, TxtInConfig> {
     @SuppressWarnings("resource")
     private Triple<RandomAccessFile, File, String> cacheContent(Reader reader) throws IOException {
         val b = new StringBuilder();
-        val cache = File.createTempFile("jem_txt_", ".tmp");
+        val cache = File.createTempFile("_jem_txt_", ".tmp");
         Closeable closeable = null;
         try {
             OutputStream out = new FileOutputStream(cache);

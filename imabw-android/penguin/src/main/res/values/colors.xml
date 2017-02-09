@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#00796F</color>
+    <color name="colorPrimaryDark">#00796F</color>
+    <color name="colorAccent">#FAFAFA</color>
+    <color name="colorBackground">#FAFAFA</color>
+
+    <color name="pathBar">#EDEDED</color>
+    <color name="pathText">#222</color>
+
+    <color name="optionBar">#EDEDED</color>
+</resources>

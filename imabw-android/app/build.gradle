@@ -11,9 +11,8 @@ android {
         minSdkVersion project.MIN_SDK_VERSION
         targetSdkVersion project.TARGET_SDK_VERSION
 
-        versionCode Integer.parseInt(project.APP_VERSION_CODE)
-        versionName project.APP_VERSION_NAME
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        versionCode 1
+        versionName '1.0'
     }
 
     buildTypes {
@@ -32,22 +31,13 @@ android {
 }
 
 dependencies {
+    compile project(':penguin')
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
-    compile 'io.reactivex:rxjava:1.2.1'
-    compile 'io.reactivex:rxandroid:1.2.1'
-    compile group: 'com.android.support', name: 'appcompat-v7', version: "$support_version"
-    compile group: 'com.android.support', name: 'design', version: "$support_version"
-    provided group: 'org.projectlombok', name: 'lombok', version: "$lombok_version"
-
-    testCompile 'junit:junit:4.12'
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile "pw.phylame.jem:jem-kotlin:$jem_version"
     compile("pw.phylame.jem:jem-formats:$jem_version") {
         exclude group: 'xpp3', module: 'xpp3' // use android builtin xpp
     }
-    compile("pw.phylame.jem:jem-kotlin:$jem_version")
-    compile project(':seal')
-
+    compile 'io.reactivex:rxjava:1.2.1'
+    compile 'io.reactivex:rxandroid:1.2.1'
+    compile 'com.android.support:support-v4:24.2.1'
 }

@@ -1,0 +1,14 @@
+<resources>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="list_horizontal_margin">5dp</dimen>
+    <dimen name="list_item_padding_start">6dp</dimen>
+    <dimen name="list_item_padding_end">10dp</dimen>
+    <dimen name="path_bar_size">27dp</dimen>
+    <dimen name="path_bar_padding">7dp</dimen>
+    <dimen name="path_bar_text_size">17sp</dimen>
+    <dimen name="path_bar_item_margin">4dp</dimen>
+    <dimen name="option_bar_size">32dp</dimen>
+    <dimen name="option_bar_padding">7dp</dimen>
+</resources>

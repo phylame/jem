@@ -1,0 +1,37 @@
+<resources>
+    <string name="penguin_title">Directory &amp; File</string>
+    <string name="unavailable_device">%1$s is unavailable</string>
+    <string name="device_phone">Phone</string>
+    <string name="device_sdcard">SDCard</string>
+    <string name="device_otg">USB OTG</string>
+    <string name="device_root">Root</string>
+    <string name="unavailable_tip">Unavailable</string>
+    <string name="unmounted_tip">Unmounted</string>
+    <string name="device_info">Free: %1$s Total: %2$s</string>
+    <plurals name="dir_mode_title">
+        <item quantity="one">Select Directory</item>
+        <item quantity="other">Select Directories</item>
+    </plurals>
+    <plurals name="file_mode_title">
+        <item quantity="one">Select File</item>
+        <item quantity="other">Select Files</item>
+    </plurals>
+    <string name="action_sort_by">Sort By</string>
+    <string name="action_new_dir">New</string>
+    <string name="action_show_hidden">Show Hidden</string>
+    <string name="action_by_name">By Name</string>
+    <string name="action_by_type">By Type</string>
+    <string name="action_by_size">By Size</string>
+    <string name="action_by_size_desc">By Size (Descent)</string>
+    <string name="action_by_date">By Date</string>
+    <string name="action_by_date_desc">By Date (Descent)</string>
+    <plurals name="directory_info">
+        <item quantity="one">1 item | %2$tD %2$tR</item>
+        <item quantity="other">%1$d items | %2$tD %2$tR</item>
+    </plurals>
+    <string name="file_info">%1$s | %2$tD %2$tR</string>
+    <plurals name="selection_info">
+        <item quantity="one">1 item</item>
+        <item quantity="other">%1$s items</item>
+    </plurals>
+</resources>

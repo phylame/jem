@@ -22,14 +22,18 @@ import jem.core.Chapter;
 import lombok.RequiredArgsConstructor;
 import pw.phylame.commons.function.Consumer;
 import pw.phylame.commons.io.IOUtils;
+import pw.phylame.commons.log.Log;
 
 import java.io.Closeable;
+import java.io.File;
 
 @RequiredArgsConstructor
 public class InputCleaner implements Consumer<Chapter> {
+    private static final String TAG = InputCleaner.class.getSimpleName();
+
     private final Closeable in;
 
-    private final Runnable addon;
+    private final File source;
 
     public InputCleaner(Closeable in) {
         this(in, null);
@@ -38,9 +42,8 @@ public class InputCleaner implements Consumer<Chapter> {
     @Override
     public void consume(Chapter chapter) {
         IOUtils.closeQuietly(in);
-        if (addon != null) {
-            addon.run();
+        if (source != null && !source.delete()) {
+            Log.e(TAG, M.tr("err.common.deleteFile", source.getPath()));
         }
     }
-
 }

@@ -6,47 +6,49 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="pw.phylame.imabw.activity.TextActivity"
-    tools:showIn="@layout/activity_text">
+    tools:showIn="@layout/activity_book">
 
     <HorizontalScrollView
-        android:id="@+id/sv_path_bar"
+        android:id="@+id/path_holder"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:background="@color/chapterPath"
+        android:background="@color/pathBarBackground"
+        android:minHeight="27dp"
         android:paddingEnd="@dimen/book_content_margin"
         android:paddingLeft="@dimen/book_content_margin"
         android:paddingRight="@dimen/book_content_margin"
         android:paddingStart="@dimen/book_content_margin"
-        android:scrollbars="none"
-        android:visibility="gone">
+        android:scrollbars="none">
 
         <LinearLayout
             android:id="@+id/path_bar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
             android:orientation="horizontal" />
     </HorizontalScrollView>
 
     <android.support.v7.widget.AppCompatTextView
-        android:id="@+id/section_detail"
+        android:id="@+id/info_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:background="@color/sectionDetail"
+        android:background="@color/sectionInfoBackground"
+        android:minHeight="27dp"
         android:paddingEnd="@dimen/book_content_margin"
         android:paddingLeft="@dimen/book_content_margin"
         android:paddingRight="@dimen/book_content_margin"
         android:paddingStart="@dimen/book_content_margin"
-        android:textSize="@dimen/book_detail_font_size" />
+        android:textColor="@color/sectionInfoTextColor"
+        android:textSize="@dimen/section_info_text_size" />
 
     <ListView
         android:id="@+id/list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@id/section_detail"
-        android:layout_below="@id/sv_path_bar"
+        android:layout_above="@id/info_bar"
+        android:layout_below="@id/path_holder"
         android:paddingEnd="@dimen/book_content_margin"
         android:paddingLeft="@dimen/book_content_margin"
         android:paddingRight="@dimen/book_content_margin"

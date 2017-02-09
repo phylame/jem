@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:showIn="@layout/activity_directory">
+
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:visibility="gone" />
+
+    <HorizontalScrollView
+        android:id="@+id/path_holder"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:background="@color/pathBar"
+        android:minHeight="@dimen/path_bar_size"
+        android:paddingEnd="@dimen/path_bar_padding"
+        android:paddingLeft="@dimen/path_bar_padding"
+        android:paddingRight="@dimen/path_bar_padding"
+        android:paddingStart="@dimen/path_bar_padding"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/path_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:orientation="horizontal" />
+    </HorizontalScrollView>
+
+    <RelativeLayout
+        android:id="@+id/option_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="@color/optionBar"
+        android:minHeight="@dimen/option_bar_size"
+        android:paddingEnd="@dimen/option_bar_padding"
+        android:paddingLeft="@dimen/option_bar_padding"
+        android:paddingRight="@dimen/option_bar_padding"
+        android:paddingStart="@dimen/option_bar_padding">
+
+        <android.support.v7.widget.AppCompatTextView
+            android:id="@+id/info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:text="10 items"
+            android:textAppearance="@style/textAppearanceDirectoryInfo" />
+
+        <android.support.v7.widget.AppCompatImageButton
+            android:id="@+id/btn_select_all"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_checkbox_normal" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:orientation="horizontal">
+
+            <android.support.v7.widget.AppCompatButton
+                android:id="@+id/btn_ok"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@android:string/ok" />
+
+            <android.support.v7.widget.AppCompatButton
+                android:id="@+id/btn_cancel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@android:string/cancel" />
+
+        </LinearLayout>
+    </RelativeLayout>
+
+    <ListView
+        android:id="@+id/list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/option_bar"
+        android:layout_below="@id/path_holder"
+        android:paddingEnd="@dimen/list_horizontal_margin"
+        android:paddingLeft="@dimen/list_horizontal_margin"
+        android:paddingRight="@dimen/list_horizontal_margin"
+        android:paddingStart="@dimen/list_horizontal_margin" />
+
+    <android.support.v7.widget.AppCompatTextView
+        android:id="@+id/tip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:drawablePadding="5dp"
+        android:drawableTop="@drawable/ic_tip"
+        android:text="(No Content)"
+        android:visibility="gone" />
+</RelativeLayout>

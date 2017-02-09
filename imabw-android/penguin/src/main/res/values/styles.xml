@@ -1,0 +1,29 @@
+<resources>
+
+    <style name="BaseTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:windowBackground">@color/colorBackground</item>
+    </style>
+
+    <style name="AppTheme" parent="BaseTheme">
+
+    </style>
+
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.ActionBar" />
+
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="textAppearanceListItem" parent="TextAppearance.AppCompat.Subhead">
+
+    </style>
+
+    <style name="textAppearanceListItemSecondary" parent="TextAppearance.AppCompat.Body1">
+
+    </style>
+
+    <style name="textAppearanceDirectoryInfo" parent="TextAppearance.AppCompat.Small">
+
+    </style>
+</resources>

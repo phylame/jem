@@ -7,35 +7,36 @@ import android.text.method.KeyListener
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.EditText
-import android.widget.TextView
-import pw.phylame.android.util.BaseActivity
+import jem.core.Chapter
+import jem.title
+import pw.phylame.ancotols.MenuAction
+import pw.phylame.ancotols.startActivityForResult
+import pw.phylame.ancotols.lazyView
+import pw.phylame.imabw.BaseActivity
 import pw.phylame.imabw.R
-import pw.phylame.jem.core.Chapter
-import pw.phylame.jem.title
 
-class TextActivity : BaseActivity() {
+internal class TextActivity : BaseActivity() {
 
     companion object {
-        fun editText(invoker: Activity, requestCode: Int, chapter: Chapter) {
+        fun perform(invoker: Activity, requestCode: Int, chapter: Item) {
             Task.chapter = chapter
             invoker.startActivityForResult(TextActivity::class.java, requestCode)
         }
     }
 
-    private lateinit var text: TextView
+    val text: EditText by lazyView(R.id.text)
+    val toolbar: Toolbar by lazyView(R.id.toolbar)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_text)
-        val toolbar = findViewById(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
 
-        val chapter = Task.chapter!!
+        val chapter = Task.chapter!!.chapter
 
-        text = findViewById(R.id.text) as EditText
         val str = chapter.text?.text ?: ""
         if (str.isNotEmpty()) {
-            text.text = str
+            text.setText(str)
         }
         toggleEditable()
 
@@ -43,7 +44,7 @@ class TextActivity : BaseActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
     }
 
-    private fun toggleEditable(): Boolean {
+    fun toggleEditable(): Boolean {
         if (text.keyListener == null) {
             text.keyListener = text.tag as KeyListener
             return true
@@ -59,14 +60,8 @@ class TextActivity : BaseActivity() {
         return super.onCreateOptionsMenu(menu)
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.action_readonly -> {
-                item.setIcon(if (toggleEditable()) R.drawable.ic_unlocked else R.drawable.ic_locked)
-            }
-            else -> return super.onOptionsItemSelected(item)
-        }
-        return true
+    @MenuAction(R.id.action_readonly)
+    fun toggleReadonly(item: MenuItem) {
+        item.setIcon(if (toggleEditable()) R.drawable.ic_unlocked else R.drawable.ic_locked)
     }
-
 }

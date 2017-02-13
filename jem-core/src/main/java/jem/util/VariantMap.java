@@ -68,7 +68,7 @@ public class VariantMap implements Cloneable {
     }
 
     public boolean contains(String name) {
-        return StringUtils.isEmpty(name) ? false : map.containsKey(name);
+        return !StringUtils.isEmpty(name) && map.containsKey(name);
     }
 
     public Object get(String name) {
@@ -125,7 +125,6 @@ public class VariantMap implements Cloneable {
      *
      * @return a shallow copy of this map
      */
-
     @Override
     @SuppressWarnings("unchecked")
     public VariantMap clone() {

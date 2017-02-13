@@ -18,15 +18,12 @@
 
 package jem.crawler;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-
+import jem.core.Book;
+import jem.core.Chapter;
+import jem.util.flob.Flob;
+import jem.util.flob.Flobs;
+import lombok.SneakyThrows;
+import lombok.val;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.jsoup.Jsoup;
@@ -35,19 +32,14 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 
-import jem.core.Book;
-import jem.core.Chapter;
-import jem.epm.util.FileDeleter;
-import jem.util.flob.Flob;
-import jem.util.flob.Flobs;
-import lombok.SneakyThrows;
-import lombok.val;
-import pw.phylame.commons.format.Render;
-import pw.phylame.commons.io.HttpUtils;
-import pw.phylame.commons.io.IOUtils;
-import pw.phylame.commons.log.Log;
-import pw.phylame.commons.util.StringUtils;
-import pw.phylame.commons.util.Validate;
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 public abstract class AbstractProvider implements CrawlerProvider {
     protected Book book;

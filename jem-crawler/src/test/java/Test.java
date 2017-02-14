@@ -11,6 +11,7 @@ import lombok.val;
 import pw.phylame.commons.util.CollectionUtils;
 
 import java.util.Arrays;
+import java.util.concurrent.Executors;
 
 public class Test {
     public static void main(String[] args) throws Exception {
@@ -38,7 +39,9 @@ public class Test {
         // DebugUtils.printTOC(book);
         // System.out.println(book.chapterAt(0).chapterAt(1).getText());
         val start = System.currentTimeMillis();
-        book.fetchTexts();
+        val pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 16);
+        book.fetchTexts(pool);
+        pool.shutdown();
         DebugUtils.makeFile(book, "E:/tmp/b", "pmab", null);
         System.out.println("total: " + (System.currentTimeMillis() - start));
         // val i = new WWW_MANGG_COM();

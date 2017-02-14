@@ -20,6 +20,7 @@ package jem.crawler;
 
 import jem.core.Book;
 import jem.core.Chapter;
+import jem.epm.util.InputCleaner;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -31,6 +32,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import pw.phylame.commons.format.Render;
+import pw.phylame.commons.function.Consumer;
 import pw.phylame.commons.io.HttpUtils;
 import pw.phylame.commons.io.IOUtils;
 import pw.phylame.commons.io.TextCache;
@@ -63,6 +65,7 @@ public abstract class AbstractCrawler implements Crawler {
         book = context.getBook();
         config = context.getConfig();
         CrawlerText.textCache = new TextCache(context.getCache());
+        book.registerCleanup(new InputCleaner(CrawlerText.textCache));
         initialized = true;
     }
 

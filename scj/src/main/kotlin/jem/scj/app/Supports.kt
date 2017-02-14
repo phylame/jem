@@ -21,6 +21,7 @@ package jem.scj.app
 import jem.core.Attributes
 import jem.core.Book
 import jem.core.Chapter
+import jem.crawler.CrawlerBook
 import jem.crawler.CrawlerConfig
 import jem.crawler.CrawlerListenerAdapter
 import jem.epm.EpmManager
@@ -47,6 +48,8 @@ import java.text.ParseException
 import java.util.Collections
 import java.util.HashMap
 import java.util.LinkedList
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 fun printJemError(e: JemException, input: String, format: String) {
     if (e is ParserException) {
@@ -154,10 +157,19 @@ fun prepareBook(book: Book, tuple: OutTuple): Book? = if (setAttributes(book, tu
     book
 } else null
 
+var isTaskPool: Boolean = false
+val taskPool: ExecutorService by lazy {
+    isTaskPool = true
+    Executors.newFixedThreadPool(Math.max(48, Runtime.getRuntime().availableProcessors() * 16))
+}
+
 fun saveBook(book: Book, tuple: OutTuple): String? {
     prepareBook(book, tuple) ?: return null
     val output = tuple.output.iif(tuple.output.isDirectory) { File(it, "${book.title}.${tuple.format}") }
     try {
+        if (book is CrawlerBook) {
+            book.fetchTexts(taskPool)
+        }
         EpmManager.writeBook(book, output, tuple.format, prepareArguments(tuple))
         return output.path
     } catch (e: IOException) {

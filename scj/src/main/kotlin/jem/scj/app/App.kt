@@ -170,6 +170,13 @@ object SCI : CLIDelegate() {
         }
     }
 
+    override fun onQuit() {
+        super.onQuit()
+        if (isTaskPool) {
+            taskPool.shutdown()
+        }
+    }
+
     override fun createOptions() {
         // help
         addOption(Option(OPTION_HELP, OPTION_HELP_LONG, false, tr("help.description"))) {

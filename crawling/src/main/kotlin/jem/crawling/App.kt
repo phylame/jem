@@ -5,12 +5,13 @@ package jem.crawling
 import jem.core.Attributes
 import jem.core.Book
 import jem.core.Chapter
-import jem.crawler.AbstractProvider
+
 import jem.crawler.CrawlerConfig
-import jem.crawler.OnFetchingListener
-import jem.crawler.ProviderManager
+import jem.crawler.CrawlerListener
+import jem.crawler.CrawlerManager
+
 import jem.epm.EpmManager
-import jem.title
+import jem.kotlin.title
 import jem.util.JemException
 import jem.util.Variants
 import jem.util.text.Text
@@ -33,11 +34,11 @@ import java.util.*
 import java.util.concurrent.Executors
 import javax.swing.JOptionPane
 
-object Crawler : IDelegate<Form>(), OnFetchingListener {
+object Crawler : IDelegate<Form>(), CrawlerListener {
     override fun onStart() {
         super.onStart()
         System.setProperty(EpmManager.AUTO_LOAD_KEY, "true")
-        System.setProperty(ProviderManager.AUTO_LOAD_KEY, "true")
+        System.setProperty(CrawlerManager.AUTO_LOAD_KEY, "true")
     }
 
     override fun createForm(): Form {
@@ -59,7 +60,6 @@ object Crawler : IDelegate<Form>(), OnFetchingListener {
 
     override fun onQuit() {
         stopTasks()
-        AbstractProvider.cleanup()
         super.onQuit()
     }
 
@@ -94,7 +94,7 @@ object Crawler : IDelegate<Form>(), OnFetchingListener {
     var subscription: Subscription? = null
     lateinit var subscriber: Subscriber<in String>
     private val threadPool = Executors.newFixedThreadPool(4);
-    private val crawlerArgs = mapOf("crawler.parse.${CrawlerConfig.FETCH_LISTENER}" to this)
+    private val crawlerArgs = mapOf("crawler.parse.${CrawlerConfig.CRAWLER_LISTENER}" to this)
 
     fun fetchBook(url: String, output: String, format: String, backup: Boolean) {
         log("读取详情链接：$url\n")

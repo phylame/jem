@@ -4,13 +4,10 @@ import jem.core.Book;
 import jem.core.Chapter;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
-import pw.phylame.commons.function.Provider;
 import pw.phylame.commons.util.Validate;
-import pw.phylame.commons.value.Lazy;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class CrawlerBook extends Book {
     /**
@@ -22,18 +19,17 @@ public class CrawlerBook extends Book {
      * Fetches text of all chapters.
      * <p>This method will be blocked until all texts fetched.</p>
      *
+     * @param pool the thread pool for executing fetching task
      * @throws InterruptedException if the current thread is interrupted while waiting for fetching
      */
-    public void fetchTexts() throws InterruptedException {
+    public void fetchTexts(ExecutorService pool) throws InterruptedException {
         int count = getExtensions().get(EXT_CHAPTER_COUNT_KEY, Integer.class, -1);
         Validate.check(count >= 0, "No chapter count found in extensions with key '%s'", EXT_CHAPTER_COUNT_KEY);
-        val pool = Executors.newFixedThreadPool(Math.max(64, Runtime.getRuntime().availableProcessors() * 16));
-        CountDownLatch latch = new CountDownLatch(count);
+        val latch = new CountDownLatch(count);
         for (val chapter : this) {
             fetchTexts(chapter, latch, pool);
         }
         latch.await();
-        pool.shutdown();
     }
 
     private void fetchTexts(Chapter chapter, CountDownLatch latch, ExecutorService pool) {
@@ -44,7 +40,7 @@ public class CrawlerBook extends Book {
             }
         } else {
             for (val sub : chapter) {
-                fetchTexts(chapter, latch, pool);
+                fetchTexts(sub, latch, pool);
             }
         }
     }

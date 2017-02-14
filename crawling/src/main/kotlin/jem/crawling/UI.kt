@@ -1,6 +1,6 @@
 package jem.crawling
 
-import jem.crawler.ProviderManager
+import jem.crawler.CrawlerManager
 import jem.epm.EpmManager
 import pw.phylame.commons.log.Log
 import pw.phylame.commons.util.CollectionUtils
@@ -126,7 +126,7 @@ object Form : IForm("PW Crawler ${App.assembly.version}"), ActionListener {
     private fun aboutApp() {
         val pane = JPanel()
         pane.layout = BoxLayout(pane, BoxLayout.PAGE_AXIS)
-        for (host in ProviderManager.knownHosts()) {
+        for (host in CrawlerManager.knownHosts()) {
             val label = JLabel("<html>&nbsp;<a href='$host'>$host</a></html>")
             label.addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(e: MouseEvent?) {

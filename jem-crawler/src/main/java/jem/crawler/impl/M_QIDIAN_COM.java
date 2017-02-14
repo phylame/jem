@@ -16,7 +16,7 @@ import org.jsoup.select.Elements;
 import jem.core.Attributes;
 import jem.core.Chapter;
 import jem.crawler.Identifiable;
-import jem.crawler.util.HtmlText;
+import jem.crawler.CrawlerText;
 import jem.util.flob.Flobs;
 import lombok.val;
 
@@ -61,7 +61,7 @@ public class M_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
             } else {
                 val a = li.child(0);
                 val chapter = new Chapter(a.child(0).text().trim());
-                chapter.setText(new HtmlText(HOST + a.attr("href"), this, chapter));
+                chapter.setText(new CrawlerText(HOST + a.attr("href"), this, chapter));
                 if (section != null) {
                     section.append(chapter);
                 } else {

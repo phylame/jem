@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jem.crawler.AbstractCrawler;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -39,17 +40,16 @@ import org.jsoup.select.Selector;
 
 import jem.core.Attributes;
 import jem.core.Chapter;
-import jem.crawler.AbstractProvider;
-import jem.crawler.CrawlerContext;
+import jem.crawler.Context;
 import jem.crawler.Identifiable;
 import jem.crawler.Searchable;
-import jem.crawler.util.HtmlText;
+import jem.crawler.CrawlerText;
 import jem.crawler.util.SoupUtils;
 import jem.util.flob.Flobs;
 import lombok.val;
 import pw.phylame.commons.util.DateUtils;
 
-public class YD_SOGOU_COM extends AbstractProvider implements Searchable, Identifiable {
+public class YD_SOGOU_COM extends AbstractCrawler implements Searchable, Identifiable {
     private static final String ENCODING = "UTF-8";
     private static final String HOST = "https://yd.sogou.com";
     private static final String GP = "gf=e-d-pdetail-i&uID=eb8dF3HZM5DeTGBL&sgid=0";
@@ -57,7 +57,7 @@ public class YD_SOGOU_COM extends AbstractProvider implements Searchable, Identi
     private String bookKey;
 
     @Override
-    public void init(CrawlerContext context) {
+    public void init(Context context) {
         super.init(context);
         bookKey = valueOfName(context.getAttrUrl().substring(35), "bkey", "&");
     }
@@ -98,7 +98,7 @@ public class YD_SOGOU_COM extends AbstractProvider implements Searchable, Identi
 
     @Override
     public void fetchContents() throws IOException {
-        fetchContentsPaged();
+        fetchTocPaged();
     }
 
     @Override
@@ -124,7 +124,7 @@ public class YD_SOGOU_COM extends AbstractProvider implements Searchable, Identi
             Attributes.setWords(chapter, obj.getInt("size"));
             Attributes.setDate(chapter, new Date(obj.getLong("updateTime")));
             val url = String.format("%s/h5/cpt/chapter?bkey=%s&ckey=%s&%s", HOST, bookKey, obj.getString("ckey"), GP);
-            chapter.setText(new HtmlText(url, this, chapter));
+            chapter.setText(new CrawlerText(url, this, chapter));
             book.append(chapter);
         }
         if (chapterCount == -1) {

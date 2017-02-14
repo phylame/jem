@@ -18,19 +18,18 @@
 
 package jem.crawler;
 
-import lombok.val;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.Map;
-
 import jem.core.Book;
 import jem.crawler.util.M;
 import jem.epm.Parser;
 import jem.epm.impl.EpmBase;
 import jem.epm.util.ParserException;
 import jem.util.JemException;
+import lombok.val;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.Map;
 
 public class CrawlerParser extends EpmBase<CrawlerConfig> implements Parser {
     public CrawlerParser() {
@@ -39,7 +38,7 @@ public class CrawlerParser extends EpmBase<CrawlerConfig> implements Parser {
 
     @Override
     public Book parse(File file, Map<String, Object> args) throws IOException, JemException {
-        throw new UnsupportedOperationException("Crawler parser is't supported for file input");
+        throw new UnsupportedOperationException("Crawler parser is not supported for file");
     }
 
     @Override
@@ -47,28 +46,29 @@ public class CrawlerParser extends EpmBase<CrawlerConfig> implements Parser {
         val config = fetchConfig(args);
         val url = new URL(input);
         val host = url.getProtocol() + "://" + url.getHost();
-        final CrawlerProvider provider;
+        final Crawler crawler;
         try {
-            provider = ProviderManager.providerFor(host);
+            crawler = CrawlerManager.crawlerFor(host);
         } catch (IllegalAccessException | ClassNotFoundException | InstantiationException e) {
             throw new ParserException(M.tr("err.unknownHost", host), e);
         }
-        if (provider == null) {
+        if (crawler == null) {
             throw new ParserException(M.tr("err.unknownHost", host));
         }
-        val book = new Book();
-        val context = new CrawlerContext(book, input, config);
-        val listener = config.fetchingListener;
-        provider.init(context);
-        provider.fetchAttributes();
+        val book = new CrawlerBook();
+        val listener = config.crawlerListener;
+        val context = new Context(input, book, config);
+        crawler.init(context);
+        crawler.fetchAttributes();
         if (listener != null) {
             listener.attributeFetched(book);
         }
-        provider.fetchContents();
+        crawler.fetchContents();
         if (listener != null) {
             listener.contentsFetched(book);
         }
         book.getAttributes().set("source", input);
+        book.getExtensions().set(CrawlerBook.EXT_CHAPTER_COUNT_KEY, crawler.getChapterCount());
         return book;
     }
 }

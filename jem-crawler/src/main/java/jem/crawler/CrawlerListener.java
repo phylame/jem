@@ -16,12 +16,15 @@
  * limitations under the License.
  */
 
-package jem
+package jem.crawler;
 
-import jem.core.Chapter
+import jem.core.Book;
+import jem.core.Chapter;
 
-operator fun Chapter.get(index: Int): Chapter = chapterAt(index)
+public interface CrawlerListener {
+    void attributeFetched(Book book);
 
-operator fun Chapter.set(index: Int, chapter: Chapter) {
-    replace(index, chapter)
+    void contentsFetched(Book book);
+
+    void fetchingText(int total, int current, Chapter chapter);
 }

@@ -18,19 +18,18 @@
 
 package jem.scj.app
 
-import org.apache.commons.cli.*
-import jem.crawler.ProviderManager
+import jem.crawler.CrawlerManager
 import jem.epm.EpmManager
 import jem.util.Build
-import pw.phylame.qaf.cli.*
-import pw.phylame.qaf.core.*
+import org.apache.commons.cli.*
 import pw.phylame.commons.io.IOUtils
 import pw.phylame.commons.io.PathUtils
 import pw.phylame.commons.log.Log
 import pw.phylame.commons.util.CollectionUtils
+import pw.phylame.qaf.cli.*
+import pw.phylame.qaf.core.*
 import java.io.File
 import java.util.*
-import kotlin.reflect.KProperty
 
 const val NAME = "scj"
 val VERSION = Build.VERSION
@@ -152,7 +151,7 @@ object SCI : CLIDelegate() {
 
     override fun onStart() {
         System.setProperty(EpmManager.AUTO_LOAD_KEY, "true")
-        System.setProperty(ProviderManager.AUTO_LOAD_KEY, "true")
+        System.setProperty(CrawlerManager.AUTO_LOAD_KEY, "true")
         App.ensureHomeExisted()
         Locale.setDefault(AppConfig.appLocale)
         App.translator = Translator(I18N_NAME)

@@ -24,9 +24,9 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import jem.core.Chapter;
-import jem.crawler.AbstractProvider;
+import jem.crawler.AbstractCrawler;
 import jem.crawler.Identifiable;
-import jem.crawler.util.HtmlText;
+import jem.crawler.CrawlerText;
 import jem.util.flob.Flobs;
 
 import java.io.IOException;
@@ -36,7 +36,7 @@ import java.util.LinkedList;
 import static jem.core.Attributes.*;
 import static pw.phylame.commons.util.StringUtils.*;
 
-public class WWW_ZHULANG_COM extends AbstractProvider implements Identifiable {
+public class WWW_ZHULANG_COM extends AbstractCrawler implements Identifiable {
     private static final String HOST = "http://www.zhulang.com";
 
     @Override
@@ -71,7 +71,7 @@ public class WWW_ZHULANG_COM extends AbstractProvider implements Identifiable {
             }
             for (val a : div.select("li>a")) {
                 val chapter = new Chapter(a.text().trim());
-                chapter.setText(new HtmlText(a.attr("href"), this, chapter));
+                chapter.setText(new CrawlerText(a.attr("href"), this, chapter));
                 section.append(chapter);
                 ++chapterCount;
             }

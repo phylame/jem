@@ -1,24 +1,20 @@
 package jem.crawler.impl;
 
-import static pw.phylame.commons.util.StringUtils.EMPTY_TEXT;
-import static pw.phylame.commons.util.StringUtils.join;
-import static pw.phylame.commons.util.StringUtils.secondPartOf;
-import static pw.phylame.commons.util.StringUtils.trimmed;
+import jem.core.Attributes;
+import jem.core.Chapter;
+import jem.crawler.CrawlerText;
+import jem.crawler.Identifiable;
+import jem.util.flob.Flobs;
+import lombok.val;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.TextNode;
+import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.LinkedList;
 
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.TextNode;
-import org.jsoup.select.Elements;
-
-import jem.core.Attributes;
-import jem.core.Chapter;
-import jem.crawler.Identifiable;
-import jem.crawler.util.HtmlText;
-import jem.util.flob.Flobs;
-import lombok.val;
+import static pw.phylame.commons.util.StringUtils.*;
 
 public class BOOK_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
     private static final String HOST = "http://book.qidian.com";
@@ -61,7 +57,7 @@ public class BOOK_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
             book.append(section);
             for (val a : volume.select("ul a")) {
                 val chapter = new Chapter(a.text().trim());
-                chapter.setText(new HtmlText(protocol + a.attr("href"), this, chapter));
+                chapter.setText(new CrawlerText(protocol + a.attr("href"), this, chapter));
                 section.append(chapter);
                 ++chapterCount;
             }

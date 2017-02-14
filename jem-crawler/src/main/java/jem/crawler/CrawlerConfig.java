@@ -25,7 +25,7 @@ public class CrawlerConfig extends AbstractConfig {
     public static final String SELF = "config";
     public static final String TIMEOUT = "timeout";
     public static final String LINE_SEPARATOR = "lineSeparator";
-    public static final String FETCH_LISTENER = "fetchListener";
+    public static final String CRAWLER_LISTENER = "crawlerListener";
 
     /**
      * Timeout for networks.
@@ -36,6 +36,6 @@ public class CrawlerConfig extends AbstractConfig {
     @Configured(LINE_SEPARATOR)
     public String lineSeparator = System.lineSeparator();
 
-    @Configured(FETCH_LISTENER)
-    public OnFetchingListener fetchingListener;
+    @Configured(CRAWLER_LISTENER)
+    public CrawlerListener crawlerListener;
 }

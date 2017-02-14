@@ -12,7 +12,7 @@
 
     <artifactId>jem-crawler</artifactId>
     <name>Jem Crawler</name>
-    <description>Web book crawler.</description>
+    <description>Web book crawler</description>
 
     <dependencies>
         <dependency>

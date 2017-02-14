@@ -22,12 +22,12 @@ import jem.core.Attributes
 import jem.core.Book
 import jem.core.Chapter
 import jem.crawler.CrawlerConfig
-import jem.crawler.OnFetchingListenerAdapter
+import jem.crawler.CrawlerListenerAdapter
 import jem.epm.EpmManager
 import jem.epm.util.MakerException
 import jem.epm.util.ParserException
 import jem.formats.pmab.PmabOutConfig
-import jem.title
+import jem.kotlin.title
 import jem.util.JemException
 import jem.util.UnsupportedFormatException
 import jem.util.Variants
@@ -63,9 +63,9 @@ fun printJemError(e: JemException, input: String, format: String) {
 fun openBook(tuple: InTuple): Book? {
     val args = HashMap(tuple.arguments)
     if (tuple.format == "crawler") {
-        val key = "crawler.parse.${CrawlerConfig.FETCH_LISTENER}"
+        val key = "crawler.parse.${CrawlerConfig.CRAWLER_LISTENER}"
         if (key !in args) {
-            args[key] = object : OnFetchingListenerAdapter() {
+            args[key] = object : CrawlerListenerAdapter() {
                 override fun fetchingText(total: Int, current: Int, chapter: Chapter) {
                     println("$current/$total: ${chapter.title}")
                 }

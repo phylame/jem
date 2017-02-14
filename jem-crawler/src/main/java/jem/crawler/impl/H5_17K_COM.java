@@ -18,40 +18,28 @@
 
 package jem.crawler.impl;
 
-import static pw.phylame.commons.util.StringUtils.EMPTY_TEXT;
-import static pw.phylame.commons.util.StringUtils.join;
-import static pw.phylame.commons.util.StringUtils.trimmed;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
+import jem.core.Attributes;
+import jem.core.Chapter;
+import jem.crawler.*;
+import jem.util.flob.Flobs;
+import lombok.val;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
-
-import jem.core.Attributes;
-import jem.core.Chapter;
-import jem.crawler.AbstractProvider;
-import jem.crawler.CrawlerContext;
-import jem.crawler.Identifiable;
-import jem.crawler.Searchable;
-import jem.crawler.util.HtmlText;
-import jem.util.flob.Flobs;
-import lombok.val;
 import pw.phylame.commons.io.HttpUtils;
 import pw.phylame.commons.io.IOUtils;
 import pw.phylame.commons.io.PathUtils;
 import pw.phylame.commons.util.DateUtils;
 
-public class H5_17K_COM extends AbstractProvider implements Searchable, Identifiable {
+import java.io.IOException;
+import java.net.URL;
+import java.util.*;
+
+import static pw.phylame.commons.util.StringUtils.*;
+
+public class H5_17K_COM extends AbstractCrawler implements Searchable, Identifiable {
     private static final String ENCODING = "UTF-8";
     private static final String HOST = "http://h5.17k.com";
     private static final int PAGE_SIZE = 180;
@@ -60,7 +48,7 @@ public class H5_17K_COM extends AbstractProvider implements Searchable, Identifi
     private String bookId;
 
     @Override
-    public void init(CrawlerContext context) {
+    public void init(Context context) {
         super.init(context);
         bookId = PathUtils.baseName(context.getAttrUrl());
     }
@@ -81,7 +69,7 @@ public class H5_17K_COM extends AbstractProvider implements Searchable, Identifi
 
     @Override
     public void fetchContents() throws IOException {
-        fetchContentsPaged();
+        fetchTocPaged();
     }
 
     @Override
@@ -126,7 +114,7 @@ public class H5_17K_COM extends AbstractProvider implements Searchable, Identifi
                 Attributes.setWords(chapter, obj.getInt("wordCount"));
                 Attributes.setDate(chapter, new Date(obj.getLong("updateDate")));
                 val url = String.format("%s/chapter/%s/%d.html", HOST, bookId, obj.getLong("id"));
-                chapter.setText(new HtmlText(url, this, chapter));
+                chapter.setText(new CrawlerText(url, this, chapter));
             }
         }
         if (chapterCount == -1) {

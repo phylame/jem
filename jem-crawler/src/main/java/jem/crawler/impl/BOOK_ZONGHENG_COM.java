@@ -1,30 +1,29 @@
 package jem.crawler.impl;
 
-import java.io.IOException;
-import java.net.URL;
-
+import jem.core.Attributes;
+import jem.core.Chapter;
+import jem.crawler.AbstractCrawler;
+import jem.crawler.Context;
+import jem.crawler.CrawlerText;
+import jem.crawler.Identifiable;
+import jem.util.flob.Flobs;
+import lombok.val;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
-
-import jem.core.Attributes;
-import jem.core.Chapter;
-import jem.crawler.AbstractProvider;
-import jem.crawler.CrawlerContext;
-import jem.crawler.Identifiable;
-import jem.crawler.util.HtmlText;
-import jem.util.flob.Flobs;
-import lombok.val;
 import pw.phylame.commons.io.PathUtils;
 import pw.phylame.commons.util.StringUtils;
 
-public class BOOK_ZONGHENG_COM extends AbstractProvider implements Identifiable {
+import java.io.IOException;
+import java.net.URL;
+
+public class BOOK_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
     private static final String HOST = "http://book.zongheng.com";
 
     private String bookId;
 
     @Override
-    public void init(CrawlerContext context) {
+    public void init(Context context) {
         super.init(context);
         bookId = PathUtils.baseName(context.getAttrUrl());
     }
@@ -57,13 +56,12 @@ public class BOOK_ZONGHENG_COM extends AbstractProvider implements Identifiable 
             val section = new Chapter(((TextNode) i1.next().childNode(0)).text().trim());
             for (val a : i2.next().select("a")) {
                 val chapter = new Chapter(a.text().trim());
-                chapter.setText(new HtmlText(a.attr("href"), this, chapter));
+                chapter.setText(new CrawlerText(a.attr("href"), this, chapter));
                 section.append(chapter);
                 ++chapterCount;
             }
             book.append(section);
         }
-
     }
 
     @Override

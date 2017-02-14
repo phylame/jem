@@ -9,20 +9,20 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.LinkedList;
 
+import jem.crawler.AbstractCrawler;
 import org.json.JSONObject;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 
 import jem.core.Attributes;
 import jem.core.Chapter;
-import jem.crawler.AbstractProvider;
-import jem.crawler.CrawlerContext;
+import jem.crawler.Context;
 import jem.crawler.Identifiable;
-import jem.crawler.util.HtmlText;
+import jem.crawler.CrawlerText;
 import jem.util.flob.Flobs;
 import lombok.val;
 
-public class M_ZONGHENG_COM extends AbstractProvider implements Identifiable {
+public class M_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
     private static final String HOST = "http://m.zongheng.com";
     private static final String ENCODING = "UTF-8";
     private static final int PAGE_SIZE = 180;
@@ -32,7 +32,7 @@ public class M_ZONGHENG_COM extends AbstractProvider implements Identifiable {
     private String bookId;
 
     @Override
-    public void init(CrawlerContext context) {
+    public void init(Context context) {
         super.init(context);
         bookId = valueOfName(secondPartOf(context.getAttrUrl(), "?"), "bookId", "&");
     }
@@ -68,7 +68,7 @@ public class M_ZONGHENG_COM extends AbstractProvider implements Identifiable {
 
     @Override
     public void fetchContents() throws IOException {
-        fetchContentsPaged();
+        fetchTocPaged();
     }
 
     @Override
@@ -84,7 +84,7 @@ public class M_ZONGHENG_COM extends AbstractProvider implements Identifiable {
             val obj = (JSONObject) item;
             val chapter = new Chapter(obj.getString("chapterName"));
             val url = String.format(TEXT_JSON_URL, HOST, bookId, obj.getInt("chapterId"));
-            chapter.setText(new HtmlText(url, this, chapter));
+            chapter.setText(new CrawlerText(url, this, chapter));
             section.append(chapter);
         }
         if (chapterCount == -1) {

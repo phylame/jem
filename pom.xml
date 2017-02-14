@@ -4,7 +4,7 @@
 
     <parent>
         <groupId>pw.phylame.util</groupId>
-        <artifactId>common-dependencies</artifactId>
+        <artifactId>my-project</artifactId>
         <version>1.0.0</version>
     </parent>
 
@@ -49,12 +49,6 @@
                 <groupId>pw.phylame.util</groupId>
                 <artifactId>commons</artifactId>
                 <version>${commons.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.projectlombok</groupId>
-                        <artifactId>lombok</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>pw.phylame.qaf</groupId>

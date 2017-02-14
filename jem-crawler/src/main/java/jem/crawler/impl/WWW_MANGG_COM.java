@@ -35,14 +35,14 @@ import org.jsoup.select.Elements;
 
 import jem.core.Attributes;
 import jem.core.Chapter;
-import jem.crawler.AbstractProvider;
+import jem.crawler.AbstractCrawler;
 import jem.crawler.Identifiable;
-import jem.crawler.util.HtmlText;
+import jem.crawler.CrawlerText;
 import jem.util.flob.Flobs;
 import lombok.val;
 import pw.phylame.commons.util.DateUtils;
 
-public class WWW_MANGG_COM extends AbstractProvider implements Identifiable {
+public class WWW_MANGG_COM extends AbstractCrawler implements Identifiable {
     public static final String HOST = "http://www.mangg.com";
 
     @Override
@@ -74,7 +74,7 @@ public class WWW_MANGG_COM extends AbstractProvider implements Identifiable {
         for (val dd : doc.select("dd")) {
             val a = dd.child(0);
             val chapter = new Chapter(a.text().trim());
-            chapter.setText(new HtmlText(HOST + a.attr("href"), this, chapter));
+            chapter.setText(new CrawlerText(HOST + a.attr("href"), this, chapter));
             book.append(chapter);
         }
         chapterCount = book.size();

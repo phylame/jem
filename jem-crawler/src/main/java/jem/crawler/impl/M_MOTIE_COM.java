@@ -12,15 +12,15 @@ import org.jsoup.select.Elements;
 
 import jem.core.Attributes;
 import jem.core.Chapter;
-import jem.crawler.AbstractProvider;
-import jem.crawler.CrawlerContext;
+import jem.crawler.AbstractCrawler;
+import jem.crawler.Context;
 import jem.crawler.Identifiable;
-import jem.crawler.util.HtmlText;
+import jem.crawler.CrawlerText;
 import jem.util.flob.Flobs;
 import lombok.val;
 import pw.phylame.commons.io.PathUtils;
 
-public class M_MOTIE_COM extends AbstractProvider implements Identifiable {
+public class M_MOTIE_COM extends AbstractCrawler implements Identifiable {
     private static final String HOST = "http://m.motie.com";
     private static final int PAGE_SIZE = 180;
 
@@ -28,7 +28,7 @@ public class M_MOTIE_COM extends AbstractProvider implements Identifiable {
     private Chapter section;
 
     @Override
-    public void init(CrawlerContext context) {
+    public void init(Context context) {
         super.init(context);
         bookId = PathUtils.baseName(context.getAttrUrl());
         chapterCount = 0;
@@ -58,7 +58,7 @@ public class M_MOTIE_COM extends AbstractProvider implements Identifiable {
 
     @Override
     public void fetchContents() throws IOException {
-        fetchContentsPaged();
+        fetchTocPaged();
     }
 
     @Override
@@ -82,7 +82,7 @@ public class M_MOTIE_COM extends AbstractProvider implements Identifiable {
                 } else {
                     url = a.attr("href");
                 }
-                chapter.setText(new HtmlText(url, this, chapter));
+                chapter.setText(new CrawlerText(url, this, chapter));
                 section.append(chapter);
                 ++chapterCount;
             }

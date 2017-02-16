@@ -18,8 +18,8 @@
 
 package jem.epm.util;
 
-import jem.core.Book;
-import jem.core.Chapter;
+import jem.Book;
+import jem.Chapter;
 import jem.epm.EpmManager;
 import jem.util.JemException;
 import jem.util.Variants;
@@ -31,8 +31,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-import static jem.core.Attributes.getTitle;
-import static jem.core.Attributes.titleOf;
+import static jem.Attributes.getTitle;
+import static jem.Attributes.titleOf;
 
 /**
  * Utilities for debug parser and maker.

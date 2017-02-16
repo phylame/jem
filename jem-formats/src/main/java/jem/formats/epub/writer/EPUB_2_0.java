@@ -25,8 +25,8 @@ import java.io.StringWriter;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 
-import jem.core.Attributes;
-import jem.core.Book;
+import jem.Attributes;
+import jem.Book;
 import jem.epm.util.MakerException;
 import jem.formats.epub.EPUB;
 import jem.formats.epub.item.Resource;

@@ -32,9 +32,9 @@ import java.util.Map;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-import jem.core.Attributes;
-import jem.core.Book;
-import jem.core.Chapter;
+import jem.Attributes;
+import jem.Book;
+import jem.Chapter;
 import jem.epm.impl.VamParser;
 import jem.epm.util.ParserException;
 import jem.epm.util.VamUtils;

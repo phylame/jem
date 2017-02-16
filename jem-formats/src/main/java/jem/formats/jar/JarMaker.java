@@ -25,8 +25,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-import jem.core.Attributes;
-import jem.core.Book;
+import jem.Attributes;
+import jem.Book;
 import jem.epm.impl.ZipMaker;
 import jem.epm.util.MakerException;
 import jem.epm.util.ZipUtils;

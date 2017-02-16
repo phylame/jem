@@ -18,7 +18,7 @@
 
 package jem.imabw.app.ui.editor
 
-import jem.core.Chapter
+import jem.Chapter
 import jem.imabw.app.*
 import jem.imabw.app.ui.Viewer
 import jem.title

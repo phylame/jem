@@ -21,7 +21,7 @@ package jem.formats.epub;
 
 import java.util.zip.ZipOutputStream;
 
-import jem.core.Book;
+import jem.Book;
 import jem.epm.util.xml.XmlRender;
 import lombok.RequiredArgsConstructor;
 

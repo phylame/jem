@@ -1,6 +1,6 @@
-import jem.core.Attributes;
-import jem.core.Book;
-import jem.core.Chapter;
+import jem.Attributes;
+import jem.Book;
+import jem.Chapter;
 import jem.crawler.CrawlerBook;
 import jem.crawler.CrawlerConfig;
 import jem.crawler.CrawlerListener;

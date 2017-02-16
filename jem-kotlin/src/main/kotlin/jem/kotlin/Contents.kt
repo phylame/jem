@@ -18,7 +18,7 @@
 
 package jem.kotlin
 
-import jem.core.Chapter
+import jem.Chapter
 
 operator fun Chapter.get(index: Int): Chapter = chapterAt(index)
 

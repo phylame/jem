@@ -16,8 +16,8 @@
 
 package jem.imabw.app
 
-import jem.core.Book
-import jem.core.Chapter
+import jem.Book
+import jem.Chapter
 import jem.epm.EpmManager
 import jem.imabw.app.ui.Dialogs
 import jem.imabw.app.ui.OpenResult

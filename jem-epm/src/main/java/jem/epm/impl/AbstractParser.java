@@ -18,7 +18,7 @@
 
 package jem.epm.impl;
 
-import jem.core.Book;
+import jem.Book;
 import jem.epm.Parser;
 import jem.epm.util.E;
 import jem.epm.util.InputCleaner;

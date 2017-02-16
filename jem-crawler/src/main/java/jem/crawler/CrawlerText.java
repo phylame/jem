@@ -18,8 +18,8 @@
 
 package jem.crawler;
 
-import jem.core.Attributes;
-import jem.core.Chapter;
+import jem.Attributes;
+import jem.Chapter;
 import jem.util.text.AbstractText;
 import jem.util.text.Texts;
 import lombok.NonNull;

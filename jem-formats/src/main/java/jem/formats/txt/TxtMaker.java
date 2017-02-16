@@ -24,8 +24,8 @@ import pw.phylame.commons.util.StringUtils;
 
 import java.io.*;
 
-import jem.core.Attributes;
-import jem.core.Book;
+import jem.Attributes;
+import jem.Book;
 import jem.epm.impl.AbstractMaker;
 import jem.epm.util.MakerException;
 import jem.epm.util.text.TextRender;

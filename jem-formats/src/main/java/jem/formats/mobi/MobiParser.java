@@ -28,8 +28,8 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 
-import jem.core.Attributes;
-import jem.core.Book;
+import jem.Attributes;
+import jem.Book;
 import jem.epm.impl.BinaryParser;
 import jem.epm.util.ParserException;
 import jem.util.flob.Flob;

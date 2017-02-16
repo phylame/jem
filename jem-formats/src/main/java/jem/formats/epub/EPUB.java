@@ -20,8 +20,8 @@ package jem.formats.epub;
 
 import java.util.Locale;
 
-import jem.core.Attributes;
-import jem.core.Book;
+import jem.Attributes;
+import jem.Book;
 
 /**
  * Constants and utilities for ePub.

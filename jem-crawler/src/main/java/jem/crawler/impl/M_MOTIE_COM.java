@@ -10,8 +10,8 @@ import java.net.URL;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
-import jem.core.Attributes;
-import jem.core.Chapter;
+import jem.Attributes;
+import jem.Chapter;
 import jem.crawler.AbstractCrawler;
 import jem.crawler.Context;
 import jem.crawler.Identifiable;

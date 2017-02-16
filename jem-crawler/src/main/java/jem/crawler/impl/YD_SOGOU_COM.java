@@ -38,8 +38,8 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.jsoup.select.Selector;
 
-import jem.core.Attributes;
-import jem.core.Chapter;
+import jem.Attributes;
+import jem.Chapter;
 import jem.crawler.Context;
 import jem.crawler.Identifiable;
 import jem.crawler.Searchable;

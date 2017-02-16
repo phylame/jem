@@ -30,9 +30,9 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
-import jem.core.Attributes;
-import jem.core.Book;
-import jem.core.Chapter;
+import jem.Attributes;
+import jem.Book;
+import jem.Chapter;
 import jem.epm.impl.AbstractMaker;
 import jem.epm.util.MakerException;
 import jem.epm.util.NumberUtils;

@@ -18,7 +18,7 @@
 
 package jem.epm;
 
-import jem.core.Book;
+import jem.Book;
 import jem.util.JemException;
 import jem.util.UnsupportedFormatException;
 import lombok.NonNull;

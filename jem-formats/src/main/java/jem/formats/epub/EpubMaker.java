@@ -21,7 +21,7 @@ package jem.formats.epub;
 import java.io.IOException;
 import java.util.zip.ZipOutputStream;
 
-import jem.core.Book;
+import jem.Book;
 import jem.epm.impl.ZipMaker;
 import jem.epm.util.MakerException;
 import jem.epm.util.ZipUtils;

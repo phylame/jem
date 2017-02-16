@@ -18,7 +18,7 @@
 
 package jem.crawler;
 
-import jem.core.Book;
+import jem.Book;
 import jem.crawler.util.M;
 import jem.epm.Parser;
 import jem.epm.impl.EpmBase;

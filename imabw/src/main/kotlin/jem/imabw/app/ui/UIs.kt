@@ -17,7 +17,7 @@
 package jem.imabw.app.ui
 
 import jem.author
-import jem.core.Chapter
+import jem.Chapter
 import jem.imabw.app.*
 import jem.imabw.app.ui.editor.TabbedEditor
 import jem.imabw.app.ui.tree.ContentsTree

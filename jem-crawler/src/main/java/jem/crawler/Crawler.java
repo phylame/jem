@@ -18,7 +18,7 @@
 
 package jem.crawler;
 
-import jem.core.Chapter;
+import jem.Chapter;
 
 import java.io.IOException;
 

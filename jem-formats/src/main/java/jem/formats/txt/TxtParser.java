@@ -18,9 +18,9 @@
 
 package jem.formats.txt;
 
-import jem.core.Attributes;
-import jem.core.Book;
-import jem.core.Chapter;
+import jem.Attributes;
+import jem.Book;
+import jem.Chapter;
 import jem.epm.impl.AbstractParser;
 import jem.epm.util.InputCleaner;
 import jem.epm.util.ParserException;

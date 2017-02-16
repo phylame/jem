@@ -18,7 +18,7 @@
 
 package jem.epm.util;
 
-import jem.core.Chapter;
+import jem.Chapter;
 import lombok.RequiredArgsConstructor;
 import pw.phylame.commons.function.Consumer;
 import pw.phylame.commons.io.IOUtils;

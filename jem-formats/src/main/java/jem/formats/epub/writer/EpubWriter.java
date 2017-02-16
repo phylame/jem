@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.zip.ZipOutputStream;
 
-import jem.core.Book;
+import jem.Book;
 import jem.epm.util.MakerException;
 import jem.epm.util.ZipUtils;
 import jem.epm.util.xml.XmlRender;

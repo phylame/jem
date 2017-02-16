@@ -21,8 +21,8 @@ package jem.formats.epub.ncx;
 import java.io.IOException;
 import java.util.List;
 
-import jem.core.Attributes;
-import jem.core.Chapter;
+import jem.Attributes;
+import jem.Chapter;
 import jem.epm.util.MakerException;
 import jem.epm.util.xml.XmlRender;
 import jem.formats.epub.EPUB;

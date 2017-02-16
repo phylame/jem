@@ -36,8 +36,8 @@ package jem.imabw.app.ui
 
 import com.toedter.calendar.JCalendar
 import com.toedter.components.JLocaleChooser
-import jem.core.Book
-import jem.core.Chapter
+import jem.Book
+import jem.Chapter
 import pw.phylame.commons.io.PathUtils
 import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.dump

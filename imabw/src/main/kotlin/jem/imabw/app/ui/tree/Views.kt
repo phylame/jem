@@ -16,7 +16,7 @@
 
 package jem.imabw.app.ui.tree
 
-import jem.core.Chapter
+import jem.Chapter
 import jem.imabw.app.Imabw
 import jem.imabw.app.Manager
 import jem.imabw.app.ui.Editable

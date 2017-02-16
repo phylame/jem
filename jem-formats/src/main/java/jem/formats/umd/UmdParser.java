@@ -33,9 +33,9 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.zip.DataFormatException;
 
-import jem.core.Attributes;
-import jem.core.Book;
-import jem.core.Chapter;
+import jem.Attributes;
+import jem.Book;
+import jem.Chapter;
 import jem.epm.impl.BinaryParser;
 import jem.epm.util.ParserException;
 import jem.epm.util.config.NonConfig;

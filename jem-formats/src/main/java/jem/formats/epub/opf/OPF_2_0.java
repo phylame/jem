@@ -18,23 +18,23 @@
 
 package jem.formats.epub.opf;
 
-import static jem.core.Attributes.getAuthor;
-import static jem.core.Attributes.getDate;
-import static jem.core.Attributes.getGenre;
-import static jem.core.Attributes.getIntro;
-import static jem.core.Attributes.getKeywords;
-import static jem.core.Attributes.getLanguage;
-import static jem.core.Attributes.getPublisher;
-import static jem.core.Attributes.getRights;
-import static jem.core.Attributes.getTitle;
-import static jem.core.Attributes.getVendor;
+import static jem.Attributes.getAuthor;
+import static jem.Attributes.getDate;
+import static jem.Attributes.getGenre;
+import static jem.Attributes.getIntro;
+import static jem.Attributes.getKeywords;
+import static jem.Attributes.getLanguage;
+import static jem.Attributes.getPublisher;
+import static jem.Attributes.getRights;
+import static jem.Attributes.getTitle;
+import static jem.Attributes.getVendor;
 import static pw.phylame.commons.util.StringUtils.isNotEmpty;
 
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
-import jem.core.Book;
+import jem.Book;
 import jem.epm.util.MakerException;
 import jem.epm.util.xml.XmlRender;
 import jem.formats.epub.EpubOutConfig;

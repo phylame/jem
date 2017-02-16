@@ -1,7 +1,7 @@
 package jem.crawler.impl;
 
-import jem.core.Attributes;
-import jem.core.Chapter;
+import jem.Attributes;
+import jem.Chapter;
 import jem.crawler.AbstractCrawler;
 import jem.crawler.Context;
 import jem.crawler.CrawlerText;

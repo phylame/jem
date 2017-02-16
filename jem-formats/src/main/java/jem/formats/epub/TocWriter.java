@@ -25,9 +25,9 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import jem.core.Attributes;
-import jem.core.Book;
-import jem.core.Chapter;
+import jem.Attributes;
+import jem.Book;
+import jem.Chapter;
 import jem.epm.util.MakerException;
 import jem.formats.epub.item.Guide;
 import jem.formats.epub.item.Resource;

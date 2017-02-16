@@ -18,8 +18,8 @@
 
 package jem.crawler;
 
-import jem.core.Book;
-import jem.core.Chapter;
+import jem.Book;
+import jem.Chapter;
 
 public interface CrawlerListener {
     void attributeFetched(Book book);

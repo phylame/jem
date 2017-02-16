@@ -23,7 +23,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import jem.core.Chapter;
+import jem.Chapter;
 import jem.crawler.AbstractCrawler;
 import jem.crawler.Identifiable;
 import jem.crawler.CrawlerText;
@@ -33,7 +33,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.LinkedList;
 
-import static jem.core.Attributes.*;
+import static jem.Attributes.*;
 import static pw.phylame.commons.util.StringUtils.*;
 
 public class WWW_ZHULANG_COM extends AbstractCrawler implements Identifiable {

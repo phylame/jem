@@ -18,7 +18,7 @@
 
 package jem.epm;
 
-import jem.core.Book;
+import jem.Book;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;

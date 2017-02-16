@@ -18,7 +18,7 @@
 
 package jem.epm.impl;
 
-import jem.core.Book;
+import jem.Book;
 import jem.epm.Maker;
 import jem.epm.util.MakerException;
 import jem.epm.util.config.EpmConfig;

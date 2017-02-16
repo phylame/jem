@@ -14,8 +14,8 @@ import org.json.JSONObject;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 
-import jem.core.Attributes;
-import jem.core.Chapter;
+import jem.Attributes;
+import jem.Chapter;
 import jem.crawler.Context;
 import jem.crawler.Identifiable;
 import jem.crawler.CrawlerText;

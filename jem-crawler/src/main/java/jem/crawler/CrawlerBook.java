@@ -1,7 +1,7 @@
 package jem.crawler;
 
-import jem.core.Book;
-import jem.core.Chapter;
+import jem.Book;
+import jem.Chapter;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import pw.phylame.commons.util.Validate;

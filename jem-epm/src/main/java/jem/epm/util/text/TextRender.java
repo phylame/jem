@@ -18,8 +18,8 @@
 
 package jem.epm.util.text;
 
-import jem.core.Attributes;
-import jem.core.Chapter;
+import jem.Attributes;
+import jem.Chapter;
 import jem.util.text.Text;
 import jem.util.text.Texts;
 import lombok.NonNull;

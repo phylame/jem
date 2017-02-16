@@ -18,8 +18,8 @@
 
 package jem.kotlin
 
-import jem.core.Attributes
-import jem.core.Chapter
+import jem.Attributes
+import jem.Chapter
 import jem.util.flob.Flob
 import jem.util.text.Text
 import java.util.*

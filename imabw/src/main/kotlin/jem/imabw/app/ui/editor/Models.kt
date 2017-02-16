@@ -21,7 +21,7 @@ package jem.imabw.app.ui.editor
 import jem.Chapter
 import jem.imabw.app.*
 import jem.imabw.app.ui.Viewer
-import jem.title
+import jem.kotlin.title
 import jem.util.flob.Flobs
 import jem.util.text.Texts
 import org.jdesktop.swingx.JXPanel

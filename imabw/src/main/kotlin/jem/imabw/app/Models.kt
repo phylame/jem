@@ -19,10 +19,10 @@ package jem.imabw.app
 import jem.Book
 import jem.Chapter
 import jem.epm.EpmManager
-import jem.get
 import jem.imabw.app.ui.Dialogs
 import jem.imabw.app.ui.Viewer
-import jem.title
+import jem.kotlin.get
+import jem.kotlin.title
 import pw.phylame.commons.io.PathUtils
 import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.tr

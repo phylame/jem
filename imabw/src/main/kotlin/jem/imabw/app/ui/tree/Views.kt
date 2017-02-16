@@ -21,7 +21,7 @@ import jem.imabw.app.Imabw
 import jem.imabw.app.Manager
 import jem.imabw.app.ui.Editable
 import jem.imabw.app.ui.Viewer
-import jem.title
+import jem.kotlin.title
 import org.jdesktop.swingx.JXLabel
 import org.jdesktop.swingx.JXPanel
 import org.jdesktop.swingx.JXTree

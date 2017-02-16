@@ -7,8 +7,7 @@
         android:actionViewClass="android.support.v7.widget.SearchView"
         android:icon="@drawable/ic_search"
         android:title="@string/book_action_search"
-        android:visible="false"
-        app:showAsAction="ifRoom|withText" />
+        app:showAsAction="ifRoom|collapseActionView" />
     <item
         android:id="@+id/action_attributes"
         android:icon="@drawable/ic_properties"

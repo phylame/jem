@@ -11,11 +11,10 @@ import android.widget.AdapterView
 import android.widget.BaseAdapter
 import android.widget.ListView
 import android.widget.TextView
-import jem.core.Attributes
-import jem.core.Attributes.titleOf
-import jem.core.Attributes.typeOf
-import jem.core.Chapter
-import jem.title
+import jem.Attributes
+import jem.Attributes.titleOf
+import jem.Attributes.typeOf
+import jem.Chapter
 import jem.util.Variants
 import jem.util.Variants.printable
 import jem.util.text.Text
@@ -72,7 +71,6 @@ internal class AttributesActivity : BaseActivity(), AdapterView.OnItemClickListe
             finish()
         } else {
             chapter = Task.chapter!!.chapter
-            toolbar.subtitle = chapter.title
             adapter.refresh()
         }
     }

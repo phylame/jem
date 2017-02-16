@@ -1,13 +1,14 @@
 package pw.phylame.imabw
 
 import jem.*
-import jem.core.Attributes
-import jem.core.Book
-import jem.core.Chapter
+import jem.Attributes
+import jem.Book
+import jem.Chapter
 import jem.epm.EpmInParam
 import jem.epm.EpmManager
 import jem.epm.EpmOutParam
 import jem.epm.util.InputCleaner
+import jem.kotlin.*
 import java.io.File
 import java.util.*
 

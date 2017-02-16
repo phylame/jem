@@ -13,10 +13,10 @@ import android.util.Log
 import android.view.*
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.*
-import jem.*
-import jem.core.Attributes
-import jem.core.Book
-import jem.core.Chapter
+import jem.kotlin.*
+import jem.Attributes
+import jem.Book
+import jem.Chapter
 import jem.epm.EpmInParam
 import jem.epm.EpmManager
 import jem.util.Build

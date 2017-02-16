@@ -2,12 +2,8 @@ package pw.phylame.imabw.activity
 
 import android.app.Activity
 import android.support.annotation.WorkerThread
-import android.util.Log
-import jem.core.Book
-import jem.core.Chapter
+import jem.Book
 import jem.epm.EpmInParam
-import jem.epm.EpmManager
-import java.io.File
 
 internal object Task {
 //    val taskPool: ExecutorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())

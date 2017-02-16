@@ -7,11 +7,10 @@ import android.text.method.KeyListener
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.EditText
-import jem.core.Chapter
-import jem.title
+import jem.kotlin.title
 import pw.phylame.ancotols.MenuAction
-import pw.phylame.ancotols.startActivityForResult
 import pw.phylame.ancotols.lazyView
+import pw.phylame.ancotols.startActivityForResult
 import pw.phylame.imabw.BaseActivity
 import pw.phylame.imabw.R
 

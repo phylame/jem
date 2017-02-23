@@ -34,20 +34,18 @@ import jem.util.UnsupportedFormatException
 import jem.util.Variants
 import jem.util.flob.Flobs
 import jem.util.text.Texts
-import pw.phylame.qaf.core.App
-import pw.phylame.qaf.core.iif
-import pw.phylame.qaf.core.tr
 import pw.phylame.commons.io.IOUtils
 import pw.phylame.commons.util.DateUtils
 import pw.phylame.commons.util.MiscUtils
+import pw.phylame.qaf.core.App
+import pw.phylame.qaf.core.iif
+import pw.phylame.qaf.core.tr
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.lang.System.lineSeparator
 import java.text.ParseException
-import java.util.Collections
-import java.util.HashMap
-import java.util.LinkedList
+import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -66,13 +64,17 @@ fun printJemError(e: JemException, input: String, format: String) {
 fun openBook(tuple: InTuple): Book? {
     val args = HashMap(tuple.arguments)
     if (tuple.format == "crawler") {
-        val key = "crawler.parse.${CrawlerConfig.CRAWLER_LISTENER}"
+        var key = "crawler.parse.${CrawlerConfig.CRAWLER_LISTENER}"
         if (key !in args) {
             args[key] = object : CrawlerListenerAdapter() {
                 override fun textFetching(chapter: Chapter, total: Int, current: Int) {
                     println("$current/$total: ${chapter.title}")
                 }
             }
+        }
+        key = "crawler.parse.${CrawlerConfig.EXECUTOR}"
+        if (key !in args) {
+            args[key] = taskPool
         }
     }
     try {
@@ -168,7 +170,7 @@ fun saveBook(book: Book, tuple: OutTuple): String? {
     val output = tuple.output.iif(tuple.output.isDirectory) { File(it, "${book.title}.${tuple.format}") }
     try {
         if (book is CrawlerBook) {
-            book.fetchTexts(taskPool)
+            book.fetchTexts()
         }
         EpmManager.writeBook(book, output, tuple.format, prepareArguments(tuple))
         return output.path

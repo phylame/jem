@@ -61,7 +61,7 @@ public class M_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
             } else {
                 val a = li.child(0);
                 val chapter = new Chapter(a.child(0).text().trim());
-                chapter.setText(new CrawlerText(HOST + a.attr("href"), this, chapter));
+                chapter.setText(new CrawlerText(this, chapter, HOST + a.attr("href")));
                 if (section != null) {
                     section.append(chapter);
                 } else {

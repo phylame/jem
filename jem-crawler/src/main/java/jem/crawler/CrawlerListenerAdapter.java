@@ -1,22 +1,17 @@
 package jem.crawler;
 
-import jem.Book;
 import jem.Chapter;
 
 public class CrawlerListenerAdapter implements CrawlerListener {
-
     @Override
-    public void attributeFetched(Book book) {
-
+    public void attributeFetched(CrawlerBook book) {
     }
 
     @Override
-    public void contentsFetched(Book book) {
-
+    public void contentsFetched(CrawlerBook book) {
     }
 
     @Override
-    public void fetchingText(int total, int current, Chapter chapter) {
-
+    public void textFetching(Chapter chapter, int total, int current) {
     }
 }

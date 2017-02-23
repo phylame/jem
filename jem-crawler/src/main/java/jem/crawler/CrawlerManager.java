@@ -27,11 +27,11 @@ public final class CrawlerManager {
 
     public static final String AUTO_LOAD_KEY = "jem.crawler.autoLoad";
 
-    public static final String REGISTRY_FILE = "META-INF/jem/crawler-providers.prop";
+    private static final String REGISTRY_FILE = "META-INF/jem/crawlers.prop";
 
-    private static final Implementor<Crawler> crawlers = new Implementor<>(Crawler.class, false);
+    private static final Implementor<CrawlerProvider> crawlers = new Implementor<>(CrawlerProvider.class, false);
 
-    public static void register(String host, Class<? extends Crawler> clazz) {
+    public static void register(String host, Class<? extends CrawlerProvider> clazz) {
         crawlers.register(host, clazz);
     }
 
@@ -39,19 +39,19 @@ public final class CrawlerManager {
         crawlers.register(host, path);
     }
 
-    public static void unregister(String host) {
-        crawlers.remove(host);
-    }
-
-    public static String[] knownHosts() {
-        return crawlers.names();
-    }
-
     public static boolean isRegistered(String host) {
         return crawlers.contains(host);
     }
 
-    public static Crawler crawlerFor(String host) throws IllegalAccessException, ClassNotFoundException, InstantiationException {
+    public static void unregister(String host) {
+        crawlers.remove(host);
+    }
+
+    public static String[] supportedHosts() {
+        return crawlers.names();
+    }
+
+    public static CrawlerProvider crawlerFor(String host) throws IllegalAccessException, ClassNotFoundException, InstantiationException {
         return crawlers.getInstance(host);
     }
 

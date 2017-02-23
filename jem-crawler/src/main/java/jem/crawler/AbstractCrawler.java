@@ -19,8 +19,9 @@
 package jem.crawler;
 
 import jem.Chapter;
+import jem.crawler.util.FileCache;
 import jem.epm.util.InputCleaner;
-import lombok.Getter;
+import lombok.NonNull;
 import lombok.val;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -32,21 +33,21 @@ import org.jsoup.nodes.TextNode;
 import pw.phylame.commons.format.Render;
 import pw.phylame.commons.io.HttpUtils;
 import pw.phylame.commons.io.IOUtils;
-import pw.phylame.commons.io.TextCache;
 import pw.phylame.commons.util.StringUtils;
 import pw.phylame.commons.util.Validate;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public abstract class AbstractCrawler implements Crawler {
-    protected Context context;
-    protected CrawlerBook book;
+public abstract class AbstractCrawler implements CrawlerProvider {
+    protected CrawlerContext context;
     protected CrawlerConfig config;
+    protected CrawlerBook book;
 
-    private int chapterIndex = 1;
+    private AtomicInteger chapterIndex = new AtomicInteger(1);
 
-    @Getter
     protected int chapterCount = -1;
 
     private boolean initialized = false;
@@ -56,30 +57,39 @@ public abstract class AbstractCrawler implements Crawler {
     }
 
     @Override
-    public void init(Context context) {
+    public void init(@NonNull CrawlerContext context) {
+        context.setError(null);
         this.context = context;
-        this.context.setError(null);
         book = context.getBook();
         config = context.getConfig();
-        CrawlerText.textCache = new TextCache(context.getCache());
-        book.registerCleanup(new InputCleaner(CrawlerText.textCache));
+        if (StringUtils.isNotEmpty(config.cache)) {
+            context.setCache(new FileCache(new File(config.cache)));
+            book.registerCleanup(new InputCleaner(context.getCache()));
+        }
         initialized = true;
     }
 
     @Override
-    public final String fetchText(Chapter chapter, final String url) {
+    public final CrawlerContext getContext() {
+        return context;
+    }
+
+    @Override
+    public final String fetchText(Chapter chapter, String uri) {
         ensureInitialized();
-        if (config.crawlerListener != null) {
-            if (chapterIndex > chapterCount) {
-                chapterIndex = 1;
+        val listener = config.crawlerListener;
+        if (listener != null) {
+            Validate.require(chapterCount >= 0, "chapterCount should be initialized");
+            if (chapterIndex.get() > chapterCount) {
+                chapterIndex.set(1);
             }
-            config.crawlerListener.fetchingText(chapterCount, chapterIndex++, chapter);
+            listener.textFetching(chapter, chapterCount, chapterIndex.getAndIncrement());
         }
-        if (StringUtils.isEmpty(url)) {
+        if (StringUtils.isEmpty(uri)) {
             return StringUtils.EMPTY_TEXT;
         }
         try {
-            return fetchText(url);
+            return fetchText(uri);
         } catch (IOException e) {
             context.setError(e);
             return StringUtils.EMPTY_TEXT;

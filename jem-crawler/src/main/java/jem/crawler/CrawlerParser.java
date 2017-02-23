@@ -25,6 +25,7 @@ import jem.epm.impl.EpmBase;
 import jem.epm.util.ParserException;
 import jem.util.JemException;
 import lombok.val;
+import pw.phylame.commons.util.Validate;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,15 +39,16 @@ public class CrawlerParser extends EpmBase<CrawlerConfig> implements Parser {
 
     @Override
     public Book parse(File file, Map<String, Object> args) throws IOException, JemException {
-        throw new UnsupportedOperationException("Crawler parser is not supported for file");
+        throw new UnsupportedOperationException("CrawlerProvider parser is not supported for file");
     }
 
     @Override
     public Book parse(String input, Map<String, Object> args) throws IOException, JemException {
         val config = fetchConfig(args);
+        Validate.requireNotNull(config, "config should have been initialized");
         val url = new URL(input);
         val host = url.getProtocol() + "://" + url.getHost();
-        final Crawler crawler;
+        final CrawlerProvider crawler;
         try {
             crawler = CrawlerManager.crawlerFor(host);
         } catch (IllegalAccessException | ClassNotFoundException | InstantiationException e) {
@@ -57,8 +59,7 @@ public class CrawlerParser extends EpmBase<CrawlerConfig> implements Parser {
         }
         val book = new CrawlerBook();
         val listener = config.crawlerListener;
-        val context = new Context(input, book, config);
-        crawler.init(context);
+        crawler.init(new CrawlerContext(input, book, config));
         crawler.fetchAttributes();
         if (listener != null) {
             listener.attributeFetched(book);
@@ -68,7 +69,6 @@ public class CrawlerParser extends EpmBase<CrawlerConfig> implements Parser {
             listener.contentsFetched(book);
         }
         book.getAttributes().set("source", input);
-        book.getExtensions().set(CrawlerBook.EXT_CHAPTER_COUNT_KEY, crawler.getChapterCount());
         return book;
     }
 }

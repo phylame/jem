@@ -74,7 +74,7 @@ public class WWW_MANGG_COM extends AbstractCrawler implements Identifiable {
         for (val dd : doc.select("dd")) {
             val a = dd.child(0);
             val chapter = new Chapter(a.text().trim());
-            chapter.setText(new CrawlerText(HOST + a.attr("href"), this, chapter));
+            chapter.setText(new CrawlerText(this, chapter, HOST + a.attr("href")));
             book.append(chapter);
         }
         chapterCount = book.size();

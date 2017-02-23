@@ -57,7 +57,7 @@ public class BOOK_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
             book.append(section);
             for (val a : volume.select("ul a")) {
                 val chapter = new Chapter(a.text().trim());
-                chapter.setText(new CrawlerText(protocol + a.attr("href"), this, chapter));
+                chapter.setText(new CrawlerText(this, chapter, protocol + a.attr("href")));
                 section.append(chapter);
                 ++chapterCount;
             }

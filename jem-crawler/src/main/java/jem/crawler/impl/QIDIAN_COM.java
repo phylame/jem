@@ -4,14 +4,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import jem.crawler.AbstractCrawler;
-import jem.crawler.Context;
+import jem.crawler.CrawlerContext;
 
 public abstract class QIDIAN_COM extends AbstractCrawler {
 
     protected String protocol;
 
     @Override
-    public void init(Context context) {
+    public void init(CrawlerContext context) {
         super.init(context);
         try {
             protocol = new URL(context.getAttrUrl()).getProtocol() + ':';

@@ -30,7 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jem.crawler.AbstractCrawler;
+import jem.crawler.*;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -40,10 +40,7 @@ import org.jsoup.select.Selector;
 
 import jem.Attributes;
 import jem.Chapter;
-import jem.crawler.Context;
-import jem.crawler.Identifiable;
-import jem.crawler.Searchable;
-import jem.crawler.CrawlerText;
+import jem.crawler.CrawlerContext;
 import jem.crawler.util.SoupUtils;
 import jem.util.flob.Flobs;
 import lombok.val;
@@ -57,7 +54,7 @@ public class YD_SOGOU_COM extends AbstractCrawler implements Searchable, Identif
     private String bookKey;
 
     @Override
-    public void init(Context context) {
+    public void init(CrawlerContext context) {
         super.init(context);
         bookKey = valueOfName(context.getAttrUrl().substring(35), "bkey", "&");
     }
@@ -124,7 +121,7 @@ public class YD_SOGOU_COM extends AbstractCrawler implements Searchable, Identif
             Attributes.setWords(chapter, obj.getInt("size"));
             Attributes.setDate(chapter, new Date(obj.getLong("updateTime")));
             val url = String.format("%s/h5/cpt/chapter?bkey=%s&ckey=%s&%s", HOST, bookKey, obj.getString("ckey"), GP);
-            chapter.setText(new CrawlerText(url, this, chapter));
+            chapter.setText(new CrawlerText(this, chapter, url));
             book.append(chapter);
         }
         if (chapterCount == -1) {

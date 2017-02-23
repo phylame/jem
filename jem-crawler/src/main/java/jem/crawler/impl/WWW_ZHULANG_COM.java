@@ -71,7 +71,7 @@ public class WWW_ZHULANG_COM extends AbstractCrawler implements Identifiable {
             }
             for (val a : div.select("li>a")) {
                 val chapter = new Chapter(a.text().trim());
-                chapter.setText(new CrawlerText(a.attr("href"), this, chapter));
+                chapter.setText(new CrawlerText(this, chapter, a.attr("href")));
                 section.append(chapter);
                 ++chapterCount;
             }

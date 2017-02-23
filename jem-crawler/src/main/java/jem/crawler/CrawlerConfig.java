@@ -21,9 +21,13 @@ package jem.crawler;
 import jem.epm.util.config.AbstractConfig;
 import jem.epm.util.config.Configured;
 
+import java.util.concurrent.ExecutorService;
+
 public class CrawlerConfig extends AbstractConfig {
     public static final String SELF = "config";
     public static final String TIMEOUT = "timeout";
+    public static final String CACHE = "cache";
+    public static final String EXECUTOR = "executor";
     public static final String LINE_SEPARATOR = "lineSeparator";
     public static final String CRAWLER_LISTENER = "crawlerListener";
 
@@ -33,9 +37,18 @@ public class CrawlerConfig extends AbstractConfig {
     @Configured(TIMEOUT)
     public int timeout = 10000;
 
-    @Configured(LINE_SEPARATOR)
-    public String lineSeparator = System.lineSeparator();
+    /**
+     * Path for cache file, {@literal null} for in-memory cache.
+     */
+    @Configured(CACHE)
+    public String cache = null;
+
+    @Configured(EXECUTOR)
+    public ExecutorService executor = null;
 
     @Configured(CRAWLER_LISTENER)
     public CrawlerListener crawlerListener;
+
+    @Configured(LINE_SEPARATOR)
+    public String lineSeparator = System.lineSeparator();
 }

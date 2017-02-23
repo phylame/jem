@@ -48,7 +48,7 @@ public class H5_17K_COM extends AbstractCrawler implements Searchable, Identifia
     private String bookId;
 
     @Override
-    public void init(Context context) {
+    public void init(CrawlerContext context) {
         super.init(context);
         bookId = PathUtils.baseName(context.getAttrUrl());
     }
@@ -114,7 +114,7 @@ public class H5_17K_COM extends AbstractCrawler implements Searchable, Identifia
                 Attributes.setWords(chapter, obj.getInt("wordCount"));
                 Attributes.setDate(chapter, new Date(obj.getLong("updateDate")));
                 val url = String.format("%s/chapter/%s/%d.html", HOST, bookId, obj.getLong("id"));
-                chapter.setText(new CrawlerText(url, this, chapter));
+                chapter.setText(new CrawlerText(this, chapter, url));
             }
         }
         if (chapterCount == -1) {

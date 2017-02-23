@@ -18,13 +18,12 @@
 
 package jem.crawler;
 
-import jem.Book;
 import jem.Chapter;
 
 public interface CrawlerListener {
-    void attributeFetched(Book book);
+    void attributeFetched(CrawlerBook book);
 
-    void contentsFetched(Book book);
+    void contentsFetched(CrawlerBook book);
 
-    void fetchingText(int total, int current, Chapter chapter);
+    void textFetching(Chapter chapter, int total, int current);
 }

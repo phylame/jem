@@ -3,7 +3,7 @@ package jem.crawler.impl;
 import jem.Attributes;
 import jem.Chapter;
 import jem.crawler.AbstractCrawler;
-import jem.crawler.Context;
+import jem.crawler.CrawlerContext;
 import jem.crawler.CrawlerText;
 import jem.crawler.Identifiable;
 import jem.util.flob.Flobs;
@@ -23,7 +23,7 @@ public class BOOK_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
     private String bookId;
 
     @Override
-    public void init(Context context) {
+    public void init(CrawlerContext context) {
         super.init(context);
         bookId = PathUtils.baseName(context.getAttrUrl());
     }
@@ -56,7 +56,7 @@ public class BOOK_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
             val section = new Chapter(((TextNode) i1.next().childNode(0)).text().trim());
             for (val a : i2.next().select("a")) {
                 val chapter = new Chapter(a.text().trim());
-                chapter.setText(new CrawlerText(a.attr("href"), this, chapter));
+                chapter.setText(new CrawlerText(this, chapter, a.attr("href")));
                 section.append(chapter);
                 ++chapterCount;
             }

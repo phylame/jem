@@ -18,18 +18,29 @@
 
 package jem.crawler;
 
-import jem.Chapter;
+import jem.crawler.util.Cacheable;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import org.jsoup.nodes.Document;
 
-import java.io.IOException;
+@Getter
+@Setter
+@RequiredArgsConstructor
+public class CrawlerContext {
 
-public interface Crawler {
-    void init(Context ctx);
+    private final String attrUrl;
+    private final CrawlerBook book;
+    private final CrawlerConfig config;
 
-    void fetchAttributes() throws IOException;
+    private Cacheable cache;
 
-    void fetchContents() throws IOException;
+    private String tocUrl;
 
-    int getChapterCount();
+    private Document soup;
 
-    String fetchText(Chapter chapter, String url);
+    /**
+     * The last error.
+     */
+    private Throwable error;
 }

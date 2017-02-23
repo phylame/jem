@@ -7,13 +7,13 @@ import static pw.phylame.commons.util.StringUtils.trimmed;
 import java.io.IOException;
 import java.net.URL;
 
+import jem.crawler.CrawlerContext;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
 import jem.Attributes;
 import jem.Chapter;
 import jem.crawler.AbstractCrawler;
-import jem.crawler.Context;
 import jem.crawler.Identifiable;
 import jem.crawler.CrawlerText;
 import jem.util.flob.Flobs;
@@ -28,7 +28,7 @@ public class M_MOTIE_COM extends AbstractCrawler implements Identifiable {
     private Chapter section;
 
     @Override
-    public void init(Context context) {
+    public void init(CrawlerContext context) {
         super.init(context);
         bookId = PathUtils.baseName(context.getAttrUrl());
         chapterCount = 0;
@@ -82,7 +82,7 @@ public class M_MOTIE_COM extends AbstractCrawler implements Identifiable {
                 } else {
                     url = a.attr("href");
                 }
-                chapter.setText(new CrawlerText(url, this, chapter));
+                chapter.setText(new CrawlerText(this, chapter, url));
                 section.append(chapter);
                 ++chapterCount;
             }

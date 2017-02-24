@@ -18,16 +18,20 @@
 
 package jem.crawler;
 
+import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import jem.Attributes;
 import jem.Chapter;
 import jem.util.text.AbstractText;
 import jem.util.text.Texts;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.val;
 import pw.phylame.commons.util.Validate;
-
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CrawlerText extends AbstractText implements Runnable {
     /**
@@ -35,65 +39,50 @@ public class CrawlerText extends AbstractText implements Runnable {
      */
     private Object tag;
 
-    /**
-     * Directly text cache.
-     */
-    private String text;
-
     @Getter
     private final String uri;
     @Getter
     private final Chapter chapter;
     @Getter
     private final CrawlerProvider crawler;
-    private final AtomicBoolean isDone = new AtomicBoolean(false);
+    private final AtomicBoolean isFetched = new AtomicBoolean(false);
     private final AtomicBoolean isSubmitted = new AtomicBoolean(false);
 
     public CrawlerText(@NonNull CrawlerProvider crawler, @NonNull Chapter chapter, @NonNull String uri) {
         super(Texts.PLAIN);
+        Validate.requireNotNull(crawler.getContext().getCache(), "cache in context cannot be null");
         this.uri = uri;
         this.chapter = chapter;
         this.crawler = crawler;
     }
 
-    private void awaitFetched() {
-        while (!isDone.get()) {
-            Thread.yield();
-        }
-    }
-
-    public final void submitToPool() {
-        val executor = crawler.getContext().getConfig().executor;
-        Validate.requireNotNull(executor, "executor in context must be initialized for async mode");
-        isSubmitted.set(true);
-        executor.submit(this);
+    public final boolean isFetched() {
+        return isFetched.get();
     }
 
     public final boolean isSubmitted() {
         return isSubmitted.get();
     }
 
+    public final Future<?> submitTo(@NonNull ExecutorService executor) {
+        isSubmitted.set(true);
+        return executor.submit(this);
+    }
+
     @Override
+    @SneakyThrows(IOException.class)
     public String getText() {
-        val executor = crawler.getContext().getConfig().executor;
-        if (executor != null) { // async mode
-            if (isSubmitted.get()) {
-                awaitFetched();
+        if (!isFetched()) {
+            if (isSubmitted()) {// already submitted into pool in async mode
+                // wait for done
+                while (!isFetched()) {
+                    Thread.yield();
+                }
             } else {
-                submitToPool();
-                awaitFetched();
+                fetchText();
             }
-        } else {
-            fetchText();
         }
-        val cache = crawler.getContext().getCache();
-        if (cache != null) {
-            Validate.requireNotNull(tag, "tag should have been initialized");
-            return cache.get(tag);
-        } else {
-            Validate.requireNotNull(text, "text should have been initialized");
-            return text;
-        }
+        return crawler.getContext().getCache().get(tag);
     }
 
     @Override
@@ -101,15 +90,12 @@ public class CrawlerText extends AbstractText implements Runnable {
         fetchText();
     }
 
+    @SneakyThrows(IOException.class)
     private void fetchText() {
         val text = crawler.fetchText(chapter, uri);
         Attributes.setWords(chapter, text.length());
-        val cache = crawler.getContext().getCache();
-        if (cache != null) {
-            tag = cache.add(text);
-        } else {
-            this.text = text;
-        }
-        isDone.set(true);
+        tag = crawler.getContext().getCache().add(text);
+        isFetched.set(true);
     }
+
 }

@@ -1,6 +1,11 @@
 package jem.crawler.impl;
 
-import static pw.phylame.commons.util.StringUtils.EMPTY_TEXT;
+import static jem.Attributes.setAuthor;
+import static jem.Attributes.setCover;
+import static jem.Attributes.setGenre;
+import static jem.Attributes.setIntro;
+import static jem.Attributes.setState;
+import static jem.Attributes.setTitle;
 import static pw.phylame.commons.util.StringUtils.join;
 import static pw.phylame.commons.util.StringUtils.secondPartOf;
 import static pw.phylame.commons.util.StringUtils.trimmed;
@@ -9,14 +14,12 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.LinkedList;
 
-import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import jem.Attributes;
 import jem.Chapter;
-import jem.crawler.Identifiable;
 import jem.crawler.CrawlerText;
+import jem.crawler.Identifiable;
 import jem.util.flob.Flobs;
 import lombok.val;
 
@@ -26,26 +29,27 @@ public class M_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
     @Override
     public void fetchAttributes() throws IOException {
         ensureInitialized();
-        val doc = getSoup(context.getAttrUrl());
+        val book = context.getBook();
+        val doc = getSoup(context.getUrl());
         Elements soup = doc.select("div.book-layout");
-        Attributes.setCover(book,
-                Flobs.forURL(new URL(largeImage(soup.select("img").attr("src"))), "image/jpg"));
-        Attributes.setTitle(book, soup.select("h2").text().trim());
-        Attributes.setAuthor(book, soup.select("a").text().trim());
+        setCover(book, Flobs.forURL(new URL(largeImage(soup.select("img").attr("src"))), "image/jpg"));
+        setTitle(book, soup.select("h2").text().trim());
+        setAuthor(book, soup.select("a").text().trim());
         soup = soup.select("p");
-        Attributes.setGenre(book, soup.first().text().trim());
-        Attributes.setState(book, secondPartOf(soup.get(1).text(), "|"));
+        setGenre(book, soup.first().text().trim());
+        setState(book, secondPartOf(soup.get(1).text(), "|"));
         val lines = new LinkedList<String>();
         for (val str : trimmed(doc.select("section#bookSummary").select("textarea").text()).split("<br>")) {
             lines.add(trimmed(str));
         }
-        Attributes.setIntro(book, join(config.lineSeparator, lines));
+        setIntro(book, join(context.getConfig().lineSeparator, lines));
     }
 
     @Override
     public void fetchContents() throws IOException {
         ensureInitialized();
-        val doc = getSoup(context.getAttrUrl() + "/catalog");
+        val book = context.getBook();
+        val doc = getSoup(context.getUrl() + "/catalog");
         Chapter section = null;
         int total = 0;
         for (val node : doc.select("ol#volumes").first().childNodes()) {
@@ -74,19 +78,13 @@ public class M_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
     }
 
     @Override
-    protected String fetchText(String url) {
+    protected String fetchText(String uri) throws IOException {
         ensureInitialized();
-        final Document doc;
-        try {
-            doc = getSoup(url);
-        } catch (IOException e) {
-            return EMPTY_TEXT;
-        }
-        return joinString(doc.select("div.read-section").select("p"), config.lineSeparator);
+        return joinNodes(getSoup(uri).select("div.read-section").select("p"), context.getConfig().lineSeparator);
     }
 
     @Override
-    public String attrUrlOf(String id) {
+    public String urlById(String id) {
         return String.format("http://m.qidian.com/book/%s", id);
     }
 

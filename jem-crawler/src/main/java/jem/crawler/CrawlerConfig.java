@@ -18,18 +18,20 @@
 
 package jem.crawler;
 
+import java.util.concurrent.ExecutorService;
+
 import jem.epm.util.config.AbstractConfig;
 import jem.epm.util.config.Configured;
-
-import java.util.concurrent.ExecutorService;
+import pw.phylame.commons.cache.Cacheable;
 
 public class CrawlerConfig extends AbstractConfig {
     public static final String SELF = "config";
+    public static final String TRY_COUNT = "tryCount";
     public static final String TIMEOUT = "timeout";
     public static final String CACHE = "cache";
+    public static final String LISTENER = "listener";
     public static final String EXECUTOR = "executor";
     public static final String LINE_SEPARATOR = "lineSeparator";
-    public static final String CRAWLER_LISTENER = "crawlerListener";
 
     /**
      * Timeout for networks.
@@ -38,16 +40,22 @@ public class CrawlerConfig extends AbstractConfig {
     public int timeout = 10000;
 
     /**
-     * Path for cache file, {@literal null} for in-memory cache.
+     * Count for retry when connection timeout.
+     */
+    @Configured(TRY_COUNT)
+    public int tryCount = 5;
+
+    /**
+     * The text cache.
      */
     @Configured(CACHE)
-    public String cache = null;
+    public Cacheable cache = null;
+
+    @Configured(LISTENER)
+    public CrawlerListener listener = null;
 
     @Configured(EXECUTOR)
     public ExecutorService executor = null;
-
-    @Configured(CRAWLER_LISTENER)
-    public CrawlerListener crawlerListener;
 
     @Configured(LINE_SEPARATOR)
     public String lineSeparator = System.lineSeparator();

@@ -18,11 +18,11 @@
 
 package jem.crawler;
 
-import jem.Chapter;
-import jem.crawler.util.FileCache;
-import jem.epm.util.InputCleaner;
-import lombok.NonNull;
-import lombok.val;
+import java.io.IOException;
+import java.net.SocketTimeoutException;
+import java.util.Collection;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.jsoup.Jsoup;
@@ -30,25 +30,28 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
+
+import jem.Chapter;
+import jem.crawler.util.SoupUtils;
+import jem.epm.util.InputCleaner;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.val;
 import pw.phylame.commons.format.Render;
 import pw.phylame.commons.io.HttpUtils;
 import pw.phylame.commons.io.IOUtils;
+import pw.phylame.commons.log.Log;
 import pw.phylame.commons.util.StringUtils;
 import pw.phylame.commons.util.Validate;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.concurrent.atomic.AtomicInteger;
-
 public abstract class AbstractCrawler implements CrawlerProvider {
-    protected CrawlerContext context;
-    protected CrawlerConfig config;
-    protected CrawlerBook book;
+    private static final String TAG = AbstractCrawler.class.getSimpleName();
 
-    private AtomicInteger chapterIndex = new AtomicInteger(1);
+    @Getter
+    protected CrawlerContext context;
 
     protected int chapterCount = -1;
+    private final AtomicInteger chapterIndex = new AtomicInteger(1);
 
     private boolean initialized = false;
 
@@ -58,31 +61,23 @@ public abstract class AbstractCrawler implements CrawlerProvider {
 
     @Override
     public void init(@NonNull CrawlerContext context) {
-        context.setError(null);
         this.context = context;
-        book = context.getBook();
-        config = context.getConfig();
-        if (StringUtils.isNotEmpty(config.cache)) {
-            context.setCache(new FileCache(new File(config.cache)));
-            book.registerCleanup(new InputCleaner(context.getCache()));
+        context.setError(null);
+        val config = context.getConfig();
+        if (config.cache != null) {
+            context.getBook().registerCleanup(new InputCleaner(config.cache));
         }
         initialized = true;
     }
 
-    @Override
-    public final CrawlerContext getContext() {
-        return context;
-    }
+    protected abstract String fetchText(String uri) throws IOException;
 
     @Override
     public final String fetchText(Chapter chapter, String uri) {
         ensureInitialized();
-        val listener = config.crawlerListener;
+        val listener = context.getConfig().listener;
         if (listener != null) {
             Validate.require(chapterCount >= 0, "chapterCount should be initialized");
-            if (chapterIndex.get() > chapterCount) {
-                chapterIndex.set(1);
-            }
             listener.textFetching(chapter, chapterCount, chapterIndex.getAndIncrement());
         }
         if (StringUtils.isEmpty(uri)) {
@@ -91,18 +86,17 @@ public abstract class AbstractCrawler implements CrawlerProvider {
         try {
             return fetchText(uri);
         } catch (IOException e) {
+            Log.e(TAG, e);
             context.setError(e);
             return StringUtils.EMPTY_TEXT;
         }
     }
 
-    protected abstract String fetchText(String url) throws IOException;
-
     protected int fetchPage(int page) throws IOException {
         throw new UnsupportedOperationException("require for implementation");
     }
 
-    protected final void fetchTocPaged() throws IOException {
+    protected final void fetchToc() throws IOException {
         ensureInitialized();
         for (int i = 2, pages = fetchPage(1); i <= pages; ++i) {
             fetchPage(i);
@@ -110,30 +104,58 @@ public abstract class AbstractCrawler implements CrawlerProvider {
     }
 
     protected final Document getSoup(String url) throws IOException {
-        return Jsoup.connect(url).timeout(config.timeout).get();
+        return fetchSoup(url, "get");
+    }
+
+    protected final Document postSoup(String url) throws IOException {
+        return fetchSoup(url, "post");
+    }
+
+    protected final Document fetchSoup(String url, String method) throws IOException {
+        val config = context.getConfig();
+        for (int i = 0, end = Math.max(1, config.tryCount); i < end; ++i) {
+            try {
+                return "get".equalsIgnoreCase(method)
+                        ? Jsoup.connect(url)
+                                .userAgent(SoupUtils.randAgent())
+                                .timeout(config.timeout).get()
+                        : Jsoup.connect(url)
+                                .userAgent(SoupUtils.randAgent())
+                                .timeout(config.timeout).post();
+            } catch (SocketTimeoutException e) {
+                Log.d(TAG, "try reconnect to %s", url);
+            }
+        }
+        throw new IOException("cannot connect to " + url);
     }
 
     protected final JSONObject getJson(String url, String encoding) throws IOException {
-        val conn = HttpUtils.Request.builder()
-                .url(url)
-                .method("get")
-                .connectTimeout(config.timeout)
-                .build()
-                .connect();
-        return new JSONObject(new JSONTokener(IOUtils.readerFor(conn.getInputStream(), encoding)));
+        return fetchJson(url, "get", encoding);
     }
 
     protected final JSONObject postJson(String url, String encoding) throws IOException {
-        val conn = HttpUtils.Request.builder()
-                .url(url)
-                .method("post")
-                .connectTimeout(config.timeout)
-                .build()
-                .connect();
-        return new JSONObject(new JSONTokener(IOUtils.readerFor(conn.getInputStream(), encoding)));
+        return fetchJson(url, "post", encoding);
     }
 
-    protected final String joinString(Collection<? extends Node> nodes, String separator) {
+    protected final JSONObject fetchJson(String url, String method, String encoding) throws IOException {
+        val config = context.getConfig();
+        val request = HttpUtils.Request.builder()
+                .url(url)
+                .method(method)
+                .property("User-Agent", SoupUtils.randAgent())
+                .connectTimeout(config.timeout)
+                .build();
+        for (int i = 0, end = Math.max(1, config.tryCount); i < end; ++i) {
+            try {
+                return new JSONObject(new JSONTokener(IOUtils.readerFor(request.connect().getInputStream(), encoding)));
+            } catch (SocketTimeoutException e) {
+                Log.d(TAG, "try reconnect to %s", url);
+            }
+        }
+        throw new IOException("cannot connect to " + url);
+    }
+
+    protected final String joinNodes(Collection<? extends Node> nodes, String separator) {
         return StringUtils.join(separator, nodes, new Render<Node>() {
             @Override
             public String render(Node node) {

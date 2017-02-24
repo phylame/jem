@@ -117,7 +117,7 @@ public final class Attributes {
      * @param type name of type
      */
     public static void mapType(String name, String type) {
-        attributeTypes.put(name, Variants.checkType(type));
+        attributeTypes.put(name, Variants.checkRegistered(type));
     }
 
     /**

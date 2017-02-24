@@ -23,9 +23,9 @@ import jem.Chapter;
 import java.io.IOException;
 
 public interface CrawlerProvider {
-    void init(CrawlerContext context);
-
     CrawlerContext getContext();
+
+    void init(CrawlerContext context);
 
     void fetchAttributes() throws IOException;
 

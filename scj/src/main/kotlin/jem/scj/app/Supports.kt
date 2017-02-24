@@ -64,17 +64,13 @@ fun printJemError(e: JemException, input: String, format: String) {
 fun openBook(tuple: InTuple): Book? {
     val args = HashMap(tuple.arguments)
     if (tuple.format == "crawler") {
-        var key = "crawler.parse.${CrawlerConfig.CRAWLER_LISTENER}"
+        var key = "crawler.parse.${CrawlerConfig.LISTENER}"
         if (key !in args) {
             args[key] = object : CrawlerListenerAdapter() {
                 override fun textFetching(chapter: Chapter, total: Int, current: Int) {
                     println("$current/$total: ${chapter.title}")
                 }
             }
-        }
-        key = "crawler.parse.${CrawlerConfig.EXECUTOR}"
-        if (key !in args) {
-            args[key] = taskPool
         }
     }
     try {
@@ -170,7 +166,8 @@ fun saveBook(book: Book, tuple: OutTuple): String? {
     val output = tuple.output.iif(tuple.output.isDirectory) { File(it, "${book.title}.${tuple.format}") }
     try {
         if (book is CrawlerBook) {
-            book.fetchTexts()
+            book.initTexts(taskPool)
+            isTaskPool = true
         }
         EpmManager.writeBook(book, output, tuple.format, prepareArguments(tuple))
         return output.path

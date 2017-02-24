@@ -18,7 +18,12 @@
 
 package jem.crawler.impl;
 
-import static pw.phylame.commons.util.StringUtils.EMPTY_TEXT;
+import static jem.Attributes.setAuthor;
+import static jem.Attributes.setCover;
+import static jem.Attributes.setDate;
+import static jem.Attributes.setIntro;
+import static jem.Attributes.setState;
+import static jem.Attributes.setTitle;
 import static pw.phylame.commons.util.StringUtils.firstPartOf;
 import static pw.phylame.commons.util.StringUtils.join;
 import static pw.phylame.commons.util.StringUtils.secondPartOf;
@@ -29,18 +34,17 @@ import java.net.URL;
 import java.util.Date;
 import java.util.LinkedList;
 
-import org.jsoup.nodes.Document;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 
-import jem.Attributes;
 import jem.Chapter;
 import jem.crawler.AbstractCrawler;
-import jem.crawler.Identifiable;
 import jem.crawler.CrawlerText;
+import jem.crawler.Identifiable;
 import jem.util.flob.Flobs;
 import lombok.val;
 import pw.phylame.commons.util.DateUtils;
+import pw.phylame.commons.util.Validate;
 
 public class WWW_MANGG_COM extends AbstractCrawler implements Identifiable {
     public static final String HOST = "http://www.mangg.com";
@@ -48,29 +52,33 @@ public class WWW_MANGG_COM extends AbstractCrawler implements Identifiable {
     @Override
     public void fetchAttributes() throws IOException {
         ensureInitialized();
-        val doc = getSoup(context.getAttrUrl());
+        val book = context.getBook();
+        val config = context.getConfig();
+        val doc = getSoup(context.getUrl());
         Elements soup = doc.select("div#info");
-        Attributes.setTitle(book, soup.select("h1").text().trim());
+        setTitle(book, soup.select("h1").text().trim());
         val div = soup.first();
-        Attributes.setAuthor(book, secondPartOf(div.child(1).text().trim(), "："));
+        setAuthor(book, secondPartOf(div.child(1).text().trim(), "："));
         String text = div.child(2).text().trim();
-        Attributes.setState(book, firstPartOf(secondPartOf(text, "："), ","));
+        setState(book, firstPartOf(secondPartOf(text, "："), ","));
         text = secondPartOf(div.child(3).text().trim(), "：");
-        Attributes.setDate(book, DateUtils.parse(text, "yyyy-m-D H:M:S", new Date()));
+        setDate(book, DateUtils.parse(text, "yyyy-m-D H:M:S", new Date()));
         val lines = new LinkedList<String>();
         for (val p : doc.select("div#intro").select("p")) {
-            lines.add(joinString(p.textNodes(), config.lineSeparator));
+            lines.add(joinNodes(p.textNodes(), config.lineSeparator));
         }
-        Attributes.setIntro(book, join(config.lineSeparator, lines));
+        setIntro(book, join(config.lineSeparator, lines));
         val cover = Flobs.forURL(new URL(doc.select("div#fmimg").select("img").attr("src")), null);
-        Attributes.setCover(book, cover);
+        setCover(book, cover);
         context.setSoup(doc);
     }
 
     @Override
     public void fetchContents() throws IOException {
         ensureInitialized();
+        val book = context.getBook();
         val doc = context.getSoup();
+        Validate.checkNotNull(doc, "soup should have been initialized");
         for (val dd : doc.select("dd")) {
             val a = dd.child(0);
             val chapter = new Chapter(a.text().trim());
@@ -81,15 +89,9 @@ public class WWW_MANGG_COM extends AbstractCrawler implements Identifiable {
     }
 
     @Override
-    protected String fetchText(String url) {
+    protected String fetchText(String uri) throws IOException {
         ensureInitialized();
-        final Document doc;
-        try {
-            doc = getSoup(url);
-        } catch (IOException e) {
-            context.setError(e);
-            return EMPTY_TEXT;
-        }
+        val doc = getSoup(uri);
         val lines = new LinkedList<String>();
         for (val node : doc.select("div#content").first().childNodes()) {
             if (node instanceof TextNode) {
@@ -100,11 +102,11 @@ public class WWW_MANGG_COM extends AbstractCrawler implements Identifiable {
                 lines.add(text.replace("卝", ""));
             }
         }
-        return join(config.lineSeparator, lines);
+        return join(context.getConfig().lineSeparator, lines);
     }
 
     @Override
-    public String attrUrlOf(String id) {
+    public String urlById(String id) {
         return String.format("%s/id%s/", HOST, id);
     }
 }

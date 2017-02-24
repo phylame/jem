@@ -1,6 +1,20 @@
 package jem.crawler.impl;
 
-import jem.Attributes;
+import static jem.Attributes.VALUES_SEPARATOR;
+import static jem.Attributes.setAuthor;
+import static jem.Attributes.setCover;
+import static jem.Attributes.setGenre;
+import static jem.Attributes.setIntro;
+import static jem.Attributes.setKeywords;
+import static jem.Attributes.setTitle;
+import static jem.Attributes.setWords;
+
+import java.io.IOException;
+import java.net.URL;
+
+import org.jsoup.nodes.TextNode;
+import org.jsoup.select.Elements;
+
 import jem.Chapter;
 import jem.crawler.AbstractCrawler;
 import jem.crawler.CrawlerContext;
@@ -8,14 +22,7 @@ import jem.crawler.CrawlerText;
 import jem.crawler.Identifiable;
 import jem.util.flob.Flobs;
 import lombok.val;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.TextNode;
-import org.jsoup.select.Elements;
 import pw.phylame.commons.io.PathUtils;
-import pw.phylame.commons.util.StringUtils;
-
-import java.io.IOException;
-import java.net.URL;
 
 public class BOOK_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
     private static final String HOST = "http://book.zongheng.com";
@@ -25,28 +32,30 @@ public class BOOK_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
     @Override
     public void init(CrawlerContext context) {
         super.init(context);
-        bookId = PathUtils.baseName(context.getAttrUrl());
+        bookId = PathUtils.baseName(context.getUrl());
     }
 
     @Override
     public void fetchAttributes() throws IOException {
         ensureInitialized();
-        val doc = getSoup(context.getAttrUrl());
+        val book = context.getBook();
+        val doc = getSoup(context.getUrl());
         Elements soup = doc.select("div.main");
-        Attributes.setCover(book, Flobs.forURL(new URL(soup.select("div.book_cover img").attr("src")), null));
+        setCover(book, Flobs.forURL(new URL(soup.select("div.book_cover img").attr("src")), null));
         soup = soup.select("div.status");
-        Attributes.setTitle(book, soup.select("h1>a").text().trim());
-        Attributes.setIntro(book, joinString(soup.select("div.info_con>p"), config.lineSeparator));
-        Attributes.setKeywords(book, joinString(soup.select("div.keyword a"), Attributes.VALUES_SEPARATOR));
+        setTitle(book, soup.select("h1>a").text().trim());
+        setIntro(book, joinNodes(soup.select("div.info_con>p"), context.getConfig().lineSeparator));
+        setKeywords(book, joinNodes(soup.select("div.keyword a"), VALUES_SEPARATOR));
         soup = soup.select("div.booksub");
-        Attributes.setAuthor(book, soup.select("a:eq(1)").text().trim());
-        Attributes.setGenre(book, soup.select("a:eq(3)").text().trim());
-        Attributes.setWords(book, Integer.parseInt(soup.select("span").text().trim()));
+        setAuthor(book, soup.select("a:eq(1)").text().trim());
+        setGenre(book, soup.select("a:eq(3)").text().trim());
+        setWords(book, Integer.parseInt(soup.select("span").text().trim()));
     }
 
     @Override
     public void fetchContents() throws IOException {
         ensureInitialized();
+        val book = context.getBook();
         chapterCount = 0;
         val doc = getSoup(String.format("%s/showchapter/%s.html", HOST, bookId));
         val top = doc.select("div#chapterListPanel");
@@ -65,19 +74,13 @@ public class BOOK_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
     }
 
     @Override
-    protected String fetchText(String url) {
+    protected String fetchText(String uri) throws IOException {
         ensureInitialized();
-        final Document doc;
-        try {
-            doc = getSoup(url);
-        } catch (IOException e) {
-            return StringUtils.EMPTY_TEXT;
-        }
-        return joinString(doc.select("div#chapterContent>p"), config.lineSeparator);
+        return joinNodes(getSoup(uri).select("div#chapterContent>p"), context.getConfig().lineSeparator);
     }
 
     @Override
-    public String attrUrlOf(String id) {
+    public String urlById(String id) {
         return String.format("%s/book/%s.html", HOST, id);
     }
 }

@@ -18,6 +18,8 @@
 
 package jem.crawler;
 
+import java.util.Set;
+
 import pw.phylame.commons.util.Implementor;
 import pw.phylame.commons.util.MiscUtils;
 
@@ -47,11 +49,12 @@ public final class CrawlerManager {
         crawlers.remove(host);
     }
 
-    public static String[] supportedHosts() {
+    public static Set<String> supportedHosts() {
         return crawlers.names();
     }
 
-    public static CrawlerProvider crawlerFor(String host) throws IllegalAccessException, ClassNotFoundException, InstantiationException {
+    public static CrawlerProvider crawlerFor(String host)
+            throws IllegalAccessException, ClassNotFoundException, InstantiationException {
         return crawlers.getInstance(host);
     }
 

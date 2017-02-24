@@ -18,22 +18,25 @@
 
 package jem.crawler;
 
-import jem.crawler.util.Cacheable;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import org.jsoup.nodes.Document;
+
+import lombok.Getter;
+import lombok.Setter;
+import pw.phylame.commons.cache.Cacheable;
+import pw.phylame.commons.cache.DirectCache;
 
 @Getter
 @Setter
-@RequiredArgsConstructor
 public class CrawlerContext {
 
-    private final String attrUrl;
+    // the URL of attributes page
+    private final String url;
     private final CrawlerBook book;
     private final CrawlerConfig config;
 
+    // The cache for chapter text.
     private Cacheable cache;
+    private CrawlerListener listener;
 
     private String tocUrl;
 
@@ -43,4 +46,12 @@ public class CrawlerContext {
      * The last error.
      */
     private Throwable error;
+
+    public CrawlerContext(String url, CrawlerBook book, CrawlerConfig config) {
+        this.url = url;
+        this.book = book;
+        this.config = config;
+        this.listener = config.listener;
+        this.cache = config.cache != null ? config.cache : new DirectCache();
+    }
 }

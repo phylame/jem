@@ -19,5 +19,5 @@
 package jem.crawler;
 
 public interface Identifiable {
-    String attrUrlOf(String id);
+    String urlById(String id);
 }

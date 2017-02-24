@@ -58,7 +58,7 @@ public class CrawlerParser extends EpmBase<CrawlerConfig> implements Parser {
             throw new ParserException(M.tr("err.unknownHost", host));
         }
         val book = new CrawlerBook();
-        val listener = config.crawlerListener;
+        val listener = config.listener;
         crawler.init(new CrawlerContext(input, book, config));
         crawler.fetchAttributes();
         if (listener != null) {

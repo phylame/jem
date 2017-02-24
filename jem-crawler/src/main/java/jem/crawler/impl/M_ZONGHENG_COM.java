@@ -1,5 +1,13 @@
 package jem.crawler.impl;
 
+import static jem.Attributes.VALUES_SEPARATOR;
+import static jem.Attributes.setAuthor;
+import static jem.Attributes.setCover;
+import static jem.Attributes.setGenre;
+import static jem.Attributes.setIntro;
+import static jem.Attributes.setKeywords;
+import static jem.Attributes.setTitle;
+import static jem.Attributes.setWords;
 import static pw.phylame.commons.util.StringUtils.join;
 import static pw.phylame.commons.util.StringUtils.secondPartOf;
 import static pw.phylame.commons.util.StringUtils.trimmed;
@@ -9,16 +17,15 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.LinkedList;
 
-import jem.crawler.AbstractCrawler;
 import org.json.JSONObject;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 
-import jem.Attributes;
 import jem.Chapter;
+import jem.crawler.AbstractCrawler;
 import jem.crawler.CrawlerContext;
-import jem.crawler.Identifiable;
 import jem.crawler.CrawlerText;
+import jem.crawler.Identifiable;
 import jem.util.flob.Flobs;
 import lombok.val;
 
@@ -34,20 +41,21 @@ public class M_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
     @Override
     public void init(CrawlerContext context) {
         super.init(context);
-        bookId = valueOfName(secondPartOf(context.getAttrUrl(), "?"), "bookId", "&");
+        bookId = valueOfName(secondPartOf(context.getUrl(), "?"), "bookId", "&");
     }
 
     @Override
     public void fetchAttributes() throws IOException {
         ensureInitialized();
-        val doc = getSoup(context.getAttrUrl());
+        val book = context.getBook();
+        val doc = getSoup(context.getUrl());
         Elements soup = doc.select("div.booksite");
-        Attributes.setCover(book, Flobs.forURL(new URL(soup.select("div.bookimg").select("img").attr("src")), null));
-        Attributes.setTitle(book, soup.select("h1").text().trim());
+        setCover(book, Flobs.forURL(new URL(soup.select("div.bookimg").select("img").attr("src")), null));
+        setTitle(book, soup.select("h1").text().trim());
         soup = soup.select("div.info").first().children();
-        Attributes.setAuthor(book, soup.get(0).child(0).text().trim());
-        Attributes.setGenre(book, soup.get(1).child(0).text().trim());
-        Attributes.setWords(book, Integer.parseInt(soup.get(2).child(0).text().trim()));
+        setAuthor(book, soup.get(0).child(0).text().trim());
+        setGenre(book, soup.get(1).child(0).text().trim());
+        setWords(book, Integer.parseInt(soup.get(2).child(0).text().trim()));
         val lines = new LinkedList<String>();
         for (val node : doc.select("div.book_intro").first().childNodes()) {
             if (!(node instanceof TextNode)) {
@@ -59,20 +67,21 @@ public class M_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
             }
             lines.add(str);
         }
-        Attributes.setIntro(book, join(config.lineSeparator, lines));
-        val tags = joinString(doc.select("div.tags_wap").first().children(), Attributes.VALUES_SEPARATOR);
+        setIntro(book, join(context.getConfig().lineSeparator, lines));
+        val tags = joinNodes(doc.select("div.tags_wap").first().children(), VALUES_SEPARATOR);
         if (!tags.isEmpty()) {
-            Attributes.setKeywords(book, tags);
+            setKeywords(book, tags);
         }
     }
 
     @Override
     public void fetchContents() throws IOException {
-        fetchTocPaged();
+        fetchToc();
     }
 
     @Override
     protected int fetchPage(int page) throws IOException {
+        val book = context.getBook();
         val json = getJson(String.format("%s/h5/ajax/chapter/list?h5=1&bookId=%s&pageNum=%d&pageSize=%d&asc=0", HOST,
                 bookId, page, PAGE_SIZE), ENCODING);
         val list = json.optJSONObject("chapterlist");
@@ -96,18 +105,13 @@ public class M_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
     }
 
     @Override
-    protected String fetchText(String url) {
+    protected String fetchText(String uri) throws IOException {
         ensureInitialized();
         val lines = new LinkedList<String>();
         JSONObject json;
         val b = new StringBuilder();
         while (true) {
-            try {
-                json = getJson(url, ENCODING);
-            } catch (IOException e) {
-                context.setError(e);
-                break;
-            }
+            json = getJson(uri, ENCODING);
             if (json.getJSONObject("ajaxResult").getInt("code") != 1) {
                 break;
             }
@@ -134,14 +138,14 @@ public class M_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
             if (result.getInt("pageCount") == result.getInt("chapterNum")) {
                 break;
             }
-            url = String.format(TEXT_JSON_URL, HOST, bookId, result.getString("nextChapterId"));
+            uri = String.format(TEXT_JSON_URL, HOST, bookId, result.getString("nextChapterId"));
         }
 
-        return join(config.lineSeparator, lines);
+        return join(context.getConfig().lineSeparator, lines);
     }
 
     @Override
-    public String attrUrlOf(String id) {
+    public String urlById(String id) {
         return String.format("%s/h5/book?bookid=%s&h5=1&fpage=180&fmodule=320", HOST, id);
     }
 

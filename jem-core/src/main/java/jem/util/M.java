@@ -18,9 +18,11 @@
 
 package jem.util;
 
-import lombok.NonNull;
 import pw.phylame.commons.util.Linguist;
 
+/**
+ * Internal message translator.
+ */
 public final class M {
     private M() {
     }
@@ -29,11 +31,11 @@ public final class M {
 
     private static final Linguist linguist = new Linguist(MESSAGES_PATH);
 
-    public static String tr(@NonNull String key) {
+    public static String tr(String key) {
         return linguist.tr(key);
     }
 
-    public static String tr(@NonNull String key, Object... args) {
+    public static String tr(String key, Object... args) {
         return linguist.tr(key, args);
     }
 

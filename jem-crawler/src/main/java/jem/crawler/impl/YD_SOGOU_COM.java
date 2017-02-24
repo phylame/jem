@@ -18,7 +18,20 @@
 
 package jem.crawler.impl;
 
-import static pw.phylame.commons.util.StringUtils.EMPTY_TEXT;
+import static jem.Attributes.AUTHOR;
+import static jem.Attributes.COVER;
+import static jem.Attributes.GENRE;
+import static jem.Attributes.INTRO;
+import static jem.Attributes.STATE;
+import static jem.Attributes.TITLE;
+import static jem.Attributes.setAuthor;
+import static jem.Attributes.setCover;
+import static jem.Attributes.setDate;
+import static jem.Attributes.setGenre;
+import static jem.Attributes.setIntro;
+import static jem.Attributes.setState;
+import static jem.Attributes.setTitle;
+import static jem.Attributes.setWords;
 import static pw.phylame.commons.util.StringUtils.isNotEmpty;
 import static pw.phylame.commons.util.StringUtils.valueOfName;
 
@@ -30,17 +43,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jem.crawler.*;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.jsoup.select.Selector;
 
-import jem.Attributes;
 import jem.Chapter;
+import jem.crawler.AbstractCrawler;
 import jem.crawler.CrawlerContext;
+import jem.crawler.CrawlerText;
+import jem.crawler.Identifiable;
+import jem.crawler.Searchable;
 import jem.crawler.util.SoupUtils;
 import jem.util.flob.Flobs;
 import lombok.val;
@@ -56,70 +70,65 @@ public class YD_SOGOU_COM extends AbstractCrawler implements Searchable, Identif
     @Override
     public void init(CrawlerContext context) {
         super.init(context);
-        bookKey = valueOfName(context.getAttrUrl().substring(35), "bkey", "&");
+        bookKey = valueOfName(context.getUrl().substring(35), "bkey", "&");
     }
 
     @Override
     public void fetchAttributes() throws IOException {
         ensureInitialized();
-        val doc = getSoup(context.getAttrUrl());
+        val book = context.getBook();
+        val doc = getSoup(context.getUrl());
         Elements soup = doc.select("div.detail-wrap");
         val img = largeImage(soup.select("img").attr("data-echo"));
-        Attributes.setCover(book, Flobs.forURL(new URL(img), "image/jpg"));
+        setCover(book, Flobs.forURL(new URL(img), "image/jpg"));
         soup = soup.select("div.detail-main");
-        Attributes.setTitle(book, soup.select("h3.detail-title").text().trim());
+        setTitle(book, soup.select("h3.detail-title").text().trim());
         int i = 0;
         for (val node : soup.first().textNodes()) {
             val text = node.text().trim();
             if (isNotEmpty(text)) {
                 if (i == 0) {
-                    Attributes.setAuthor(book, text);
+                    setAuthor(book, text);
                 } else if (i == 1) {
-                    Attributes.setGenre(book, text);
+                    setGenre(book, text);
                 } else if (i == 2) {
-                    Attributes.setState(book, text);
+                    setState(book, text);
                 } else {
                     break;
                 }
                 ++i;
             }
         }
-        Attributes.setDate(book, DateUtils.parse(soup.select("div").get(1).text(), "yyyy-m-D", new Date()));
+        setDate(book, DateUtils.parse(soup.select("div").get(1).text(), "yyyy-m-D", new Date()));
         soup = doc.select("#l_descr");
         if (soup.isEmpty()) {
             soup = doc.select("p.detail-summary");
         }
-        Attributes.setIntro(book, soup.text().trim());
-        context.setSoup(doc);
+        setIntro(book, soup.text().trim());
     }
 
     @Override
     public void fetchContents() throws IOException {
-        fetchTocPaged();
+        fetchToc();
     }
 
     @Override
-    public String fetchText(String url) {
-        final Document doc;
-        try {
-            doc = getSoup(url);
-        } catch (IOException e) {
-            context.setError(e);
-            return EMPTY_TEXT;
-        }
-        return joinString(doc.select("div#text").first().children(), config.lineSeparator);
+    public String fetchText(String uri) throws IOException {
+        ensureInitialized();
+        return joinNodes(getSoup(uri).select("div#text").first().children(), context.getConfig().lineSeparator);
     }
 
     @Override
     protected int fetchPage(int page) throws IOException {
+        val book = context.getBook();
         val json = postJson(String.format("%s/h5/cpt/ajax/detail?%s&p=%d&bkey=%s&asc=asc", HOST, GP, page, bookKey),
                 ENCODING);
         val list = json.getJSONObject("list");
         for (val item : list.getJSONArray("items")) {
             val obj = (JSONObject) item;
             val chapter = new Chapter(obj.getString("name"));
-            Attributes.setWords(chapter, obj.getInt("size"));
-            Attributes.setDate(chapter, new Date(obj.getLong("updateTime")));
+            setWords(chapter, obj.getInt("size"));
+            setDate(chapter, new Date(obj.getLong("updateTime")));
             val url = String.format("%s/h5/cpt/chapter?bkey=%s&ckey=%s&%s", HOST, bookKey, obj.getString("ckey"), GP);
             chapter.setText(new CrawlerText(this, chapter, url));
             book.append(chapter);
@@ -137,7 +146,7 @@ public class YD_SOGOU_COM extends AbstractCrawler implements Searchable, Identif
     }
 
     @Override
-    public String attrUrlOf(String id) {
+    public String urlById(String id) {
         return String.format("%s/h5/cpt/detail?bkey=%s&%s", HOST, id, GP);
     }
 
@@ -163,13 +172,13 @@ public class YD_SOGOU_COM extends AbstractCrawler implements Searchable, Identif
     private Map<String, Object> parseResult(Element detail, Element latest) {
         val map = new HashMap<String, Object>();
         map.put("url", String.format("%s/h5/cpt/detail?bkey=%s&%s", HOST, detail.attr("bkey"), GP));
-        map.put(Attributes.COVER, largeImage(Selector.select("img", detail).attr("data-echo")));
-        map.put(Attributes.TITLE, Selector.select("h3", detail).text().trim());
+        map.put(COVER, largeImage(Selector.select("img", detail).attr("data-echo")));
+        map.put(TITLE, Selector.select("h3", detail).text().trim());
         val elem = Selector.select("div.result-author", detail).first();
-        map.put(Attributes.AUTHOR, SoupUtils.textOf(elem.childNode(0)));
-        map.put(Attributes.GENRE, SoupUtils.textOf(elem.childNode(1)));
-        map.put(Attributes.STATE, SoupUtils.textOf(elem.childNode(2)));
-        map.put(Attributes.INTRO, Selector.select("div.result-summary", detail).text().trim());
+        map.put(AUTHOR, SoupUtils.textOf(elem.childNode(0)));
+        map.put(GENRE, SoupUtils.textOf(elem.childNode(1)));
+        map.put(STATE, SoupUtils.textOf(elem.childNode(2)));
+        map.put(INTRO, Selector.select("div.result-summary", detail).text().trim());
         map.put(LAST_UPDATE_KEY, DateUtils.parse(Selector.select("time", latest).text().trim(), "yyyy-m-D", null));
         map.put(LAST_CHAPTER_KEY, Selector.select("em", latest).text().trim());
         return map;

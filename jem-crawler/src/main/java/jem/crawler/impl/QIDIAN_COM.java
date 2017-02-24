@@ -14,7 +14,7 @@ public abstract class QIDIAN_COM extends AbstractCrawler {
     public void init(CrawlerContext context) {
         super.init(context);
         try {
-            protocol = new URL(context.getAttrUrl()).getProtocol() + ':';
+            protocol = new URL(context.getUrl()).getProtocol() + ':';
         } catch (MalformedURLException e) {
             protocol = "http:";
         }

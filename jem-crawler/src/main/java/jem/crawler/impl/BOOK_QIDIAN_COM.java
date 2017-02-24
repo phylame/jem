@@ -1,20 +1,24 @@
 package jem.crawler.impl;
 
-import jem.Attributes;
+import static jem.Attributes.setAuthor;
+import static jem.Attributes.setCover;
+import static jem.Attributes.setGenre;
+import static jem.Attributes.setIntro;
+import static jem.Attributes.setState;
+import static jem.Attributes.setTitle;
+import static jem.Attributes.setWords;
+import static pw.phylame.commons.util.StringUtils.secondPartOf;
+
+import java.io.IOException;
+import java.net.URL;
+
+import org.jsoup.select.Elements;
+
 import jem.Chapter;
 import jem.crawler.CrawlerText;
 import jem.crawler.Identifiable;
 import jem.util.flob.Flobs;
 import lombok.val;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.TextNode;
-import org.jsoup.select.Elements;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.LinkedList;
-
-import static pw.phylame.commons.util.StringUtils.*;
 
 public class BOOK_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
     private static final String HOST = "http://book.qidian.com";
@@ -22,38 +26,29 @@ public class BOOK_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
     @Override
     public void fetchAttributes() throws IOException {
         ensureInitialized();
-        val doc = getSoup(context.getAttrUrl());
+        val book = context.getBook();
+        val config = context.getConfig();
+        val doc = getSoup(context.getUrl());
         Elements soup = doc.select("div.book-information");
-        Attributes.setCover(book,
-                Flobs.forURL(new URL(largeImage(soup.select("div.book-img>a>img").attr("src"))), "image/jpg"));
+        setCover(book, Flobs.forURL(new URL(largeImage(soup.select("div.book-img>a>img").attr("src"))), "image/jpg"));
         soup = soup.select("div.book-info");
-        Attributes.setTitle(book, soup.select("h1>em").text().trim());
-        Attributes.setAuthor(book, soup.select("h1 a").text().trim());
+        setTitle(book, soup.select("h1>em").text().trim());
+        setAuthor(book, soup.select("h1 a").text().trim());
         soup = soup.select("p.tag");
-        Attributes.setState(book, soup.select("span").first().text());
-        val genres = new LinkedList<String>();
-        for (val a : soup.select("a")) {
-            genres.add(a.text().trim());
-        }
-        Attributes.setGenre(book, join("/", genres));
-        val lines = new LinkedList<String>();
-        for (val node : doc.select("div.book-intro>p:eq(0)").first().childNodes()) {
-            if (!(node instanceof TextNode)) {
-                continue;
-            }
-            lines.add(trimmed(node.toString()));
-        }
-        Attributes.setIntro(book, join(config.lineSeparator, lines));
+        setState(book, soup.select("span").first().text());
+        setGenre(book, joinNodes(soup.select("a"), "/"));
+        setIntro(book, joinNodes(doc.select("div.book-intro>p:eq(0)").first().childNodes(), config.lineSeparator));
     }
 
     @Override
     public void fetchContents() throws IOException {
         ensureInitialized();
+        val book = context.getBook();
         chapterCount = 0;
-        val doc = getSoup(context.getAttrUrl() + "#Catalog");
+        val doc = getSoup(context.getUrl() + "#Catalog");
         for (val volume : doc.select("div.volume")) {
             val section = new Chapter(secondPartOf(volume.select("h3").text().split("·")[0], " "));
-            Attributes.setWords(section, Integer.parseInt((volume.select("h3 cite").text().trim())));
+            setWords(section, Integer.parseInt((volume.select("h3 cite").text().trim())));
             book.append(section);
             for (val a : volume.select("ul a")) {
                 val chapter = new Chapter(a.text().trim());
@@ -65,21 +60,13 @@ public class BOOK_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
     }
 
     @Override
-    protected String fetchText(String url) {
+    protected String fetchText(String uri) throws IOException {
         ensureInitialized();
-        final Document doc;
-        try {
-            doc = getSoup(url);
-        } catch (IOException e) {
-            context.setError(e);
-            return EMPTY_TEXT;
-        }
-        return joinString(doc.select("div.read-content>p"), config.lineSeparator);
+        return joinNodes(getSoup(uri).select("div.read-content>p"), context.getConfig().lineSeparator);
     }
 
     @Override
-    public String attrUrlOf(String id) {
+    public String urlById(String id) {
         return String.format("%s/info/%s", HOST, id);
     }
-
 }

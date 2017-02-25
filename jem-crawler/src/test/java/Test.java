@@ -32,14 +32,14 @@ public class Test implements CrawlerListener {
         System.setProperty(EpmManager.AUTO_LOAD_KEY, "true");
         System.setProperty(CrawlerManager.AUTO_LOAD_KEY, "true");
         val pool = Executors.newFixedThreadPool(32);
-        val url = "http://h5.17k.com/book/1080397.html";
+        val url = "http://www.mangg.com/id53148/";
         val config = CollectionUtils.<String, Object>mapOf(
                 CRAWLER_PREFIX + CrawlerConfig.LISTENER, new Test());
         val book = (CrawlerBook) EpmManager.readBook(url, "crawler", config);
         book.initTexts(pool);
         book.initTexts(pool);
-        DebugUtils.makeFile(book, "e:/tmp/b", "pmab", null);
-        DebugUtils.makeFile(book, "e:/tmp/b", "epub", null);
+        DebugUtils.makeFile(book, "d:/tmp/b", "pmab", null);
+        DebugUtils.makeFile(book, "d:/tmp/b", "epub", null);
         book.cleanup();
         pool.shutdown();
     }

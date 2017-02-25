@@ -18,29 +18,23 @@
 
 package jem.crawler.impl;
 
-import static jem.Attributes.setAuthor;
-import static jem.Attributes.setCover;
-import static jem.Attributes.setGenre;
-import static jem.Attributes.setIntro;
-import static jem.Attributes.setTitle;
-import static jem.Attributes.setWords;
-import static pw.phylame.commons.util.StringUtils.join;
-import static pw.phylame.commons.util.StringUtils.secondPartOf;
-import static pw.phylame.commons.util.StringUtils.trimmed;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.LinkedList;
-
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-
 import jem.Chapter;
 import jem.crawler.AbstractCrawler;
 import jem.crawler.CrawlerText;
 import jem.crawler.Identifiable;
 import jem.util.flob.Flobs;
 import lombok.val;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import pw.phylame.commons.log.Log;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.LinkedList;
+
+import static jem.Attributes.*;
+import static pw.phylame.commons.util.StringUtils.*;
 
 public class WWW_ZHULANG_COM extends AbstractCrawler implements Identifiable {
     private static final String HOST = "http://www.zhulang.com";
@@ -54,7 +48,13 @@ public class WWW_ZHULANG_COM extends AbstractCrawler implements Identifiable {
     public void fetchAttributes() throws IOException {
         ensureInitialized();
         val book = context.getBook();
-        val doc = getSoup(context.getUrl());
+        final Document doc;
+        try {
+            doc = getSoup(context.getUrl());
+        } catch (InterruptedException e) {
+            Log.d(TAG, "user interrupted");
+            return;
+        }
         setCover(book, Flobs.forURL(new URL(doc.select("div.cover-box-left>img").attr("src")), null));
         Elements soup = doc.select("div.cover-box-right");
         Element elem = soup.select("h2").first();
@@ -70,7 +70,13 @@ public class WWW_ZHULANG_COM extends AbstractCrawler implements Identifiable {
         ensureInitialized();
         val book = context.getBook();
         chapterCount = 0;
-        val doc = getSoup(context.getUrl().replace("www", "book"));
+        final Document doc;
+        try {
+            doc = getSoup(context.getUrl().replace("www", "book"));
+        } catch (InterruptedException e) {
+            Log.d(TAG, "user interrupted");
+            return;
+        }
         for (val div : doc.select("div.bdrbox")) {
             val section = new Chapter(div.select("h2").text().trim());
             val summary = div.select("div.catalog-summary");
@@ -90,7 +96,13 @@ public class WWW_ZHULANG_COM extends AbstractCrawler implements Identifiable {
     @Override
     protected String fetchText(String uri) throws IOException {
         ensureInitialized();
-        val doc = getSoup(uri);
+        final Document doc;
+        try {
+            doc = getSoup(uri);
+        } catch (InterruptedException e) {
+            Log.d(TAG, "user interrupted");
+            return EMPTY_TEXT;
+        }
         val lines = new LinkedList<String>();
         for (val elem : doc.select("div#read-content").first().children()) {
             if (!elem.tagName().equals("p")) {

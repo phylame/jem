@@ -1,27 +1,22 @@
 package jem.crawler.impl;
 
-import static jem.Attributes.setAuthor;
-import static jem.Attributes.setCover;
-import static jem.Attributes.setGenre;
-import static jem.Attributes.setIntro;
-import static jem.Attributes.setState;
-import static jem.Attributes.setTitle;
-import static pw.phylame.commons.util.StringUtils.join;
-import static pw.phylame.commons.util.StringUtils.secondPartOf;
-import static pw.phylame.commons.util.StringUtils.trimmed;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.LinkedList;
-
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-
 import jem.Chapter;
 import jem.crawler.CrawlerText;
 import jem.crawler.Identifiable;
 import jem.util.flob.Flobs;
 import lombok.val;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import pw.phylame.commons.log.Log;
+import pw.phylame.commons.util.StringUtils;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.LinkedList;
+
+import static jem.Attributes.*;
+import static pw.phylame.commons.util.StringUtils.*;
 
 public class M_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
     private static final String HOST = "http://m.qidian.com";
@@ -30,7 +25,13 @@ public class M_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
     public void fetchAttributes() throws IOException {
         ensureInitialized();
         val book = context.getBook();
-        val doc = getSoup(context.getUrl());
+        final Document doc;
+        try {
+            doc = getSoup(context.getUrl());
+        } catch (InterruptedException e) {
+            Log.d(TAG, "user interrupted");
+            return;
+        }
         Elements soup = doc.select("div.book-layout");
         setCover(book, Flobs.forURL(new URL(largeImage(soup.select("img").attr("src"))), "image/jpg"));
         setTitle(book, soup.select("h2").text().trim());
@@ -49,7 +50,13 @@ public class M_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
     public void fetchContents() throws IOException {
         ensureInitialized();
         val book = context.getBook();
-        val doc = getSoup(context.getUrl() + "/catalog");
+        final Document doc;
+        try {
+            doc = getSoup(context.getUrl() + "/catalog");
+        } catch (InterruptedException e) {
+            Log.d(TAG, "user interrupted");
+            return;
+        }
         Chapter section = null;
         int total = 0;
         for (val node : doc.select("ol#volumes").first().childNodes()) {
@@ -80,7 +87,12 @@ public class M_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
     @Override
     protected String fetchText(String uri) throws IOException {
         ensureInitialized();
-        return joinNodes(getSoup(uri).select("div.read-section").select("p"), context.getConfig().lineSeparator);
+        try {
+            return joinNodes(getSoup(uri).select("div.read-section").select("p"), context.getConfig().lineSeparator);
+        } catch (InterruptedException e) {
+            Log.d(TAG, "user interrupted");
+            return StringUtils.EMPTY_TEXT;
+        }
     }
 
     @Override

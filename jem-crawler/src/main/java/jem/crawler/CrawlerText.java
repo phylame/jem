@@ -18,11 +18,6 @@
 
 package jem.crawler;
 
-import java.io.IOException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import jem.Attributes;
 import jem.Chapter;
 import jem.util.text.AbstractText;
@@ -31,7 +26,13 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
+import pw.phylame.commons.util.StringUtils;
 import pw.phylame.commons.util.Validate;
+
+import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CrawlerText extends AbstractText implements Runnable {
     /**
@@ -51,9 +52,9 @@ public class CrawlerText extends AbstractText implements Runnable {
     public CrawlerText(@NonNull CrawlerProvider crawler, @NonNull Chapter chapter, @NonNull String uri) {
         super(Texts.PLAIN);
         Validate.requireNotNull(crawler.getContext().getCache(), "cache in context cannot be null");
-        this.uri = uri;
-        this.chapter = chapter;
         this.crawler = crawler;
+        this.chapter = chapter;
+        this.uri = uri;
     }
 
     public final boolean isFetched() {
@@ -74,8 +75,10 @@ public class CrawlerText extends AbstractText implements Runnable {
     public String getText() {
         if (!isFetched()) {
             if (isSubmitted()) {// already submitted into pool in async mode
-                // wait for done
-                while (!isFetched()) {
+                while (!isFetched()) { // wait for done
+                    if (Thread.currentThread().isInterrupted()) {
+                        return StringUtils.EMPTY_TEXT;
+                    }
                     Thread.yield();
                 }
             } else {
@@ -87,7 +90,9 @@ public class CrawlerText extends AbstractText implements Runnable {
 
     @Override
     public void run() {
-        fetchText();
+        if (!isFetched()) {
+            fetchText();
+        }
     }
 
     @SneakyThrows(IOException.class)

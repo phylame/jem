@@ -1,11 +1,11 @@
 package jem.crawler;
 
-import java.util.concurrent.ExecutorService;
-
 import jem.Book;
 import jem.Chapter;
 import lombok.NonNull;
 import lombok.val;
+
+import java.util.concurrent.ExecutorService;
 
 public class CrawlerBook extends Book {
     /**
@@ -14,11 +14,13 @@ public class CrawlerBook extends Book {
      * This method will be blocked until all texts fetched.
      * </p>
      *
-     * @param executor
-     *            the executor service for executing task of fetching text
+     * @param executor the executor service for executing task of fetching text
      */
-    public final void initTexts(@NonNull ExecutorService executor) throws InterruptedException {
+    public final void initTexts(@NonNull ExecutorService executor) {
         for (val chapter : this) {
+            if (Thread.currentThread().isInterrupted()) {
+                return;
+            }
             fetchTexts(chapter, executor);
         }
     }
@@ -32,6 +34,9 @@ public class CrawlerBook extends Book {
             }
         }
         for (val sub : chapter) {
+            if (Thread.currentThread().isInterrupted()) {
+                return;
+            }
             fetchTexts(sub, executor);
         }
     }

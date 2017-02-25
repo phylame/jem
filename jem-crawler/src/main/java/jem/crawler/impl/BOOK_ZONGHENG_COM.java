@@ -1,20 +1,5 @@
 package jem.crawler.impl;
 
-import static jem.Attributes.VALUES_SEPARATOR;
-import static jem.Attributes.setAuthor;
-import static jem.Attributes.setCover;
-import static jem.Attributes.setGenre;
-import static jem.Attributes.setIntro;
-import static jem.Attributes.setKeywords;
-import static jem.Attributes.setTitle;
-import static jem.Attributes.setWords;
-
-import java.io.IOException;
-import java.net.URL;
-
-import org.jsoup.nodes.TextNode;
-import org.jsoup.select.Elements;
-
 import jem.Chapter;
 import jem.crawler.AbstractCrawler;
 import jem.crawler.CrawlerContext;
@@ -22,7 +7,17 @@ import jem.crawler.CrawlerText;
 import jem.crawler.Identifiable;
 import jem.util.flob.Flobs;
 import lombok.val;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.TextNode;
+import org.jsoup.select.Elements;
 import pw.phylame.commons.io.PathUtils;
+import pw.phylame.commons.log.Log;
+import pw.phylame.commons.util.StringUtils;
+
+import java.io.IOException;
+import java.net.URL;
+
+import static jem.Attributes.*;
 
 public class BOOK_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
     private static final String HOST = "http://book.zongheng.com";
@@ -39,7 +34,13 @@ public class BOOK_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
     public void fetchAttributes() throws IOException {
         ensureInitialized();
         val book = context.getBook();
-        val doc = getSoup(context.getUrl());
+        final Document doc;
+        try {
+            doc = getSoup(context.getUrl());
+        } catch (InterruptedException e) {
+            Log.d(TAG, "user interrupted");
+            return;
+        }
         Elements soup = doc.select("div.main");
         setCover(book, Flobs.forURL(new URL(soup.select("div.book_cover img").attr("src")), null));
         soup = soup.select("div.status");
@@ -57,7 +58,13 @@ public class BOOK_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
         ensureInitialized();
         val book = context.getBook();
         chapterCount = 0;
-        val doc = getSoup(String.format("%s/showchapter/%s.html", HOST, bookId));
+        final Document doc;
+        try {
+            doc = getSoup(String.format("%s/showchapter/%s.html", HOST, bookId));
+        } catch (InterruptedException e) {
+            Log.d(TAG, "user interrupted");
+            return;
+        }
         val top = doc.select("div#chapterListPanel");
         val i1 = top.select("h5").iterator();
         val i2 = top.select("div.booklist").iterator();
@@ -76,7 +83,12 @@ public class BOOK_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
     @Override
     protected String fetchText(String uri) throws IOException {
         ensureInitialized();
-        return joinNodes(getSoup(uri).select("div#chapterContent>p"), context.getConfig().lineSeparator);
+        try {
+            return joinNodes(getSoup(uri).select("div#chapterContent>p"), context.getConfig().lineSeparator);
+        } catch (InterruptedException e) {
+            Log.d(TAG, "user interrupted");
+            return StringUtils.EMPTY_TEXT;
+        }
     }
 
     @Override

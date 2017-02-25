@@ -18,49 +18,29 @@
 
 package jem.crawler.impl;
 
-import static jem.Attributes.AUTHOR;
-import static jem.Attributes.COVER;
-import static jem.Attributes.GENRE;
-import static jem.Attributes.INTRO;
-import static jem.Attributes.STATE;
-import static jem.Attributes.TITLE;
-import static jem.Attributes.setAuthor;
-import static jem.Attributes.setCover;
-import static jem.Attributes.setDate;
-import static jem.Attributes.setGenre;
-import static jem.Attributes.setIntro;
-import static jem.Attributes.setState;
-import static jem.Attributes.setTitle;
-import static jem.Attributes.setWords;
-import static pw.phylame.commons.util.StringUtils.join;
-import static pw.phylame.commons.util.StringUtils.trimmed;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import org.json.JSONObject;
-import org.json.JSONTokener;
-import org.jsoup.nodes.TextNode;
-import org.jsoup.select.Elements;
-
 import jem.Chapter;
-import jem.crawler.AbstractCrawler;
-import jem.crawler.CrawlerContext;
-import jem.crawler.CrawlerText;
-import jem.crawler.Identifiable;
-import jem.crawler.Searchable;
+import jem.crawler.*;
 import jem.util.flob.Flobs;
 import lombok.val;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.TextNode;
+import org.jsoup.select.Elements;
 import pw.phylame.commons.io.HttpUtils;
 import pw.phylame.commons.io.IOUtils;
 import pw.phylame.commons.io.PathUtils;
+import pw.phylame.commons.log.Log;
 import pw.phylame.commons.util.DateUtils;
+import pw.phylame.commons.util.StringUtils;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.*;
+
+import static jem.Attributes.*;
+import static pw.phylame.commons.util.StringUtils.join;
+import static pw.phylame.commons.util.StringUtils.trimmed;
 
 public class H5_17K_COM extends AbstractCrawler implements Searchable, Identifiable {
     private static final String ENCODING = "UTF-8";
@@ -80,7 +60,13 @@ public class H5_17K_COM extends AbstractCrawler implements Searchable, Identifia
     public void fetchAttributes() throws IOException {
         ensureInitialized();
         val book = context.getBook();
-        val doc = getSoup(context.getUrl());
+        final Document doc;
+        try {
+            doc = getSoup(context.getUrl());
+        } catch (InterruptedException e) {
+            Log.d(TAG, "user interrupted");
+            return;
+        }
         Elements section = doc.select("section.bookhome_top");
         setCover(book, Flobs.forURL(new URL(section.select("img").attr("src")), null));
         setTitle(book, section.select("p.title").text());
@@ -93,13 +79,23 @@ public class H5_17K_COM extends AbstractCrawler implements Searchable, Identifia
 
     @Override
     public void fetchContents() throws IOException {
-        fetchToc();
+        try {
+            fetchToc();
+        } catch (InterruptedException e) {
+            Log.d(TAG, "user interrupted");
+        }
     }
 
     @Override
     public String fetchText(String uri) throws IOException {
         ensureInitialized();
-        val doc = getSoup(uri);
+        final Document doc;
+        try {
+            doc = getSoup(uri);
+        } catch (InterruptedException e) {
+            Log.d(TAG, "user interrupted");
+            return StringUtils.EMPTY_TEXT;
+        }
         val div = doc.select("div#TextContent");
         val lines = new LinkedList<String>();
         for (val node : div.first().childNodes()) {
@@ -117,9 +113,15 @@ public class H5_17K_COM extends AbstractCrawler implements Searchable, Identifia
     @Override
     protected int fetchPage(int page) throws IOException {
         val book = context.getBook();
-        val json = getJson(
-                String.format("%s/h5/book/ajaxBookList.k?bookId=%s&page=%d&size=%d", HOST, bookId, page, PAGE_SIZE),
-                ENCODING);
+        final JSONObject json;
+        try {
+            json = getJson(
+                    String.format("%s/h5/book/ajaxBookList.k?bookId=%s&page=%d&size=%d", HOST, bookId, page, PAGE_SIZE),
+                    ENCODING);
+        } catch (InterruptedException e) {
+            Log.d(TAG, "user interrupted");
+            return 0;
+        }
         Chapter chapter;
         for (val item : json.getJSONArray("datas")) {
             val obj = (JSONObject) item;

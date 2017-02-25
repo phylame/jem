@@ -1,24 +1,20 @@
 package jem.crawler.impl;
 
-import static jem.Attributes.setAuthor;
-import static jem.Attributes.setCover;
-import static jem.Attributes.setGenre;
-import static jem.Attributes.setIntro;
-import static jem.Attributes.setState;
-import static jem.Attributes.setTitle;
-import static jem.Attributes.setWords;
-import static pw.phylame.commons.util.StringUtils.secondPartOf;
-
-import java.io.IOException;
-import java.net.URL;
-
-import org.jsoup.select.Elements;
-
 import jem.Chapter;
 import jem.crawler.CrawlerText;
 import jem.crawler.Identifiable;
 import jem.util.flob.Flobs;
 import lombok.val;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
+import pw.phylame.commons.log.Log;
+import pw.phylame.commons.util.StringUtils;
+
+import java.io.IOException;
+import java.net.URL;
+
+import static jem.Attributes.*;
+import static pw.phylame.commons.util.StringUtils.secondPartOf;
 
 public class BOOK_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
     private static final String HOST = "http://book.qidian.com";
@@ -28,7 +24,13 @@ public class BOOK_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
         ensureInitialized();
         val book = context.getBook();
         val config = context.getConfig();
-        val doc = getSoup(context.getUrl());
+        final Document doc;
+        try {
+            doc = getSoup(context.getUrl());
+        } catch (InterruptedException e) {
+            Log.d(TAG, "user interrupted");
+            return;
+        }
         Elements soup = doc.select("div.book-information");
         setCover(book, Flobs.forURL(new URL(largeImage(soup.select("div.book-img>a>img").attr("src"))), "image/jpg"));
         soup = soup.select("div.book-info");
@@ -45,7 +47,13 @@ public class BOOK_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
         ensureInitialized();
         val book = context.getBook();
         chapterCount = 0;
-        val doc = getSoup(context.getUrl() + "#Catalog");
+        final Document doc;
+        try {
+            doc = getSoup(context.getUrl() + "#Catalog");
+        } catch (InterruptedException e) {
+            Log.d(TAG, "user interrupted");
+            return;
+        }
         for (val volume : doc.select("div.volume")) {
             val section = new Chapter(secondPartOf(volume.select("h3").text().split("·")[0], " "));
             setWords(section, Integer.parseInt((volume.select("h3 cite").text().trim())));
@@ -62,7 +70,12 @@ public class BOOK_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
     @Override
     protected String fetchText(String uri) throws IOException {
         ensureInitialized();
-        return joinNodes(getSoup(uri).select("div.read-content>p"), context.getConfig().lineSeparator);
+        try {
+            return joinNodes(getSoup(uri).select("div.read-content>p"), context.getConfig().lineSeparator);
+        } catch (InterruptedException e) {
+            Log.d(TAG, "user interrupted");
+            return StringUtils.EMPTY_TEXT;
+        }
     }
 
     @Override

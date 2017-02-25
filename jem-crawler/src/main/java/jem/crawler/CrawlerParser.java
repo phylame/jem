@@ -33,13 +33,15 @@ import java.net.URL;
 import java.util.Map;
 
 public class CrawlerParser extends EpmBase<CrawlerConfig> implements Parser {
+    private static final String NAME = "crawler";
+
     public CrawlerParser() {
-        super("crawler", CrawlerConfig.class);
+        super(NAME, CrawlerConfig.class);
     }
 
     @Override
     public Book parse(File file, Map<String, Object> args) throws IOException, JemException {
-        throw new UnsupportedOperationException("CrawlerProvider parser is not supported for file");
+        throw new UnsupportedOperationException("Crawler parser is not supported for file");
     }
 
     @Override

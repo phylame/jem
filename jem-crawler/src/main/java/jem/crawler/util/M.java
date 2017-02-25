@@ -30,7 +30,7 @@ public final class M {
     private M() {
     }
 
-    private static final String MESSAGES_PATH = "jem/listener/messages";
+    private static final String MESSAGES_PATH = "jem/crawler/messages";
 
     private static final Linguist linguist = new Linguist(MESSAGES_PATH);
 

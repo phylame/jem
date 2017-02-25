@@ -1,26 +1,5 @@
 package jem.crawler.impl;
 
-import static jem.Attributes.VALUES_SEPARATOR;
-import static jem.Attributes.setAuthor;
-import static jem.Attributes.setCover;
-import static jem.Attributes.setGenre;
-import static jem.Attributes.setIntro;
-import static jem.Attributes.setKeywords;
-import static jem.Attributes.setTitle;
-import static jem.Attributes.setWords;
-import static pw.phylame.commons.util.StringUtils.join;
-import static pw.phylame.commons.util.StringUtils.secondPartOf;
-import static pw.phylame.commons.util.StringUtils.trimmed;
-import static pw.phylame.commons.util.StringUtils.valueOfName;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.LinkedList;
-
-import org.json.JSONObject;
-import org.jsoup.nodes.TextNode;
-import org.jsoup.select.Elements;
-
 import jem.Chapter;
 import jem.crawler.AbstractCrawler;
 import jem.crawler.CrawlerContext;
@@ -28,6 +7,18 @@ import jem.crawler.CrawlerText;
 import jem.crawler.Identifiable;
 import jem.util.flob.Flobs;
 import lombok.val;
+import org.json.JSONObject;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.TextNode;
+import org.jsoup.select.Elements;
+import pw.phylame.commons.log.Log;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.LinkedList;
+
+import static jem.Attributes.*;
+import static pw.phylame.commons.util.StringUtils.*;
 
 public class M_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
     private static final String HOST = "http://m.zongheng.com";
@@ -48,7 +39,13 @@ public class M_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
     public void fetchAttributes() throws IOException {
         ensureInitialized();
         val book = context.getBook();
-        val doc = getSoup(context.getUrl());
+        final Document doc;
+        try {
+            doc = getSoup(context.getUrl());
+        } catch (InterruptedException e) {
+            Log.d(TAG, "user interrupted");
+            return;
+        }
         Elements soup = doc.select("div.booksite");
         setCover(book, Flobs.forURL(new URL(soup.select("div.bookimg").select("img").attr("src")), null));
         setTitle(book, soup.select("h1").text().trim());
@@ -76,14 +73,24 @@ public class M_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
 
     @Override
     public void fetchContents() throws IOException {
-        fetchToc();
+        try {
+            fetchToc();
+        } catch (InterruptedException e) {
+            Log.d(TAG, "user interrupted");
+        }
     }
 
     @Override
     protected int fetchPage(int page) throws IOException {
         val book = context.getBook();
-        val json = getJson(String.format("%s/h5/ajax/chapter/list?h5=1&bookId=%s&pageNum=%d&pageSize=%d&asc=0", HOST,
-                bookId, page, PAGE_SIZE), ENCODING);
+        final JSONObject json;
+        try {
+            json = getJson(String.format("%s/h5/ajax/chapter/list?h5=1&bookId=%s&pageNum=%d&pageSize=%d&asc=0", HOST,
+                    bookId, page, PAGE_SIZE), ENCODING);
+        } catch (InterruptedException e) {
+            Log.d(TAG, "user interrupted");
+            return 0;
+        }
         val list = json.optJSONObject("chapterlist");
         if (list == null) {
             return 0;
@@ -111,7 +118,12 @@ public class M_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
         JSONObject json;
         val b = new StringBuilder();
         while (true) {
-            json = getJson(uri, ENCODING);
+            try {
+                json = getJson(uri, ENCODING);
+            } catch (InterruptedException e) {
+                Log.d(TAG, "user interrupted");
+                break;
+            }
             if (json.getJSONObject("ajaxResult").getInt("code") != 1) {
                 break;
             }

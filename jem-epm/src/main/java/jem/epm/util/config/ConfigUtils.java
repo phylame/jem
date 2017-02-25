@@ -18,10 +18,6 @@
 
 package jem.epm.util.config;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.Map;
-
 import jem.epm.util.E;
 import jem.epm.util.M;
 import lombok.NonNull;
@@ -32,6 +28,10 @@ import pw.phylame.commons.function.Prediction;
 import pw.phylame.commons.log.Log;
 import pw.phylame.commons.util.CollectionUtils;
 import pw.phylame.commons.util.Reflections;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.Map;
 
 /**
  * Utilities for maker and parser configurations
@@ -56,7 +56,8 @@ public final class ConfigUtils {
         try {
             // get config object in m, key: prefix + <Class>.SELF
             val field = clazz.getField(EpmConfig.SELF_FIELD_NAME);
-            if (Modifier.isStatic(field.getModifiers()) && field.isAccessible()) {
+            if (Modifier.isStatic(field.getModifiers())) {
+                field.setAccessible(true);
                 // find the config object by key
                 config = fetchObject(m, (prefix != null ? prefix : "") + field.get(null), clazz, null);
             }

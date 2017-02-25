@@ -18,43 +18,43 @@
 
 package jem.crawler.impl;
 
-import static jem.Attributes.setAuthor;
-import static jem.Attributes.setCover;
-import static jem.Attributes.setDate;
-import static jem.Attributes.setIntro;
-import static jem.Attributes.setState;
-import static jem.Attributes.setTitle;
-import static pw.phylame.commons.util.StringUtils.firstPartOf;
-import static pw.phylame.commons.util.StringUtils.join;
-import static pw.phylame.commons.util.StringUtils.secondPartOf;
-import static pw.phylame.commons.util.StringUtils.trimmed;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.Date;
-import java.util.LinkedList;
-
-import org.jsoup.nodes.TextNode;
-import org.jsoup.select.Elements;
-
 import jem.Chapter;
 import jem.crawler.AbstractCrawler;
 import jem.crawler.CrawlerText;
 import jem.crawler.Identifiable;
 import jem.util.flob.Flobs;
 import lombok.val;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.TextNode;
+import org.jsoup.select.Elements;
+import pw.phylame.commons.log.Log;
 import pw.phylame.commons.util.DateUtils;
+import pw.phylame.commons.util.StringUtils;
 import pw.phylame.commons.util.Validate;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.Date;
+import java.util.LinkedList;
+
+import static jem.Attributes.*;
+import static pw.phylame.commons.util.StringUtils.*;
+
 public class WWW_MANGG_COM extends AbstractCrawler implements Identifiable {
-    public static final String HOST = "http://www.mangg.com";
+    private static final String HOST = "http://www.mangg.com";
 
     @Override
     public void fetchAttributes() throws IOException {
         ensureInitialized();
         val book = context.getBook();
         val config = context.getConfig();
-        val doc = getSoup(context.getUrl());
+        final Document doc;
+        try {
+            doc = getSoup(context.getUrl());
+        } catch (InterruptedException e) {
+            Log.d(TAG, "user interrupted");
+            return;
+        }
         Elements soup = doc.select("div#info");
         setTitle(book, soup.select("h1").text().trim());
         val div = soup.first();
@@ -91,7 +91,13 @@ public class WWW_MANGG_COM extends AbstractCrawler implements Identifiable {
     @Override
     protected String fetchText(String uri) throws IOException {
         ensureInitialized();
-        val doc = getSoup(uri);
+        final Document doc;
+        try {
+            doc = getSoup(uri);
+        } catch (InterruptedException e) {
+            Log.d(TAG, "user interrupted");
+            return StringUtils.EMPTY_TEXT;
+        }
         val lines = new LinkedList<String>();
         for (val node : doc.select("div#content").first().childNodes()) {
             if (node instanceof TextNode) {

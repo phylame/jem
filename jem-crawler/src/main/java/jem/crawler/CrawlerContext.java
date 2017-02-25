@@ -18,10 +18,9 @@
 
 package jem.crawler;
 
-import org.jsoup.nodes.Document;
-
 import lombok.Getter;
 import lombok.Setter;
+import org.jsoup.nodes.Document;
 import pw.phylame.commons.cache.Cacheable;
 import pw.phylame.commons.cache.DirectCache;
 

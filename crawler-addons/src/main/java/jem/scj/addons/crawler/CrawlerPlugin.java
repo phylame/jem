@@ -32,7 +32,7 @@ public class CrawlerPlugin implements Plugin {
     public Map<String, Object> getMeta() {
         val map = new LinkedHashMap<String, Object>();
         map.put("id", getId());
-        map.put("name", "CrawlerProvider Plugin");
+        map.put("name", "Crawler Plugin");
         map.put("version", "1.0");
         map.put("vendor", "PW");
         return map;

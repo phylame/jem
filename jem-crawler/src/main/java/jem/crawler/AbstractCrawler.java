@@ -123,10 +123,12 @@ public abstract class AbstractCrawler implements CrawlerProvider {
                 return "get".equalsIgnoreCase(method)
                         ? Jsoup.connect(url)
                         .userAgent(SoupUtils.randAgent())
-                        .timeout(config.timeout).get()
+                        .timeout(config.timeout)
+                        .get()
                         : Jsoup.connect(url)
                         .userAgent(SoupUtils.randAgent())
-                        .timeout(config.timeout).post();
+                        .timeout(config.timeout)
+                        .post();
             } catch (SocketTimeoutException e) {
                 Log.d(TAG, "try reconnect to %s", url);
             }

@@ -23,7 +23,7 @@ public class Test implements CrawlerListener {
     }
 
     @Override
-    public void textFetching(Chapter chapter, int total, int current) {
+    public void textFetched(Chapter chapter, int total, int current) {
         System.out.printf("%d/%d: %s\n", current, total, Attributes.getTitle(chapter));
     }
 

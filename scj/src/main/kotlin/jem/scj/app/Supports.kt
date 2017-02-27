@@ -67,7 +67,7 @@ fun openBook(tuple: InTuple): Book? {
         var key = "crawler.parse.${CrawlerConfig.LISTENER}"
         if (key !in args) {
             args[key] = object : CrawlerListenerAdapter() {
-                override fun textFetching(chapter: Chapter, total: Int, current: Int) {
+                override fun textFetched(chapter: Chapter, total: Int, current: Int) {
                     println("$current/$total: ${chapter.title}")
                 }
             }

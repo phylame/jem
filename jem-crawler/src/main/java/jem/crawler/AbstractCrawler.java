@@ -18,11 +18,12 @@
 
 package jem.crawler;
 
-import java.io.IOException;
-import java.net.SocketTimeoutException;
-import java.util.Collection;
-import java.util.concurrent.atomic.AtomicInteger;
-
+import jem.Chapter;
+import jem.crawler.util.SoupUtils;
+import jem.epm.util.InputCleaner;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.val;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.jsoup.Jsoup;
@@ -30,19 +31,17 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
-
-import jem.Chapter;
-import jem.crawler.util.SoupUtils;
-import jem.epm.util.InputCleaner;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.val;
 import pw.phylame.commons.format.Render;
 import pw.phylame.commons.io.HttpUtils;
 import pw.phylame.commons.io.IOUtils;
 import pw.phylame.commons.log.Log;
 import pw.phylame.commons.util.StringUtils;
 import pw.phylame.commons.util.Validate;
+
+import java.io.IOException;
+import java.net.SocketTimeoutException;
+import java.util.Collection;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class AbstractCrawler implements CrawlerProvider {
     protected final String TAG = getClass().getSimpleName();
@@ -75,20 +74,26 @@ public abstract class AbstractCrawler implements CrawlerProvider {
     @Override
     public final String fetchText(Chapter chapter, String uri) {
         ensureInitialized();
+        if (StringUtils.isEmpty(uri)) {
+            notifyTextFetched(chapter);
+            return StringUtils.EMPTY_TEXT;
+        }
+        String text;
+        try {
+            text = fetchText(uri);
+        } catch (IOException e) {
+            context.setError(e);
+            text = StringUtils.EMPTY_TEXT;
+        }
+        notifyTextFetched(chapter);
+        return text;
+    }
+
+    private void notifyTextFetched(Chapter chapter) {
         val listener = context.getListener();
         if (listener != null) {
             Validate.require(chapterCount >= 0, "chapterCount should be initialized");
-            listener.textFetching(chapter, chapterCount, chapterIndex.getAndIncrement());
-        }
-        if (StringUtils.isEmpty(uri)) {
-            return StringUtils.EMPTY_TEXT;
-        }
-        try {
-            return fetchText(uri);
-        } catch (IOException e) {
-            Log.e(TAG, e);
-            context.setError(e);
-            return StringUtils.EMPTY_TEXT;
+            listener.textFetched(chapter, chapterCount, chapterIndex.getAndIncrement());
         }
     }
 
@@ -123,13 +128,13 @@ public abstract class AbstractCrawler implements CrawlerProvider {
             try {
                 return "get".equalsIgnoreCase(method)
                         ? Jsoup.connect(url)
-                                .userAgent(SoupUtils.randAgent())
-                                .timeout(config.timeout)
-                                .get()
+                        .userAgent(SoupUtils.randAgent())
+                        .timeout(config.timeout)
+                        .get()
                         : Jsoup.connect(url)
-                                .userAgent(SoupUtils.randAgent())
-                                .timeout(config.timeout)
-                                .post();
+                        .userAgent(SoupUtils.randAgent())
+                        .timeout(config.timeout)
+                        .post();
             } catch (SocketTimeoutException e) {
                 Log.d(TAG, "try reconnect to %s", url);
             }

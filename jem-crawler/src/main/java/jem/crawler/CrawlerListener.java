@@ -25,5 +25,5 @@ public interface CrawlerListener {
 
     void contentsFetched(CrawlerBook book);
 
-    void textFetching(Chapter chapter, int total, int current);
+    void textFetched(Chapter chapter, int total, int current);
 }

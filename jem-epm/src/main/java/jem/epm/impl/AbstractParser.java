@@ -18,6 +18,11 @@
 
 package jem.epm.impl;
 
+import java.io.Closeable;
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
+
 import jem.Book;
 import jem.epm.Parser;
 import jem.epm.util.E;
@@ -28,11 +33,6 @@ import jem.util.JemException;
 import lombok.NonNull;
 import lombok.val;
 
-import java.io.Closeable;
-import java.io.File;
-import java.io.IOException;
-import java.util.Map;
-
 public abstract class AbstractParser<I extends Closeable, C extends EpmConfig> extends EpmBase<C> implements Parser {
 
     protected AbstractParser(String name, Class<C> clazz) {
@@ -41,7 +41,7 @@ public abstract class AbstractParser<I extends Closeable, C extends EpmConfig> e
 
     protected abstract I openInput(File file, C config) throws IOException;
 
-    protected abstract Book parse(I input, C config) throws IOException, ParserException;
+    public abstract Book parse(I input, C config) throws IOException, ParserException;
 
     @Override
     public Book parse(@NonNull File file, Map<String, Object> args) throws IOException, JemException {

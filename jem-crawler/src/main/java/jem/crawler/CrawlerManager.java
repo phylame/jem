@@ -18,8 +18,14 @@
 
 package jem.crawler;
 
+import java.io.IOException;
+import java.net.URL;
 import java.util.Set;
 
+import jem.crawler.util.M;
+import jem.epm.util.ParserException;
+import lombok.NonNull;
+import lombok.val;
 import pw.phylame.commons.util.Implementor;
 import pw.phylame.commons.util.MiscUtils;
 
@@ -56,6 +62,35 @@ public final class CrawlerManager {
     public static CrawlerProvider crawlerFor(String host)
             throws IllegalAccessException, ClassNotFoundException, InstantiationException {
         return crawlers.getInstance(host);
+    }
+
+    public static CrawlerBook fetchBook(@NonNull String input, @NonNull CrawlerConfig config)
+            throws IOException, ParserException {
+        val url = new URL(input);
+        val host = url.getProtocol() + "://" + url.getHost();
+        final CrawlerProvider crawler;
+        try {
+            crawler = CrawlerManager.crawlerFor(host);
+        } catch (IllegalAccessException | ClassNotFoundException | InstantiationException e) {
+            throw new ParserException(M.tr("err.unknownHost", host), e);
+        }
+        if (crawler == null) {
+            throw new ParserException(M.tr("err.unknownHost", host));
+        }
+        val book = new CrawlerBook();
+        val context = new CrawlerContext(input, book, config);
+        crawler.init(context);
+        crawler.fetchAttributes();
+        val listener = context.getListener();
+        if (listener != null) {
+            listener.attributeFetched(book);
+        }
+        crawler.fetchContents();
+        if (listener != null) {
+            listener.contentsFetched(book);
+        }
+        book.getAttributes().set("source", input);
+        return book;
     }
 
     public static void loadCrawlers() {

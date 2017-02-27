@@ -60,16 +60,16 @@ public final class DebugUtils {
         return book;
     }
 
-    public static void makeFile(Book book, String path, Map<String, Object> args) {
+    public static boolean makeFile(Book book, String path, Map<String, Object> args) {
         val format = EpmManager.nameOfExtension(PathUtils.extName(path));
         if (format == null) {
             System.err.println("unsupported format: " + path);
-            return;
+            return false;
         }
-        makeFile(book, path, format, args);
+        return makeFile(book, path, format, args);
     }
 
-    public static void makeFile(Book book, String path, String format, Map<String, Object> args) {
+    public static boolean makeFile(Book book, String path, String format, Map<String, Object> args) {
         File file = new File(path);
         if (file.isDirectory()) {
             file = new File(file, getTitle(book) + "." + format);
@@ -78,7 +78,9 @@ public final class DebugUtils {
             EpmManager.writeBook(book, file, format, args);
         } catch (IOException | JemException e) {
             e.printStackTrace();
+            return false;
         }
+        return true;
     }
 
     public static void printAttributes(Chapter chapter, boolean showLine) {

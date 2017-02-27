@@ -19,6 +19,7 @@
 package jem.crawler;
 
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import org.jsoup.nodes.Document;
 import pw.phylame.commons.cache.Cacheable;
@@ -46,9 +47,10 @@ public class CrawlerContext {
      */
     private Throwable error;
 
-    public CrawlerContext(String url, CrawlerBook book, CrawlerConfig config) {
+    public CrawlerContext(@NonNull String url, @NonNull CrawlerBook book, @NonNull CrawlerConfig config) {
         this.url = url;
         this.book = book;
+        book.setContext(this);
         this.config = config;
         this.listener = config.listener;
         this.cache = config.cache != null ? config.cache : new DirectCache();

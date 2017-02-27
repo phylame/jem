@@ -18,12 +18,11 @@
 
 package jem.crawler;
 
-import jem.Chapter;
-import jem.crawler.util.SoupUtils;
-import jem.epm.util.InputCleaner;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.val;
+import java.io.IOException;
+import java.net.SocketTimeoutException;
+import java.util.Collection;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.jsoup.Jsoup;
@@ -31,17 +30,19 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
+
+import jem.Chapter;
+import jem.crawler.util.SoupUtils;
+import jem.epm.util.InputCleaner;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.val;
 import pw.phylame.commons.format.Render;
 import pw.phylame.commons.io.HttpUtils;
 import pw.phylame.commons.io.IOUtils;
 import pw.phylame.commons.log.Log;
 import pw.phylame.commons.util.StringUtils;
 import pw.phylame.commons.util.Validate;
-
-import java.io.IOException;
-import java.net.SocketTimeoutException;
-import java.util.Collection;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class AbstractCrawler implements CrawlerProvider {
     protected final String TAG = getClass().getSimpleName();
@@ -74,7 +75,7 @@ public abstract class AbstractCrawler implements CrawlerProvider {
     @Override
     public final String fetchText(Chapter chapter, String uri) {
         ensureInitialized();
-        val listener = context.getConfig().listener;
+        val listener = context.getListener();
         if (listener != null) {
             Validate.require(chapterCount >= 0, "chapterCount should be initialized");
             listener.textFetching(chapter, chapterCount, chapterIndex.getAndIncrement());
@@ -98,7 +99,7 @@ public abstract class AbstractCrawler implements CrawlerProvider {
     protected final void fetchToc() throws IOException, InterruptedException {
         ensureInitialized();
         for (int i = 2, pages = fetchPage(1); i <= pages; ++i) {
-            if (Thread.currentThread().isInterrupted()) {
+            if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
             fetchPage(i);
@@ -116,19 +117,19 @@ public abstract class AbstractCrawler implements CrawlerProvider {
     protected final Document fetchSoup(String url, String method) throws IOException, InterruptedException {
         val config = context.getConfig();
         for (int i = 0, end = Math.max(1, config.tryCount); i < end; ++i) {
-            if (Thread.currentThread().isInterrupted()) {
+            if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
             try {
                 return "get".equalsIgnoreCase(method)
                         ? Jsoup.connect(url)
-                        .userAgent(SoupUtils.randAgent())
-                        .timeout(config.timeout)
-                        .get()
+                                .userAgent(SoupUtils.randAgent())
+                                .timeout(config.timeout)
+                                .get()
                         : Jsoup.connect(url)
-                        .userAgent(SoupUtils.randAgent())
-                        .timeout(config.timeout)
-                        .post();
+                                .userAgent(SoupUtils.randAgent())
+                                .timeout(config.timeout)
+                                .post();
             } catch (SocketTimeoutException e) {
                 Log.d(TAG, "try reconnect to %s", url);
             }
@@ -144,7 +145,8 @@ public abstract class AbstractCrawler implements CrawlerProvider {
         return fetchJson(url, "post", encoding);
     }
 
-    protected final JSONObject fetchJson(String url, String method, String encoding) throws IOException, InterruptedException {
+    protected final JSONObject fetchJson(String url, String method, String encoding)
+            throws IOException, InterruptedException {
         val config = context.getConfig();
         val request = HttpUtils.Request.builder()
                 .url(url)
@@ -153,7 +155,7 @@ public abstract class AbstractCrawler implements CrawlerProvider {
                 .connectTimeout(config.timeout)
                 .build();
         for (int i = 0, end = Math.max(1, config.tryCount); i < end; ++i) {
-            if (Thread.currentThread().isInterrupted()) {
+            if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
             try {

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -204,12 +205,19 @@ public class TocWriter {
         newGuide(href, "toc", title);
     }
 
+    private void ensureNotInterrupted() {
+        if (Thread.interrupted()) {
+            throw new CancellationException();
+        }
+    }
+
     // return links of sub-chapters
     private List<HtmlRender.Link> processSection(Chapter section, String suffix, String href) throws IOException {
         val links = new LinkedList<HtmlRender.Link>();
         String _suffix;
         int count = 1;
         for (val chapter : section) {
+            ensureNotInterrupted();
             _suffix = suffix + "-" + Integer.toString(count);
             links.add(!chapter.isSection() ? writeChapter(chapter, _suffix) : writeSection(chapter, _suffix, href));
             ++count;

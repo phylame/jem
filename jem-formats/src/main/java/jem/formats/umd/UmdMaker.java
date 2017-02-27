@@ -58,7 +58,8 @@ public class UmdMaker extends AbstractMaker<UmdOutConfig> {
     }
 
     @Override
-    public void make(@NonNull Book book, @NonNull OutputStream output, UmdOutConfig config) throws IOException, MakerException {
+    public void make(@NonNull Book book, @NonNull OutputStream output, UmdOutConfig config)
+            throws IOException, MakerException {
         if (config == null) {
             config = new UmdOutConfig();
         }
@@ -66,17 +67,17 @@ public class UmdMaker extends AbstractMaker<UmdOutConfig> {
 
         output.write(littleRender.putUInt32(UMD.MAGIC_NUMBER));
         switch (config.umdType) {
-            case UMD.TEXT:
-                makeText(tuple);
-                break;
-            case UMD.CARTOON:
-                makeCartoon(tuple);
-                break;
-            case UMD.COMIC:
-                makeComic(tuple);
-                break;
-            default:
-                throw new MakerException(M.tr("umd.make.invalidType", config.umdType));
+        case UMD.TEXT:
+            makeText(tuple);
+        break;
+        case UMD.CARTOON:
+            makeCartoon(tuple);
+        break;
+        case UMD.COMIC:
+            makeComic(tuple);
+        break;
+        default:
+            throw new MakerException(M.tr("umd.make.invalidType", config.umdType));
         }
     }
 
@@ -271,7 +272,7 @@ public class UmdMaker extends AbstractMaker<UmdOutConfig> {
         if (key != null && key instanceof byte[]) {
             data = (byte[]) key;
         } else {
-            data = new byte[]{  // 0 x 16
+            data = new byte[]{ // 0 x 16
                     0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0
             };
@@ -344,9 +345,10 @@ public class UmdMaker extends AbstractMaker<UmdOutConfig> {
         writeChunk(UMD.CDT_UMD_END, false, littleRender.putUInt32(length), tuple);
     }
 
-    private void writeText(BufferedRandomAccessFile file, long contentLength, List<Long> checks, Tuple tuple) throws IOException {
-        int count = (int) (contentLength >> 15);  // div 0x8000
-        count += ((contentLength & 0x7FFF) > 0) ? 1 : 0;    // mod 0x8000 > 0
+    private void writeText(BufferedRandomAccessFile file, long contentLength, List<Long> checks, Tuple tuple)
+            throws IOException {
+        int count = (int) (contentLength >> 15); // div 0x8000
+        count += ((contentLength & 0x7FFF) > 0) ? 1 : 0; // mod 0x8000 > 0
         val randValA = NumberUtils.randInteger(0, count);
         val randValB = NumberUtils.randInteger(0, count);
         for (int i = 0; i < count; ++i) {
@@ -384,6 +386,7 @@ public class UmdMaker extends AbstractMaker<UmdOutConfig> {
         val rand = NumberUtils.randInteger(0, images.size() - 1);
         int i = 0;
         for (val img : images) {
+            ensureNotInterrupted();
             long checkVal = NumberUtils.randLong(4026530000L, 4294970000L);
             checks.add(checkVal);
             writeAddition(checkVal, img.readAll(), tuple);

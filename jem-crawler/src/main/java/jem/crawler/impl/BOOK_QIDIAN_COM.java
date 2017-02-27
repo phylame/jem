@@ -1,20 +1,27 @@
 package jem.crawler.impl;
 
+import static jem.Attributes.setAuthor;
+import static jem.Attributes.setCover;
+import static jem.Attributes.setGenre;
+import static jem.Attributes.setIntro;
+import static jem.Attributes.setState;
+import static jem.Attributes.setTitle;
+import static jem.Attributes.setWords;
+import static pw.phylame.commons.util.StringUtils.secondPartOf;
+
+import java.io.IOException;
+import java.net.URL;
+
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
+
 import jem.Chapter;
 import jem.crawler.CrawlerText;
 import jem.crawler.Identifiable;
 import jem.util.flob.Flobs;
 import lombok.val;
-import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
 import pw.phylame.commons.log.Log;
 import pw.phylame.commons.util.StringUtils;
-
-import java.io.IOException;
-import java.net.URL;
-
-import static jem.Attributes.*;
-import static pw.phylame.commons.util.StringUtils.secondPartOf;
 
 public class BOOK_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
     private static final String HOST = "http://book.qidian.com";
@@ -46,7 +53,7 @@ public class BOOK_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
     public void fetchContents() throws IOException {
         ensureInitialized();
         val book = context.getBook();
-        chapterCount = 0;
+        int chapterCount = 0;
         final Document doc;
         try {
             doc = getSoup(context.getUrl() + "#Catalog");
@@ -65,6 +72,8 @@ public class BOOK_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
                 ++chapterCount;
             }
         }
+        this.chapterCount = chapterCount;
+        book.setTotalChapters(chapterCount);
     }
 
     @Override

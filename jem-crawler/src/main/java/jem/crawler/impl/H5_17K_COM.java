@@ -140,6 +140,7 @@ public class H5_17K_COM extends AbstractCrawler implements Searchable, Identifia
         }
         if (chapterCount == -1) {
             chapterCount = json.getInt("totalChapter");
+            book.setTotalChapters(chapterCount);
             return json.getInt("totalPage");
         } else {
             return 0;

@@ -86,6 +86,7 @@ public class WWW_MANGG_COM extends AbstractCrawler implements Identifiable {
             book.append(chapter);
         }
         chapterCount = book.size();
+        book.setTotalChapters(chapterCount);
     }
 
     @Override

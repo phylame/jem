@@ -56,7 +56,7 @@ public class MobiParser extends BinaryParser<MobiInConfig> {
     }
 
     @Override
-    protected Book parse(RandomAccessFile file, MobiInConfig config) throws IOException, ParserException {
+    public Book parse(RandomAccessFile file, MobiInConfig config) throws IOException, ParserException {
         if (config == null) {
             config = new MobiInConfig();
         }

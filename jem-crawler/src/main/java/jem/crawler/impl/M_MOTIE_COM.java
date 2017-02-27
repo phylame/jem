@@ -69,6 +69,7 @@ public class M_MOTIE_COM extends AbstractCrawler implements Identifiable {
         } catch (InterruptedException e) {
             Log.d(TAG, "user interrupted");
         }
+        context.getBook().setTotalChapters(chapterCount);
     }
 
     @Override

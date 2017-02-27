@@ -137,6 +137,7 @@ public class YD_SOGOU_COM extends AbstractCrawler implements Searchable, Identif
         }
         if (chapterCount == -1) {
             chapterCount = list.getInt("total");
+            book.setTotalChapters(chapterCount);
             return list.getInt("totalPages");
         } else {
             return 0;

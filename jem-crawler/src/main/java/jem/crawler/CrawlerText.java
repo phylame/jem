@@ -18,27 +18,37 @@
 
 package jem.crawler;
 
+import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+
 import jem.Attributes;
 import jem.Chapter;
 import jem.util.text.AbstractText;
 import jem.util.text.Texts;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.val;
 import pw.phylame.commons.util.StringUtils;
 import pw.phylame.commons.util.Validate;
 
-import java.io.IOException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 public class CrawlerText extends AbstractText implements Runnable {
     /**
      * Tag for text in cache.
      */
-    private Object tag;
+    private volatile Object tag;
+    private volatile Future<?> future;
+
+    @Setter
+    private CountDownLatch latch;
+
+    @Getter
+    private volatile boolean isFetched = false;
+    @Getter
+    private volatile boolean isSubmitted = false;
 
     @Getter
     private final String uri;
@@ -46,8 +56,6 @@ public class CrawlerText extends AbstractText implements Runnable {
     private final Chapter chapter;
     @Getter
     private final CrawlerProvider crawler;
-    private final AtomicBoolean isFetched = new AtomicBoolean(false);
-    private final AtomicBoolean isSubmitted = new AtomicBoolean(false);
 
     public CrawlerText(@NonNull CrawlerProvider crawler, @NonNull Chapter chapter, @NonNull String uri) {
         super(Texts.PLAIN);
@@ -57,17 +65,10 @@ public class CrawlerText extends AbstractText implements Runnable {
         this.uri = uri;
     }
 
-    public final boolean isFetched() {
-        return isFetched.get();
-    }
-
-    public final boolean isSubmitted() {
-        return isSubmitted.get();
-    }
-
     public final Future<?> submitTo(@NonNull ExecutorService executor) {
-        isSubmitted.set(true);
-        return executor.submit(this);
+        isSubmitted = true;
+        future = executor.submit(this);
+        return future;
     }
 
     @Override
@@ -75,7 +76,7 @@ public class CrawlerText extends AbstractText implements Runnable {
     public String getText() {
         if (!isFetched()) {
             if (isSubmitted()) {// already submitted into pool in async mode
-                while (!isFetched()) { // wait for done
+                while (!future.isDone() && !isFetched()) { // wait for done
                     if (Thread.currentThread().isInterrupted()) {
                         return StringUtils.EMPTY_TEXT;
                     }
@@ -85,13 +86,16 @@ public class CrawlerText extends AbstractText implements Runnable {
                 fetchText();
             }
         }
-        return crawler.getContext().getCache().get(tag);
+        return tag == null ? StringUtils.EMPTY_TEXT : crawler.getContext().getCache().get(tag);
     }
 
     @Override
     public void run() {
         if (!isFetched()) {
             fetchText();
+        }
+        if (latch != null) {
+            latch.countDown();
         }
     }
 
@@ -100,7 +104,7 @@ public class CrawlerText extends AbstractText implements Runnable {
         val text = crawler.fetchText(chapter, uri);
         Attributes.setWords(chapter, text.length());
         tag = crawler.getContext().getCache().add(text);
-        isFetched.set(true);
+        isFetched = true;
     }
 
 }

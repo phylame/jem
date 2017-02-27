@@ -82,6 +82,7 @@ public class M_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
             }
         }
         chapterCount = total;
+        book.setTotalChapters(total);
     }
 
     @Override

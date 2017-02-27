@@ -27,7 +27,7 @@ import java.util.Map;
 
 /**
  * {@code Maker} used for making {@code Book} to book file.
- * <p><strong>NOTE: </strong> the instance of {@code Maker} be reusable.
+ * <p><strong>NOTE: </strong> the instance of {@code Maker} must be reusable.
  */
 public interface Maker {
     /**

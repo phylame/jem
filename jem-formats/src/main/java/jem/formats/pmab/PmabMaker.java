@@ -83,14 +83,14 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
     private void writePBM(Book book, Tuple tuple) throws IOException, MakerException {
         val writer = prepareXml("pbm", PMAB.PBM_XML_NS, tuple);
         switch (tuple.version) {
-            case 3:
-                writePBMHead("value", true, tuple);
-                writePBMv3(book, tuple);
-                break;
-            case 2:
-                writePBMHead("content", false, tuple);
-                writePBMv2(book, tuple);
-                break;
+        case 3:
+            writePBMHead("value", true, tuple);
+            writePBMv3(book, tuple);
+        break;
+        case 2:
+            writePBMHead("content", false, tuple);
+            writePBMv2(book, tuple);
+        break;
         }
         writeXml(tuple, writer, PMAB.PBM_FILE);
     }
@@ -98,12 +98,12 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
     private void writePBC(Book book, Tuple tuple) throws IOException {
         val writer = prepareXml("pbc", PMAB.PBC_XML_NS, tuple);
         switch (tuple.version) {
-            case 3:
-                writePBCv3(book, tuple);
-                break;
-            case 2:
-                writePBCv2(book, tuple);
-                break;
+        case 3:
+            writePBCv3(book, tuple);
+        break;
+        case 2:
+            writePBCv2(book, tuple);
+        break;
         }
         writeXml(tuple, writer, PMAB.PBC_FILE);
     }
@@ -156,25 +156,25 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
         String type = Variants.typeOf(value);
         if (!type.equals(Variants.STRING)) {
             switch (type) {
-                case Variants.TEXT:
-                    val dir = name.equals(Attributes.INTRO) ? config.textDir : config.extraDir;
-                    data = writeV3Text((Text) value, dir, prefix + name, tuple);
-                    type = null;
-                    break;
-                case Variants.FLOB:
-                    data = writeFile((Flob) value, prefix + name, "type", tuple);
-                    type = null;
-                    break;
-                case Variants.DATETIME:
-                    data = DateUtils.format((Date) value, config.dateFormat);
-                    type = type + ";format=" + config.dateFormat;
-                    break;
-                case Variants.LOCALE:
-                    data = Converters.render((Locale) value, Locale.class);
-                    break;
-                default:
-                    data = value.toString();
-                    break;
+            case Variants.TEXT:
+                val dir = name.equals(Attributes.INTRO) ? config.textDir : config.extraDir;
+                data = writeV3Text((Text) value, dir, prefix + name, tuple);
+                type = null;
+            break;
+            case Variants.FLOB:
+                data = writeFile((Flob) value, prefix + name, "type", tuple);
+                type = null;
+            break;
+            case Variants.DATETIME:
+                data = DateUtils.format((Date) value, config.dateFormat);
+                type = type + ";format=" + config.dateFormat;
+            break;
+            case Variants.LOCALE:
+                data = Converters.render((Locale) value, Locale.class);
+            break;
+            default:
+                data = value.toString();
+            break;
             }
         } else {
             data = value.toString();
@@ -263,6 +263,7 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
         val render = tuple.render.beginTag("toc");
         int count = 1;
         for (val sub : book) {
+            ensureNotInterrupted();
             writeV3Chapter(sub, Integer.toString(count), tuple);
             ++count;
         }
@@ -284,6 +285,7 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
 
         int count = 1;
         for (val sub : chapter) {
+            ensureNotInterrupted();
             writeV3Chapter(sub, suffix + "-" + count, tuple);
             ++count;
         }
@@ -296,6 +298,7 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
                 .attribute("depth", Integer.toString(MiscUtils.depthOf((Chapter) book)));
         int count = 1;
         for (val sub : book) {
+            ensureNotInterrupted();
             writeV2Chapter(sub, Integer.toString(count), tuple);
             ++count;
         }
@@ -333,6 +336,7 @@ public class PmabMaker extends ZipMaker<PmabOutConfig> {
 
         int count = 1;
         for (val sub : chapter) {
+            ensureNotInterrupted();
             writeV2Chapter(sub, suffix + "-" + count, tuple);
             ++count;
         }

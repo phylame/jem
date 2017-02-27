@@ -57,7 +57,7 @@ public class EpubParser extends VamParser<EpubInConfig> {
     }
 
     @Override
-    protected Book parse(VamReader vam, EpubInConfig config) throws IOException, ParserException {
+    public Book parse(VamReader vam, EpubInConfig config) throws IOException, ParserException {
         if (!EPUB.MT_EPUB.equals(VamUtils.textOf(vam, EPUB.MIME_FILE, "ASCII").trim())) {
             throw new ParserException(M.tr("epub.parse.invalidMT", EPUB.MIME_FILE, EPUB.MT_EPUB));
         }

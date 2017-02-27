@@ -1,5 +1,4 @@
 import java.util.concurrent.Executors;
-
 import jem.Attributes;
 import jem.Chapter;
 import jem.crawler.CrawlerBook;
@@ -31,17 +30,18 @@ public class Test implements CrawlerListener {
     public static void main(String[] args) throws Exception {
         System.setProperty(EpmManager.AUTO_LOAD_KEY, "true");
         System.setProperty(CrawlerManager.AUTO_LOAD_KEY, "true");
-        val pool = Executors.newFixedThreadPool(32);
+        val pool = Executors.newFixedThreadPool(64);
         val url = "http://www.mangg.com/id53148/";
         val config = CollectionUtils.<String, Object>mapOf(
                 CRAWLER_PREFIX + CrawlerConfig.LISTENER, new Test());
         val book = (CrawlerBook) EpmManager.readBook(url, "crawler", config);
-        book.initTexts(pool);
-        book.initTexts(pool);
-        DebugUtils.makeFile(book, "d:/tmp/b", "pmab", null);
-        DebugUtils.makeFile(book, "d:/tmp/b", "epub", null);
+        val futures = book.initTexts(pool, false);
+        book.awaitFetched();
+//        for (Future<?> future : futures) {
+//            future.cancel(true);
+//        }
+        System.out.println("done");
         book.cleanup();
         pool.shutdown();
     }
-
 }

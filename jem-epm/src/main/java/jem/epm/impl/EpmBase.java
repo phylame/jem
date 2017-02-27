@@ -18,6 +18,9 @@
 
 package jem.epm.impl;
 
+import java.util.Map;
+import java.util.concurrent.CancellationException;
+
 import jem.epm.Parser;
 import jem.epm.util.config.BadConfigException;
 import jem.epm.util.config.ConfigUtils;
@@ -25,14 +28,14 @@ import jem.epm.util.config.EpmConfig;
 import lombok.Getter;
 import pw.phylame.commons.util.Validate;
 
-import java.util.Map;
-
 /**
  * Implementation base for parser and maker.
  *
- * @param <C> the config clazz
+ * @param <C>
+ *            the config clazz
  */
 public abstract class EpmBase<C extends EpmConfig> {
+
     /**
      * Name of format for the parser or maker.
      */
@@ -41,7 +44,8 @@ public abstract class EpmBase<C extends EpmConfig> {
 
     /**
      * Class of the config.
-     * <p>If no config required, set to {@literal null}.
+     * <p>
+     * If no config required, set to {@literal null}.
      */
     private final Class<C> clazz;
 
@@ -55,5 +59,11 @@ public abstract class EpmBase<C extends EpmConfig> {
         return clazz == null
                 ? null
                 : ConfigUtils.fetchConfig(m, name + '.' + (this instanceof Parser ? "parse." : "make."), clazz);
+    }
+
+    protected final void ensureNotInterrupted() {
+        if (Thread.interrupted()) {
+            throw new CancellationException();
+        }
     }
 }

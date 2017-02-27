@@ -112,7 +112,7 @@ public class JarMaker extends ZipMaker<JarOutConfig> {
             output.writeShort(data.length);
             output.write(data);
         }
-        output.writeShort(0);  // what?
+        output.writeShort(0); // what?
         val intro = Attributes.getIntro(tuple.book);
         val str = intro != null ? TextRender.renderText(intro, tuple.config.textConfig) : "";
         data = str.getBytes(JAR.METADATA_ENCODING);

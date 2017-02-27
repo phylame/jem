@@ -27,7 +27,7 @@ import java.util.Map;
 
 /**
  * {@code Parser} used for parsing book file and stores to {@code Book}.
- * <p><strong>NOTE: </strong> the instance of {@code Parser} be reusable.
+ * <p><strong>NOTE: </strong> the instance of {@code Parser} must be reusable.
  */
 public interface Parser {
     /**

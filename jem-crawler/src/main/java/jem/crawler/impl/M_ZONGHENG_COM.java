@@ -105,6 +105,7 @@ public class M_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
         }
         if (chapterCount == -1) {
             chapterCount = list.getInt("chapterCount");
+            book.setTotalChapters(chapterCount);
             return (int) Math.ceil(chapterCount / list.getDouble("pageSize"));
         } else {
             return 0;

@@ -20,6 +20,7 @@ package jem.formats.txt;
 
 import lombok.NonNull;
 import lombok.val;
+import pw.phylame.commons.io.IOUtils;
 import pw.phylame.commons.util.StringUtils;
 
 import java.io.*;
@@ -39,7 +40,8 @@ public class TxtMaker extends AbstractMaker<TxtOutConfig> {
     }
 
     @Override
-    public void make(@NonNull Book book, @NonNull OutputStream output, TxtOutConfig config) throws IOException, MakerException {
+    public void make(@NonNull Book book, @NonNull OutputStream output, TxtOutConfig config)
+            throws IOException, MakerException {
         if (config == null) {
             config = new TxtOutConfig();
         }
@@ -50,9 +52,7 @@ public class TxtMaker extends AbstractMaker<TxtOutConfig> {
         if (config == null) {
             config = new TxtOutConfig();
         }
-        if (!(writer instanceof BufferedWriter)) {
-            writer = new BufferedWriter(writer);
-        }
+        writer = IOUtils.buffered(writer);
         val lineSeparator = config.textConfig.lineSeparator;
         if (StringUtils.isNotEmpty(config.header)) {
             writer.append(config.header).append(lineSeparator);
@@ -73,7 +73,7 @@ public class TxtMaker extends AbstractMaker<TxtOutConfig> {
             writer.write(lineSeparator);
             if (book.isSection()) {
                 TextRender.renderBook(book, render, config.textConfig);
-            } else {        // book has not sub-parts, then save its content
+            } else { // book has not sub-parts, then save its content
                 TextRender.renderText(book.getText(), render, config.textConfig);
             }
         } catch (Exception e) {

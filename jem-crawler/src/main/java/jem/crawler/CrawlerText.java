@@ -47,7 +47,7 @@ public class CrawlerText extends AbstractText implements Runnable {
 
     @Getter
     private volatile boolean isFetched = false;
-    @Getter
+
     private volatile boolean isSubmitted = false;
 
     @Getter
@@ -75,9 +75,10 @@ public class CrawlerText extends AbstractText implements Runnable {
     @SneakyThrows(IOException.class)
     public String getText() {
         if (!isFetched()) {
-            if (isSubmitted()) {// already submitted into pool in async mode
+            if (isSubmitted) {// already submitted into pool in async mode
                 while (!future.isDone() && !isFetched()) { // wait for done
                     if (Thread.currentThread().isInterrupted()) {
+                        isSubmitted = false;
                         return StringUtils.EMPTY_TEXT;
                     }
                     Thread.yield();
@@ -86,7 +87,9 @@ public class CrawlerText extends AbstractText implements Runnable {
                 fetchText();
             }
         }
-        return tag == null ? StringUtils.EMPTY_TEXT : crawler.getContext().getCache().get(tag);
+        val text = tag == null ? StringUtils.EMPTY_TEXT : crawler.getContext().getCache().get(tag);
+        isSubmitted = false;
+        return text;
     }
 
     @Override

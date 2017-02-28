@@ -69,7 +69,6 @@ public class WWW_ZHULANG_COM extends AbstractCrawler implements Identifiable {
     public void fetchContents() throws IOException {
         ensureInitialized();
         val book = context.getBook();
-        int chapterCount = 0;
         final Document doc;
         try {
             doc = getSoup(context.getUrl().replace("www", "book"));
@@ -85,14 +84,13 @@ public class WWW_ZHULANG_COM extends AbstractCrawler implements Identifiable {
             }
             for (val a : div.select("li>a")) {
                 val chapter = new Chapter(a.text().trim());
-                chapter.setText(new CrawlerText(this, chapter, a.attr("href")));
+                val text = new CrawlerText(this, chapter, a.attr("href"));
+                book.getTexts().add(text);
+                chapter.setText(text);
                 section.append(chapter);
-                ++chapterCount;
             }
             book.append(section);
         }
-        this.chapterCount = chapterCount;
-        book.setTotalChapters(chapterCount);
     }
 
     @Override

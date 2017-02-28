@@ -53,7 +53,6 @@ public class BOOK_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
     public void fetchContents() throws IOException {
         ensureInitialized();
         val book = context.getBook();
-        int chapterCount = 0;
         final Document doc;
         try {
             doc = getSoup(context.getUrl() + "#Catalog");
@@ -67,13 +66,12 @@ public class BOOK_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
             book.append(section);
             for (val a : volume.select("ul a")) {
                 val chapter = new Chapter(a.text().trim());
-                chapter.setText(new CrawlerText(this, chapter, protocol + a.attr("href")));
+                val text = new CrawlerText(this, chapter, protocol + a.attr("href"));
+                book.getTexts().add(text);
+                chapter.setText(text);
                 section.append(chapter);
-                ++chapterCount;
             }
         }
-        this.chapterCount = chapterCount;
-        book.setTotalChapters(chapterCount);
     }
 
     @Override

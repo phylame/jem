@@ -1,5 +1,21 @@
 package jem.crawler.impl;
 
+import static jem.Attributes.VALUES_SEPARATOR;
+import static jem.Attributes.setAuthor;
+import static jem.Attributes.setCover;
+import static jem.Attributes.setGenre;
+import static jem.Attributes.setIntro;
+import static jem.Attributes.setKeywords;
+import static jem.Attributes.setTitle;
+import static jem.Attributes.setWords;
+
+import java.io.IOException;
+import java.net.URL;
+
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.TextNode;
+import org.jsoup.select.Elements;
+
 import jem.Chapter;
 import jem.crawler.AbstractCrawler;
 import jem.crawler.CrawlerContext;
@@ -7,17 +23,9 @@ import jem.crawler.CrawlerText;
 import jem.crawler.Identifiable;
 import jem.util.flob.Flobs;
 import lombok.val;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.TextNode;
-import org.jsoup.select.Elements;
 import pw.phylame.commons.io.PathUtils;
 import pw.phylame.commons.log.Log;
 import pw.phylame.commons.util.StringUtils;
-
-import java.io.IOException;
-import java.net.URL;
-
-import static jem.Attributes.*;
 
 public class BOOK_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
     private static final String HOST = "http://book.zongheng.com";
@@ -57,7 +65,6 @@ public class BOOK_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
     public void fetchContents() throws IOException {
         ensureInitialized();
         val book = context.getBook();
-        int chapterCount = 0;
         final Document doc;
         try {
             doc = getSoup(String.format("%s/showchapter/%s.html", HOST, bookId));
@@ -72,14 +79,13 @@ public class BOOK_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
             val section = new Chapter(((TextNode) i1.next().childNode(0)).text().trim());
             for (val a : i2.next().select("a")) {
                 val chapter = new Chapter(a.text().trim());
-                chapter.setText(new CrawlerText(this, chapter, a.attr("href")));
+                val text = new CrawlerText(this, chapter, a.attr("href"));
+                book.getTexts().add(text);
+                chapter.setText(text);
                 section.append(chapter);
-                ++chapterCount;
             }
             book.append(section);
         }
-        this.chapterCount = chapterCount;
-        book.setTotalChapters(chapterCount);
     }
 
     @Override

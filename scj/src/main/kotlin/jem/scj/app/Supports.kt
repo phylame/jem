@@ -166,7 +166,7 @@ fun saveBook(book: Book, tuple: OutTuple): String? {
     val output = tuple.output.iif(tuple.output.isDirectory) { File(it, "${book.title}.${tuple.format}") }
     try {
         if (book is CrawlerBook) {
-            book.initTexts(taskPool, false)
+            book.initTexts(taskPool)
             isTaskPool = true
         }
         EpmManager.writeBook(book, output, tuple.format, prepareArguments(tuple))

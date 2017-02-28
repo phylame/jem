@@ -80,6 +80,8 @@ public class M_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
         }
     }
 
+    private boolean isFirstPage = true;
+
     @Override
     protected int fetchPage(int page) throws IOException {
         val book = context.getBook();
@@ -100,12 +102,14 @@ public class M_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
             val obj = (JSONObject) item;
             val chapter = new Chapter(obj.getString("chapterName"));
             val url = String.format(TEXT_JSON_URL, HOST, bookId, obj.getInt("chapterId"));
-            chapter.setText(new CrawlerText(this, chapter, url));
+            val text = new CrawlerText(this, chapter, url);
+            book.getTexts().add(text);
+            chapter.setText(text);
             section.append(chapter);
         }
-        if (chapterCount == -1) {
-            chapterCount = list.getInt("chapterCount");
-            book.setTotalChapters(chapterCount);
+        if (isFirstPage) {
+            isFirstPage = false;
+            val chapterCount = list.getInt("chapterCount");
             return (int) Math.ceil(chapterCount / list.getDouble("pageSize"));
         } else {
             return 0;

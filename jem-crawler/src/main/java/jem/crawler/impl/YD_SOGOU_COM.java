@@ -18,28 +18,50 @@
 
 package jem.crawler.impl;
 
-import jem.Chapter;
-import jem.crawler.*;
-import jem.crawler.util.SoupUtils;
-import jem.util.flob.Flobs;
-import lombok.val;
+import static jem.Attributes.AUTHOR;
+import static jem.Attributes.COVER;
+import static jem.Attributes.GENRE;
+import static jem.Attributes.INTRO;
+import static jem.Attributes.STATE;
+import static jem.Attributes.TITLE;
+import static jem.Attributes.setAuthor;
+import static jem.Attributes.setCover;
+import static jem.Attributes.setDate;
+import static jem.Attributes.setGenre;
+import static jem.Attributes.setIntro;
+import static jem.Attributes.setState;
+import static jem.Attributes.setTitle;
+import static jem.Attributes.setWords;
+import static pw.phylame.commons.util.StringUtils.isNotEmpty;
+import static pw.phylame.commons.util.StringUtils.valueOfName;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.jsoup.select.Selector;
+
+import jem.Chapter;
+import jem.crawler.AbstractCrawler;
+import jem.crawler.CrawlerContext;
+import jem.crawler.CrawlerText;
+import jem.crawler.Identifiable;
+import jem.crawler.Searchable;
+import jem.crawler.util.SoupUtils;
+import jem.util.flob.Flobs;
+import lombok.val;
 import pw.phylame.commons.log.Log;
 import pw.phylame.commons.util.DateUtils;
 import pw.phylame.commons.util.StringUtils;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.*;
-
-import static jem.Attributes.*;
-import static pw.phylame.commons.util.StringUtils.isNotEmpty;
-import static pw.phylame.commons.util.StringUtils.valueOfName;
 
 public class YD_SOGOU_COM extends AbstractCrawler implements Searchable, Identifiable {
     private static final String ENCODING = "UTF-8";
@@ -114,6 +136,8 @@ public class YD_SOGOU_COM extends AbstractCrawler implements Searchable, Identif
         }
     }
 
+    private boolean isFirstPage = true;
+
     @Override
     protected int fetchPage(int page) throws IOException {
         val book = context.getBook();
@@ -135,9 +159,8 @@ public class YD_SOGOU_COM extends AbstractCrawler implements Searchable, Identif
             chapter.setText(new CrawlerText(this, chapter, url));
             book.append(chapter);
         }
-        if (chapterCount == -1) {
-            chapterCount = list.getInt("total");
-            book.setTotalChapters(chapterCount);
+        if (isFirstPage) {
+            isFirstPage = false;
             return list.getInt("totalPages");
         } else {
             return 0;

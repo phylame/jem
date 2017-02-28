@@ -1,6 +1,7 @@
 package jem.crawler;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -8,21 +9,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 import jem.Book;
-import jem.Chapter;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.Setter;
 import lombok.val;
 import pw.phylame.commons.util.Validate;
 
 public class CrawlerBook extends Book {
-    @Getter
-    @Setter
-    private int totalChapters = 0;
 
     WeakReference<CrawlerContext> context;
-
-    private CountDownLatch latch;
 
     void setContext(CrawlerContext context) {
         this.context = new WeakReference<>(context);
@@ -30,6 +24,19 @@ public class CrawlerBook extends Book {
 
     public final CrawlerContext getContext() {
         return context != null ? context.get() : null;
+    }
+
+    @Getter
+    List<CrawlerText> texts = new ArrayList<>(160);
+
+    public final int getTotalChapters() {
+        return texts.size();
+    }
+
+    private CountDownLatch latch;
+
+    public final List<Future<?>> initTexts(@NonNull ExecutorService executor) {
+        return initTexts(executor, 0);
     }
 
     /**
@@ -40,18 +47,20 @@ public class CrawlerBook extends Book {
      *
      * @param executor
      *            the executor service for executing task of fetching text
-     * @param forced
-     *            {@literal true} for fetching text, no matter already fetched
+     * @param from
+     *            index of first text for fetching
      * @return list of future
      */
-    public final List<Future<?>> initTexts(@NonNull ExecutorService executor, boolean forced) {
+    public final List<Future<?>> initTexts(@NonNull ExecutorService executor, int from) {
         val futures = new LinkedList<Future<?>>();
-        latch = new CountDownLatch(totalChapters);
-        for (val chapter : this) {
+        latch = new CountDownLatch(texts.size() - from);
+        for (int i = from, end = texts.size(); i < end; ++i) {
+            val text = texts.get(i);
             if (Thread.currentThread().isInterrupted()) {
                 break;
             }
-            fetchTexts(chapter, executor, futures, forced);
+            text.setLatch(latch);
+            futures.add(text.submitTo(executor));
         }
         return futures;
     }
@@ -70,21 +79,10 @@ public class CrawlerBook extends Book {
         latch.await();
     }
 
-    private void fetchTexts(Chapter chapter, ExecutorService executor, List<Future<?>> futures, boolean forced) {
-        val text = chapter.getText();
-        if (text instanceof CrawlerText) {
-            val ct = (CrawlerText) text;
-            if ((forced || !ct.isFetched()) && !ct.isSubmitted()) {
-                ct.setLatch(latch);
-                futures.add(ct.submitTo(executor));
-            }
-        }
-        for (val sub : chapter) {
-            if (Thread.currentThread().isInterrupted()) {
-                break;
-            }
-            fetchTexts(sub, executor, futures, forced);
-        }
+    @Override
+    public void cleanup() {
+        latch = null;
+        texts.clear();
+        super.cleanup();
     }
-
 }

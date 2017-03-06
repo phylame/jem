@@ -18,12 +18,6 @@
 
 package jem.formats.jar;
 
-import java.io.BufferedInputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.util.zip.ZipFile;
-
 import jem.Attributes;
 import jem.Book;
 import jem.Chapter;
@@ -34,6 +28,12 @@ import jem.formats.util.M;
 import jem.util.flob.Flobs;
 import jem.util.text.Texts;
 import lombok.val;
+
+import java.io.BufferedInputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.util.zip.ZipFile;
 
 /**
  * <tt>Parser</tt> implement for JAR book.

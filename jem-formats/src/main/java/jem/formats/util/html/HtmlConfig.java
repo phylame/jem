@@ -18,10 +18,10 @@
 
 package jem.formats.util.html;
 
-import java.util.Map;
-
 import jem.epm.util.config.AbstractConfig;
 import jem.epm.util.config.Configured;
+
+import java.util.Map;
 
 /**
  * Config for rendering HTML.

@@ -18,18 +18,17 @@
 
 package jem.formats.txt;
 
+import jem.Attributes;
+import jem.Book;
+import jem.epm.impl.AbstractMaker;
+import jem.epm.util.MakerException;
+import jem.epm.util.text.TextRender;
 import lombok.NonNull;
 import lombok.val;
 import pw.phylame.commons.io.IOUtils;
 import pw.phylame.commons.util.StringUtils;
 
 import java.io.*;
-
-import jem.Attributes;
-import jem.Book;
-import jem.epm.impl.AbstractMaker;
-import jem.epm.util.MakerException;
-import jem.epm.util.text.TextRender;
 
 /**
  * <tt>Maker</tt> implement for TXT book.

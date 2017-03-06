@@ -18,6 +18,7 @@
 
 package jem.formats.util;
 
+import jem.epm.util.ParserException;
 import lombok.val;
 import pw.phylame.commons.format.Converters;
 import pw.phylame.commons.util.DateUtils;
@@ -25,8 +26,6 @@ import pw.phylame.commons.util.DateUtils;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.Locale;
-
-import jem.epm.util.ParserException;
 
 public final class EpmUtils {
     public static Date parseDate(String str, String format) throws ParserException {

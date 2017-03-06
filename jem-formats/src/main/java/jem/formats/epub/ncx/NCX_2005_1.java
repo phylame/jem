@@ -18,9 +18,6 @@
 
 package jem.formats.epub.ncx;
 
-import java.io.IOException;
-import java.util.List;
-
 import jem.Attributes;
 import jem.Chapter;
 import jem.epm.util.MakerException;
@@ -36,6 +33,9 @@ import jem.formats.epub.writer.EpubWriter;
 import lombok.val;
 import pw.phylame.commons.util.MiscUtils;
 import pw.phylame.commons.util.StringUtils;
+
+import java.io.IOException;
+import java.util.List;
 
 /**
  * NCX version 2005-1

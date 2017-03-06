@@ -18,6 +18,10 @@
 
 package jem.formats.util.html;
 
+import jem.epm.util.MakerException;
+import jem.epm.util.xml.XmlConfig;
+import jem.epm.util.xml.XmlRender;
+import jem.util.text.Text;
 import lombok.NonNull;
 import lombok.val;
 import pw.phylame.commons.util.CollectionUtils;
@@ -28,11 +32,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.util.List;
-
-import jem.epm.util.MakerException;
-import jem.epm.util.xml.XmlConfig;
-import jem.epm.util.xml.XmlRender;
-import jem.util.text.Text;
 
 /**
  * Renders book content with HTML.

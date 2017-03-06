@@ -19,7 +19,6 @@
 package jem.crawler.util;
 
 import org.jsoup.nodes.Node;
-
 import pw.phylame.commons.util.RandomUtils;
 
 public final class SoupUtils {

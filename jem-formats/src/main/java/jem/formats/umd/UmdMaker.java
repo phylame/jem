@@ -18,18 +18,6 @@
 
 package jem.formats.umd;
 
-import static pw.phylame.commons.io.ByteUtils.littleRender;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.RandomAccessFile;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-
 import jem.Attributes;
 import jem.Book;
 import jem.Chapter;
@@ -47,6 +35,14 @@ import pw.phylame.commons.io.ZLibUtils;
 import pw.phylame.commons.log.Log;
 import pw.phylame.commons.util.CollectionUtils;
 import pw.phylame.commons.util.StringUtils;
+
+import java.io.*;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+
+import static pw.phylame.commons.io.ByteUtils.littleRender;
 
 /**
  * <tt>Maker</tt> implement for UMD book.
@@ -67,17 +63,17 @@ public class UmdMaker extends AbstractMaker<UmdOutConfig> {
 
         output.write(littleRender.putUInt32(UMD.MAGIC_NUMBER));
         switch (config.umdType) {
-        case UMD.TEXT:
-            makeText(tuple);
-        break;
-        case UMD.CARTOON:
-            makeCartoon(tuple);
-        break;
-        case UMD.COMIC:
-            makeComic(tuple);
-        break;
-        default:
-            throw new MakerException(M.tr("umd.make.invalidType", config.umdType));
+            case UMD.TEXT:
+                makeText(tuple);
+                break;
+            case UMD.CARTOON:
+                makeCartoon(tuple);
+                break;
+            case UMD.COMIC:
+                makeComic(tuple);
+                break;
+            default:
+                throw new MakerException(M.tr("umd.make.invalidType", config.umdType));
         }
     }
 
@@ -386,7 +382,6 @@ public class UmdMaker extends AbstractMaker<UmdOutConfig> {
         val rand = NumberUtils.randInteger(0, images.size() - 1);
         int i = 0;
         for (val img : images) {
-            ensureNotInterrupted();
             long checkVal = NumberUtils.randLong(4026530000L, 4294970000L);
             checks.add(checkVal);
             writeAddition(checkVal, img.readAll(), tuple);

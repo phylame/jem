@@ -18,11 +18,11 @@
 
 package jem.formats.txt;
 
-import java.util.regex.Pattern;
-
 import jem.epm.util.config.AbstractConfig;
 import jem.epm.util.config.Configured;
 import jem.formats.util.M;
+
+import java.util.regex.Pattern;
 
 /**
  * Config for parse TXT file.

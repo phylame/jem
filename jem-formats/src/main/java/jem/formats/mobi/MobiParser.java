@@ -18,16 +18,6 @@
 
 package jem.formats.mobi;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.RandomAccessFile;
-import java.util.Collections;
-import java.util.Date;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-
 import jem.Attributes;
 import jem.Book;
 import jem.epm.impl.BinaryParser;
@@ -47,6 +37,12 @@ import pw.phylame.commons.log.Log;
 import pw.phylame.commons.util.DateUtils;
 import pw.phylame.commons.util.MiscUtils;
 import pw.phylame.commons.util.StringUtils;
+
+import java.io.*;
+import java.util.Collections;
+import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 
 public class MobiParser extends BinaryParser<MobiInConfig> {
     private static final String TAG = MobiParser.class.getSimpleName();
@@ -199,7 +195,8 @@ public class MobiParser extends BinaryParser<MobiInConfig> {
         val count = in.readInt();
         byte[] b = {};
         val authors = new LinkedList<String>();
-        val keywords = new LinkedHashSet<String>();;
+        val keywords = new LinkedHashSet<String>();
+        ;
         int majorVersion = -1, minorVersion = -1, buildNumber = -1;
         for (int i = 0; i < count; ++i) {
             val type = in.readInt();
@@ -209,125 +206,125 @@ public class MobiParser extends BinaryParser<MobiInConfig> {
             String key;
             Object value = null;
             switch (type) {
-            case 100:
-                authors.add(new String(b, 0, length, data.encoding).trim());
-                continue;
-            case 101:
-                key = Attributes.PUBLISHER;
-            break;
-            case 102:
-                key = "imprint";
-            break;
-            case 103: {
-                key = Attributes.INTRO;
-                value = Texts.forString(new String(b, 0, length, data.encoding).trim(), Texts.PLAIN);
-            }
-            break;
-            case 104:
-                key = Attributes.ISBN;
-                value = new String(b, 0, length, data.encoding).trim().replace("-", "");
-            break;
-            case 105:
-                key = Attributes.GENRE;
-                Collections.addAll(keywords, new String(b, 0, length, data.encoding).trim().split(";"));
-                continue;
-            case 106: {
-                key = Attributes.PUBDATE;
-                value = DateUtils.parse(new String(b, 0, length, data.encoding), "yyyy-m-D", new Date());
-            }
-            break;
-            case 107:
-                key = "review";
-            break;
-            case 108:
-                key = Attributes.VENDOR;
-            break;
-            case 109:
-                key = Attributes.RIGHTS;
-            break;
-            case 110:
-                key = "subjectCode";
-            break;
-            case 111:
-                key = "type";
-            break;
-            case 112: {
-                key = "source";
-                String str = new String(b, 0, length, data.encoding).trim();
-                if (str.startsWith("urn:isbn:")) {
-                    str = str.substring(9);
-                    if (StringUtils.isNotEmpty(str)) {
-                        Attributes.setISBN(data.book, str);
+                case 100:
+                    authors.add(new String(b, 0, length, data.encoding).trim());
+                    continue;
+                case 101:
+                    key = Attributes.PUBLISHER;
+                    break;
+                case 102:
+                    key = "imprint";
+                    break;
+                case 103: {
+                    key = Attributes.INTRO;
+                    value = Texts.forString(new String(b, 0, length, data.encoding).trim(), Texts.PLAIN);
+                }
+                break;
+                case 104:
+                    key = Attributes.ISBN;
+                    value = new String(b, 0, length, data.encoding).trim().replace("-", "");
+                    break;
+                case 105:
+                    key = Attributes.GENRE;
+                    Collections.addAll(keywords, new String(b, 0, length, data.encoding).trim().split(";"));
+                    continue;
+                case 106: {
+                    key = Attributes.PUBDATE;
+                    value = DateUtils.parse(new String(b, 0, length, data.encoding), "yyyy-m-D", new Date());
+                }
+                break;
+                case 107:
+                    key = "review";
+                    break;
+                case 108:
+                    key = Attributes.VENDOR;
+                    break;
+                case 109:
+                    key = Attributes.RIGHTS;
+                    break;
+                case 110:
+                    key = "subjectCode";
+                    break;
+                case 111:
+                    key = "type";
+                    break;
+                case 112: {
+                    key = "source";
+                    String str = new String(b, 0, length, data.encoding).trim();
+                    if (str.startsWith("urn:isbn:")) {
+                        str = str.substring(9);
+                        if (StringUtils.isNotEmpty(str)) {
+                            Attributes.setISBN(data.book, str);
+                            continue;
+                        }
+                    } else if (str.startsWith("calibre:")) {
+                        str = str.substring(8);
+                        if (StringUtils.isNotEmpty(str)) {
+                            key = "uuid";
+                            value = str;
+                        }
+                    }
+                }
+                break;
+                case 113:
+                    key = "uuid";
+                    break;
+                case 129:
+                    Log.t(TAG, "ignore 'KF8CoverURI': {0}", new String(b, 0, length, data.encoding));
+                    continue;
+                case 201: {
+                    key = Attributes.COVER;
+                    if (data.imageIndex < 0) {
+                        Log.e(TAG, "no image index found");
                         continue;
                     }
-                } else if (str.startsWith("calibre:")) {
-                    str = str.substring(8);
-                    if (StringUtils.isNotEmpty(str)) {
-                        key = "uuid";
-                        value = str;
+                    value = flobForRecord("cover.jpg", data, ByteUtils.getInt(b, 0) + data.imageIndex, false);
+                }
+                break;
+                case 202: {
+                    if (data.imageIndex < 0) {
+                        Log.e(TAG, "no image index found");
+                        continue;
                     }
-                }
-            }
-            break;
-            case 113:
-                key = "uuid";
-            break;
-            case 129:
-                Log.t(TAG, "ignore 'KF8CoverURI': {0}", new String(b, 0, length, data.encoding));
-                continue;
-            case 201: {
-                key = Attributes.COVER;
-                if (data.imageIndex < 0) {
-                    Log.e(TAG, "no image index found");
+                    val index = ByteUtils.getInt(b, 0) + data.imageIndex;
+                    extensions.set("thumbnailCover", flobForRecord("thumbnail-cover.jpg", data, index, false));
                     continue;
                 }
-                value = flobForRecord("cover.jpg", data, ByteUtils.getInt(b, 0) + data.imageIndex, false);
-            }
-            break;
-            case 202: {
-                if (data.imageIndex < 0) {
-                    Log.e(TAG, "no image index found");
+                case 203: {
+                    if (data.imageIndex < 0) {
+                        Log.e(TAG, "no image index found");
+                        continue;
+                    }
+                    val index = ByteUtils.getInt(b, 0) + data.imageIndex;
+                    extensions.set("fakeCover", flobForRecord("fake-cover.jpg", data, index, false));
                     continue;
                 }
-                val index = ByteUtils.getInt(b, 0) + data.imageIndex;
-                extensions.set("thumbnailCover", flobForRecord("thumbnail-cover.jpg", data, index, false));
-                continue;
-            }
-            case 203: {
-                if (data.imageIndex < 0) {
-                    Log.e(TAG, "no image index found");
+                case 204:
+                    extensions.set("mobi.creatorId", ByteUtils.getInt32(b, 0));
                     continue;
+                case 205:
+                    majorVersion = ByteUtils.getInt32(b, 0);
+                    continue;
+                case 206:
+                    minorVersion = ByteUtils.getInt32(b, 0);
+                    continue;
+                case 207:
+                    buildNumber = ByteUtils.getInt32(b, 0);
+                    continue;
+                case 503:
+                    key = Attributes.TITLE;
+                    break;
+                case 501:
+                    extensions.set("mobi.cdetype", new String(b, 0, length, data.encoding));
+                    continue;
+                case 524: {
+                    key = Attributes.LANGUAGE;
+                    value = MiscUtils.parseLocale(new String(b, 0, length, data.encoding));
                 }
-                val index = ByteUtils.getInt(b, 0) + data.imageIndex;
-                extensions.set("fakeCover", flobForRecord("fake-cover.jpg", data, index, false));
-                continue;
-            }
-            case 204:
-                extensions.set("mobi.creatorId", ByteUtils.getInt32(b, 0));
-                continue;
-            case 205:
-                majorVersion = ByteUtils.getInt32(b, 0);
-                continue;
-            case 206:
-                minorVersion = ByteUtils.getInt32(b, 0);
-                continue;
-            case 207:
-                buildNumber = ByteUtils.getInt32(b, 0);
-                continue;
-            case 503:
-                key = Attributes.TITLE;
-            break;
-            case 501:
-                extensions.set("mobi.cdetype", new String(b, 0, length, data.encoding));
-                continue;
-            case 524: {
-                key = Attributes.LANGUAGE;
-                value = MiscUtils.parseLocale(new String(b, 0, length, data.encoding));
-            }
-            break;
-            default:
-                Log.d(TAG, "ignore record type: {0}", type);
-                continue;
+                break;
+                default:
+                    Log.d(TAG, "ignore record type: {0}", type);
+                    continue;
             }
             if (value == null) {
                 value = new String(b, 0, length, data.encoding).trim();
@@ -367,15 +364,15 @@ public class MobiParser extends BinaryParser<MobiInConfig> {
 
     private void detectEncoding(int code, Local data) {
         switch (code) {
-        case 65001:
-            data.encoding = "UTF-8";
-        break;
-        case 1252:
-            data.encoding = "CP1252";
-        break;
-        default:
-            data.encoding = StringUtils.notEmptyOr(data.config.textEncoding, "CP1252");
-        break;
+            case 65001:
+                data.encoding = "UTF-8";
+                break;
+            case 1252:
+                data.encoding = "CP1252";
+                break;
+            default:
+                data.encoding = StringUtils.notEmptyOr(data.config.textEncoding, "CP1252");
+                break;
         }
     }
 

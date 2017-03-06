@@ -1,62 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="?android:attr/selectableItemBackground"
-    android:minHeight="?attr/listPreferredItemHeight"
-    android:paddingEnd="@dimen/list_item_padding_start"
-    android:paddingLeft="@dimen/list_item_padding_start"
-    android:paddingRight="@dimen/list_item_padding_end"
-    android:paddingStart="@dimen/list_item_padding_end">
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackground"
+                android:minHeight="?attr/listPreferredItemHeight"
+                android:paddingEnd="@dimen/list_item_padding_start"
+                android:paddingLeft="@dimen/list_item_padding_start"
+                android:paddingRight="@dimen/list_item_padding_end"
+                android:paddingStart="@dimen/list_item_padding_end">
 
     <android.support.v7.widget.AppCompatImageView
-        android:id="@+id/icon1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_centerVertical="true" />
+            android:id="@+id/icon1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"/>
 
     <android.support.v7.widget.AppCompatImageView
-        android:id="@+id/icon2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_centerVertical="true" />
+            android:id="@+id/icon2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"/>
 
     <TableLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_centerVertical="true"
-        android:layout_toEndOf="@id/icon1"
-        android:layout_toLeftOf="@id/icon2"
-        android:layout_toRightOf="@id/icon1"
-        android:layout_toStartOf="@id/icon2"
-        android:orientation="vertical"
-        android:paddingEnd="2dp"
-        android:paddingLeft="2dp"
-        android:paddingRight="2dp"
-        android:paddingStart="2dp">
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_centerVertical="true"
+            android:layout_toEndOf="@id/icon1"
+            android:layout_toLeftOf="@id/icon2"
+            android:layout_toRightOf="@id/icon1"
+            android:layout_toStartOf="@id/icon2"
+            android:orientation="vertical"
+            android:paddingEnd="2dp"
+            android:paddingLeft="2dp"
+            android:paddingRight="2dp"
+            android:paddingStart="2dp">
 
         <TableRow android:layout_height="match_parent">
 
             <android.support.v7.widget.AppCompatTextView
-                android:id="@+id/text1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ellipsize="marquee"
-                android:textAppearance="@style/textAppearanceListItem" />
+                    android:id="@+id/text1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="marquee"
+                    android:textAppearance="@style/textAppearanceListItem"/>
         </TableRow>
 
         <TableRow android:layout_height="match_parent">
 
             <android.support.v7.widget.AppCompatTextView
-                android:id="@+id/text2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ellipsize="marquee"
-                android:textAppearance="@style/textAppearanceListItemSecondary" />
+                    android:id="@+id/text2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="marquee"
+                    android:textAppearance="@style/textAppearanceListItemSecondary"/>
         </TableRow>
     </TableLayout>
 

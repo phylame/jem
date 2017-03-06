@@ -1,10 +1,10 @@
 package jem.crawler.impl;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import jem.crawler.AbstractCrawler;
 import jem.crawler.CrawlerContext;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 
 public abstract class QIDIAN_COM extends AbstractCrawler {
 

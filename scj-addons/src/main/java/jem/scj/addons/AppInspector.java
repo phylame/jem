@@ -18,17 +18,6 @@
 
 package jem.scj.addons;
 
-import static java.lang.System.out;
-import static jem.scj.addons.M.tr;
-
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
-
-import org.apache.commons.cli.Option;
-
 import jem.scj.app.AppConfig;
 import jem.scj.app.AppKt;
 import jem.scj.app.SCI;
@@ -36,6 +25,7 @@ import jem.scj.app.SCJPlugin;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 import lombok.val;
+import org.apache.commons.cli.Option;
 import pw.phylame.commons.function.Prediction;
 import pw.phylame.commons.function.Provider;
 import pw.phylame.commons.log.LogLevel;
@@ -48,6 +38,15 @@ import pw.phylame.qaf.cli.PropertiesFetcher;
 import pw.phylame.qaf.core.App;
 import pw.phylame.qaf.core.Metadata;
 import pw.phylame.qaf.core.Plugin;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
+
+import static java.lang.System.out;
+import static jem.scj.addons.M.tr;
 
 public class AppInspector extends SCJPlugin {
 
@@ -109,11 +108,11 @@ public class AppInspector extends SCJPlugin {
             }
         });
         sci.addOption(Option.builder("S")
-                .numberOfArgs(2)
-                .argName(app.tr("help.kvName"))
-                .valueSeparator()
-                .desc(tr("help.setConfig"))
-                .build(),
+                        .numberOfArgs(2)
+                        .argName(app.tr("help.kvName"))
+                        .valueSeparator()
+                        .desc(tr("help.setConfig"))
+                        .build(),
                 new ConfigSetter());
     }
 

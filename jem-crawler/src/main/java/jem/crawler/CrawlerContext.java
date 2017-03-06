@@ -25,6 +25,8 @@ import org.jsoup.nodes.Document;
 import pw.phylame.commons.cache.Cacheable;
 import pw.phylame.commons.cache.DirectCache;
 
+import java.lang.ref.WeakReference;
+
 @Getter
 @Setter
 public class CrawlerContext {
@@ -38,6 +40,8 @@ public class CrawlerContext {
     private Cacheable cache;
     private CrawlerListener listener;
 
+    private WeakReference<? extends CrawlerProvider> crawler;
+
     private String tocUrl;
 
     private Document soup;
@@ -47,12 +51,12 @@ public class CrawlerContext {
      */
     private Throwable error;
 
-    public CrawlerContext(@NonNull String url, @NonNull CrawlerBook book, @NonNull CrawlerConfig config) {
+    public CrawlerContext(@NonNull String url, @NonNull CrawlerConfig config) {
         this.url = url;
-        this.book = book;
-        book.setContext(this);
         this.config = config;
         this.listener = config.listener;
+        this.book = new CrawlerBook(this);
+        book.getAttributes().set(CrawlerBook.ATTRIBUTE_SOURCE, url);
         this.cache = config.cache != null ? config.cache : new DirectCache();
     }
 }

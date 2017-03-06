@@ -1,23 +1,5 @@
 package jem.crawler.impl;
 
-import static jem.Attributes.getTitle;
-import static jem.Attributes.setAuthor;
-import static jem.Attributes.setCover;
-import static jem.Attributes.setGenre;
-import static jem.Attributes.setIntro;
-import static jem.Attributes.setState;
-import static jem.Attributes.setTitle;
-import static jem.Attributes.setWords;
-import static pw.phylame.commons.util.StringUtils.EMPTY_TEXT;
-import static pw.phylame.commons.util.StringUtils.secondPartOf;
-import static pw.phylame.commons.util.StringUtils.trimmed;
-
-import java.io.IOException;
-import java.net.URL;
-
-import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
-
 import jem.Chapter;
 import jem.crawler.AbstractCrawler;
 import jem.crawler.CrawlerContext;
@@ -25,9 +7,17 @@ import jem.crawler.CrawlerText;
 import jem.crawler.Identifiable;
 import jem.util.flob.Flobs;
 import lombok.val;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
 import pw.phylame.commons.io.PathUtils;
 import pw.phylame.commons.log.Log;
 import pw.phylame.commons.util.StringUtils;
+
+import java.io.IOException;
+import java.net.URL;
+
+import static jem.Attributes.*;
+import static pw.phylame.commons.util.StringUtils.*;
 
 public class M_MOTIE_COM extends AbstractCrawler implements Identifiable {
     private static final String HOST = "http://m.motie.com";
@@ -108,8 +98,10 @@ public class M_MOTIE_COM extends AbstractCrawler implements Identifiable {
                 } else {
                     url = a.attr("href");
                 }
-                chapter.setText(new CrawlerText(this, chapter, url));
+                val text = new CrawlerText(this, chapter, url);
+                chapter.setText(text);
                 section.append(chapter);
+                onTextAdded(text);
             }
         }
         val str = doc.select("form.page_form").text().trim();

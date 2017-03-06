@@ -18,11 +18,6 @@
 
 package jem.formats.pmab;
 
-import lombok.NonNull;
-import lombok.val;
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-
 import jem.Attributes;
 import jem.Book;
 import jem.Chapter;
@@ -37,6 +32,10 @@ import jem.util.flob.Flob;
 import jem.util.flob.Flobs;
 import jem.util.text.Text;
 import jem.util.text.Texts;
+import lombok.NonNull;
+import lombok.val;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 import pw.phylame.commons.log.Log;
 
 import java.io.IOException;

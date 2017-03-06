@@ -24,6 +24,6 @@ public class MobiInConfig extends AbstractConfig {
     public static final String SELF = "config";
 
     public String textEncoding;
-    public int maxHeaderLength=500;
+    public int maxHeaderLength = 500;
     public boolean fixExtraData = false;
 }

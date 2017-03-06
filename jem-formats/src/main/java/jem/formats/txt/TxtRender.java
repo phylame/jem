@@ -18,11 +18,10 @@
 
 package jem.formats.txt;
 
+import jem.epm.util.text.AbstractWriter;
 import lombok.AllArgsConstructor;
 
 import java.io.Writer;
-
-import jem.epm.util.text.AbstractWriter;
 
 
 @AllArgsConstructor

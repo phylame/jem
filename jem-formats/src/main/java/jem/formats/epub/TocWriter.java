@@ -18,14 +18,6 @@
 
 package jem.formats.epub;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.CancellationException;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
-
 import jem.Attributes;
 import jem.Book;
 import jem.Chapter;
@@ -42,6 +34,13 @@ import jem.util.text.Text;
 import jem.util.text.Texts;
 import lombok.val;
 import pw.phylame.commons.io.PathUtils;
+
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Writes book HTML tree.
@@ -205,19 +204,12 @@ public class TocWriter {
         newGuide(href, "toc", title);
     }
 
-    private void ensureNotInterrupted() {
-        if (Thread.interrupted()) {
-            throw new CancellationException();
-        }
-    }
-
     // return links of sub-chapters
     private List<HtmlRender.Link> processSection(Chapter section, String suffix, String href) throws IOException {
         val links = new LinkedList<HtmlRender.Link>();
         String _suffix;
         int count = 1;
         for (val chapter : section) {
-            ensureNotInterrupted();
             _suffix = suffix + "-" + Integer.toString(count);
             links.add(!chapter.isSection() ? writeChapter(chapter, _suffix) : writeSection(chapter, _suffix, href));
             ++count;
@@ -256,13 +248,10 @@ public class TocWriter {
     /**
      * Writes specified chapter to OPS text directory.
      *
-     * @param chapter
-     *            the chapter
-     * @param suffix
-     *            suffix string for file path
+     * @param chapter the chapter
+     * @param suffix  suffix string for file path
      * @return link to the chapter HTML, relative to HTML in textDir
-     * @throws IOException
-     *             if occur IO errors
+     * @throws IOException if occur IO errors
      */
     private HtmlRender.Link writeChapter(Chapter chapter, String suffix) throws IOException {
         val baseName = "chapter" + suffix;
@@ -328,13 +317,10 @@ public class TocWriter {
     /**
      * Writes specified image to OPS image directory.
      *
-     * @param file
-     *            the image file
-     * @param name
-     *            base name of image (no extension)
+     * @param file the image file
+     * @param name base name of image (no extension)
      * @return path relative to HTML in textDir
-     * @throws IOException
-     *             if occur IO errors
+     * @throws IOException if occur IO errors
      */
     private String writeImage(Flob file, String name, String id) throws IOException {
         val path = IMAGE_DIR + "/" + name + "." + PathUtils.extName(file.getName());
@@ -349,15 +335,11 @@ public class TocWriter {
     /**
      * Writes specified HTML text to OPS text directory.
      *
-     * @param text
-     *            the HTML string
-     * @param id
-     *            id of the HTML file
-     * @param name
-     *            name of HTML file
+     * @param text the HTML string
+     * @param id   id of the HTML file
+     * @param name name of HTML file
      * @return path in OPS
-     * @throws IOException
-     *             if occur IO errors
+     * @throws IOException if occur IO errors
      */
     private String writeText(String text, String id, String name) throws IOException {
         val path = TEXT_DIR + "/" + name;
@@ -369,15 +351,11 @@ public class TocWriter {
     /**
      * Writes specified HTML text to OPS text directory.
      *
-     * @param text
-     *            the <tt>Text</tt> containing HTML
-     * @param id
-     *            id of the HTML file
-     * @param name
-     *            name of HTML
+     * @param text the <tt>Text</tt> containing HTML
+     * @param id   id of the HTML file
+     * @param name name of HTML
      * @return path in OPS
-     * @throws IOException
-     *             if occur IO errors
+     * @throws IOException if occur IO errors
      */
     private String writeText(Text text, String id, String name) throws IOException {
         val path = TEXT_DIR + "/" + name;
@@ -391,8 +369,7 @@ public class TocWriter {
      * <p>
      * After writing, the cssHref of HtmlConfig will be assigned.
      *
-     * @throws IOException
-     *             if occur IO errors
+     * @throws IOException if occur IO errors
      */
     private void writeCss() throws IOException {
         if (epubConfig.htmlConfig.style == null) {
@@ -406,16 +383,11 @@ public class TocWriter {
     /**
      * Writes file in OPS to ePub archive.
      *
-     * @param file
-     *            the file
-     * @param path
-     *            path in ops
-     * @param id
-     *            id of the file
-     * @param mediaType
-     *            media type of the file, if <tt>null</tt> using {@link Flob#getMime()}
-     * @throws IOException
-     *             if occur IO errors
+     * @param file      the file
+     * @param path      path in ops
+     * @param id        id of the file
+     * @param mediaType media type of the file, if <tt>null</tt> using {@link Flob#getMime()}
+     * @throws IOException if occur IO errors
      */
     private void writeIntoEpub(Flob file, String path, String id, String mediaType) throws IOException {
         epubWriter.writeToOps(file, path);

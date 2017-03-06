@@ -18,11 +18,12 @@
 
 package jem.crawler;
 
-import java.io.IOException;
-import java.net.SocketTimeoutException;
-import java.util.Collection;
-import java.util.concurrent.atomic.AtomicInteger;
-
+import jem.Chapter;
+import jem.crawler.util.SoupUtils;
+import jem.epm.util.InputCleaner;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.val;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.jsoup.Jsoup;
@@ -30,19 +31,18 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
-
-import jem.Chapter;
-import jem.crawler.util.SoupUtils;
-import jem.epm.util.InputCleaner;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.val;
 import pw.phylame.commons.format.Render;
 import pw.phylame.commons.io.HttpUtils;
 import pw.phylame.commons.io.IOUtils;
 import pw.phylame.commons.log.Log;
 import pw.phylame.commons.util.StringUtils;
 import pw.phylame.commons.util.Validate;
+
+import java.io.IOException;
+import java.lang.ref.WeakReference;
+import java.net.SocketTimeoutException;
+import java.util.Collection;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class AbstractCrawler implements CrawlerProvider {
     protected final String TAG = getClass().getSimpleName();
@@ -62,6 +62,7 @@ public abstract class AbstractCrawler implements CrawlerProvider {
     public void init(@NonNull CrawlerContext context) {
         this.context = context;
         context.setError(null);
+        context.setCrawler(new WeakReference<>(this));
         val config = context.getConfig();
         if (config.cache != null) {
             context.getBook().registerCleanup(new InputCleaner(config.cache));
@@ -87,6 +88,10 @@ public abstract class AbstractCrawler implements CrawlerProvider {
         }
         notifyTextFetched(chapter, progress.incrementAndGet());
         return text;
+    }
+
+    protected final void onTextAdded(CrawlerText text) {
+        context.getBook().texts.add(text);
     }
 
     private void notifyTextFetched(Chapter chapter, int progress) {
@@ -127,13 +132,15 @@ public abstract class AbstractCrawler implements CrawlerProvider {
             try {
                 return "get".equalsIgnoreCase(method)
                         ? Jsoup.connect(url)
-                                .userAgent(SoupUtils.randAgent())
-                                .timeout(config.timeout)
-                                .get()
+                        .userAgent(SoupUtils.randAgent())
+                        .header("Accept-Encoding", "gzip,deflate")
+                        .timeout(config.timeout)
+                        .get()
                         : Jsoup.connect(url)
-                                .userAgent(SoupUtils.randAgent())
-                                .timeout(config.timeout)
-                                .post();
+                        .userAgent(SoupUtils.randAgent())
+                        .header("Accept-Encoding", "gzip,deflate")
+                        .timeout(config.timeout)
+                        .post();
             } catch (SocketTimeoutException e) {
                 Log.d(TAG, "try reconnect to %s", url);
             }
@@ -156,6 +163,7 @@ public abstract class AbstractCrawler implements CrawlerProvider {
                 .url(url)
                 .method(method)
                 .property("User-Agent", SoupUtils.randAgent())
+                .property("Accept-Encoding", "gzip,deflate")
                 .connectTimeout(config.timeout)
                 .build();
         for (int i = 0, end = Math.max(1, config.tryCount); i < end; ++i) {

@@ -18,22 +18,6 @@
 
 package jem.formats.epub.opf;
 
-import static jem.Attributes.getAuthor;
-import static jem.Attributes.getDate;
-import static jem.Attributes.getGenre;
-import static jem.Attributes.getIntro;
-import static jem.Attributes.getKeywords;
-import static jem.Attributes.getLanguage;
-import static jem.Attributes.getPublisher;
-import static jem.Attributes.getRights;
-import static jem.Attributes.getTitle;
-import static jem.Attributes.getVendor;
-import static pw.phylame.commons.util.StringUtils.isNotEmpty;
-
-import java.io.IOException;
-import java.util.Date;
-import java.util.List;
-
 import jem.Book;
 import jem.epm.util.MakerException;
 import jem.epm.util.xml.XmlRender;
@@ -45,6 +29,13 @@ import jem.formats.epub.item.Spine;
 import lombok.val;
 import pw.phylame.commons.util.DateUtils;
 import pw.phylame.commons.util.MiscUtils;
+
+import java.io.IOException;
+import java.util.Date;
+import java.util.List;
+
+import static jem.Attributes.*;
+import static pw.phylame.commons.util.StringUtils.isNotEmpty;
 
 /**
  * OPF 2.0 implements.
@@ -64,11 +55,11 @@ class OPF_2_0 implements OpfWriter {
 
     @Override
     public void write(String coverID,
-            List<Resource> resources,
-            List<Spine> spines,
-            String ncxID,
-            List<Guide> guides,
-            OutData data) throws IOException, MakerException {
+                      List<Resource> resources,
+                      List<Spine> spines,
+                      String ncxID,
+                      List<Guide> guides,
+                      OutData data) throws IOException, MakerException {
         this.render = data.render;
         this.config = data.config;
 

@@ -18,12 +18,12 @@
 
 package jem.formats.umd;
 
+import jem.epm.util.text.TextWriter;
+
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.LinkedList;
 import java.util.List;
-
-import jem.epm.util.text.TextWriter;
 
 class UmdRender implements TextWriter {
     private final UmdMaker maker;

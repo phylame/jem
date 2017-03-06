@@ -18,10 +18,10 @@
 
 package jem.formats.epub;
 
-import java.util.Locale;
-
 import jem.Attributes;
 import jem.Book;
+
+import java.util.Locale;
 
 /**
  * Constants and utilities for ePub.

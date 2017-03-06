@@ -18,15 +18,12 @@
 
 package jem.scj.addons;
 
-import java.util.Arrays;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
-
 import jem.scj.app.AppConfig;
 import jem.scj.app.SCI;
 import jem.scj.app.SCJPlugin;
 import lombok.val;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
 import pw.phylame.commons.format.Render;
 import pw.phylame.commons.log.Log;
 import pw.phylame.commons.log.LogLevel;
@@ -34,6 +31,8 @@ import pw.phylame.commons.util.StringUtils;
 import pw.phylame.qaf.cli.CLIDelegate;
 import pw.phylame.qaf.cli.Initializer;
 import pw.phylame.qaf.core.Metadata;
+
+import java.util.Arrays;
 
 public class LogSetter extends SCJPlugin implements Initializer {
     private static final String OPTION = "L";
@@ -66,11 +65,11 @@ public class LogSetter extends SCJPlugin implements Initializer {
             level = Log.getLevel().getName();
         }
         sci.addOption(Option.builder(OPTION)
-                .longOpt(OPTION_LONG)
-                .hasArg()
-                .argName(M.tr("logSetter.argName"))
-                .desc(M.tr("help.setLogLevel", makeLevelList(), level))
-                .build(),
+                        .longOpt(OPTION_LONG)
+                        .hasArg()
+                        .argName(M.tr("logSetter.argName"))
+                        .desc(M.tr("help.setLogLevel", makeLevelList(), level))
+                        .build(),
                 this);
     }
 

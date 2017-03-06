@@ -18,10 +18,6 @@
 
 package jem.formats.util.html;
 
-import java.io.IOException;
-import java.lang.reflect.Modifier;
-import java.util.Properties;
-
 import jem.formats.util.M;
 import jem.util.flob.Flob;
 import jem.util.flob.Flobs;
@@ -31,6 +27,10 @@ import pw.phylame.commons.io.IOUtils;
 import pw.phylame.commons.util.CollectionUtils;
 import pw.phylame.commons.util.StringUtils;
 import pw.phylame.commons.value.Lazy;
+
+import java.io.IOException;
+import java.lang.reflect.Modifier;
+import java.util.Properties;
 
 /**
  * CSS config for rendering HTML.

@@ -18,9 +18,6 @@
 
 package jem.formats.epub;
 
-import java.io.IOException;
-import java.util.zip.ZipOutputStream;
-
 import jem.Book;
 import jem.epm.impl.ZipMaker;
 import jem.epm.util.MakerException;
@@ -29,6 +26,9 @@ import jem.formats.epub.writer.EpubWriterFactory;
 import jem.formats.util.M;
 import lombok.NonNull;
 import lombok.val;
+
+import java.io.IOException;
+import java.util.zip.ZipOutputStream;
 
 /**
  * ePub e-book maker.

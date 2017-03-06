@@ -1,5 +1,10 @@
 package jem.crawler;
 
+import jem.Book;
+import lombok.NonNull;
+import lombok.val;
+import pw.phylame.commons.util.Validate;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -8,35 +13,28 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import jem.Book;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.val;
-import pw.phylame.commons.util.Validate;
-
 public class CrawlerBook extends Book {
+    public static final String ATTRIBUTE_SOURCE = "source";
 
-    WeakReference<CrawlerContext> context;
+    private CountDownLatch latch;
+    private List<Future<String>> futures;
+    private final WeakReference<CrawlerContext> context;
+    final List<CrawlerText> texts = new ArrayList<>(160);
 
-    void setContext(CrawlerContext context) {
+    CrawlerBook(@NonNull CrawlerContext context) {
         this.context = new WeakReference<>(context);
     }
 
     public final CrawlerContext getContext() {
-        return context != null ? context.get() : null;
+        return context.get();
     }
-
-    @Getter
-    List<CrawlerText> texts = new ArrayList<>(160);
 
     public final int getTotalChapters() {
         return texts.size();
     }
 
-    private CountDownLatch latch;
-
-    public final List<Future<?>> initTexts(@NonNull ExecutorService executor) {
-        return initTexts(executor, 0);
+    public final void fetchTexts(@NonNull ExecutorService executor) {
+        fetchTexts(executor, 0);
     }
 
     /**
@@ -45,24 +43,28 @@ public class CrawlerBook extends Book {
      * This method will be blocked until all texts fetched.
      * </p>
      *
-     * @param executor
-     *            the executor service for executing task of fetching text
-     * @param from
-     *            index of first text for fetching
+     * @param executor the executor service for executing task of fetching text
+     * @param from     index of first text for fetching
      * @return list of future
      */
-    public final List<Future<?>> initTexts(@NonNull ExecutorService executor, int from) {
-        val futures = new LinkedList<Future<?>>();
+    public final void fetchTexts(@NonNull ExecutorService executor, int from) {
+        futures = new LinkedList<>();
         latch = new CountDownLatch(texts.size() - from);
         for (int i = from, end = texts.size(); i < end; ++i) {
-            val text = texts.get(i);
-            if (Thread.currentThread().isInterrupted()) {
-                break;
-            }
-            text.setLatch(latch);
-            futures.add(text.submitTo(executor));
+            futures.add(texts.get(i).schedule(executor, latch));
         }
-        return futures;
+    }
+
+    /**
+     * Cancels all tasks for fetching text.
+     */
+    public final void cancelFetch() {
+        if (futures != null) {
+            for (val future : futures) {
+                future.cancel(true);
+            }
+            futures = null;
+        }
     }
 
     /**
@@ -70,9 +72,7 @@ public class CrawlerBook extends Book {
      * <p>
      * Current thread will be blocked until all text fetched.
      *
-     * @author PW[<a href="mailto:phylame@163.com">phylame@163.com</a>]
-     * @throws InterruptedException
-     *             if the current thread is interrupted while waiting
+     * @throws InterruptedException if the current thread is interrupted while waiting
      */
     public final void awaitFetched() throws InterruptedException {
         Validate.requireNotNull(latch, "latch should have been initialized");
@@ -83,6 +83,7 @@ public class CrawlerBook extends Book {
     public void cleanup() {
         latch = null;
         texts.clear();
+        cancelFetch();
         super.cleanup();
     }
 }

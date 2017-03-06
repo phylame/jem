@@ -18,11 +18,11 @@
 
 package jem.formats.pmab;
 
-import java.util.Map;
-
 import jem.epm.impl.ZipMaker.ZipOutConfig;
 import jem.epm.util.config.Configured;
 import jem.epm.util.xml.XmlConfig;
+
+import java.util.Map;
 
 /**
  * Config for making PMAB book.

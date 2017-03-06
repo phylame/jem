@@ -19,17 +19,14 @@
 package jem.crawler;
 
 import jem.Book;
-import jem.crawler.util.M;
 import jem.epm.Parser;
 import jem.epm.impl.EpmBase;
-import jem.epm.util.ParserException;
 import jem.util.JemException;
 import lombok.val;
 import pw.phylame.commons.util.Validate;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.Map;
 
 public class CrawlerParser extends EpmBase<CrawlerConfig> implements Parser {
@@ -48,29 +45,6 @@ public class CrawlerParser extends EpmBase<CrawlerConfig> implements Parser {
     public Book parse(String input, Map<String, Object> args) throws IOException, JemException {
         val config = fetchConfig(args);
         Validate.requireNotNull(config, "config should have been initialized");
-        val url = new URL(input);
-        val host = url.getProtocol() + "://" + url.getHost();
-        final CrawlerProvider crawler;
-        try {
-            crawler = CrawlerManager.crawlerFor(host);
-        } catch (IllegalAccessException | ClassNotFoundException | InstantiationException e) {
-            throw new ParserException(M.tr("err.unknownHost", host), e);
-        }
-        if (crawler == null) {
-            throw new ParserException(M.tr("err.unknownHost", host));
-        }
-        val book = new CrawlerBook();
-        val listener = config.listener;
-        crawler.init(new CrawlerContext(input, book, config));
-        crawler.fetchAttributes();
-        if (listener != null) {
-            listener.attributeFetched(book);
-        }
-        crawler.fetchContents();
-        if (listener != null) {
-            listener.contentsFetched(book);
-        }
-        book.getAttributes().set("source", input);
-        return book;
+        return CrawlerManager.fetchBook(input, config);
     }
 }

@@ -18,44 +18,39 @@
 
 package jem.crawler;
 
-import java.io.IOException;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-
 import jem.Attributes;
 import jem.Chapter;
 import jem.util.text.AbstractText;
 import jem.util.text.Texts;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.val;
-import pw.phylame.commons.util.StringUtils;
 import pw.phylame.commons.util.Validate;
 
-public class CrawlerText extends AbstractText implements Runnable {
-    /**
-     * Tag for text in cache.
-     */
-    private volatile Object tag;
-    private volatile Future<?> future;
+import java.io.IOException;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.ReentrantLock;
 
-    @Setter
-    private CountDownLatch latch;
-
-    @Getter
-    private volatile boolean isFetched = false;
-
-    private volatile boolean isSubmitted = false;
-
+public class CrawlerText extends AbstractText implements Callable<String> {
     @Getter
     private final String uri;
     @Getter
     private final Chapter chapter;
     @Getter
     private final CrawlerProvider crawler;
+
+    /**
+     * Tag for text in cache.
+     */
+    private volatile Object tag;
+
+    /**
+     * After fetching done, call {@code countDown()} of the latch.
+     */
+    private CountDownLatch latch;
+    private Future<String> future;
+    private final ReentrantLock lock = new ReentrantLock();
 
     public CrawlerText(@NonNull CrawlerProvider crawler, @NonNull Chapter chapter, @NonNull String uri) {
         super(Texts.PLAIN);
@@ -65,49 +60,81 @@ public class CrawlerText extends AbstractText implements Runnable {
         this.uri = uri;
     }
 
-    public final Future<?> submitTo(@NonNull ExecutorService executor) {
-        isSubmitted = true;
-        future = executor.submit(this);
-        return future;
+    /**
+     * Returns {@literal true} indicating text is fetching, otherwise {@literal false}
+     *
+     * @return fetching state
+     */
+    public final boolean isFetched() {
+        return tag != null;
     }
 
-    @Override
-    @SneakyThrows(IOException.class)
-    public String getText() {
-        if (!isFetched()) {
-            if (isSubmitted) {// already submitted into pool in async mode
-                while (!future.isDone() && !isFetched()) { // wait for done
-                    if (Thread.currentThread().isInterrupted()) {
-                        isSubmitted = false;
-                        return StringUtils.EMPTY_TEXT;
-                    }
-                    Thread.yield();
-                }
-            } else {
-                fetchText();
+    /**
+     * Submits the text to specified executor for fetching text in async mode.
+     * <p><strong>NOTE:</strong>The {@code getText()} method will block when the task is running.</p>
+     *
+     * @param executor the executor pool
+     * @return the future
+     */
+    public final Future<String> schedule(@NonNull ExecutorService executor, CountDownLatch latch) {
+        lock.lock();
+        try {
+            if (future != null && !future.isDone()) {
+                return future;
             }
+            this.latch = latch;
+            future = executor.submit(this);
+            return future;
+        } finally {
+            lock.unlock();
         }
-        val text = tag == null ? StringUtils.EMPTY_TEXT : crawler.getContext().getCache().get(tag);
-        isSubmitted = false;
-        return text;
     }
 
     @Override
-    public void run() {
-        if (!isFetched()) {
-            fetchText();
-        }
-        if (latch != null) {
-            latch.countDown();
+    @SneakyThrows({IOException.class, ExecutionException.class})
+    public final String getText() throws CancellationException {
+        lock.lock();
+        try {
+            if (future != null) { // already submitted into pool in async mode
+                try {
+                    return future.get(); // wait for done
+                } catch (InterruptedException e) {
+                    throw new CancellationException("interrupted");
+                } finally {
+                    future = null; // the task is finished
+                }
+            } else if (tag == null) {
+                return fetchText(); // fetch in current thread
+            } else {
+                return crawler.getContext().getCache().get(tag); // get from cache
+            }
+        } finally {
+            lock.unlock();
         }
     }
 
+    @Override
+    public final String call() throws Exception {
+        try {
+            return fetchText();
+        } finally {
+            future = null;
+        }
+    }
+
+    /**
+     * Fetches text and discard cache(if present).
+     *
+     * @return the text
+     */
     @SneakyThrows(IOException.class)
-    private void fetchText() {
+    public final String fetchText() {
         val text = crawler.fetchText(chapter, uri);
         Attributes.setWords(chapter, text.length());
         tag = crawler.getContext().getCache().add(text);
-        isFetched = true;
+        if (latch != null) {
+            latch.countDown();
+        }
+        return text;
     }
-
 }

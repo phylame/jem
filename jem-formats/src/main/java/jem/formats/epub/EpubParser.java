@@ -18,20 +18,6 @@
 
 package jem.formats.epub;
 
-import static jem.epm.util.xml.XmlUtils.attributeOf;
-import static jem.epm.util.xml.XmlUtils.newPullParser;
-import static pw.phylame.commons.util.StringUtils.isEmpty;
-import static pw.phylame.commons.util.StringUtils.isNotEmpty;
-import static pw.phylame.commons.util.StringUtils.trimmed;
-
-import java.io.IOException;
-import java.text.ParseException;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-
 import jem.Attributes;
 import jem.Book;
 import jem.Chapter;
@@ -43,11 +29,22 @@ import jem.util.flob.Flobs;
 import jem.util.text.Texts;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 import pw.phylame.commons.io.PathUtils;
 import pw.phylame.commons.log.Log;
 import pw.phylame.commons.util.DateUtils;
 import pw.phylame.commons.util.MiscUtils;
 import pw.phylame.commons.vam.VamReader;
+
+import java.io.IOException;
+import java.text.ParseException;
+import java.util.HashMap;
+import java.util.Map;
+
+import static jem.epm.util.xml.XmlUtils.attributeOf;
+import static jem.epm.util.xml.XmlUtils.newPullParser;
+import static pw.phylame.commons.util.StringUtils.*;
 
 public class EpubParser extends VamParser<EpubInConfig> {
     private static final String TAG = EpubParser.class.getSimpleName();
@@ -78,16 +75,16 @@ public class EpubParser extends VamParser<EpubInConfig> {
             int event = xpp.getEventType();
             do {
                 switch (event) {
-                case XmlPullParser.START_TAG: {
-                    if (xpp.getName().equals("rootfile")) {
-                        val mime = attributeOf(xpp, "media-type");
-                        if (mime.equals(EPUB.MT_OPF)) {
-                            data.opfPath = attributeOf(xpp, "full-path");
-                            break;
+                    case XmlPullParser.START_TAG: {
+                        if (xpp.getName().equals("rootfile")) {
+                            val mime = attributeOf(xpp, "media-type");
+                            if (mime.equals(EPUB.MT_OPF)) {
+                                data.opfPath = attributeOf(xpp, "full-path");
+                                break;
+                            }
                         }
                     }
-                }
-                break;
+                    break;
                 }
                 event = xpp.next();
             } while (event != XmlPullParser.END_DOCUMENT);
@@ -111,51 +108,51 @@ public class EpubParser extends VamParser<EpubInConfig> {
             do {
                 val tag = xpp.getName();
                 switch (event) {
-                case XmlPullParser.START_TAG: {
-                    hasText = false;
-                    if (tag.equals("item")) {
-                        data.items.put(attributeOf(xpp, "id"),
-                                new Item(attributeOf(xpp, "href"), attributeOf(xpp, "media-type")));
-                    } else if (tag.equals("itemref")) {
-                        // ignored
-                    } else if (tag.equals("reference")) {
-                        // ignored
-                    } else if (tag.equals("meta")) {
-                        val name = xpp.getAttributeValue(null, "name");
-                        val value = xpp.getAttributeValue(null, "content");
-                        if ("cover".equals(name)) {
-                            coverId = value;
-                        } else if (value != null) {
-                            data.book.getAttributes().set(name, value);
+                    case XmlPullParser.START_TAG: {
+                        hasText = false;
+                        if (tag.equals("item")) {
+                            data.items.put(attributeOf(xpp, "id"),
+                                    new Item(attributeOf(xpp, "href"), attributeOf(xpp, "media-type")));
+                        } else if (tag.equals("itemref")) {
+                            // ignored
+                        } else if (tag.equals("reference")) {
+                            // ignored
+                        } else if (tag.equals("meta")) {
+                            val name = xpp.getAttributeValue(null, "name");
+                            val value = xpp.getAttributeValue(null, "content");
+                            if ("cover".equals(name)) {
+                                coverId = value;
+                            } else if (value != null) {
+                                data.book.getAttributes().set(name, value);
+                            }
+                        } else if (tag.startsWith("dc:")) {
+                            data.scheme = xpp.getAttributeValue(null, "opf:scheme");
+                            data.role = xpp.getAttributeValue(null, "opf:role");
+                            data.event = xpp.getAttributeValue(null, "opf:event");
+                            hasText = true;
+                        } else if (tag.equals("package")) {
+                            val version = attributeOf(xpp, "version");
+                            if (!version.startsWith("2")) {
+                                throw new ParserException(M.tr("epub.make.unsupportedVersion", version));
+                            }
+                        } else if (tag.equals("spine")) {
+                            data.tocId = xpp.getAttributeValue(null, "toc");
                         }
-                    } else if (tag.startsWith("dc:")) {
-                        data.scheme = xpp.getAttributeValue(null, "opf:scheme");
-                        data.role = xpp.getAttributeValue(null, "opf:role");
-                        data.event = xpp.getAttributeValue(null, "opf:event");
-                        hasText = true;
-                    } else if (tag.equals("package")) {
-                        val version = attributeOf(xpp, "version");
-                        if (!version.startsWith("2")) {
-                            throw new ParserException(M.tr("epub.make.unsupportedVersion", version));
+                    }
+                    break;
+                    case XmlPullParser.TEXT: {
+                        if (hasText) {
+                            b.append(xpp.getText());
                         }
-                    } else if (tag.equals("spine")) {
-                        data.tocId = xpp.getAttributeValue(null, "toc");
                     }
-                }
-                break;
-                case XmlPullParser.TEXT: {
-                    if (hasText) {
-                        b.append(xpp.getText());
+                    break;
+                    case XmlPullParser.END_TAG: {
+                        if (tag.startsWith("dc:")) {
+                            parseMetadata(tag.substring(3), xpp, b, data);
+                        }
+                        b.setLength(0);
                     }
-                }
-                break;
-                case XmlPullParser.END_TAG: {
-                    if (tag.startsWith("dc:")) {
-                        parseMetadata(tag.substring(3), xpp, b, data);
-                    }
-                    b.setLength(0);
-                }
-                break;
+                    break;
                 }
                 event = xpp.next();
             } while (event != XmlPullParser.END_DOCUMENT);
@@ -175,60 +172,60 @@ public class EpubParser extends VamParser<EpubInConfig> {
         val text = trimmed(b.toString());
         Object value = text;
         switch (name) {
-        case "identifier": {
-            if ("uuid".equals(data.scheme)) {
-                name = "uuid";
-            } else if ("isbn".equals(data.scheme)) {
-                name = Attributes.ISBN;
+            case "identifier": {
+                if ("uuid".equals(data.scheme)) {
+                    name = "uuid";
+                } else if ("isbn".equals(data.scheme)) {
+                    name = Attributes.ISBN;
+                }
             }
-        }
-        break;
-        case "creator": {
-            if (data.role == null) {
-                name = Attributes.AUTHOR;
-            } else if (data.role.equals("aut")) {
-                name = Attributes.AUTHOR;
+            break;
+            case "creator": {
+                if (data.role == null) {
+                    name = Attributes.AUTHOR;
+                } else if (data.role.equals("aut")) {
+                    name = Attributes.AUTHOR;
+                }
             }
-        }
-        break;
-        case "date": {
-            if (data.event == null) {
-                name = Attributes.PUBDATE;
-            } else if (data.event.equals("creation")) {
-                name = Attributes.PUBDATE;
-            } else if (data.event.equals("modification")) {
-                name = Attributes.DATE;
+            break;
+            case "date": {
+                if (data.event == null) {
+                    name = Attributes.PUBDATE;
+                } else if (data.event.equals("creation")) {
+                    name = Attributes.PUBDATE;
+                } else if (data.event.equals("modification")) {
+                    name = Attributes.DATE;
+                }
+                try {
+                    value = DateUtils.parse(text, "yyyy-m-D");
+                } catch (ParseException e) {
+                    Log.d(TAG, e);
+                    return;
+                }
             }
-            try {
-                value = DateUtils.parse(text, "yyyy-m-D");
-            } catch (ParseException e) {
-                Log.d(TAG, e);
-                return;
+            break;
+            case "contributor": {
+                if (data.role == null) {
+                    name = Attributes.VENDOR;
+                } else if (data.role.equals("bkp")) {
+                    name = Attributes.VENDOR;
+                }
             }
-        }
-        break;
-        case "contributor": {
-            if (data.role == null) {
-                name = Attributes.VENDOR;
-            } else if (data.role.equals("bkp")) {
-                name = Attributes.VENDOR;
+            break;
+            case "type":
+            case "subject": {
+                name = Attributes.GENRE;
             }
-        }
-        break;
-        case "type":
-        case "subject": {
-            name = Attributes.GENRE;
-        }
-        break;
-        case "description": {
-            name = Attributes.INTRO;
-            value = Texts.forString(text, Texts.PLAIN);
-        }
-        break;
-        case "language": {
-            value = MiscUtils.parseLocale(text);
-        }
-        break;
+            break;
+            case "description": {
+                name = Attributes.INTRO;
+                value = Texts.forString(text, Texts.PLAIN);
+            }
+            break;
+            case "language": {
+                value = MiscUtils.parseLocale(text);
+            }
+            break;
         }
         book.getAttributes().set(name, value);
     }
@@ -255,54 +252,54 @@ public class EpubParser extends VamParser<EpubInConfig> {
             do {
                 val tag = xpp.getName();
                 switch (event) {
-                case XmlPullParser.START_TAG: {
-                    hasText = false;
-                    if (tag.equals("navPoint")) {
-                        val id = attributeOf(xpp, "id");
-                        item = data.items.remove(id);
-                        if (item == null) {
-                            Log.d(TAG, "no such resource with id: {0}", id);
-                        }
-                        val sub = new Chapter();
-                        chapter.append(sub);
-                        chapter = sub;
-                    } else if (tag.equals("content")) {
-                        val href = data.opsDir + '/' + attributeOf(xpp, "src");
-                        String mime, type;
-                        if (item == null) {
-                            mime = "text/plain";
-                            type = Texts.PLAIN;
-                        } else {
-                            mime = item.mime;
-                            type = mime.contains("html") ? Texts.HTML : Texts.PLAIN;
-                        }
-                        chapter.setText(Texts.forFlob(Flobs.forVam(data.vam, href, mime), null, type));
-                    } else if (tag.equals("text")) {
-                        hasText = true;
-                    } else if (tag.equals("meta")) {
-                        book.getExtensions().set(attributeOf(xpp, "name"), attributeOf(xpp, "content"));
-                    } else if (tag.equals("navLabel")) {
-                        forChapter = true;
-                    }
-                }
-                break;
-                case XmlPullParser.TEXT: {
-                    if (hasText) {
-                        b.append(xpp.getText());
-                    }
-                }
-                break;
-                case XmlPullParser.END_TAG: {
-                    if (tag.equals("navPoint")) {
-                        chapter = chapter.getParent();
-                    } else if (tag.equals("text")) {
-                        if (forChapter) {
-                            Attributes.setTitle(chapter, trimmed(b.toString()));
+                    case XmlPullParser.START_TAG: {
+                        hasText = false;
+                        if (tag.equals("navPoint")) {
+                            val id = attributeOf(xpp, "id");
+                            item = data.items.remove(id);
+                            if (item == null) {
+                                Log.d(TAG, "no such resource with id: {0}", id);
+                            }
+                            val sub = new Chapter();
+                            chapter.append(sub);
+                            chapter = sub;
+                        } else if (tag.equals("content")) {
+                            val href = data.opsDir + '/' + attributeOf(xpp, "src");
+                            String mime, type;
+                            if (item == null) {
+                                mime = "text/plain";
+                                type = Texts.PLAIN;
+                            } else {
+                                mime = item.mime;
+                                type = mime.contains("html") ? Texts.HTML : Texts.PLAIN;
+                            }
+                            chapter.setText(Texts.forFlob(Flobs.forVam(data.vam, href, mime), null, type));
+                        } else if (tag.equals("text")) {
+                            hasText = true;
+                        } else if (tag.equals("meta")) {
+                            book.getExtensions().set(attributeOf(xpp, "name"), attributeOf(xpp, "content"));
+                        } else if (tag.equals("navLabel")) {
+                            forChapter = true;
                         }
                     }
-                    b.setLength(0);
-                }
-                break;
+                    break;
+                    case XmlPullParser.TEXT: {
+                        if (hasText) {
+                            b.append(xpp.getText());
+                        }
+                    }
+                    break;
+                    case XmlPullParser.END_TAG: {
+                        if (tag.equals("navPoint")) {
+                            chapter = chapter.getParent();
+                        } else if (tag.equals("text")) {
+                            if (forChapter) {
+                                Attributes.setTitle(chapter, trimmed(b.toString()));
+                            }
+                        }
+                        b.setLength(0);
+                    }
+                    break;
                 }
                 event = xpp.next();
             } while (event != XmlPullParser.END_DOCUMENT);

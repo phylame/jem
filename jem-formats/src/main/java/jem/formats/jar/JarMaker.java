@@ -18,13 +18,6 @@
 
 package jem.formats.jar;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
-
 import jem.Attributes;
 import jem.Book;
 import jem.epm.impl.ZipMaker;
@@ -35,6 +28,13 @@ import jem.formats.util.M;
 import jem.util.Build;
 import lombok.val;
 import pw.phylame.commons.io.IOUtils;
+
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 /**
  * <tt>Maker</tt> implement for JAR book.

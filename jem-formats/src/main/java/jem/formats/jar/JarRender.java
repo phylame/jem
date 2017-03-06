@@ -18,6 +18,7 @@
 
 package jem.formats.jar;
 
+import jem.epm.util.text.TextWriter;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 
@@ -26,8 +27,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-
-import jem.epm.util.text.TextWriter;
 
 @RequiredArgsConstructor
 class JarRender implements TextWriter {

@@ -2,16 +2,16 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/toc_action_add"
-        android:title="@string/book_action_add" />
+            android:id="@+id/toc_action_add"
+            android:title="@string/book_action_add"/>
     <item
-        android:id="@+id/toc_action_insert"
-        android:title="@string/book_action_insert" />
+            android:id="@+id/toc_action_insert"
+            android:title="@string/book_action_insert"/>
     <item
-        android:id="@+id/toc_action_rename"
-        android:title="@string/book_action_rename" />
+            android:id="@+id/toc_action_rename"
+            android:title="@string/book_action_rename"/>
     <item
-        android:id="@+id/toc_action_attributes"
-        android:title="@string/book_action_attributes" />
+            android:id="@+id/toc_action_attributes"
+            android:title="@string/book_action_attributes"/>
 
 </menu>

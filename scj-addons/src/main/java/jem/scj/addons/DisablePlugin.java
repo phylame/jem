@@ -18,20 +18,12 @@
 
 package jem.scj.addons;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
-
 import jem.scj.app.AppConfig;
 import jem.scj.app.SCI;
 import jem.scj.app.SCJPlugin;
 import lombok.val;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
 import pw.phylame.commons.io.IOUtils;
 import pw.phylame.commons.log.Log;
 import pw.phylame.commons.util.CollectionUtils;
@@ -39,6 +31,13 @@ import pw.phylame.qaf.cli.CLIDelegate;
 import pw.phylame.qaf.cli.Command;
 import pw.phylame.qaf.cli.Initializer;
 import pw.phylame.qaf.core.Metadata;
+
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 
 public class DisablePlugin extends SCJPlugin implements Initializer, Command {
     private static final String TAG = DisablePlugin.class.getSimpleName();
@@ -55,11 +54,11 @@ public class DisablePlugin extends SCJPlugin implements Initializer, Command {
     @Override
     public void init() {
         sci.addOption(Option.builder(OPTION)
-                .longOpt("disable-plugin")
-                .hasArg()
-                .argName(M.tr("disablePlugin.argName"))
-                .desc(M.tr("disablePlugin.tip"))
-                .build(),
+                        .longOpt("disable-plugin")
+                        .hasArg()
+                        .argName(M.tr("disablePlugin.argName"))
+                        .desc(M.tr("disablePlugin.tip"))
+                        .build(),
                 this);
     }
 

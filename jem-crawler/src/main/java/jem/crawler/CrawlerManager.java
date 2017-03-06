@@ -18,16 +18,17 @@
 
 package jem.crawler;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.Set;
-
 import jem.crawler.util.M;
 import jem.epm.util.ParserException;
 import lombok.NonNull;
 import lombok.val;
 import pw.phylame.commons.util.Implementor;
 import pw.phylame.commons.util.MiscUtils;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Set;
 
 public final class CrawlerManager {
     private CrawlerManager() {
@@ -59,26 +60,31 @@ public final class CrawlerManager {
         return crawlers.names();
     }
 
-    public static CrawlerProvider crawlerFor(String host)
-            throws IllegalAccessException, ClassNotFoundException, InstantiationException {
-        return crawlers.getInstance(host);
-    }
-
-    public static CrawlerBook fetchBook(@NonNull String input, @NonNull CrawlerConfig config)
-            throws IOException, ParserException {
-        val url = new URL(input);
+    public static CrawlerProvider crawlerFor(String input) throws ParserException {
+        final URL url;
+        try {
+            url = new URL(input);
+        } catch (MalformedURLException e) {
+            throw new ParserException(M.tr("err.unknownHost", input), e);
+        }
         val host = url.getProtocol() + "://" + url.getHost();
         final CrawlerProvider crawler;
         try {
-            crawler = CrawlerManager.crawlerFor(host);
+            crawler = crawlers.getInstance(host);
         } catch (IllegalAccessException | ClassNotFoundException | InstantiationException e) {
             throw new ParserException(M.tr("err.unknownHost", host), e);
         }
         if (crawler == null) {
             throw new ParserException(M.tr("err.unknownHost", host));
         }
-        val book = new CrawlerBook();
-        val context = new CrawlerContext(input, book, config);
+        return crawler;
+    }
+
+    public static CrawlerBook fetchBook(@NonNull String input, @NonNull CrawlerConfig config)
+            throws IOException, ParserException {
+        val context = new CrawlerContext(input, config);
+        val crawler = crawlerFor(input);
+        val book = context.getBook();
         crawler.init(context);
         crawler.fetchAttributes();
         val listener = context.getListener();
@@ -89,7 +95,6 @@ public final class CrawlerManager {
         if (listener != null) {
             listener.contentsFetched(book);
         }
-        book.getAttributes().set("source", input);
         return book;
     }
 

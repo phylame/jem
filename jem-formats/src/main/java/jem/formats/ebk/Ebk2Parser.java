@@ -18,14 +18,6 @@
 
 package jem.formats.ebk;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.zip.DataFormatException;
-
 import jem.Attributes;
 import jem.Book;
 import jem.Chapter;
@@ -42,6 +34,14 @@ import lombok.val;
 import pw.phylame.commons.io.ByteUtils;
 import pw.phylame.commons.io.ZLibUtils;
 import pw.phylame.commons.util.StringUtils;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.RandomAccessFile;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.DataFormatException;
 
 public class Ebk2Parser extends BinaryParser<NonConfig> {
     public Ebk2Parser() {

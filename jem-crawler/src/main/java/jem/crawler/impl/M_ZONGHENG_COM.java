@@ -103,8 +103,8 @@ public class M_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
             val chapter = new Chapter(obj.getString("chapterName"));
             val url = String.format(TEXT_JSON_URL, HOST, bookId, obj.getInt("chapterId"));
             val text = new CrawlerText(this, chapter, url);
-            book.getTexts().add(text);
             chapter.setText(text);
+            onTextAdded(text);
             section.append(chapter);
         }
         if (isFirstPage) {

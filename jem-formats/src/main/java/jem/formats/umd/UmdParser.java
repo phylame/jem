@@ -18,6 +18,16 @@
 
 package jem.formats.umd;
 
+import jem.Attributes;
+import jem.Book;
+import jem.Chapter;
+import jem.epm.impl.BinaryParser;
+import jem.epm.util.ParserException;
+import jem.epm.util.config.NonConfig;
+import jem.formats.util.M;
+import jem.util.flob.Flobs;
+import jem.util.text.AbstractText;
+import jem.util.text.Texts;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -32,17 +42,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.zip.DataFormatException;
-
-import jem.Attributes;
-import jem.Book;
-import jem.Chapter;
-import jem.epm.impl.BinaryParser;
-import jem.epm.util.ParserException;
-import jem.epm.util.config.NonConfig;
-import jem.formats.util.M;
-import jem.util.flob.Flobs;
-import jem.util.text.AbstractText;
-import jem.util.text.Texts;
 
 /**
  * <tt>Parser</tt> implement for UMD book.

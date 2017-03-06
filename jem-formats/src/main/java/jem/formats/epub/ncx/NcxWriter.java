@@ -18,15 +18,15 @@
 
 package jem.formats.epub.ncx;
 
-import java.io.IOException;
-import java.util.List;
-
 import jem.epm.util.MakerException;
 import jem.formats.epub.OutData;
 import jem.formats.epub.item.Guide;
 import jem.formats.epub.item.Resource;
 import jem.formats.epub.item.Spine;
 import jem.formats.epub.writer.EpubWriter;
+
+import java.io.IOException;
+import java.util.List;
 
 /**
  * NCX builder.

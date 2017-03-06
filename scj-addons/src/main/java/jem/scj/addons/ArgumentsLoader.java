@@ -18,17 +18,17 @@
 
 package jem.scj.addons;
 
-import static pw.phylame.commons.util.CollectionUtils.propertiesFor;
-import static pw.phylame.commons.util.CollectionUtils.update;
-
-import java.io.IOException;
-import java.util.Map;
-
 import jem.scj.app.AppConfig;
 import jem.scj.app.SCJPlugin;
 import pw.phylame.commons.log.Log;
 import pw.phylame.qaf.core.App;
 import pw.phylame.qaf.core.Metadata;
+
+import java.io.IOException;
+import java.util.Map;
+
+import static pw.phylame.commons.util.CollectionUtils.propertiesFor;
+import static pw.phylame.commons.util.CollectionUtils.update;
 
 public class ArgumentsLoader extends SCJPlugin {
     private static final String TAG = ArgumentsLoader.class.getSimpleName();

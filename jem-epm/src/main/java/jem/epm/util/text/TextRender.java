@@ -27,7 +27,6 @@ import lombok.val;
 import pw.phylame.commons.util.CollectionUtils;
 
 import java.util.LinkedList;
-import java.util.concurrent.CancellationException;
 
 import static pw.phylame.commons.util.StringUtils.*;
 
@@ -38,12 +37,6 @@ public final class TextRender {
     private TextRender() {
     }
 
-    private static void ensureNotInterrupted() {
-        if (Thread.interrupted()) {
-            throw new CancellationException();
-        }
-    }
-
     /**
      * Renders chapter of book to contents with one level.
      */
@@ -51,7 +44,6 @@ public final class TextRender {
             throws Exception {
         val maker = new RenderHelper(writer, config);
         for (val chapter : book) {
-            ensureNotInterrupted();
             walkChapter(chapter, maker);
         }
     }
@@ -59,15 +51,11 @@ public final class TextRender {
     /**
      * Renders lines of text in <tt>Text</tt> to specified writer.
      *
-     * @param text
-     *            the text source
-     * @param writer
-     *            the destination writer
-     * @param config
-     *            render config
+     * @param text   the text source
+     * @param writer the destination writer
+     * @param config render config
      * @return number of written lines
-     * @throws Exception
-     *             if occurs error while rendering text
+     * @throws Exception if occurs error while rendering text
      */
     public static int renderLines(Text text, TextWriter writer, TextConfig config) throws Exception {
         return renderLines(text, writer, config, false);
@@ -101,15 +89,11 @@ public final class TextRender {
     /**
      * Renders text in <tt>Text</tt> to specified writer.
      *
-     * @param text
-     *            the text source
-     * @param writer
-     *            the destination writer
-     * @param config
-     *            render config
+     * @param text   the text source
+     * @param writer the destination writer
+     * @param config render config
      * @return written state, <tt>true</tt> if has text written, otherwise not
-     * @throws Exception
-     *             if occurs error while rendering text
+     * @throws Exception if occurs error while rendering text
      */
     public static boolean renderText(@NonNull Text text, @NonNull TextWriter writer, @NonNull TextConfig config)
             throws Exception {
@@ -167,7 +151,6 @@ public final class TextRender {
         maker.writeText(chapter);
 
         for (val sub : chapter) {
-            ensureNotInterrupted();
             walkChapter(sub, maker);
         }
 

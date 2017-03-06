@@ -18,17 +18,11 @@
 
 package jem.scj.addons;
 
-import java.io.File;
-import java.io.FileReader;
-
-import javax.script.ScriptEngine;
-
-import org.apache.commons.cli.Option;
-
 import jem.scj.app.AppConfig;
 import jem.scj.app.SCI;
 import jem.scj.app.SCJPlugin;
 import lombok.val;
+import org.apache.commons.cli.Option;
 import pw.phylame.commons.log.Log;
 import pw.phylame.commons.util.Reflections;
 import pw.phylame.commons.util.StringUtils;
@@ -37,6 +31,10 @@ import pw.phylame.qaf.cli.Command;
 import pw.phylame.qaf.cli.TypedFetcher;
 import pw.phylame.qaf.core.App;
 import pw.phylame.qaf.core.Metadata;
+
+import javax.script.ScriptEngine;
+import java.io.File;
+import java.io.FileReader;
 
 public class ScriptRunner extends SCJPlugin {
     private static final String TAG = "CSR";
@@ -56,11 +54,11 @@ public class ScriptRunner extends SCJPlugin {
     @Override
     public void init() {
         sci.addOption(Option.builder(OPTION)
-                .longOpt("run-script")
-                .hasArg()
-                .argName(M.tr("runScript.file"))
-                .desc(M.tr("help.runScript"))
-                .build(),
+                        .longOpt("run-script")
+                        .hasArg()
+                        .argName(M.tr("runScript.file"))
+                        .desc(M.tr("help.runScript"))
+                        .build(),
                 new RunnerCommand());
     }
 

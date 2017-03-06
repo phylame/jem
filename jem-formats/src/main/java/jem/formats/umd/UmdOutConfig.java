@@ -19,12 +19,12 @@
 package jem.formats.umd;
 
 
-import java.util.List;
-
 import jem.epm.util.config.AbstractConfig;
 import jem.epm.util.config.Configured;
 import jem.epm.util.text.TextConfig;
 import jem.util.flob.Flob;
+
+import java.util.List;
 
 /**
  * Config for making UMD book.

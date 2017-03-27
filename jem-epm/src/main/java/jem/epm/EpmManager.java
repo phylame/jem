@@ -69,12 +69,12 @@ public final class EpmManager {
     /**
      * Holds registered {@code Parser} class information.
      */
-    private static final Implementor<Parser> parsers = new Implementor<>(Parser.class, true, null);
+    private static final Implementor<Parser> parsers = new Implementor<>(Parser.class, true);
 
     /**
      * Holds registered {@code Maker} class information.
      */
-    private static final Implementor<Maker> makers = new Implementor<>(Maker.class, true, null);
+    private static final Implementor<Maker> makers = new Implementor<>(Maker.class, true);
 
     /**
      * Mapping parser and maker name to file extension nameMap.

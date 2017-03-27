@@ -27,7 +27,7 @@
     <properties>
         <qaf.version>1.1.0</qaf.version>
         <xpp3.version>1.1.4c</xpp3.version>
-        <kotlin.version>1.0.6</kotlin.version>
+        <kotlin.version>1.1.0</kotlin.version>
         <commons.version>1.1.0</commons.version>
     </properties>
 

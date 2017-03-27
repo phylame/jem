@@ -1,8 +1,8 @@
 package jem.crawler.impl;
 
 import jem.Chapter;
-import jem.crawler.AbstractCrawler;
 import jem.crawler.CrawlerContext;
+import jem.crawler.CrawlerProvider;
 import jem.crawler.CrawlerText;
 import jem.crawler.Identifiable;
 import jem.util.flob.Flobs;
@@ -11,7 +11,6 @@ import org.json.JSONObject;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
-import pw.phylame.commons.log.Log;
 
 import java.io.IOException;
 import java.net.URL;
@@ -20,7 +19,7 @@ import java.util.LinkedList;
 import static jem.Attributes.*;
 import static pw.phylame.commons.util.StringUtils.*;
 
-public class M_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
+public class M_ZONGHENG_COM extends CrawlerProvider implements Identifiable {
     private static final String HOST = "http://m.zongheng.com";
     private static final String ENCODING = "UTF-8";
     private static final int PAGE_SIZE = 180;
@@ -38,14 +37,9 @@ public class M_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
     @Override
     public void fetchAttributes() throws IOException {
         ensureInitialized();
+        val context = getContext();
         val book = context.getBook();
-        final Document doc;
-        try {
-            doc = getSoup(context.getUrl());
-        } catch (InterruptedException e) {
-            Log.d(TAG, "user interrupted");
-            return;
-        }
+        final Document doc = getSoup(context.getUrl());
         Elements soup = doc.select("div.booksite");
         setCover(book, Flobs.forURL(new URL(soup.select("div.bookimg").select("img").attr("src")), null));
         setTitle(book, soup.select("h1").text().trim());
@@ -73,26 +67,16 @@ public class M_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
 
     @Override
     public void fetchContents() throws IOException {
-        try {
-            fetchToc();
-        } catch (InterruptedException e) {
-            Log.d(TAG, "user interrupted");
-        }
+        fetchToc();
     }
 
     private boolean isFirstPage = true;
 
     @Override
     protected int fetchPage(int page) throws IOException {
-        val book = context.getBook();
-        final JSONObject json;
-        try {
-            json = getJson(String.format("%s/h5/ajax/chapter/list?h5=1&bookId=%s&pageNum=%d&pageSize=%d&asc=0", HOST,
-                    bookId, page, PAGE_SIZE), ENCODING);
-        } catch (InterruptedException e) {
-            Log.d(TAG, "user interrupted");
-            return 0;
-        }
+        val book = getContext().getBook();
+        final JSONObject json = getJson(String.format("%s/h5/ajax/chapter/list?h5=1&bookId=%s&pageNum=%d&pageSize=%d&asc=0", HOST,
+                bookId, page, PAGE_SIZE), ENCODING);
         val list = json.optJSONObject("chapterlist");
         if (list == null) {
             return 0;
@@ -117,18 +101,13 @@ public class M_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
     }
 
     @Override
-    protected String fetchText(String uri) throws IOException {
+    public String fetchText(String uri) throws IOException {
         ensureInitialized();
         val lines = new LinkedList<String>();
         JSONObject json;
         val b = new StringBuilder();
         while (true) {
-            try {
-                json = getJson(uri, ENCODING);
-            } catch (InterruptedException e) {
-                Log.d(TAG, "user interrupted");
-                break;
-            }
+            json = getJson(uri, ENCODING);
             if (json.getJSONObject("ajaxResult").getInt("code") != 1) {
                 break;
             }
@@ -158,7 +137,7 @@ public class M_ZONGHENG_COM extends AbstractCrawler implements Identifiable {
             uri = String.format(TEXT_JSON_URL, HOST, bookId, result.getString("nextChapterId"));
         }
 
-        return join(context.getConfig().lineSeparator, lines);
+        return join(getContext().getConfig().lineSeparator, lines);
     }
 
     @Override

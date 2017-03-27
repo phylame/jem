@@ -29,9 +29,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.jsoup.select.Selector;
-import pw.phylame.commons.log.Log;
 import pw.phylame.commons.util.DateUtils;
-import pw.phylame.commons.util.StringUtils;
 
 import java.io.IOException;
 import java.net.URL;
@@ -41,7 +39,7 @@ import static jem.Attributes.*;
 import static pw.phylame.commons.util.StringUtils.isNotEmpty;
 import static pw.phylame.commons.util.StringUtils.valueOfName;
 
-public class YD_SOGOU_COM extends AbstractCrawler implements Searchable, Identifiable {
+public class YD_SOGOU_COM extends CrawlerProvider implements Searchable, Identifiable {
     private static final String ENCODING = "UTF-8";
     private static final String HOST = "https://yd.sogou.com";
     private static final String GP = "gf=e-d-pdetail-i&uID=eb8dF3HZM5DeTGBL&sgid=0";
@@ -57,14 +55,9 @@ public class YD_SOGOU_COM extends AbstractCrawler implements Searchable, Identif
     @Override
     public void fetchAttributes() throws IOException {
         ensureInitialized();
+        val context = getContext();
         val book = context.getBook();
-        final Document doc;
-        try {
-            doc = getSoup(context.getUrl());
-        } catch (InterruptedException e) {
-            Log.d(TAG, "user interrupted");
-            return;
-        }
+        final Document doc = getSoup(context.getUrl());
         Elements soup = doc.select("div.detail-wrap");
         val img = largeImage(soup.select("img").attr("data-echo"));
         setCover(book, Flobs.forURL(new URL(img), "image/jpg"));
@@ -96,37 +89,21 @@ public class YD_SOGOU_COM extends AbstractCrawler implements Searchable, Identif
 
     @Override
     public void fetchContents() throws IOException {
-        try {
-            fetchToc();
-        } catch (InterruptedException e) {
-            Log.d(TAG, "user interrupted");
-        }
+        fetchToc();
     }
 
     @Override
     public String fetchText(String uri) throws IOException {
         ensureInitialized();
-        try {
-            return joinNodes(getSoup(uri).select("div#text").first().children(), context.getConfig().lineSeparator);
-        } catch (InterruptedException e) {
-            Log.d(TAG, "user interrupted");
-            return StringUtils.EMPTY_TEXT;
-        }
+        return joinNodes(getSoup(uri).select("div#text").first().children(), getContext().getConfig().lineSeparator);
     }
 
     private boolean isFirstPage = true;
 
     @Override
     protected int fetchPage(int page) throws IOException {
-        val book = context.getBook();
-        final JSONObject json;
-        try {
-            json = postJson(String.format("%s/h5/cpt/ajax/detail?%s&p=%d&bkey=%s&asc=asc", HOST, GP, page, bookKey),
-                    ENCODING);
-        } catch (InterruptedException e) {
-            Log.d(TAG, "user interrupted");
-            return 0;
-        }
+        val book = getContext().getBook();
+        val json = postJson(String.format("%s/h5/cpt/ajax/detail?%s&p=%d&bkey=%s&asc=asc", HOST, GP, page, bookKey), ENCODING);
         val list = json.getJSONObject("list");
         for (val item : list.getJSONArray("items")) {
             val obj = (JSONObject) item;

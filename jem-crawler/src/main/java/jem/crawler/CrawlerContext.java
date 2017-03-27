@@ -26,6 +26,7 @@ import pw.phylame.commons.cache.Cacheable;
 import pw.phylame.commons.cache.DirectCache;
 
 import java.lang.ref.WeakReference;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Getter
 @Setter
@@ -38,7 +39,8 @@ public class CrawlerContext {
 
     // The cache for chapter text.
     private Cacheable cache;
-    private CrawlerListener listener;
+    private TextFetchListener listener;
+    private final AtomicInteger progress = new AtomicInteger(0);
 
     private WeakReference<? extends CrawlerProvider> crawler;
 
@@ -47,7 +49,7 @@ public class CrawlerContext {
     private Document soup;
 
     /**
-     * The last error.
+     * The last occurred error.
      */
     private Throwable error;
 

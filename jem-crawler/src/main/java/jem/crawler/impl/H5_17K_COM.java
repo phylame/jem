@@ -30,9 +30,7 @@ import org.jsoup.select.Elements;
 import pw.phylame.commons.io.HttpUtils;
 import pw.phylame.commons.io.IOUtils;
 import pw.phylame.commons.io.PathUtils;
-import pw.phylame.commons.log.Log;
 import pw.phylame.commons.util.DateUtils;
-import pw.phylame.commons.util.StringUtils;
 
 import java.io.IOException;
 import java.net.URL;
@@ -42,7 +40,7 @@ import static jem.Attributes.*;
 import static pw.phylame.commons.util.StringUtils.join;
 import static pw.phylame.commons.util.StringUtils.trimmed;
 
-public class H5_17K_COM extends AbstractCrawler implements Searchable, Identifiable {
+public class H5_17K_COM extends CrawlerProvider implements Searchable, Identifiable {
     private static final String ENCODING = "UTF-8";
     private static final String HOST = "http://h5.17k.com";
     private static final int PAGE_SIZE = 180;
@@ -59,14 +57,9 @@ public class H5_17K_COM extends AbstractCrawler implements Searchable, Identifia
     @Override
     public void fetchAttributes() throws IOException {
         ensureInitialized();
+        val context = getContext();
         val book = context.getBook();
-        final Document doc;
-        try {
-            doc = getSoup(context.getUrl());
-        } catch (InterruptedException e) {
-            Log.d(TAG, "user interrupted");
-            return;
-        }
+        final Document doc = getSoup(context.getUrl());
         Elements section = doc.select("section.bookhome_top");
         setCover(book, Flobs.forURL(new URL(section.select("img").attr("src")), null));
         setTitle(book, section.select("p.title").text());
@@ -79,23 +72,13 @@ public class H5_17K_COM extends AbstractCrawler implements Searchable, Identifia
 
     @Override
     public void fetchContents() throws IOException {
-        try {
-            fetchToc();
-        } catch (InterruptedException e) {
-            Log.d(TAG, "user interrupted");
-        }
+        fetchToc();
     }
 
     @Override
     public String fetchText(String uri) throws IOException {
         ensureInitialized();
-        final Document doc;
-        try {
-            doc = getSoup(uri);
-        } catch (InterruptedException e) {
-            Log.d(TAG, "user interrupted");
-            return StringUtils.EMPTY_TEXT;
-        }
+        final Document doc = getSoup(uri);
         val div = doc.select("div#TextContent");
         val lines = new LinkedList<String>();
         for (val node : div.first().childNodes()) {
@@ -107,23 +90,17 @@ public class H5_17K_COM extends AbstractCrawler implements Searchable, Identifia
                 lines.add(trimmed(text.text()));
             }
         }
-        return join(context.getConfig().lineSeparator, lines);
+        return join(getContext().getConfig().lineSeparator, lines);
     }
 
     private boolean isFirstPage = true;
 
     @Override
     protected int fetchPage(int page) throws IOException {
-        val book = context.getBook();
-        final JSONObject json;
-        try {
-            json = getJson(
-                    String.format("%s/h5/book/ajaxBookList.k?bookId=%s&page=%d&size=%d", HOST, bookId, page, PAGE_SIZE),
-                    ENCODING);
-        } catch (InterruptedException e) {
-            Log.d(TAG, "user interrupted");
-            return 0;
-        }
+        val book = getContext().getBook();
+        val json = getJson(
+                String.format("%s/h5/book/ajaxBookList.k?bookId=%s&page=%d&size=%d", HOST, bookId, page, PAGE_SIZE),
+                ENCODING);
         Chapter chapter;
         for (val item : json.getJSONArray("datas")) {
             val obj = (JSONObject) item;

@@ -39,7 +39,7 @@ var Chapter.intro: Text? get() = Attributes.getIntro(this)
         Attributes.setIntro(this, value)
     }
 
-var Chapter.words: Int get() = Attributes.getWords(this)
+var Chapter.words: String get() = Attributes.getWords(this)
     set(value) {
         Attributes.setWords(this, value)
     }

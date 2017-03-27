@@ -19,7 +19,7 @@
 package jem.crawler.impl;
 
 import jem.Chapter;
-import jem.crawler.AbstractCrawler;
+import jem.crawler.CrawlerProvider;
 import jem.crawler.CrawlerText;
 import jem.crawler.Identifiable;
 import jem.util.flob.Flobs;
@@ -27,9 +27,7 @@ import lombok.val;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
-import pw.phylame.commons.log.Log;
 import pw.phylame.commons.util.DateUtils;
-import pw.phylame.commons.util.StringUtils;
 import pw.phylame.commons.util.Validate;
 
 import java.io.IOException;
@@ -40,21 +38,16 @@ import java.util.LinkedList;
 import static jem.Attributes.*;
 import static pw.phylame.commons.util.StringUtils.*;
 
-public class WWW_MANGG_COM extends AbstractCrawler implements Identifiable {
+public class WWW_MANGG_COM extends CrawlerProvider implements Identifiable {
     private static final String HOST = "http://www.mangg.com";
 
     @Override
     public void fetchAttributes() throws IOException {
         ensureInitialized();
+        val context = getContext();
         val book = context.getBook();
         val config = context.getConfig();
-        final Document doc;
-        try {
-            doc = getSoup(context.getUrl());
-        } catch (InterruptedException e) {
-            Log.d(TAG, "user interrupted");
-            return;
-        }
+        final Document doc = getSoup(context.getUrl());
         Elements soup = doc.select("div#info");
         setTitle(book, soup.select("h1").text().trim());
         val div = soup.first();
@@ -76,6 +69,7 @@ public class WWW_MANGG_COM extends AbstractCrawler implements Identifiable {
     @Override
     public void fetchContents() throws IOException {
         ensureInitialized();
+        val context = getContext();
         val book = context.getBook();
         val doc = context.getSoup();
         Validate.checkNotNull(doc, "soup should have been initialized");
@@ -90,15 +84,9 @@ public class WWW_MANGG_COM extends AbstractCrawler implements Identifiable {
     }
 
     @Override
-    protected String fetchText(String uri) throws IOException {
+    public String fetchText(String uri) throws IOException {
         ensureInitialized();
-        final Document doc;
-        try {
-            doc = getSoup(uri);
-        } catch (InterruptedException e) {
-            Log.d(TAG, "user interrupted");
-            return StringUtils.EMPTY_TEXT;
-        }
+        final Document doc = getSoup(uri);
         val lines = new LinkedList<String>();
         for (val node : doc.select("div#content").first().childNodes()) {
             if (node instanceof TextNode) {
@@ -109,7 +97,7 @@ public class WWW_MANGG_COM extends AbstractCrawler implements Identifiable {
                 lines.add(text.replace("卝", ""));
             }
         }
-        return join(context.getConfig().lineSeparator, lines);
+        return join(getContext().getConfig().lineSeparator, lines);
     }
 
     @Override

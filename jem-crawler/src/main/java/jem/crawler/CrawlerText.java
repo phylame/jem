@@ -44,29 +44,23 @@ public class CrawlerText extends AbstractText implements Callable<String> {
      * Tag for text in cache.
      */
     private volatile Object tag;
+    @Getter
+    private volatile boolean fetching;
 
     /**
      * After fetching done, call {@code countDown()} of the latch.
      */
     private CountDownLatch latch;
-    private Future<String> future;
+    private final CrawlerContext context;
     private final ReentrantLock lock = new ReentrantLock();
 
     public CrawlerText(@NonNull CrawlerProvider crawler, @NonNull Chapter chapter, @NonNull String uri) {
         super(Texts.PLAIN);
-        Validate.requireNotNull(crawler.getContext().getCache(), "cache in context cannot be null");
+        context = crawler.getContext();
+        Validate.requireNotNull(context.getCache(), "cache in context cannot be null");
         this.crawler = crawler;
         this.chapter = chapter;
         this.uri = uri;
-    }
-
-    /**
-     * Returns {@literal true} indicating text is fetching, otherwise {@literal false}
-     *
-     * @return fetching state
-     */
-    public final boolean isFetched() {
-        return tag != null;
     }
 
     /**
@@ -79,35 +73,20 @@ public class CrawlerText extends AbstractText implements Callable<String> {
     public final Future<String> schedule(@NonNull ExecutorService executor, CountDownLatch latch) {
         lock.lock();
         try {
-            if (future != null && !future.isDone()) {
-                return future;
-            }
+            Validate.check(!fetching, "Task is already submitted in some thread");
             this.latch = latch;
-            future = executor.submit(this);
-            return future;
+            return executor.submit(this);
         } finally {
             lock.unlock();
         }
     }
 
     @Override
-    @SneakyThrows({IOException.class, ExecutionException.class})
+    @SneakyThrows(IOException.class)
     public final String getText() throws CancellationException {
         lock.lock();
         try {
-            if (future != null) { // already submitted into pool in async mode
-                try {
-                    return future.get(); // wait for done
-                } catch (InterruptedException e) {
-                    throw new CancellationException("interrupted");
-                } finally {
-                    future = null; // the task is finished
-                }
-            } else if (tag == null) {
-                return fetchText(); // fetch in current thread
-            } else {
-                return crawler.getContext().getCache().get(tag); // get from cache
-            }
+            return getOrFetch();
         } finally {
             lock.unlock();
         }
@@ -115,10 +94,20 @@ public class CrawlerText extends AbstractText implements Callable<String> {
 
     @Override
     public final String call() throws Exception {
-        try {
-            return fetchText();
-        } finally {
-            future = null;
+        return getOrFetch();
+    }
+
+    private String getOrFetch() throws IOException {
+        while (fetching) { // text is fetched in async mode
+            if (Thread.interrupted()) {
+                throw new CancellationException("interrupted");
+            }
+            Thread.yield();
+        }
+        if (tag == null) {
+            return fetchText(); // fetch in current thread
+        } else {
+            return context.getCache().get(tag); // get from cache
         }
     }
 
@@ -129,12 +118,25 @@ public class CrawlerText extends AbstractText implements Callable<String> {
      */
     @SneakyThrows(IOException.class)
     public final String fetchText() {
-        val text = crawler.fetchText(chapter, uri);
-        Attributes.setWords(chapter, text.length());
-        tag = crawler.getContext().getCache().add(text);
-        if (latch != null) {
-            latch.countDown();
+        try {
+            fetching = true;
+            val text = crawler.fetchText(uri);
+            Attributes.setWords(chapter, text.length());
+            tag = context.getCache().add(text);
+            if (latch != null) {
+                latch.countDown();
+            }
+            notifyTextFetched(chapter, context.getProgress().incrementAndGet());
+            return text;
+        } finally {
+            fetching = false;
         }
-        return text;
+    }
+
+    private void notifyTextFetched(Chapter chapter, int progress) {
+        val listener = context.getListener();
+        if (listener != null) {
+            listener.textFetched(chapter, context.getBook().getTotalChapters(), progress);
+        }
     }
 }

@@ -49,7 +49,7 @@ public class CrawlerConfig extends AbstractConfig {
     public Cacheable cache = null;
 
     @Configured(LISTENER)
-    public CrawlerListener listener = null;
+    public TextFetchListener listener = null;
 
     @Configured(LINE_SEPARATOR)
     public String lineSeparator = System.lineSeparator();

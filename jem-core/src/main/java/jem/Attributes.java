@@ -180,11 +180,15 @@ public final class Attributes {
         chapter.getAttributes().set(INTRO, Texts.forString(intro, Texts.PLAIN));
     }
 
-    public static Integer getWords(Chapter chapter) {
-        return chapter.getAttributes().get(WORDS, Integer.class, 0);
+    public static String getWords(Chapter chapter) {
+        return chapter.getAttributes().get(WORDS, String.class, null);
     }
 
     public static void setWords(Chapter chapter, int words) {
+        chapter.getAttributes().set(WORDS, String.valueOf(words));
+    }
+
+    public static void setWords(Chapter chapter, String words) {
         chapter.getAttributes().set(WORDS, words);
     }
 

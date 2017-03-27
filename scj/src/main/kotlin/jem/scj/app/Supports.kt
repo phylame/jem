@@ -23,7 +23,7 @@ import jem.Book
 import jem.Chapter
 import jem.crawler.CrawlerBook
 import jem.crawler.CrawlerConfig
-import jem.crawler.CrawlerListenerAdapter
+import jem.crawler.TextFetchListener
 import jem.epm.EpmManager
 import jem.epm.util.MakerException
 import jem.epm.util.ParserException
@@ -66,11 +66,7 @@ fun openBook(tuple: InTuple): Book? {
     if (tuple.format == "crawler") {
         var key = "crawler.parse.${CrawlerConfig.LISTENER}"
         if (key !in args) {
-            args[key] = object : CrawlerListenerAdapter() {
-                override fun textFetched(chapter: Chapter, total: Int, current: Int) {
-                    println("$current/$total: ${chapter.title}")
-                }
-            }
+            args[key] = TextFetchListener { chapter, total, current -> println("$current/$total: ${chapter.title}") }
         }
     }
     try {

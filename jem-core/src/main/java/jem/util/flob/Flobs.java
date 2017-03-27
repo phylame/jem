@@ -19,6 +19,7 @@
 package jem.util.flob;
 
 import jem.util.Variants;
+import lombok.Getter;
 import lombok.NonNull;
 import pw.phylame.commons.io.IOUtils;
 import pw.phylame.commons.io.RAFInputStream;
@@ -67,11 +68,12 @@ public final class Flobs {
         return new ByteFlob(name, bytes, mime);
     }
 
-    private static class NormalFlob extends AbstractFlob {
+    public static class NormalFlob extends AbstractFlob {
         static {
             Variants.mapType(NormalFlob.class, Variants.FLOB);
         }
 
+        @Getter
         private final File file;
 
         private NormalFlob(@NonNull File file, String mime) throws IOException {
@@ -224,11 +226,12 @@ public final class Flobs {
         }
     }
 
-    private static class URLFlob extends AbstractFlob {
+    public static class URLFlob extends AbstractFlob {
         static {
             Variants.mapType(URLFlob.class, Variants.FLOB);
         }
 
+        @Getter
         private final URL url;
 
         private URLFlob(URL url, String mime) {

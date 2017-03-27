@@ -1,8 +1,8 @@
 package jem.crawler.impl;
 
 import jem.Chapter;
-import jem.crawler.AbstractCrawler;
 import jem.crawler.CrawlerContext;
+import jem.crawler.CrawlerProvider;
 import jem.crawler.CrawlerText;
 import jem.crawler.Identifiable;
 import jem.util.flob.Flobs;
@@ -10,8 +10,6 @@ import lombok.val;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import pw.phylame.commons.io.PathUtils;
-import pw.phylame.commons.log.Log;
-import pw.phylame.commons.util.StringUtils;
 
 import java.io.IOException;
 import java.net.URL;
@@ -19,7 +17,7 @@ import java.net.URL;
 import static jem.Attributes.*;
 import static pw.phylame.commons.util.StringUtils.*;
 
-public class M_MOTIE_COM extends AbstractCrawler implements Identifiable {
+public class M_MOTIE_COM extends CrawlerProvider implements Identifiable {
     private static final String HOST = "http://m.motie.com";
     private static final int PAGE_SIZE = 180;
 
@@ -35,14 +33,9 @@ public class M_MOTIE_COM extends AbstractCrawler implements Identifiable {
     @Override
     public void fetchAttributes() throws IOException {
         ensureInitialized();
+        val context = getContext();
         val book = context.getBook();
-        final Document doc;
-        try {
-            doc = getSoup(context.getUrl());
-        } catch (InterruptedException e) {
-            Log.d(TAG, "user interrupted");
-            return;
-        }
+        final Document doc = getSoup(context.getUrl());
         Elements soup = doc.select("dl.detail_table");
         setCover(book, Flobs.forURL(new URL(soup.select("img").attr("src")), null));
         setTitle(book, soup.select("h1").text().trim());
@@ -63,24 +56,14 @@ public class M_MOTIE_COM extends AbstractCrawler implements Identifiable {
 
     @Override
     public void fetchContents() throws IOException {
-        try {
-            fetchToc();
-        } catch (InterruptedException e) {
-            Log.d(TAG, "user interrupted");
-        }
+        fetchToc();
     }
 
     @Override
     protected int fetchPage(int page) throws IOException {
-        val book = context.getBook();
-        final Document doc;
-        try {
-            doc = getSoup(
-                    String.format("%s/book/%s/chapter?isAsc=true&page=%d&pageSize=%d", HOST, bookId, page, PAGE_SIZE));
-        } catch (InterruptedException e) {
-            Log.d(TAG, "user interrupted");
-            return 0;
-        }
+        val book = getContext().getBook();
+        final Document doc = getSoup(
+                String.format("%s/book/%s/chapter?isAsc=true&page=%d&pageSize=%d", HOST, bookId, page, PAGE_SIZE));
         Elements soup = doc.select("div#bd");
         for (val div : soup.select("div.detail_zx")) {
             String title = div.select("span").text().trim();
@@ -109,14 +92,9 @@ public class M_MOTIE_COM extends AbstractCrawler implements Identifiable {
     }
 
     @Override
-    protected String fetchText(String uri) throws IOException {
+    public String fetchText(String uri) throws IOException {
         ensureInitialized();
-        try {
-            return joinNodes(getSoup(uri).select("div.intro").first().children(), context.getConfig().lineSeparator);
-        } catch (InterruptedException e) {
-            Log.d(TAG, "user interrupted");
-            return StringUtils.EMPTY_TEXT;
-        }
+        return joinNodes(getSoup(uri).select("div.intro").first().children(), getContext().getConfig().lineSeparator);
     }
 
     @Override

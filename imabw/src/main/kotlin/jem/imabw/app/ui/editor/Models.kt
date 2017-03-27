@@ -162,13 +162,13 @@ class Editor(tab: Tab, text: String) : JXPanel(BorderLayout()) {
 
             override fun insertUpdate(e: DocumentEvent) {
                 if (!prohibitNotify) {
-                    tab.get().fireTextModified()
+                    tab.get()?.fireTextModified()
                 }
             }
 
             override fun removeUpdate(e: DocumentEvent) {
                 if (!prohibitNotify) {
-                    tab.get().fireTextModified()
+                    tab.get()?.fireTextModified()
                 }
             }
         })

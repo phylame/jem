@@ -87,14 +87,7 @@ public final class CrawlerManager {
         val book = context.getBook();
         crawler.init(context);
         crawler.fetchAttributes();
-        val listener = context.getListener();
-        if (listener != null) {
-            listener.attributeFetched(book);
-        }
         crawler.fetchContents();
-        if (listener != null) {
-            listener.contentsFetched(book);
-        }
         return book;
     }
 

@@ -5,11 +5,11 @@ import jem.crawler.CrawlerText;
 import jem.crawler.Identifiable;
 import jem.util.flob.Flobs;
 import lombok.val;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import pw.phylame.commons.log.Log;
-import pw.phylame.commons.util.StringUtils;
+import pw.phylame.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.net.URL;
@@ -24,21 +24,29 @@ public class M_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
     @Override
     public void fetchAttributes() throws IOException {
         ensureInitialized();
+        val context = getContext();
         val book = context.getBook();
-        final Document doc;
-        try {
-            doc = getSoup(context.getUrl());
-        } catch (InterruptedException e) {
-            Log.d(TAG, "user interrupted");
-            return;
-        }
+        final Document doc = getSoup(context.getUrl());
         Elements soup = doc.select("div.book-layout");
         setCover(book, Flobs.forURL(new URL(largeImage(soup.select("img").attr("src"))), "image/jpg"));
-        setTitle(book, soup.select("h2").text().trim());
-        setAuthor(book, soup.select("a").text().trim());
+        setTitle(book, soup.select("h2")
+                .text()
+                .trim());
+        setAuthor(book, soup.select("div.book-rand-a>a")
+                .first()
+                .textNodes()
+                .get(0)
+                .text()
+                .trim());
         soup = soup.select("p");
-        setGenre(book, soup.first().text().trim());
-        setState(book, secondPartOf(soup.get(1).text(), "|"));
+        setGenre(book, soup.first()
+                .text()
+                .trim());
+        val pair = partition(soup.get(1)
+                .text()
+                .trim(), "|");
+        setWords(book, pair.getFirst());
+        setState(book, pair.getSecond());
         val lines = new LinkedList<String>();
         for (val str : trimmed(doc.select("section#bookSummary").select("textarea").text()).split("<br>")) {
             lines.add(trimmed(str));
@@ -49,49 +57,35 @@ public class M_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
     @Override
     public void fetchContents() throws IOException {
         ensureInitialized();
+        val context = getContext();
         val book = context.getBook();
-        final Document doc;
-        try {
-            doc = getSoup(context.getUrl() + "/catalog");
-        } catch (InterruptedException e) {
-            Log.d(TAG, "user interrupted");
-            return;
-        }
-        Chapter section = null;
-        for (val node : doc.select("ol#volumes").first().childNodes()) {
-            if (!(node instanceof Element)) {
-                continue;
-            }
-            val li = (Element) node;
-            if (!li.tagName().equalsIgnoreCase("li")) {
-                continue;
-            }
-            if (li.attr("class").equals("chapter-bar")) { // section
-                book.append(section = new Chapter(li.text().trim()));
-            } else {
-                val a = li.child(0);
-                val chapter = new Chapter(a.child(0).text().trim());
-                val text = new CrawlerText(this, chapter, HOST + a.attr("href"));
+        val str = IOUtils.toString(getContent(context.getUrl() + "/catalog", "get"), "utf-8");
+        val start = str.indexOf("[{", str.indexOf("g_data.volumes"));
+        val end = str.indexOf("}];", start);
+        Chapter section;
+        val baseURL = context.getUrl();
+        for (val s : new JSONArray(str.substring(start, end + 2))) {
+            JSONObject json = (JSONObject) s;
+            book.append(section = new Chapter(json.getString("vN")));
+            for (val c : json.getJSONArray("cs")) {
+                json = (JSONObject) c;
+                val chapter = new Chapter(json.getString("cN"));
+                setWords(chapter, json.getInt("cnt"));
+                val text = new CrawlerText(this, chapter, baseURL + '/' + json.getInt("id"));
                 chapter.setText(text);
                 onTextAdded(text);
-                if (section != null) {
-                    section.append(chapter);
-                } else {
-                    book.append(chapter);
-                }
+                section.append(chapter);
             }
         }
     }
 
     @Override
-    protected String fetchText(String uri) throws IOException {
+    public String fetchText(String uri) throws IOException {
         ensureInitialized();
-        try {
-            return joinNodes(getSoup(uri).select("div.read-section").select("p"), context.getConfig().lineSeparator);
-        } catch (InterruptedException e) {
-            Log.d(TAG, "user interrupted");
-            return StringUtils.EMPTY_TEXT;
-        }
+        val nodes = getSoup(uri)
+                .select("section.read-section")
+                .select("p");
+        return joinNodes(nodes, getContext().getConfig().lineSeparator);
     }
 
     @Override

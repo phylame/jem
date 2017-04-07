@@ -251,6 +251,16 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
     }
 
     /**
+     * Swaps position of two specified chapters.
+     *
+     * @param from position of the chapter
+     * @param to   postion of another chapter
+     */
+    public final void swap(int from, int to) {
+        Collections.swap(chapters, from, to);
+    }
+
+    /**
      * Removes all chapters from sub-chapter list.
      */
     public final void clear() {

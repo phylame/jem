@@ -71,7 +71,7 @@ public final class CrawlerManager {
         final CrawlerProvider crawler;
         try {
             crawler = crawlers.getInstance(host);
-        } catch (IllegalAccessException | ClassNotFoundException | InstantiationException e) {
+        } catch (ReflectiveOperationException e) {
             throw new ParserException(M.tr("err.unknownHost", host), e);
         }
         if (crawler == null) {

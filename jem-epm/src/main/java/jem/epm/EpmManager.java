@@ -62,7 +62,7 @@ public final class EpmManager {
     public static final String MAKER_DEFINE_FILE = "META-INF/jem/makers.prop";
 
     /**
-     * Name of system property to auto load customized parsers and parsers.
+     * Name of system property for auto-loading customized parsers and parsers.
      */
     public static final String AUTO_LOAD_KEY = "jem.epm.autoLoad";
 
@@ -97,7 +97,7 @@ public final class EpmManager {
      *
      * @param name name of the parser (normally the extension name of book file)
      * @param path path of the parser class
-     * @throws IllegalArgumentException if the <code>name</code> or <code>path</code> is {@literal null} or empty string
+     * @throws IllegalArgumentException if the {@code name} or {@code path} is {@literal null} or empty string
      */
     public static void registerParser(String name, String path) {
         parsers.register(name, path);
@@ -111,8 +111,8 @@ public final class EpmManager {
      *
      * @param name  name of the parser (normally the extension name of book file)
      * @param clazz the {@code Parser} class
-     * @throws IllegalArgumentException if the <code>name</code> is {@literal null} or empty string
-     * @throws NullPointerException     if the <code>clazz</code> is {@literal null}
+     * @throws IllegalArgumentException if the {@code name} is {@literal null} or empty string
+     * @throws NullPointerException     if the {@code clazz} is {@literal null}
      */
     public static void registerParser(String name, Class<? extends Parser> clazz) {
         parsers.register(name, clazz);
@@ -131,7 +131,7 @@ public final class EpmManager {
      * Tests parser with specified name is registered or not.
      *
      * @param name the name of format
-     * @return <code>true</code> if the parser is registered otherwise <code>false</code>
+     * @return {@literal true} if the parser is registered otherwise {@literal false}
      */
     public static boolean hasParser(String name) {
         return parsers.contains(name);
@@ -151,13 +151,10 @@ public final class EpmManager {
      *
      * @param name name of the parser
      * @return {@code Parser} instance or {@literal null} if parser not registered
-     * @throws NullPointerException   if the <code>name</code> is {@literal null}
-     * @throws IllegalAccessException cannot access the parser class
-     * @throws InstantiationException cannot create new instance of parser class
-     * @throws ClassNotFoundException if registered class path is invalid
+     * @throws NullPointerException         if the {@code name} is {@literal null}
+     * @throws ReflectiveOperationException if cannot create the parser
      */
-    public static Parser parserFor(String name)
-            throws IllegalAccessException, InstantiationException, ClassNotFoundException {
+    public static Parser parserFor(String name) throws ReflectiveOperationException {
         return parsers.getInstance(name);
     }
 
@@ -172,7 +169,7 @@ public final class EpmManager {
      *
      * @param name name of the maker (normally the extension name of book file)
      * @param path class path of the maker class
-     * @throws IllegalArgumentException if the <code>name</code> or <code>path</code> is {@literal null} or empty string
+     * @throws IllegalArgumentException if the {@code name} or {@code path} is {@literal null} or empty string
      */
     public static void registerMaker(String name, String path) {
         makers.register(name, path);
@@ -186,8 +183,8 @@ public final class EpmManager {
      *
      * @param name  name of the maker (normally the extension name of book file)
      * @param clazz the {@code Maker} class
-     * @throws IllegalArgumentException if the <code>name</code> is {@literal null} or empty string
-     * @throws NullPointerException     if the <code>clazz</code> is {@literal null}
+     * @throws IllegalArgumentException if the {@code name} is {@literal null} or empty string
+     * @throws NullPointerException     if the {@code clazz} is {@literal null}
      */
     public static void registerMaker(String name, Class<? extends Maker> clazz) {
         makers.register(name, clazz);
@@ -206,7 +203,7 @@ public final class EpmManager {
      * Tests maker with specified name is registered or not.
      *
      * @param name the name of format
-     * @return <code>true</code> if the maker is registered otherwise <code>false</code>
+     * @return {@literal true} if the maker is registered otherwise {@literal false}
      */
     public static boolean hasMaker(String name) {
         return makers.contains(name);
@@ -226,22 +223,19 @@ public final class EpmManager {
      *
      * @param name name of the maker
      * @return {@code Maker} instance or {@literal null} if maker not registered
-     * @throws NullPointerException   if the <code>name</code> is {@literal null}
-     * @throws IllegalAccessException cannot access the maker class
-     * @throws InstantiationException cannot create new instance of maker class
-     * @throws ClassNotFoundException if registered class path is invalid
+     * @throws NullPointerException         if the {@code name} is {@literal null}
+     * @throws ReflectiveOperationException if cannot create the maker
      */
-    public static Maker makerFor(String name)
-            throws IllegalAccessException, InstantiationException, ClassNotFoundException {
+    public static Maker makerFor(String name) throws ReflectiveOperationException {
         return makers.getInstance(name);
     }
 
     /**
      * Maps specified file extension nameMap to parser (or maker) name.
      *
-     * @param name         the name of parser or maker
-     * @param extensionMap file extension nameMap supported by the parser (or maker), do nothing if {@literal null}
-     * @throws NullPointerException if the <code>name</code> is {@literal null}
+     * @param name       the name of parser or maker
+     * @param extensions file extension nameMap supported by the parser (or maker), do nothing if {@literal null}
+     * @throws NullPointerException if the {@code name} is {@literal null}
      */
     public static void mapExtensions(@NonNull String name, Collection<String> extensions) {
         if (isEmpty(extensions)) {
@@ -292,7 +286,7 @@ public final class EpmManager {
         Parser parser = null;
         try {
             parser = parserFor(format);
-        } catch (IllegalAccessException | ClassNotFoundException | InstantiationException e) {
+        } catch (ReflectiveOperationException e) {
             Log.e(TAG, e);
         }
         if (parser == null) {
@@ -338,7 +332,7 @@ public final class EpmManager {
         Maker maker = null;
         try {
             maker = makerFor(format);
-        } catch (IllegalAccessException | ClassNotFoundException | InstantiationException e) {
+        } catch (ReflectiveOperationException e) {
             Log.e(TAG, e);
         }
         if (maker == null) {

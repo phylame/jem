@@ -22,7 +22,7 @@ import jem.util.VariantMap;
 import lombok.Getter;
 
 /**
- * Common <code>Book</code> model describes book structure.
+ * Common {@code Book} model describes book structure.
  * <p>
  * A book structure contains the following parts:
  * </p>
@@ -54,7 +54,7 @@ public class Book extends Chapter {
      *
      * @param title  the title string
      * @param author the author string
-     * @throws NullPointerException if the argument list contains <code>null</code>
+     * @throws NullPointerException if the argument list contains {@literal null}
      */
     public Book(String title, String author) {
         super(title);

@@ -5,12 +5,12 @@
     <parent>
         <groupId>pw.phylame.util</groupId>
         <artifactId>my-project</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.1</version>
     </parent>
 
     <groupId>pw.phylame.jem</groupId>
     <artifactId>jem-project</artifactId>
-    <version>3.2.0</version>
+    <version>3.3.0</version>
     <packaging>pom</packaging>
 
     <name>Project Jem</name>
@@ -27,7 +27,7 @@
     <properties>
         <qaf.version>1.1.0</qaf.version>
         <xpp3.version>1.1.4c</xpp3.version>
-        <kotlin.version>1.1.0</kotlin.version>
+        <kotlin.version>1.1.2</kotlin.version>
         <commons.version>1.1.0</commons.version>
     </properties>
 

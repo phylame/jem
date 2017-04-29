@@ -49,8 +49,8 @@ public class VariantMap implements Cloneable {
         this.validator = validator;
     }
 
-    public void set(@NonNull String name, @NonNull Object value) {
-        Validate.require(!name.isEmpty(), "name cannot be empty");
+    public void set(String name, @NonNull Object value) {
+        Validate.requireNotEmpty(name, "name cannot be empty");
         if (validator != null) {
             validator.validate(name, value);
         }
@@ -91,13 +91,12 @@ public class VariantMap implements Cloneable {
         return (value != null) ? value.toString() : fallback;
     }
 
-    @SuppressWarnings("unchecked")
     public <T> T get(String name, @NonNull Class<T> type, T fallback) {
         if (StringUtils.isEmpty(name)) {
             return fallback;
         }
         val value = map.get(name);
-        return (value != null && type.isInstance(value)) ? (T) value : fallback;
+        return (value != null && type.isInstance(value)) ? type.cast(value) : fallback;
     }
 
     public Object remove(String name) {
@@ -116,12 +115,12 @@ public class VariantMap implements Cloneable {
         return map.entrySet();
     }
 
-    public String[] names() {
-        return map.keySet().toArray(new String[map.size()]);
+    public Set<String> names() {
+        return map.keySet();
     }
 
     /**
-     * Returns a shallow copy of this <code>VariantMap</code> instance: the names and values themselves are not cloned.
+     * Returns a shallow copy of this {@code VariantMap} instance: the names and values themselves are not cloned.
      *
      * @return a shallow copy of this map
      */

@@ -36,14 +36,14 @@ public interface Text extends Iterable<String> {
     /**
      * Returns text of this object.
      *
-     * @return the string of text, never be <code>null</code>
+     * @return the string of text, never be {@literal null}
      */
     String getText();
 
     /**
      * Returns list of string of text split by line separator.
      *
-     * @param skipEmpty <code>true</code> to skip empty lines
+     * @param skipEmpty {@literal true} to skip empty lines
      * @return list of string, may be empty list
      */
     List<String> getLines(boolean skipEmpty);

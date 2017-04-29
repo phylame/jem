@@ -1,2 +1,2 @@
-# Jem Core - Core library of jem toolkit
-**jem-core** provides common interface and book/chapter model
+# Jem Core - Core of the jem toolkit
+**jem-core** providing base interfaces and book/chapter models

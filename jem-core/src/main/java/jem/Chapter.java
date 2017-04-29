@@ -23,6 +23,7 @@ import jem.util.flob.Flob;
 import jem.util.text.Text;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.val;
 import pw.phylame.commons.function.Consumer;
 import pw.phylame.commons.log.Log;
@@ -109,17 +110,15 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
      * Attributes of the chapter.
      */
     @Getter
-    private VariantMap attributes = new VariantMap(new HashMap<String, Object>(), new Attributes.TypeValidator());
+    private VariantMap attributes = new VariantMap(new HashMap<String, Object>(), Attributes.variantValidator);
 
     /**
      * Content of the chapter.
      */
     @Getter
+    @Setter
+    @NonNull
     private Text text;
-
-    public void setText(@NonNull Text text) {
-        this.text = text;
-    }
 
     // ****************************
     // ** Sub-chapter operations **
@@ -254,17 +253,24 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
      * Swaps position of two specified chapters.
      *
      * @param from position of the chapter
-     * @param to   postion of another chapter
+     * @param to   position of another chapter
      */
     public final void swap(int from, int to) {
         Collections.swap(chapters, from, to);
     }
 
+    public final void clear() {
+        clear(true);
+    }
+
     /**
      * Removes all chapters from sub-chapter list.
      */
-    public final void clear() {
+    public final void clear(boolean cleanup) {
         for (val chapter : chapters) {
+            if (cleanup) {
+                chapter.cleanup();
+            }
             chapter.parent = null;
         }
         chapters.clear();
@@ -356,11 +362,7 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
         attributes.clear();
 
         // clean all sub chapters
-        for (val chapter : chapters) {
-            chapter.cleanup();
-            chapter.parent = null;
-        }
-        chapters.clear();
+        clear(true);
 
         cleaned = true;
     }

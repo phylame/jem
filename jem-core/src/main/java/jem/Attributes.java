@@ -39,7 +39,7 @@ import static pw.phylame.commons.util.StringUtils.EMPTY_TEXT;
 import static pw.phylame.commons.util.StringUtils.join;
 
 /**
- * Declares name of attributes supported by Jem for chapter and book.
+ * Declares name of standard attributes of book(or chapter) supported by Jem.
  */
 public final class Attributes {
     public static final String AUTHOR = "author";
@@ -64,7 +64,7 @@ public final class Attributes {
     public static final String VENDOR = "vendor";
     public static final String WORDS = "words";
 
-    public static class TypeValidator implements Validator {
+    public static final Validator variantValidator = new Validator() {
         @Override
         public void validate(String name, Object value) throws RuntimeException {
             val type = typeOf(name);
@@ -75,13 +75,14 @@ public final class Attributes {
                 throw Exceptions.forIllegalArgument("attribute '%s' must be '%s'", name, type);
             }
         }
-    }
+    };
 
-    private static final Map<String, String> attributeTypes = new ConcurrentHashMap<>();
+    private static final Map<String, String> typeMapping;
 
     static {
+        typeMapping = new ConcurrentHashMap<>();
         try {
-            update(attributeTypes, propertiesFor("!jem/util/attributes.properties"));
+            update(typeMapping, propertiesFor("!jem/util/attributes.properties"));
         } catch (IOException e) {
             Log.d("Attributes", e);
         }
@@ -90,10 +91,10 @@ public final class Attributes {
     /**
      * Returns supported names of attribute by Jem.
      *
-     * @return array of attribute names
+     * @return set of attribute names
      */
-    public static String[] supportedNames() {
-        return attributeTypes.keySet().toArray(new String[attributeTypes.size()]);
+    public static Set<String> supportedNames() {
+        return typeMapping.keySet();
     }
 
     /**
@@ -111,13 +112,13 @@ public final class Attributes {
     }
 
     /**
-     * Maps specified attribute name for specified variant type.
+     * Maps specified attribute name with specified variant type.
      *
      * @param name name of attribute
      * @param type name of type
      */
-    public static void mapType(String name, String type) {
-        attributeTypes.put(name, Variants.checkRegistered(type));
+    public static void mapType(@NonNull String name, String type) {
+        typeMapping.put(name, Variants.ensureRegistered(type));
     }
 
     /**
@@ -127,7 +128,7 @@ public final class Attributes {
      * @return the type string
      */
     public static String typeOf(String name) {
-        return attributeTypes.get(name);
+        return typeMapping.get(name);
     }
 
     /**

@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- * Abstract <code>Flob</code> implementation.
+ * Abstract {@code Flob} implementation.
  */
 public abstract class AbstractFlob implements Flob {
 

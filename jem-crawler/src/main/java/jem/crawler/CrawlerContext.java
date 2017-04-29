@@ -23,7 +23,7 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.jsoup.nodes.Document;
 import pw.phylame.commons.cache.Cacheable;
-import pw.phylame.commons.cache.DirectCache;
+import pw.phylame.commons.cache.InlineCache;
 
 import java.lang.ref.WeakReference;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -59,6 +59,6 @@ public class CrawlerContext {
         this.listener = config.listener;
         this.book = new CrawlerBook(this);
         book.getAttributes().set(CrawlerBook.ATTRIBUTE_SOURCE, url);
-        this.cache = config.cache != null ? config.cache : new DirectCache();
+        this.cache = config.cache != null ? config.cache : new InlineCache();
     }
 }

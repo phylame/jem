@@ -29,21 +29,21 @@ public interface Flob {
     /**
      * Returns name of the object.
      *
-     * @return the name, never be <code>null</code>
+     * @return the name, never be {@literal null}
      */
     String getName();
 
     /**
      * Returns the MIME type of the content.
      *
-     * @return the MIME string, never be <code>null</code>
+     * @return the MIME string, never be {@literal null}
      */
     String getMime();
 
     /**
-     * Opens an <code>InputStream</code> for reading the content.
+     * Opens an {@code InputStream} for reading the content.
      *
-     * @return the stream, never be <code>null</code>
+     * @return the stream, never be {@literal null}
      * @throws IOException if occurs I/O errors
      */
     InputStream openStream() throws IOException;

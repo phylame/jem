@@ -42,26 +42,24 @@ public final class Variants {
     private Variants() {
     }
 
-    // declare variant type aliases
+    // declare standard variant type aliases
     public static final String FLOB = "file";
     public static final String TEXT = "text";
     public static final String STRING = "str";
     public static final String INTEGER = "int";
     public static final String REAL = "real";
+    public static final String BOOLEAN = "bool";
     public static final String LOCALE = "locale";
     public static final String DATETIME = "datetime";
-    public static final String BOOLEAN = "bool";
 
-    private static final String TAG = Variants.class.getSimpleName();
+    private static final String TAG = "Variants";
 
-    private static final Set<String> typeNames = new LinkedHashSet<>();
+    private static final Set<String> variantNames = new LinkedHashSet<>();
 
     private static final Map<Class<?>, String> typeMapping = new ConcurrentHashMap<>();
 
     /**
      * Loads built-in variant mapping.
-     *
-     * @author PW[<a href="mailto:phylame@163.com">phylame@163.com</a>]
      */
     private static void initVariants() {
         try {
@@ -71,7 +69,7 @@ public final class Variants {
                 for (val e : prop.entrySet()) {
                     type = e.getValue().toString();
                     typeMapping.put(Class.forName(e.getKey().toString()), type);
-                    typeNames.add(type);
+                    variantNames.add(type);
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
@@ -84,16 +82,41 @@ public final class Variants {
     }
 
     /**
-     * Returns supported type by Jem.
+     * Returns names of all registered variant type.
      *
      * @return set of type names
      */
     public static Set<String> supportedTypes() {
-        return Collections.unmodifiableSet(typeNames);
+        return Collections.unmodifiableSet(variantNames);
     }
 
     /**
-     * Gets readable text for variant type.
+     * Registers the specified type.
+     *
+     * @param type name of type
+     * @throws IllegalArgumentException if the type is already registered
+     */
+    public static void registerType(String type) {
+        Validate.requireNotEmpty(type, "type cannot be null or empty");
+        Validate.require(!variantNames.contains(type), "type %s already registered", type);
+        variantNames.add(type);
+    }
+
+    /**
+     * Ensures specified variant type is registered.
+     *
+     * @param type name of type
+     * @return the input type
+     * @throws IllegalArgumentException if the type is not registered
+     */
+    public static String ensureRegistered(String type) {
+        Validate.requireNotEmpty(type, "type cannot be null or empty");
+        Validate.require(variantNames.contains(type), "type %s in unsupported", type);
+        return type;
+    }
+
+    /**
+     * Gets readable title text for variant type.
      *
      * @param type name of type
      * @return the text, or {@literal null} if the type is unknown
@@ -107,42 +130,24 @@ public final class Variants {
     }
 
     /**
-     * Registers user specified type.
-     *
-     * @param type name of type
-     */
-    public static void registerType(String type) {
-        Validate.requireNotEmpty(type, "type cannot be null or empty");
-        Validate.require(!typeNames.contains(type), "type %s already registered", type);
-        typeNames.add(type);
-    }
-
-    public static String checkRegistered(String type) {
-        Validate.requireNotEmpty(type, "type cannot be null or empty");
-        Validate.require(typeNames.contains(type), "type %s in unsupported", type);
-        return type;
-    }
-
-    /**
-     * Maps specified class for variant type.
+     * Maps specified class for specified variant type.
      *
      * @param clazz the class
      * @param type  name of type
-     * @throws NullPointerException     if the class is {@literal null}
-     * @throws IllegalArgumentException if the name of type is invalid
+     * @throws IllegalArgumentException if the type is not registered
      */
     public static void mapType(@NonNull Class<?> clazz, String type) {
-        typeMapping.put(clazz, checkRegistered(type));
+        typeMapping.put(clazz, ensureRegistered(type));
     }
 
     /**
-     * Detects the type of specified object.
+     * Detects the type of specified variant object.
      *
      * @param obj the object
      * @return the type name or {@literal null} if unknown
      * @throws NullPointerException if the object is {@literal null}
      */
-    public static String typeOf(@NonNull final Object obj) {
+    public static String typeOf(@NonNull Object obj) {
         return CollectionUtils.getOrPut(typeMapping, obj.getClass(), false, new Function<Class<?>, String>() {
             @Override
             public String apply(Class<?> clazz) {
@@ -157,14 +162,14 @@ public final class Variants {
     }
 
     /**
-     * Returns default value for specified type.
+     * Returns default value for specified variant type.
      *
      * @param type name of type
      * @return the value, or {@literal null} if the type not in jem built-in types
      * @throws IllegalArgumentException if the name of type is empty
      */
     public static Object defaultOf(String type) {
-        switch (checkRegistered(type)) {
+        switch (ensureRegistered(type)) {
             case STRING:
                 return StringUtils.EMPTY_TEXT;
             case TEXT:
@@ -187,7 +192,7 @@ public final class Variants {
     }
 
     /**
-     * Converts specified object to string for printing.
+     * Converts specified variant object to printable string.
      *
      * @param obj the object or {@literal null} if the type of object is unknown
      * @return a string represent the object

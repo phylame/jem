@@ -270,10 +270,10 @@ fun viewBook(inTuple: InTuple, outTuple: OutTuple, keys: Array<String>): Boolean
         } else if (key.matches(VIEW_CHAPTER.toRegex())) {
             state = viewChapter(book, key) && state
         } else if (key.matches(VIEW_ITEM.toRegex())) {
-            val names = arrayOf(key.replaceFirst("item\\$".toRegex(), ""))
+            val names = setOf(key.replaceFirst("item\\$".toRegex(), ""))
             state = viewExtension(book, names) && state
         } else {
-            viewAttribute(book, arrayOf(key), lineSeparator(), false, false)
+            viewAttribute(book, setOf(key), lineSeparator(), false, false)
         }
     }
 
@@ -285,7 +285,7 @@ private fun walkTree(chapter: Chapter, prefix: String, keys: Array<String>,
                      showAttributes: Boolean, showOrder: Boolean, indent: String, showBrackets: Boolean) {
     print(prefix)
     if (showAttributes) {
-        viewAttribute(chapter, keys, ", ", showBrackets, true)
+        viewAttribute(chapter, keys.toList(), ", ", showBrackets, true)
     }
     var order = 1
     val format = "%" + chapter.size().toString().length + "d"
@@ -306,7 +306,7 @@ private fun viewToc(chapter: Chapter, keys: Array<String>, indent: String, showO
     walkTree(chapter, "", keys, false, showOrder, indent, showBrackets)
 }
 
-private fun viewAttribute(chapter: Chapter, keys: Array<String>, sep: String, showBrackets: Boolean, ignoreEmpty: Boolean) {
+private fun viewAttribute(chapter: Chapter, keys: Collection<String>, sep: String, showBrackets: Boolean, ignoreEmpty: Boolean) {
     val lines = LinkedList<String>()
     for (key in keys) {
         if (key == VIEW_ALL) {
@@ -322,7 +322,7 @@ private fun viewAttribute(chapter: Chapter, keys: Array<String>, sep: String, sh
             println(text.text)
         } else if (key == VIEW_NAMES) {
             val names = LinkedList<String>()
-            Collections.addAll(names, *chapter.attributes.names())
+            names.addAll(chapter.attributes.names())
             Collections.addAll(names, VIEW_TEXT, VIEW_SIZE, VIEW_ALL)
             if (chapter.isSection) {
                 names.add(VIEW_TOC)
@@ -354,7 +354,7 @@ private fun viewAttribute(chapter: Chapter, keys: Array<String>, sep: String, sh
     }
 }
 
-private fun viewExtension(book: Book, names: Array<String>): Boolean {
+private fun viewExtension(book: Book, names: Collection<String>): Boolean {
     var state = true
     for (name in names) {
         val value = book.extensions.get(name, null)
@@ -374,7 +374,7 @@ private fun viewChapter(book: Book, name: String): Boolean {
     val key = if (parts.size > 1) parts[1] else VIEW_TEXT
     val indexes = parseIndexes(index) ?: return false
     try {
-        viewAttribute(MiscUtils.locate(book, indexes), arrayOf(key), lineSeparator(), false, false)
+        viewAttribute(MiscUtils.locate(book, indexes), setOf(key), lineSeparator(), false, false)
         return true
     } catch (e: IndexOutOfBoundsException) {
         App.error(tr("error.view.notFoundChapter", index, book.title), e)

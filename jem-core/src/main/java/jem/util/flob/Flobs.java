@@ -33,7 +33,7 @@ import java.util.Arrays;
 import java.util.zip.ZipFile;
 
 /**
- * Factory class for creating <code>Flob</code> instance.
+ * Factory class for creating {@code Flob} instance.
  */
 public final class Flobs {
     private Flobs() {

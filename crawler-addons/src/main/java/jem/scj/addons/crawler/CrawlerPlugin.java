@@ -17,7 +17,7 @@
 package jem.scj.addons.crawler;
 
 import lombok.val;
-import pw.phylame.qaf.core.Plugin;
+import qaf.core.Plugin;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

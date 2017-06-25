@@ -22,8 +22,8 @@ import jem.crawler.util.M;
 import jem.epm.util.ParserException;
 import lombok.NonNull;
 import lombok.val;
-import pw.phylame.commons.util.Implementor;
-import pw.phylame.commons.util.MiscUtils;
+import jclp.util.Implementor;
+import jclp.util.MiscUtils;
 
 import java.io.IOException;
 import java.net.MalformedURLException;

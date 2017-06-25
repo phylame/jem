@@ -23,8 +23,8 @@ import jem.epm.util.M;
 import jem.epm.util.ParserException;
 import jem.epm.util.config.EpmConfig;
 import lombok.val;
-import pw.phylame.commons.io.BufferedRandomAccessFile;
-import pw.phylame.commons.io.ByteUtils;
+import jclp.io.BufferedRandomAccessFile;
+import jclp.io.ByteUtils;
 
 import java.io.File;
 import java.io.IOException;

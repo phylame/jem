@@ -31,8 +31,8 @@ import jem.formats.epub.item.Resource;
 import jem.formats.epub.item.Spine;
 import jem.formats.epub.writer.EpubWriter;
 import lombok.val;
-import pw.phylame.commons.util.MiscUtils;
-import pw.phylame.commons.util.StringUtils;
+import jclp.util.MiscUtils;
+import jclp.util.StringUtils;
 
 import java.io.IOException;
 import java.util.List;

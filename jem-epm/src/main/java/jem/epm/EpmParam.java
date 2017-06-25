@@ -19,8 +19,8 @@
 package jem.epm;
 
 import lombok.*;
-import pw.phylame.commons.io.PathUtils;
-import pw.phylame.commons.util.StringUtils;
+import jclp.io.PathUtils;
+import jclp.util.StringUtils;
 
 import java.io.File;
 import java.util.Map;
@@ -54,6 +54,6 @@ abstract class EpmParam {
         val ext = StringUtils.isNotEmpty(extension)
                 ? extension
                 : PathUtils.extName(file.getPath()).toLowerCase();
-        return StringUtils.notEmptyOr(EpmManager.nameOfExtension(ext), ext);
+        return StringUtils.coalesce(EpmManager.nameOfExtension(ext), ext);
     }
 }

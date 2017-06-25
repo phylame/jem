@@ -24,9 +24,9 @@ import jem.epm.util.xml.XmlRender;
 import jem.util.text.Text;
 import lombok.NonNull;
 import lombok.val;
-import pw.phylame.commons.util.CollectionUtils;
-import pw.phylame.commons.util.StringUtils;
-import pw.phylame.commons.util.Validate;
+import jclp.util.CollectionUtils;
+import jclp.util.StringUtils;
+import jclp.util.Validate;
 
 import java.io.IOException;
 import java.io.OutputStream;

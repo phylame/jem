@@ -31,9 +31,9 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.val;
-import pw.phylame.commons.io.ByteUtils;
-import pw.phylame.commons.io.ZLibUtils;
-import pw.phylame.commons.util.StringUtils;
+import jclp.io.ByteUtils;
+import jclp.io.ZLibUtils;
+import jclp.util.StringUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

@@ -20,7 +20,7 @@ package jem.crawler;
 
 import jem.epm.util.config.AbstractConfig;
 import jem.epm.util.config.Configured;
-import pw.phylame.commons.cache.Cacheable;
+import jclp.cache.Cacheable;
 
 public class CrawlerConfig extends AbstractConfig {
     public static final String SELF = "config";

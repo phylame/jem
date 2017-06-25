@@ -18,7 +18,7 @@
 
 package jem.util;
 
-import pw.phylame.commons.util.Linguist;
+import jclp.util.Linguist;
 
 /**
  * Internal message translator.
@@ -39,4 +39,11 @@ public final class M {
         return linguist.tr(key, args);
     }
 
+    public static String optTr(String key, String fallback) {
+        return linguist.optTr(key, fallback);
+    }
+
+    public static String optTr(String key, String fallback, Object... args) {
+        return linguist.optTr(key, fallback, args);
+    }
 }

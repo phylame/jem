@@ -27,15 +27,15 @@ import jem.formats.epub.item.Guide;
 import jem.formats.epub.item.Resource;
 import jem.formats.epub.item.Spine;
 import lombok.val;
-import pw.phylame.commons.util.DateUtils;
-import pw.phylame.commons.util.MiscUtils;
+import jclp.util.DateUtils;
+import jclp.util.MiscUtils;
 
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
 import static jem.Attributes.*;
-import static pw.phylame.commons.util.StringUtils.isNotEmpty;
+import static jclp.util.StringUtils.isNotEmpty;
 
 /**
  * OPF 2.0 implements.

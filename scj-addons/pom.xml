@@ -5,7 +5,7 @@
     <parent>
         <groupId>pw.phylame.util</groupId>
         <artifactId>my-project</artifactId>
-        <version>1.0.1</version>
+        <version>1.0.2</version>
     </parent>
 
     <groupId>pw.phylame.jem</groupId>
@@ -15,7 +15,8 @@
     <description>Addons for SCJ</description>
 
     <properties>
-        <jem.version>3.3.0</jem.version>
+        <jem.version>3.4.0</jem.version>
+        <qaf.version>1.2.0</qaf.version>
     </properties>
 
     <dependencies>

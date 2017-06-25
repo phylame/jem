@@ -20,15 +20,15 @@ package jem.scj.addons;
 
 import jem.scj.app.AppConfig;
 import jem.scj.app.SCJPlugin;
-import pw.phylame.commons.log.Log;
-import pw.phylame.qaf.core.App;
-import pw.phylame.qaf.core.Metadata;
+import jclp.log.Log;
+import qaf.core.App;
+import qaf.core.Metadata;
 
 import java.io.IOException;
 import java.util.Map;
 
-import static pw.phylame.commons.util.CollectionUtils.propertiesFor;
-import static pw.phylame.commons.util.CollectionUtils.update;
+import static jclp.util.CollectionUtils.propertiesFor;
+import static jclp.util.CollectionUtils.update;
 
 public class ArgumentsLoader extends SCJPlugin {
     private static final String TAG = ArgumentsLoader.class.getSimpleName();
@@ -54,7 +54,7 @@ public class ArgumentsLoader extends SCJPlugin {
         try {
             update(m, propertiesFor(app.pathOf(name + NAME_SUFFIX), getClass().getClassLoader()));
         } catch (IOException e) {
-            Log.e(TAG, e);
+            Log.e(TAG, "cannot load arguments", e);
         }
     }
 }

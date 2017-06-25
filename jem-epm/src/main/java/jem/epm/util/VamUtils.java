@@ -22,64 +22,65 @@ import jem.util.flob.Flob;
 import jem.util.text.Text;
 import lombok.NonNull;
 import lombok.val;
-import pw.phylame.commons.io.IOUtils;
-import pw.phylame.commons.vam.FileVamReader;
-import pw.phylame.commons.vam.VamReader;
-import pw.phylame.commons.vam.VamWriter;
-import pw.phylame.commons.vam.ZipVamReader;
+import jclp.io.IOUtils;
+import jclp.vdm.FileVdmReader;
+import jclp.vdm.VdmReader;
+import jclp.vdm.VdmWriter;
+import jclp.vdm.ZipVdmReader;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.zip.ZipFile;
 
 public final class VamUtils {
     private VamUtils() {
     }
 
-    public static VamReader openReader(File file, String type) throws IOException {
+    public static VdmReader openReader(File file, String type) throws IOException {
         switch (type) {
             case "dir":
-                return new FileVamReader(file);
+                return new FileVdmReader(file);
             case "zip":
-                return new ZipVamReader(file);
+                return new ZipVdmReader(new ZipFile(file));
             default:
                 return null;
         }
     }
 
-    public static VamReader openReader(File file) throws IOException {
-        return file.isDirectory() ? new FileVamReader(file) : new ZipVamReader(file);
+    public static VdmReader openReader(File file) throws IOException {
+        return file.isDirectory() ? new FileVdmReader(file) : new ZipVdmReader(new ZipFile(file));
     }
 
-    public static InputStream streamOf(@NonNull VamReader vr, String name) throws IOException {
-        val item = vr.itemFor(name);
+    public static InputStream streamOf(@NonNull VdmReader vr, String name) throws IOException {
+        val item = vr.entryFor(name);
         if (item == null) {
             throw new IOException(M.tr("err.vam.noEntry", name, vr.getName()));
         }
         return vr.streamOf(item);
     }
 
-    public static String textOf(VamReader vr, String name, String encoding) throws IOException {
+    public static String textOf(VdmReader vr, String name, String encoding) throws IOException {
         try (val in = streamOf(vr, name)) {
             return IOUtils.toString(in, encoding);
         }
     }
 
-    public static void write(VamWriter vw, String name, String str, String encoding) throws IOException {
-        val item = vw.mkitem(name);
+    public static void write(VdmWriter vw, String name, String str, String encoding) throws IOException {
+        val item = vw.newEntry(name);
         vw.begin(item);
         vw.write(item, encoding == null ? str.getBytes() : str.getBytes(encoding));
         vw.end(item);
     }
 
-    public static void write(VamWriter vw, String name, Flob flob) throws IOException {
-        val item = vw.mkitem(name);
+    public static void write(VdmWriter vw, String name, Flob flob) throws IOException {
+        val item = vw.newEntry(name);
         flob.writeTo(vw.begin(item));
         vw.end(item);
     }
 
-    public static void write(VamWriter vw, String name, Text text, String encoding) throws IOException {
-        val item = vw.mkitem(name);
+    public static void write(VdmWriter vw, String name, Text text, String encoding) throws IOException {
+        val item = vw.newEntry(name);
         val writer = IOUtils.writerFor(vw.begin(item), encoding);
         text.writeTo(writer);
         writer.flush();

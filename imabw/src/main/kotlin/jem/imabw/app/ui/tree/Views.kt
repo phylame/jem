@@ -27,12 +27,12 @@ import org.jdesktop.swingx.JXPanel
 import org.jdesktop.swingx.JXTree
 import org.json.JSONObject
 import org.json.JSONTokener
-import pw.phylame.qaf.core.tr
-import pw.phylame.qaf.ixin.*
-import pw.phylame.qaf.swing.center
-import pw.phylame.qaf.swing.east
-import pw.phylame.qaf.swing.north
-import pw.phylame.qaf.swing.west
+import qaf.core.App
+import qaf.ixin.*
+import qaf.swing.center
+import qaf.swing.east
+import qaf.swing.north
+import qaf.swing.west
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Component
@@ -46,15 +46,15 @@ import javax.swing.tree.TreePath
 
 object BookRender : DefaultTreeCellRenderer() {
     private val bookIcon by lazy {
-        iconFor(":tree/book.png")
+        iconFor("tree/book.png")
     }
 
     private val sectionIcon by lazy {
-        iconFor(":tree/section.png")
+        iconFor("tree/section.png")
     }
 
     private val chapterIcon by lazy {
-        iconFor(":tree/book.png")
+        iconFor("tree/book.png")
     }
 
     private val highlightColor = Color.BLUE
@@ -104,7 +104,7 @@ object ControlsPane : JXPanel(BorderLayout()) {
         toolbar.isRollover = true
         toolbar.isLocked = true
         toolbar.isBorderPainted = false
-        west = JXLabel(tr("contents.title"), iconFor(":tree/contents.png"), JXLabel.LEADING)
+        west = JXLabel(App.tr("contents.title"), iconFor("tree/contents.png"), JXLabel.LEADING)
         east = toolbar
     }
 
@@ -141,7 +141,7 @@ object ContentsTree : JXPanel(BorderLayout()), Editable {
 
         tree.cellRenderer = BookRender
 
-        fileFor(":ui/contents.json")?.openStream()?.use {
+        fileFor("ui/contents.json")?.openStream()?.use {
             var items = LinkedList<Item>()
             val json = JSONObject(JSONTokener(it))
             var array = json.optJSONArray("menu")

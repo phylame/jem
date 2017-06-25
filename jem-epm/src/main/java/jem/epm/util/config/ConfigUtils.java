@@ -23,11 +23,11 @@ import jem.epm.util.M;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
-import pw.phylame.commons.format.Converters;
-import pw.phylame.commons.function.Prediction;
-import pw.phylame.commons.log.Log;
-import pw.phylame.commons.util.CollectionUtils;
-import pw.phylame.commons.util.Reflections;
+import jclp.text.Converters;
+import jclp.function.Predicate;
+import jclp.log.Log;
+import jclp.util.CollectionUtils;
+import jclp.util.Reflections;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -93,7 +93,7 @@ public final class ConfigUtils {
 
     @SuppressWarnings("unchecked")
     private static void fetchFields(EpmConfig config, Map<String, Object> m, String prefix) throws BadConfigException {
-        val fields = Reflections.getFields(config.getClass(), new Prediction<Field>() {
+        val fields = Reflections.getFields(config.getClass(), new Predicate<Field>() {
             @Override
             public boolean test(Field field) {
                 int mod = field.getModifiers();

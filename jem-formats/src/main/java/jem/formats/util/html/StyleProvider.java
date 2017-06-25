@@ -22,11 +22,11 @@ import jem.formats.util.M;
 import jem.util.flob.Flob;
 import jem.util.flob.Flobs;
 import lombok.val;
-import pw.phylame.commons.function.Provider;
-import pw.phylame.commons.io.IOUtils;
-import pw.phylame.commons.util.CollectionUtils;
-import pw.phylame.commons.util.StringUtils;
-import pw.phylame.commons.value.Lazy;
+import jclp.function.Provider;
+import jclp.io.IOUtils;
+import jclp.util.CollectionUtils;
+import jclp.util.StringUtils;
+import jclp.value.Lazy;
 
 import java.io.IOException;
 import java.lang.reflect.Modifier;

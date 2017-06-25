@@ -24,8 +24,8 @@ import jem.epm.EpmManager;
 import jem.util.JemException;
 import jem.util.Variants;
 import lombok.val;
-import pw.phylame.commons.io.PathUtils;
-import pw.phylame.commons.util.StringUtils;
+import jclp.io.PathUtils;
+import jclp.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -85,7 +85,7 @@ public final class DebugUtils {
 
     public static void printAttributes(Chapter chapter, boolean showLine) {
         if (showLine) {
-            System.out.println(StringUtils.multiplyOf("-", 36));
+            System.out.println(StringUtils.duplicated("-", 36));
         }
         System.out.println(chapter.getAttributes().size() + " attributes of " + getTitle(chapter));
         for (val e : chapter.getAttributes().entries()) {
@@ -99,7 +99,7 @@ public final class DebugUtils {
 
     public static void printExtension(Book book, boolean showLine) {
         if (showLine) {
-            System.out.println(StringUtils.multiplyOf("-", 36));
+            System.out.println(StringUtils.duplicated("-", 36));
         }
         System.out.println(book.getExtensions().size() + " extensions of " + getTitle(book));
         for (val e : book.getExtensions().entries()) {

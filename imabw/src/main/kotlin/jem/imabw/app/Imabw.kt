@@ -16,30 +16,29 @@
 
 package jem.imabw.app
 
+import jclp.io.IOUtils
+import jclp.log.Level
+import jclp.log.Log
 import jem.epm.EpmManager
 import jem.imabw.app.ui.Dialogs
 import jem.imabw.app.ui.Viewer
-import pw.phylame.commons.io.IOUtils
-import pw.phylame.commons.log.Log
-import pw.phylame.commons.log.LogLevel
-import pw.phylame.qaf.core.App
-import pw.phylame.qaf.core.DebugLevel
-import pw.phylame.qaf.core.tr
-import pw.phylame.qaf.ixin.*
+import qaf.core.App
+import qaf.core.Verbose
+import qaf.ixin.*
 import java.util.*
 
 object Imabw : IDelegate<Viewer>() {
     override fun onStart() {
         super.onStart()
-        App.ensureHomeExisted()
+        App.ensureHomeExists()
         System.setProperty(EpmManager.AUTO_LOAD_KEY, "true")
         proxy = CommandDispatcher(arrayOf(this))
 
-        Log.setLevel(LogLevel.forName(AppSettings.logLevel, LogLevel.INFO))
-        App.debugLevel = DebugLevel.valueOf(AppSettings.debugLevel)
+        Log.setLevel(Level.valueOf(AppSettings.logLevel))
+        App.verbose = Verbose.valueOf(AppSettings.debugLevel)
         Locale.setDefault(AppSettings.appLocale)
         resource = Resource(RESOURCE_DIR, "$IMAGE_DIR/${UISettings.iconSets}", I18N_DIR, javaClass.classLoader)
-        App.translator = resource.translatorFor(TRANSLATOR_NAME)
+        App.setTranslator(resource.translatorFor(TRANSLATOR_NAME))
 
         if (PluginSettings.isEnable) {
             val blacklist = if (PluginSettings.blacklist.isNotBlank())
@@ -69,17 +68,17 @@ object Imabw : IDelegate<Viewer>() {
     }
 
     override fun onReady() {
-        form.statusText = tr("viewer.status.ready")
+        form.statusText = App.tr("viewer.status.ready")
         form.isVisible = true
-        Manager.newFile(tr("d.newBook.defaultTitle"))
+        Manager.newFile(App.tr("d.newBook.defaultTitle"))
     }
 
     fun message(id: String) {
-        form.statusText = tr(id)
+        form.statusText = App.tr(id)
     }
 
     fun message(id: String, vararg args: Any?) {
-        form.statusText = tr(id, *args)
+        form.statusText = App.tr(id, *args)
     }
 
     @Command(EDIT_SETTINGS)

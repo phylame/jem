@@ -17,7 +17,7 @@
 package jem.imabw.app
 
 import jem.util.Build
-import pw.phylame.qaf.ixin.Ixin
+import qaf.ixin.Ixin
 
 // meta data
 val APP_NAME: String = System.getProperty("app.name", "imabw")

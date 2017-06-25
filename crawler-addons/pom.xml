@@ -15,7 +15,7 @@
     <description>Crawler addons for SCJ</description>
 
     <properties>
-        <jem.version>3.2.0</jem.version>
+        <jem.version>3.4.0</jem.version>
     </properties>
 
     <dependencies>

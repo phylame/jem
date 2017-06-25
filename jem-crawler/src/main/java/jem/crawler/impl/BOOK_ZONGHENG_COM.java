@@ -10,7 +10,7 @@ import lombok.val;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
-import pw.phylame.commons.io.PathUtils;
+import jclp.io.PathUtils;
 
 import java.io.IOException;
 import java.net.URL;

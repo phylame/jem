@@ -18,11 +18,11 @@
 
 package jem.epm.util;
 
+import jclp.function.Consumer;
+import jclp.io.IOUtils;
+import jclp.log.Log;
 import jem.Chapter;
 import lombok.RequiredArgsConstructor;
-import pw.phylame.commons.function.Consumer;
-import pw.phylame.commons.io.IOUtils;
-import pw.phylame.commons.log.Log;
 
 import java.io.Closeable;
 import java.io.File;
@@ -40,7 +40,7 @@ public class InputCleaner implements Consumer<Chapter> {
     }
 
     @Override
-    public void consume(Chapter chapter) {
+    public void accept(Chapter chapter) {
         IOUtils.closeQuietly(in);
         if (source != null && !source.delete()) {
             Log.e(TAG, M.tr("err.common.deleteFile", source.getPath()));

@@ -18,8 +18,8 @@
 
 package jem.epm.util;
 
-import pw.phylame.commons.function.Provider;
-import pw.phylame.commons.value.Lazy;
+import jclp.function.Provider;
+import jclp.value.Lazy;
 
 import java.text.NumberFormat;
 import java.text.ParseException;

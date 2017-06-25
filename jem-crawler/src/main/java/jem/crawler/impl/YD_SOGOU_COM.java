@@ -29,15 +29,15 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.jsoup.select.Selector;
-import pw.phylame.commons.util.DateUtils;
+import jclp.util.DateUtils;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 
 import static jem.Attributes.*;
-import static pw.phylame.commons.util.StringUtils.isNotEmpty;
-import static pw.phylame.commons.util.StringUtils.valueOfName;
+import static jclp.util.StringUtils.isNotEmpty;
+import static jclp.util.StringUtils.valueOfName;
 
 public class YD_SOGOU_COM extends CrawlerProvider implements Searchable, Identifiable {
     private static final String ENCODING = "UTF-8";

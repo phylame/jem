@@ -29,11 +29,11 @@ import jem.util.flob.Flobs;
 import jem.util.text.Texts;
 import lombok.NonNull;
 import lombok.val;
-import pw.phylame.commons.io.BufferedRandomAccessFile;
-import pw.phylame.commons.io.IOUtils;
-import pw.phylame.commons.log.Log;
-import pw.phylame.commons.util.StringUtils;
-import pw.phylame.commons.value.Triple;
+import jclp.io.BufferedRandomAccessFile;
+import jclp.io.IOUtils;
+import jclp.log.Log;
+import jclp.util.StringUtils;
+import jclp.value.Triple;
 
 import java.io.*;
 import java.util.regex.Pattern;
@@ -138,7 +138,7 @@ public class TxtParser extends AbstractParser<Reader, TxtInConfig> {
     }
 
     @SuppressWarnings("resource")
-    private Triple<RandomAccessFile, File, String> cacheContent(Reader reader) throws IOException {
+    private Triple<? extends RandomAccessFile, File, String> cacheContent(Reader reader) throws IOException {
         val b = new StringBuilder();
         val cache = File.createTempFile("_jem_txt_", ".tmp");
         Closeable closeable = null;

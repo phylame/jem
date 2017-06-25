@@ -33,7 +33,7 @@ import jem.util.flob.Flob;
 import jem.util.text.Text;
 import jem.util.text.Texts;
 import lombok.val;
-import pw.phylame.commons.io.PathUtils;
+import jclp.io.PathUtils;
 
 import java.io.IOException;
 import java.io.StringWriter;

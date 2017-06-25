@@ -1,5 +1,5 @@
-import pw.phylame.qaf.ixin.x
-import pw.phylame.qaf.swing.*
+import qaf.ixin.x
+import qaf.swing.*
 import java.awt.*
 import java.util.*
 import javax.swing.*

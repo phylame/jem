@@ -19,7 +19,7 @@
 package jem.crawler.util;
 
 import org.jsoup.nodes.Node;
-import pw.phylame.commons.util.RandomUtils;
+import jclp.util.RandomUtils;
 
 public final class SoupUtils {
     public static final String[] USER_AGENTS = {

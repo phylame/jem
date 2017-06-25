@@ -23,8 +23,8 @@ import jem.util.flob.Flob;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
-import pw.phylame.commons.io.IOUtils;
-import pw.phylame.commons.util.Exceptions;
+import jclp.io.IOUtils;
+import jclp.util.Exceptions;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -32,13 +32,11 @@ import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.List;
 
-import static pw.phylame.commons.util.StringUtils.EMPTY_TEXT;
 
 /**
  * Factory class for creating {@code Text} instance.
  */
 public final class Texts {
-
     private Texts() {
     }
 
@@ -53,7 +51,7 @@ public final class Texts {
     public static final String PLAIN = "plain";
 
     public static Text forEmpty(String type) {
-        return forString(EMPTY_TEXT, type);
+        return forString("", type);
     }
 
     public static Text forString(@NonNull CharSequence cs, String type) {
@@ -66,12 +64,12 @@ public final class Texts {
 
     private static class RawText extends AbstractText {
         static {
-            Variants.mapType(RawText.class, Variants.TEXT);
+            Variants.mapClass(RawText.class, Variants.TEXT);
         }
 
         private final CharSequence text;
 
-        private RawText(CharSequence cs, String type) {
+        RawText(CharSequence cs, String type) {
             super(type);
             this.text = cs;
         }
@@ -84,7 +82,7 @@ public final class Texts {
 
     private static class FlobText extends AbstractText {
         static {
-            Variants.mapType(FlobText.class, Variants.TEXT);
+            Variants.mapClass(FlobText.class, Variants.TEXT);
         }
 
         private final Flob file;

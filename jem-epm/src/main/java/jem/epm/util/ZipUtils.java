@@ -22,7 +22,7 @@ import jem.util.flob.Flob;
 import jem.util.text.Text;
 import lombok.NonNull;
 import lombok.val;
-import pw.phylame.commons.io.IOUtils;
+import jclp.io.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;

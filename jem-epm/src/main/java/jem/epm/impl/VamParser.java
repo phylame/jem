@@ -20,22 +20,22 @@ package jem.epm.impl;
 
 import jem.epm.util.config.AbstractConfig;
 import jem.epm.util.config.Configured;
-import pw.phylame.commons.util.StringUtils;
-import pw.phylame.commons.vam.VamReader;
+import jclp.util.StringUtils;
+import jclp.vdm.VdmReader;
 
 import java.io.File;
 import java.io.IOException;
 
 import static jem.epm.util.VamUtils.openReader;
 
-public abstract class VamParser<C extends VamParser.VamInConfig> extends AbstractParser<VamReader, C> {
+public abstract class VamParser<C extends VamParser.VamInConfig> extends AbstractParser<VdmReader, C> {
 
     protected VamParser(String name, Class<C> clazz) {
         super(name, clazz);
     }
 
     @Override
-    protected VamReader openInput(File file, C config) throws IOException {
+    protected VdmReader openInput(File file, C config) throws IOException {
         return StringUtils.isNotEmpty(config.inputType) ? openReader(file, config.inputType) : openReader(file);
     }
 

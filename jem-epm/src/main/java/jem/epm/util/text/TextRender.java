@@ -24,11 +24,11 @@ import jem.util.text.Text;
 import jem.util.text.Texts;
 import lombok.NonNull;
 import lombok.val;
-import pw.phylame.commons.util.CollectionUtils;
+import jclp.util.CollectionUtils;
 
 import java.util.LinkedList;
 
-import static pw.phylame.commons.util.StringUtils.*;
+import static jclp.util.StringUtils.*;
 
 /**
  * Render book text with plain style.

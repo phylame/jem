@@ -23,14 +23,14 @@ import jem.scj.app.SCI;
 import jem.scj.app.SCJPlugin;
 import lombok.val;
 import org.apache.commons.cli.Option;
-import pw.phylame.commons.log.Log;
-import pw.phylame.commons.util.Reflections;
-import pw.phylame.commons.util.StringUtils;
-import pw.phylame.qaf.cli.CLIDelegate;
-import pw.phylame.qaf.cli.Command;
-import pw.phylame.qaf.cli.TypedFetcher;
-import pw.phylame.qaf.core.App;
-import pw.phylame.qaf.core.Metadata;
+import jclp.log.Log;
+import jclp.util.Reflections;
+import jclp.util.StringUtils;
+import qaf.cli.CLIDelegate;
+import qaf.cli.Command;
+import qaf.cli.TypedFetcher;
+import qaf.core.App;
+import qaf.core.Metadata;
 
 import javax.script.ScriptEngine;
 import java.io.File;
@@ -75,7 +75,7 @@ public class ScriptRunner extends SCJPlugin {
             }
             return engine;
         } catch (Exception e) {
-            Log.e(TAG, e);
+            Log.e(TAG, "cannot instantiate js engine", e);
             app.error(M.tr("runScript.unsupported", System.getProperty("java.version")));
             return null;
         }

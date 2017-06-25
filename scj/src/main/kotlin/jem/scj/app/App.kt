@@ -18,16 +18,17 @@
 
 package jem.scj.app
 
+import jclp.io.IOUtils
+import jclp.io.PathUtils
+import jclp.log.Log
+import jclp.util.CollectionUtils
+import jclp.util.Linguist
 import jem.crawler.CrawlerManager
 import jem.epm.EpmManager
 import jem.util.Build
 import org.apache.commons.cli.*
-import pw.phylame.commons.io.IOUtils
-import pw.phylame.commons.io.PathUtils
-import pw.phylame.commons.log.Log
-import pw.phylame.commons.util.CollectionUtils
-import pw.phylame.qaf.cli.*
-import pw.phylame.qaf.core.*
+import qaf.cli.*
+import qaf.core.*
 import java.io.File
 import java.util.*
 
@@ -46,11 +47,6 @@ const val VIEW_EXTENSION = "ext"
 const val VIEW_NAMES = "names"
 const val VIEW_TEXT = "text"
 const val VIEW_SIZE = "size"
-
-// debug level
-const val DEBUG_NONE = "none"
-const val DEBUG_ECHO = "echo"
-const val DEBUG_TRACE = "trace"
 
 // CLI inTuple
 const val OPTION_HELP = "h"
@@ -93,7 +89,7 @@ object AppConfig : Settings() {
 
     var pluginEnable by delegated(true, "app.plugin.enable")
 
-    var debugLevel by delegated(DEBUG_ECHO, "app.debug.level")
+    var debugLevel by delegated(Verbose.ECHO.name.toLowerCase(), "app.debug.level")
 
     var outputFormat by delegated(EpmManager.PMAB, "jem.output.defaultFormat")
 
@@ -119,29 +115,26 @@ object AppConfig : Settings() {
 fun checkInputFormat(format: String) = checkInputFormat(format, null)
 
 fun checkInputFormat(format: String, input: String?): Boolean = if (format.isEmpty()) {
-    App.error(tr("error.input.unknownFormat", input))
+    App.error(App.tr("error.input.unknownFormat", input))
     false
 } else if (!EpmManager.hasParser(format)) {
-    App.error(tr("error.input.unsupported", format))
-    println(tr("tip.unsupportedFormat", OPTION_LIST, OPTION_LIST_LONG))
+    App.error(App.tr("error.input.unsupported", format))
+    println(App.tr("tip.unsupportedFormat", OPTION_LIST, OPTION_LIST_LONG))
     false
 } else true
 
 fun checkOutputFormat(format: String): Boolean = if (!EpmManager.hasMaker(format)) {
-    App.error(tr("error.output.unsupported", format))
-    println(tr("tip.unsupportedFormat", OPTION_LIST, OPTION_LIST_LONG))
+    App.error(App.tr("error.output.unsupported", format))
+    println(App.tr("tip.unsupportedFormat", OPTION_LIST, OPTION_LIST_LONG))
     false
 } else true
 
 fun checkDebugLevel(level: String): Boolean {
-    when (level) {
-        DEBUG_ECHO -> App.debugLevel = DebugLevel.ECHO
-        DEBUG_TRACE -> App.debugLevel = DebugLevel.TRACE
-        DEBUG_NONE -> App.debugLevel = DebugLevel.NONE
-        else -> {
-            App.error(tr("error.invalidDebugLevel", level))
-            return false
-        }
+    try {
+        App.verbose = Verbose.valueOf(level.toUpperCase())
+    } catch (e: IllegalArgumentException) {
+        App.error(App.tr("error.invalidDebugLevel", level))
+        return false
     }
     return true
 }
@@ -152,9 +145,9 @@ object SCI : CLIDelegate() {
     override fun onStart() {
         System.setProperty(EpmManager.AUTO_LOAD_KEY, "true")
         System.setProperty(CrawlerManager.AUTO_LOAD_KEY, "true")
-        App.ensureHomeExisted()
+        App.ensureHomeExists()
         Locale.setDefault(AppConfig.appLocale)
-        App.translator = Translator(I18N_NAME)
+        App.setTranslator(Linguist(I18N_NAME))
         if (!checkDebugLevel(AppConfig.debugLevel)) {
             App.exit(-1)
         }
@@ -179,93 +172,93 @@ object SCI : CLIDelegate() {
 
     override fun createOptions() {
         // help
-        addOption(Option(OPTION_HELP, OPTION_HELP_LONG, false, tr("help.description"))) {
+        addOption(Option(OPTION_HELP, OPTION_HELP_LONG, false, App.tr("help.description"))) {
             val formatter = HelpFormatter()
             formatter.syntaxPrefix = ""
-            formatter.printHelp(AppConfig.termWidth, tr("sci.syntax", App.assembly.name), tr("help.prefix"), options, tr("help.feedback"))
+            formatter.printHelp(AppConfig.termWidth, App.tr("sci.syntax", App.assembly.name), App.tr("help.prefix"), options, App.tr("help.feedback"))
             0
         }
         // version
-        addOption(Option(OPTION_VERSION, OPTION_VERSION_LONG, false, tr("help.version"))) {
+        addOption(Option(OPTION_VERSION, OPTION_VERSION_LONG, false, App.tr("help.version"))) {
             println("SCI for Jem v$VERSION on ${System.getProperty("os.name")} (${System.getProperty("os.arch")})")
-            println(tr("app.copyrights", Calendar.getInstance()[Calendar.YEAR].toString()))
+            println(App.tr("app.copyrights", Calendar.getInstance()[Calendar.YEAR].toString()))
             0
         }
         // list
-        addOption(Option(OPTION_LIST, OPTION_LIST_LONG, false, tr("help.list"))) {
-            println(tr("list.title"))
-            println(" ${tr("list.input")} ${EpmManager.supportedParsers().joinToString(" ")}")
-            println(" ${tr("list.output")} ${EpmManager.supportedMakers().joinToString(" ")}")
+        addOption(Option(OPTION_LIST, OPTION_LIST_LONG, false, App.tr("help.list"))) {
+            println(App.tr("list.title"))
+            println(" ${App.tr("list.input")} ${EpmManager.supportedParsers().joinToString(" ")}")
+            println(" ${App.tr("list.output")} ${EpmManager.supportedMakers().joinToString(" ")}")
             0
         }
         // debug level
         addOption(Option.builder(OPTION_DEBUG_LEVEL)
                 .longOpt(OPTION_DEBUG_LEVEL_LONG)
-                .argName(tr("help.debug.argName"))
+                .argName(App.tr("help.debug.argName"))
                 .hasArg()
-                .desc(tr("help.debug", AppConfig.debugLevel))
+                .desc(App.tr("help.debug", AppConfig.debugLevel))
                 .build(),
                 TypedFetcher(OPTION_DEBUG_LEVEL, String::class.java, ::checkDebugLevel)
         )
         // input format
         addOption(Option.builder(OPTION_INPUT_FORMAT)
                 .longOpt(OPTION_INPUT_FORMAT_LONG)
-                .argName(tr("help.formatName"))
+                .argName(App.tr("help.formatName"))
                 .hasArg()
-                .desc(tr("help.inputFormat"))
+                .desc(App.tr("help.inputFormat"))
                 .build(),
                 TypedFetcher(OPTION_INPUT_FORMAT, String::class.java, ::checkInputFormat)
         )
         // parser arguments
         addOption(Option.builder(OPTION_IN_ARGUMENTS)
-                .argName(tr("help.kvName"))
+                .argName(App.tr("help.kvName"))
                 .numberOfArgs(2)
                 .valueSeparator()
-                .desc(tr("help.parserArgs"))
+                .desc(App.tr("help.parserArgs"))
                 .build(),
                 PropertiesFetcher(OPTION_IN_ARGUMENTS)
         )
         // output attributes
         addOption(Option.builder(OPTION_OUT_ATTRIBUTES)
-                .argName(tr("help.kvName"))
+                .argName(App.tr("help.kvName"))
                 .numberOfArgs(2)
                 .valueSeparator()
-                .desc(tr("help.attribute"))
+                .desc(App.tr("help.attribute"))
                 .build(),
                 PropertiesFetcher(OPTION_OUT_ATTRIBUTES)
         )
         // output extensions
         addOption(Option.builder(OPTION_OUT_EXTENSIONS)
-                .argName(tr("help.kvName"))
+                .argName(App.tr("help.kvName"))
                 .numberOfArgs(2)
                 .valueSeparator()
-                .desc(tr("help.extension"))
+                .desc(App.tr("help.extension"))
                 .build(),
                 PropertiesFetcher(OPTION_OUT_EXTENSIONS)
         )
         // output path
         addOption(Option.builder(OPTION_OUTPUT)
-                .argName(tr("help.output.argName"))
+                .argName(App.tr("help.output.argName"))
                 .hasArg()
-                .desc(tr("help.output.path"))
+                .desc(App.tr("help.output.path"))
                 .build(),
                 fetcherOf<String>(OPTION_OUTPUT)
         )
         // output format
         addOption(Option.builder(OPTION_OUTPUT_FORMAT)
                 .longOpt(OPTION_OUTPUT_FORMAT_LONG)
-                .argName(tr("help.formatName"))
+                .argName(App.tr("help.formatName"))
                 .hasArg()
-                .desc(tr("help.outputFormat", AppConfig.outputFormat))
+                .desc(App.tr("help.outputFormat", AppConfig.outputFormat))
                 .build(),
                 TypedFetcher(OPTION_OUTPUT_FORMAT, String::class.java, ::checkOutputFormat)
         )
         // maker arguments
         addOption(Option.builder(OPTION_OUT_ARGUMENTS)
-                .argName(tr("help.kvName"))
+                .argName(App.tr("help.kvName"))
                 .numberOfArgs(2)
                 .valueSeparator()
-                .desc(tr("help.makerArgs"))
+                .desc(App.tr("help.makerArgs"))
                 .build(),
                 PropertiesFetcher(OPTION_OUT_ARGUMENTS)
         )
@@ -273,7 +266,7 @@ object SCI : CLIDelegate() {
         val group = OptionGroup()
 
         // convert
-        var option = Option(OPTION_CONVERT, false, tr("help.convert", OPTION_OUTPUT_FORMAT))
+        var option = Option(OPTION_CONVERT, false, App.tr("help.convert", OPTION_OUTPUT_FORMAT))
         group.addOption(option)
         addOption(option, object : ConsumerCommand {
             override fun consume(tuple: InTuple): Boolean = convertBook(tuple, OutTuple())
@@ -281,11 +274,11 @@ object SCI : CLIDelegate() {
 
 
         // join
-        option = Option(OPTION_JOIN, false, tr("help.join"))
+        option = Option(OPTION_JOIN, false, App.tr("help.join"))
         group.addOption(option)
         addOption(option) {
             if (inputs.isEmpty()) {
-                App.error(tr("error.input.empty"))
+                App.error(App.tr("error.input.empty"))
                 -1
             } else {
                 if (joinBook(OutTuple(File(output)))) 0 else 1
@@ -294,9 +287,9 @@ object SCI : CLIDelegate() {
 
         // extract and indices
         option = Option.builder(OPTION_EXTRACT)
-                .argName(tr("help.extract.argName"))
+                .argName(App.tr("help.extract.argName"))
                 .hasArg()
-                .desc(tr("help.extract"))
+                .desc(App.tr("help.extract"))
                 .build()
         group.addOption(option)
         addOption(option, ExtractBook(OPTION_EXTRACT))
@@ -305,10 +298,10 @@ object SCI : CLIDelegate() {
         val viewBook = ViewBook(OPTION_VIEW)
         defaultCommand = viewBook
         addOption(Option.builder(OPTION_VIEW)
-                .argName(tr("help.view.argName"))
+                .argName(App.tr("help.view.argName"))
                 .hasArg()
                 .valueSeparator()
-                .desc(tr("help.view"))
+                .desc(App.tr("help.view"))
                 .build(),
                 viewBook
         )
@@ -319,16 +312,16 @@ object SCI : CLIDelegate() {
     override fun onOptionError(e: ParseException) {
         when (e) {
             is UnrecognizedOptionException -> {
-                App.error(tr("error.option.unrecognized", e.option))
+                App.error(App.tr("error.option.unrecognized", e.option))
             }
             is MissingArgumentException -> {
-                App.error(tr("error.option.missingArgument", e.option.opt))
+                App.error(App.tr("error.option.missingArgument", e.option.opt))
             }
             is AlreadySelectedException -> {
-                App.error(tr("error.option.multiOptions", e.option.opt, e.optionGroup.selected))
+                App.error(App.tr("error.option.multiOptions", e.option.opt, e.optionGroup.selected))
             }
             is MissingOptionException -> {
-                App.error(tr("error.option.missingOption", e.missingOptions.joinToString(",")))
+                App.error(App.tr("error.option.missingOption", e.missingOptions.joinToString(",")))
             }
             else -> e.printStackTrace()
         }
@@ -355,7 +348,7 @@ object SCI : CLIDelegate() {
 
     fun consumeInputs(consumer: Consumer): Int {
         if (inputs.isEmpty()) {
-            App.error(tr("error.input.empty"))
+            App.error(App.tr("error.input.empty"))
             return -1
         }
         var status = 0

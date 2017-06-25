@@ -2,14 +2,14 @@ package jem.crawling
 
 import jem.crawler.CrawlerManager
 import jem.epm.EpmManager
-import pw.phylame.commons.log.Log
-import pw.phylame.commons.util.CollectionUtils
-import pw.phylame.qaf.core.App
-import pw.phylame.qaf.ixin.IForm
-import pw.phylame.qaf.ixin.addGroupedComponents
-import pw.phylame.qaf.ixin.title
-import pw.phylame.qaf.ixin.x
-import pw.phylame.qaf.swing.*
+import jclp.log.Log
+import jclp.util.CollectionUtils
+import qaf.core.App
+import qaf.ixin.IForm
+import qaf.ixin.addGroupedComponents
+import qaf.ixin.title
+import qaf.ixin.x
+import qaf.swing.*
 import java.awt.Desktop
 import java.awt.Insets
 import java.awt.event.*

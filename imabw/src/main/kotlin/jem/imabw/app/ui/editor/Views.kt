@@ -21,7 +21,7 @@ import jem.imabw.app.Imabw
 import jem.imabw.app.REPLACE
 import jem.imabw.app.ui.Editable
 import org.jdesktop.swingx.JXPanel
-import pw.phylame.qaf.ixin.Command
+import qaf.ixin.Command
 
 object TabbedEditor : JXPanel(), Editable {
     init {

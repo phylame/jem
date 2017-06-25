@@ -18,6 +18,8 @@
 
 package jem.imabw.app.ui.editor
 
+import jclp.function.Consumer
+import jclp.log.Log
 import jem.Chapter
 import jem.imabw.app.*
 import jem.imabw.app.ui.Viewer
@@ -26,11 +28,9 @@ import jem.util.flob.Flobs
 import jem.util.text.Texts
 import org.jdesktop.swingx.JXPanel
 import org.jdesktop.swingx.JXTextArea
-import pw.phylame.commons.function.Consumer
-import pw.phylame.commons.log.Log
-import pw.phylame.qaf.core.App
-import pw.phylame.qaf.ixin.isRight
-import pw.phylame.qaf.swing.center
+import qaf.core.App
+import qaf.ixin.isRight
+import qaf.swing.center
 import java.awt.BorderLayout
 import java.awt.event.FocusAdapter
 import java.awt.event.FocusEvent
@@ -87,7 +87,7 @@ class Tab(val chapter: Chapter) : Consumer<Chapter> {
         file
     }
 
-    override fun consume(chapter: Chapter) {
+    override fun accept(chapter: Chapter) {
         val cache = cache
         if (cache != null) {
             if (!cache.delete()) {

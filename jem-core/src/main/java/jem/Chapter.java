@@ -21,18 +21,16 @@ package jem;
 import jem.util.VariantMap;
 import jem.util.flob.Flob;
 import jem.util.text.Text;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.Setter;
-import lombok.val;
-import pw.phylame.commons.function.Consumer;
-import pw.phylame.commons.log.Log;
-import pw.phylame.commons.util.Hierarchical;
-import pw.phylame.commons.util.StringUtils;
-import pw.phylame.commons.util.Validate;
+import lombok.*;
+import jclp.function.Consumer;
+import jclp.log.Log;
+import jclp.util.Hierarchical;
 
 import java.lang.ref.WeakReference;
 import java.util.*;
+
+import static jem.Attributes.*;
+import static jclp.util.Validate.require;
 
 /**
  * <p>
@@ -61,7 +59,7 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
      * Constructs chapter with empty title.
      */
     public Chapter() {
-        Attributes.setTitle(this, StringUtils.EMPTY_TEXT);
+        setTitle(this, "");
     }
 
     /**
@@ -71,7 +69,7 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
      * @throws NullPointerException if the <code>title</code> is <code>null</code>
      */
     public Chapter(String title) {
-        Attributes.setTitle(this, title);
+        setTitle(this, title);
     }
 
     /**
@@ -82,7 +80,7 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
      * @throws NullPointerException if the title or text is {@literal null}
      */
     public Chapter(String title, Text text) {
-        Attributes.setTitle(this, title);
+        setTitle(this, title);
         setText(text);
     }
 
@@ -96,9 +94,9 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
      * @throws NullPointerException if the argument list contains <code>null</code>
      */
     public Chapter(String title, Flob cover, Text intro, Text text) {
-        Attributes.setTitle(this, title);
-        Attributes.setCover(this, cover);
-        Attributes.setIntro(this, intro);
+        setTitle(this, title);
+        setCover(this, cover);
+        setIntro(this, intro);
         setText(text);
     }
 
@@ -110,15 +108,28 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
      * Attributes of the chapter.
      */
     @Getter
-    private VariantMap attributes = new VariantMap(new HashMap<String, Object>(), Attributes.variantValidator);
+    private VariantMap attributes = new VariantMap(new HashMap<String, Object>(), variantValidator);
 
     /**
      * Content of the chapter.
      */
     @Getter
-    @Setter
-    @NonNull
     private Text text;
+
+    public final void setText(@NonNull Text text) {
+        this.text = text;
+    }
+
+    /**
+     * Extra data field used by user.
+     */
+    @Setter
+    private Object tag;
+
+    @SuppressWarnings("unchecked")
+    public final <T> T getTag() {
+        return (T) tag;
+    }
 
     // ****************************
     // ** Sub-chapter operations **
@@ -149,9 +160,9 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
     private List<Chapter> chapters = new ArrayList<>();
 
     private Chapter checkChapter(@NonNull Chapter chapter) {
-        Validate.require(chapter.getParent() == null, "Chapter already in a certain section: %s", chapter);
-        Validate.require(chapter != this, "Cannot add self to sub chapter list: %s", chapter);
-        Validate.require(chapter != getParent(), "Cannot add parent chapter to its sub chapter list: %s", chapter);
+        require(chapter != this, "Cannot add self to sub chapter list: %s", chapter);
+        require(chapter.getParent() == null, "Chapter already in a certain section: %s", chapter);
+        require(chapter != getParent(), "Cannot add parent chapter to its sub chapter list: %s", chapter);
         return chapter;
     }
 
@@ -287,7 +298,7 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
     }
 
     @Override
-    public List<Chapter> items() {
+    public List<Chapter> getChildren() {
         return Collections.unmodifiableList(chapters);
     }
 
@@ -355,7 +366,7 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
      */
     public void cleanup() {
         for (val work : cleaners) {
-            work.consume(this);
+            work.accept(this);
         }
         cleaners.clear();
         // remove all attributes
@@ -373,19 +384,16 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
     protected void finalize() throws Throwable {
         super.finalize();
         if (!cleaned) {
-            Log.e("Book", "*** BUG: Chapter \"{0}@{1}\" not cleaned ***\n", Attributes.getTitle(this), hashCode());
+            Log.e("Book", "*** BUG: Chapter \"{0}@{1}\" not cleaned ***\n", getTitle(this), hashCode());
         }
     }
 
     @SuppressWarnings("unchecked")
+    @SneakyThrows({InstantiationException.class, IllegalAccessException.class})
     protected void dumpTo(Chapter chapter) {
         chapter.text = text;
         chapter.attributes = attributes.clone();
-        try {
-            chapter.chapters = chapters.getClass().newInstance();
-        } catch (InstantiationException | IllegalAccessException e) {
-            throw new InternalError();
-        }
+        chapter.chapters = chapters.getClass().newInstance();
         chapter.chapters.addAll(chapters);
     }
 

@@ -29,12 +29,12 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
-import pw.phylame.commons.format.Render;
-import pw.phylame.commons.io.HttpUtils;
-import pw.phylame.commons.io.IOUtils;
-import pw.phylame.commons.log.Log;
-import pw.phylame.commons.util.StringUtils;
-import pw.phylame.commons.util.Validate;
+import jclp.text.Render;
+import jclp.io.HttpUtils;
+import jclp.io.IOUtils;
+import jclp.log.Log;
+import jclp.util.StringUtils;
+import jclp.util.Validate;
 
 import java.io.IOException;
 import java.io.InputStream;

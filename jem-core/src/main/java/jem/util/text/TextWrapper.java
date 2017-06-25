@@ -29,35 +29,34 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TextWrapper implements Text {
     @NonNull
-    private final Text text;
+    private final Text actual;
 
     public final Text getTarget() {
-        return text;
+        return actual;
     }
 
     @Override
     public Iterator<String> iterator() {
-        return text.iterator();
+        return actual.iterator();
     }
 
     @Override
     public String getType() {
-        return text.getType();
+        return actual.getType();
     }
 
     @Override
     public String getText() {
-        return text.getText();
+        return actual.getText();
     }
 
     @Override
     public List<String> getLines(boolean skipEmpty) {
-        return text.getLines(skipEmpty);
+        return actual.getLines(skipEmpty);
     }
 
     @Override
     public long writeTo(Writer writer) throws IOException {
-        return text.writeTo(writer);
+        return actual.writeTo(writer);
     }
-
 }

@@ -9,14 +9,14 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
-import pw.phylame.commons.io.IOUtils;
+import jclp.io.IOUtils;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.LinkedList;
 
 import static jem.Attributes.*;
-import static pw.phylame.commons.util.StringUtils.*;
+import static jclp.util.StringUtils.*;
 
 public class M_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
     private static final String HOST = "http://m.qidian.com";

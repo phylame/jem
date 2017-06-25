@@ -23,7 +23,7 @@ import jem.epm.Parser;
 import jem.epm.impl.EpmBase;
 import jem.util.JemException;
 import lombok.val;
-import pw.phylame.commons.util.Validate;
+import jclp.util.Validate;
 
 import java.io.File;
 import java.io.IOException;

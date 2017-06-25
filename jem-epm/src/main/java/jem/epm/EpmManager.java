@@ -18,16 +18,16 @@
 
 package jem.epm;
 
+import jclp.function.BiFunction;
+import jclp.io.PathUtils;
+import jclp.log.Log;
+import jclp.util.Implementor;
+import jclp.util.MiscUtils;
 import jem.Book;
 import jem.util.JemException;
 import jem.util.UnsupportedFormatException;
 import lombok.NonNull;
 import lombok.val;
-import pw.phylame.commons.function.BiFunction;
-import pw.phylame.commons.io.PathUtils;
-import pw.phylame.commons.log.Log;
-import pw.phylame.commons.util.Implementor;
-import pw.phylame.commons.util.MiscUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,8 +37,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static pw.phylame.commons.util.CollectionUtils.isEmpty;
-import static pw.phylame.commons.util.CollectionUtils.setOf;
+import static jclp.util.CollectionUtils.isEmpty;
+import static jclp.util.CollectionUtils.setOf;
 
 public final class EpmManager {
     private EpmManager() {
@@ -287,7 +287,7 @@ public final class EpmManager {
         try {
             parser = parserFor(format);
         } catch (ReflectiveOperationException e) {
-            Log.e(TAG, e);
+            Log.e(TAG, "cannot create parser", e);
         }
         if (parser == null) {
             throw new UnsupportedFormatException(format, "Unsupported format '" + format + "'");
@@ -333,7 +333,7 @@ public final class EpmManager {
         try {
             maker = makerFor(format);
         } catch (ReflectiveOperationException e) {
-            Log.e(TAG, e);
+            Log.e(TAG, "cannot create parser", e);
         }
         if (maker == null) {
             throw new UnsupportedFormatException(format, "Unsupported format '" + format + "'");

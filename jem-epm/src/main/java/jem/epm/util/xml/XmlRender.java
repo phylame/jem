@@ -23,7 +23,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.xmlpull.v1.XmlSerializer;
-import pw.phylame.commons.util.StringUtils;
+import jclp.util.StringUtils;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -100,7 +100,7 @@ public class XmlRender {
         if (count <= 0) {
             return;
         }
-        serializer.text(StringUtils.multiplyOf(config.indentString, count));
+        serializer.text(StringUtils.duplicated(config.indentString, count));
     }
 
     private void newNode() throws IOException {

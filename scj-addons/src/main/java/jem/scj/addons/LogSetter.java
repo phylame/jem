@@ -24,13 +24,13 @@ import jem.scj.app.SCJPlugin;
 import lombok.val;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
-import pw.phylame.commons.format.Render;
-import pw.phylame.commons.log.Log;
-import pw.phylame.commons.log.LogLevel;
-import pw.phylame.commons.util.StringUtils;
-import pw.phylame.qaf.cli.CLIDelegate;
-import pw.phylame.qaf.cli.Initializer;
-import pw.phylame.qaf.core.Metadata;
+import jclp.log.Log;
+import jclp.log.Level;
+import jclp.text.Render;
+import jclp.util.StringUtils;
+import qaf.cli.CLIDelegate;
+import qaf.cli.Initializer;
+import qaf.core.Metadata;
 
 import java.util.Arrays;
 
@@ -54,15 +54,18 @@ public class LogSetter extends SCJPlugin implements Initializer {
 
     @Override
     public void perform(CLIDelegate delegate, CommandLine cmd) {
-        val level = LogLevel.forName(cmd.getOptionValue(OPTION), Log.getLevel());
-        sci.getContext().put(OPTION, level);
-        Log.setLevel(level);
+        try {
+            val level = Level.valueOf(cmd.getOptionValue(OPTION).toUpperCase());
+            sci.getContext().put(OPTION, level);
+            Log.setLevel(level);
+        } catch (IllegalArgumentException ignored) {
+        }
     }
 
     private void addSetOption() {
         String level = config.rawFor(CONFIG_KEY);
         if (StringUtils.isEmpty(level)) {
-            level = Log.getLevel().getName();
+            level = Log.getLevel().name().toLowerCase();
         }
         sci.addOption(Option.builder(OPTION)
                         .longOpt(OPTION_LONG)
@@ -74,10 +77,10 @@ public class LogSetter extends SCJPlugin implements Initializer {
     }
 
     public static String makeLevelList() {
-        return StringUtils.join(", ", Arrays.asList(LogLevel.values()), new Render<LogLevel>() {
+        return StringUtils.join(", ", Arrays.asList(Level.values()), new Render<Level>() {
             @Override
-            public String render(LogLevel level) {
-                return '\"' + level.getName() + '\"';
+            public String render(Level level) {
+                return '\"' + level.name().toLowerCase() + '\"';
             }
         });
     }
@@ -85,7 +88,10 @@ public class LogSetter extends SCJPlugin implements Initializer {
     private void setByConfig() {
         val level = config.rawFor(CONFIG_KEY);
         if (StringUtils.isNotEmpty(level)) {
-            Log.setLevel(LogLevel.forName(level, LogLevel.DEFAULT));
+            try {
+                Log.setLevel(Level.valueOf(level.toUpperCase()));
+            } catch (IllegalArgumentException ignored) {
+            }
         }
     }
 }

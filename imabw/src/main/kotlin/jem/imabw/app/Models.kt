@@ -16,6 +16,7 @@
 
 package jem.imabw.app
 
+import jclp.io.PathUtils
 import jem.Book
 import jem.Chapter
 import jem.epm.EpmManager
@@ -23,10 +24,8 @@ import jem.imabw.app.ui.Dialogs
 import jem.imabw.app.ui.Viewer
 import jem.kotlin.get
 import jem.kotlin.title
-import pw.phylame.commons.io.PathUtils
-import pw.phylame.qaf.core.App
-import pw.phylame.qaf.core.tr
-import pw.phylame.qaf.ixin.Command
+import qaf.core.App
+import qaf.ixin.Command
 import java.io.File
 import java.nio.charset.Charset
 import java.util.*
@@ -284,7 +283,7 @@ object Manager {
 
     fun maybeSaving(title: String): Boolean = if (!(task?.isModified ?: false)) {// not modified
         true
-    } else when (Dialogs.saving(Viewer, title, tr("d.askSaving.tip"))) { // ask for saving
+    } else when (Dialogs.saving(Viewer, title, App.tr("d.askSaving.tip"))) { // ask for saving
         Dialogs.OPTION_DISCARD -> true
         Dialogs.OPTION_OK -> saveFile()
         else -> false
@@ -292,11 +291,11 @@ object Manager {
 
     fun openBook(title: String, param: EpmInParam) {
         if (!param.file.exists()) {
-            Dialogs.error(Viewer, title, tr("d.openBook.fileNotExist", param.file))
+            Dialogs.error(Viewer, title, App.tr("d.openBook.fileNotExist", param.file))
             return
         }
         if (!EpmManager.hasParser(param.format)) {
-            Dialogs.error(Viewer, title, tr("d.openBook.unsupportedFormat", param.format))
+            Dialogs.error(Viewer, title, App.tr("d.openBook.unsupportedFormat", param.format))
             return
         }
         Books.openBook(title, true, arrayOf(param), object : OpeningObserver() {
@@ -319,7 +318,7 @@ object Manager {
     }
 
     fun openFile(file: File?) {
-        val title = tr("d.openBook.title")
+        val title = App.tr("d.openBook.title")
         if (!maybeSaving(title)) {
             return
         }
@@ -336,7 +335,7 @@ object Manager {
     }
 
     fun newFile(name: String?) {
-        val title = tr("d.newBook.title")
+        val title = App.tr("d.newBook.title")
         if (!maybeSaving(title)) {
             return
         }
@@ -400,7 +399,7 @@ object Manager {
 
     @Command(EXIT_APP)
     fun exitApp() {
-        if (!maybeSaving(tr("d.exitApp.title"))) {
+        if (!maybeSaving(App.tr("d.exitApp.title"))) {
             return
         }
         task?.cleanup()

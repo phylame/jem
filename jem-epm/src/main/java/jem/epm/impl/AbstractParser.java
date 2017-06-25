@@ -61,7 +61,7 @@ public abstract class AbstractParser<I extends Closeable, C extends EpmConfig> e
                 throw E.forParser("'parse(I, C)' of '%s' returned null", getClass().getName());
             }
         } catch (IOException | JemException | RuntimeException e) {
-            cleaner.consume(null);
+            cleaner.accept(null);
             throw e;
         }
         // close the input when book is in cleanup

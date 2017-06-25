@@ -27,8 +27,8 @@ import lombok.val;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
-import pw.phylame.commons.util.DateUtils;
-import pw.phylame.commons.util.Validate;
+import jclp.util.DateUtils;
+import jclp.util.Validate;
 
 import java.io.IOException;
 import java.net.URL;
@@ -36,7 +36,7 @@ import java.util.Date;
 import java.util.LinkedList;
 
 import static jem.Attributes.*;
-import static pw.phylame.commons.util.StringUtils.*;
+import static jclp.util.StringUtils.*;
 
 public class WWW_MANGG_COM extends CrawlerProvider implements Identifiable {
     private static final String HOST = "http://www.mangg.com";

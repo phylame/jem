@@ -33,7 +33,7 @@ import java.net.URL;
 import java.util.LinkedList;
 
 import static jem.Attributes.*;
-import static pw.phylame.commons.util.StringUtils.*;
+import static jclp.util.StringUtils.*;
 
 public class WWW_ZHULANG_COM extends CrawlerProvider implements Identifiable {
     private static final String HOST = "http://www.zhulang.com";

@@ -22,8 +22,8 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import org.jsoup.nodes.Document;
-import pw.phylame.commons.cache.Cacheable;
-import pw.phylame.commons.cache.InlineCache;
+import jclp.cache.Cacheable;
+import jclp.cache.InlineCache;
 
 import java.lang.ref.WeakReference;
 import java.util.concurrent.atomic.AtomicInteger;

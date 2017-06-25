@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding" native2AsciiForPropertiesFiles="true" defaultCharsetForPropertiesFiles="UTF-8">
+    <file url="file://$PROJECT_DIR$" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/crawler-addons" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/imabw" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/jem-core" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/jem-crawler" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/jem-epm" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/jem-formats" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/jem-kotlin" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/scj" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/scj-addons" charset="UTF-8" />
+    <file url="PROJECT" charset="UTF-8" />
+  </component>
+</project>

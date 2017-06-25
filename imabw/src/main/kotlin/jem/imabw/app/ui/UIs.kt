@@ -22,11 +22,11 @@ import jem.imabw.app.ui.editor.TabbedEditor
 import jem.imabw.app.ui.tree.ContentsTree
 import jem.kotlin.author
 import jem.kotlin.title
-import pw.phylame.qaf.core.Settings
-import pw.phylame.qaf.core.tr
-import pw.phylame.qaf.ixin.*
-import pw.phylame.qaf.swing.center
-import pw.phylame.qaf.swing.east
+import qaf.core.App
+import qaf.core.Settings
+import qaf.ixin.*
+import qaf.swing.center
+import qaf.swing.east
 import java.awt.Component
 import java.awt.event.ActionEvent
 import java.awt.event.WindowAdapter
@@ -70,7 +70,7 @@ interface Editable {
     }
 }
 
-object Viewer : IForm(tr("app.name"), Settings("$SETTINGS_DIR/snap")) {
+object Viewer : IForm(App.tr("app.name"), Settings("$SETTINGS_DIR/snap")) {
     private const val DIVIDER_SIZE_KEY = "form.divider.size"
     private const val DIVIDER_LOCATION_KEY = "form.divider.location"
     private const val SIDE_BAR_VISIBLE_KEY = "form.sidebar.visible"
@@ -242,12 +242,12 @@ object Viewer : IForm(tr("app.name"), Settings("$SETTINGS_DIR/snap")) {
             val file = task.inParam?.file
             if (file != null) {
                 if (task.inParam?.format == null) {
-                    b.append('[').append(tr("viewer.title.imported")).append("] - ")
+                    b.append('[').append(App.tr("viewer.title.imported")).append("] - ")
                 }
                 b.append(file.path).append(" - ")
             }
         }
-        b.append(tr("app.name")).append(" ").append(APP_VERSION)
+        b.append(App.tr("app.name")).append(" ").append(APP_VERSION)
         title = b.toString()
     }
 
@@ -291,7 +291,7 @@ object Viewer : IForm(tr("app.name"), Settings("$SETTINGS_DIR/snap")) {
     private class OpenHistortAction(val path: String) : AbstractAction() {
         init {
             this[Action.NAME] = path
-            this[Action.LONG_DESCRIPTION] = tr("openHistory.details", path)
+            this[Action.LONG_DESCRIPTION] = App.tr("openHistory.details", path)
         }
 
         override fun actionPerformed(e: ActionEvent) {

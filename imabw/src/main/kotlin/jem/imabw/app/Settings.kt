@@ -16,12 +16,12 @@
 
 package jem.imabw.app
 
-import pw.phylame.commons.log.LogLevel
-import pw.phylame.qaf.core.App
-import pw.phylame.qaf.core.DebugLevel
-import pw.phylame.qaf.core.Settings
-import pw.phylame.qaf.ixin.Ixin
-import pw.phylame.qaf.ixin.fileFor
+import jclp.log.Level
+import qaf.core.App
+import qaf.core.Settings
+import qaf.core.Verbose
+import qaf.ixin.Ixin
+import qaf.ixin.fileFor
 import java.awt.Color
 import java.awt.Font
 import java.util.*
@@ -40,9 +40,9 @@ object AppSettings : Settings("$SETTINGS_DIR/settings") {
 
     var appLocale: Locale by delegated(Locale.getDefault(), "app.locale")
 
-    var logLevel by delegated(LogLevel.INFO.name, "app.log.level")
+    var logLevel by delegated(Level.INFO.name, "app.log.level")
 
-    val debugLevel by delegated(DebugLevel.ECHO.name, "app.debug.level")
+    val debugLevel by delegated(Verbose.ECHO.name, "app.debug.level")
 
     var isHistoryEnable by delegated(true, "app.history.enable")
 

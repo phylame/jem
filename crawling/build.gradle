@@ -26,8 +26,8 @@ repositories {
 }
 
 dependencies {
-    compile "pw.phylame.qaf:qaf-ixin:$qaf_version"
-    compile "pw.phylame.qaf:kotlin-swing:$qaf_version"
+    compile "qaf:qaf-ixin:$qaf_version"
+    compile "qaf:kotlin-swing:$qaf_version"
     compile "pw.phylame.jem:jem-kotlin:$jem_version"
     compile "pw.phylame.jem:jem-crawler:$jem_version"
     compile "pw.phylame.jem:jem-formats:$jem_version"

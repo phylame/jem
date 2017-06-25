@@ -9,13 +9,13 @@ import jem.util.flob.Flobs;
 import lombok.val;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
-import pw.phylame.commons.io.PathUtils;
+import jclp.io.PathUtils;
 
 import java.io.IOException;
 import java.net.URL;
 
 import static jem.Attributes.*;
-import static pw.phylame.commons.util.StringUtils.*;
+import static jclp.util.StringUtils.*;
 
 public class M_MOTIE_COM extends CrawlerProvider implements Identifiable {
     private static final String HOST = "http://m.motie.com";
@@ -77,7 +77,7 @@ public class M_MOTIE_COM extends CrawlerProvider implements Identifiable {
                 val chapter = new Chapter(a.text().trim());
                 String url;
                 if (li.childNodeSize() > 1 && li.child(1).tagName().equals("img")) { // VIP
-                    url = EMPTY_TEXT;
+                    url = "";
                 } else {
                     url = a.attr("href");
                 }

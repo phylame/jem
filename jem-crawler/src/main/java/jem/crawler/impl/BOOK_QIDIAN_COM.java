@@ -12,8 +12,8 @@ import java.io.IOException;
 import java.net.URL;
 
 import static jem.Attributes.*;
-import static pw.phylame.commons.util.StringUtils.firstPartOf;
-import static pw.phylame.commons.util.StringUtils.secondPartOf;
+import static jclp.util.StringUtils.firstPartOf;
+import static jclp.util.StringUtils.secondPartOf;
 
 public class BOOK_QIDIAN_COM extends QIDIAN_COM implements Identifiable {
     private static final String HOST = "http://book.qidian.com";

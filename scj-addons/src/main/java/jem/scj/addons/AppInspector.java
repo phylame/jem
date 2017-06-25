@@ -26,18 +26,18 @@ import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 import lombok.val;
 import org.apache.commons.cli.Option;
-import pw.phylame.commons.function.Prediction;
-import pw.phylame.commons.function.Provider;
-import pw.phylame.commons.log.LogLevel;
-import pw.phylame.commons.util.CollectionUtils;
-import pw.phylame.commons.util.StringUtils;
-import pw.phylame.commons.value.Lazy;
-import pw.phylame.qaf.cli.CLIDelegate;
-import pw.phylame.qaf.cli.Command;
-import pw.phylame.qaf.cli.PropertiesFetcher;
-import pw.phylame.qaf.core.App;
-import pw.phylame.qaf.core.Metadata;
-import pw.phylame.qaf.core.Plugin;
+import jclp.function.Predicate;
+import jclp.function.Provider;
+import jclp.log.Level;
+import jclp.util.CollectionUtils;
+import jclp.util.StringUtils;
+import jclp.value.Lazy;
+import qaf.cli.CLIDelegate;
+import qaf.cli.Command;
+import qaf.cli.PropertiesFetcher;
+import qaf.core.App;
+import qaf.core.Metadata;
+import qaf.core.Plugin;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -86,10 +86,10 @@ public class AppInspector extends SCJPlugin {
                     width = Math.max(width, printPlugin(plugin, b));
                     items.add(b.toString());
                 }
-                out.println(StringUtils.multiplyOf("-", width));
+                out.println(StringUtils.duplicated("-", width));
                 for (val item : items) {
                     out.print(item);
-                    out.println(StringUtils.multiplyOf("-", width));
+                    out.println(StringUtils.duplicated("-", width));
                 }
                 return 0;
             }
@@ -118,7 +118,7 @@ public class AppInspector extends SCJPlugin {
 
     private int printPlugin(Plugin plugin, StringBuilder out) {
         val pattern = "%" + config.get("app.plugin.nameWidth", 8, Integer.class) + "s: %s";
-        String text = formatItem(pattern, "id", plugin.getId());
+        String text = formatItem(pattern, "id", plugin.getUuid());
         int width = text.length();
         val nl = '\n';
         out.append(text).append(nl);
@@ -138,25 +138,27 @@ public class AppInspector extends SCJPlugin {
     }
 
     private class ConfigSetter extends PropertiesFetcher implements Command {
-        private final Lazy<Map<String, Prediction<String>>> validators = new Lazy<>(
-                new Provider<Map<String, Prediction<String>>>() {
+        private final Lazy<Map<String, Predicate<String>>> validators = new Lazy<>(
+                new Provider<Map<String, Predicate<String>>>() {
                     @Override
-                    public Map<String, Prediction<String>> provide() throws Exception {
-                        return CollectionUtils.<String, Prediction<String>>mapOf(
-                                "app.debug.level", new Prediction<String>() {
+                    public Map<String, Predicate<String>> provide() throws Exception {
+                        return CollectionUtils.mapOf(
+                                "app.debug.level", new Predicate<String>() {
                                     @Override
                                     public boolean test(String i) {
                                         return AppKt.checkDebugLevel(i);
                                     }
                                 },
-                                "app.log.level", new Prediction<String>() {
+                                "app.log.level", new Predicate<String>() {
                                     @Override
                                     public boolean test(String i) {
-                                        if (LogLevel.forName(i, null) == null) {
+                                        try {
+                                            Level.valueOf(i.toUpperCase());
+                                            return true;
+                                        } catch (IllegalArgumentException e) {
                                             app.error(tr("logSetter.invalidLevel", i, LogSetter.makeLevelList()));
                                             return false;
                                         }
-                                        return true;
                                     }
                                 });
                     }

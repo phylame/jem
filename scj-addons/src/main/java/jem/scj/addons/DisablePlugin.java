@@ -24,13 +24,13 @@ import jem.scj.app.SCJPlugin;
 import lombok.val;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
-import pw.phylame.commons.io.IOUtils;
-import pw.phylame.commons.log.Log;
-import pw.phylame.commons.util.CollectionUtils;
-import pw.phylame.qaf.cli.CLIDelegate;
-import pw.phylame.qaf.cli.Command;
-import pw.phylame.qaf.cli.Initializer;
-import pw.phylame.qaf.core.Metadata;
+import jclp.io.IOUtils;
+import jclp.log.Log;
+import jclp.util.CollectionUtils;
+import qaf.cli.CLIDelegate;
+import qaf.cli.Command;
+import qaf.cli.Initializer;
+import qaf.core.Metadata;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -73,7 +73,7 @@ public class DisablePlugin extends SCJPlugin implements Initializer, Command {
             } catch (FileNotFoundException e) {
                 Log.d(TAG, "not found blacklist file: %s", config.getBlacklist());
             } catch (IOException e) {
-                Log.d(TAG, e);
+                Log.d(TAG, "cannot load blacklist", e);
             }
             if (!set.isEmpty()) {
                 try (val writer = new FileWriter(config.getBlacklist())) {
@@ -81,7 +81,7 @@ public class DisablePlugin extends SCJPlugin implements Initializer, Command {
                         writer.append(path).append('\n');
                     }
                 } catch (IOException e) {
-                    Log.d(TAG, e);
+                    Log.d(TAG, "cannot write blacklist", e);
                 }
             }
         }

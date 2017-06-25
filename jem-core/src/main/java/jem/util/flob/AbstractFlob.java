@@ -21,8 +21,8 @@ package jem.util.flob;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;
-import pw.phylame.commons.io.IOUtils;
-import pw.phylame.commons.io.PathUtils;
+import jclp.io.IOUtils;
+import jclp.io.PathUtils;
 
 import java.io.IOException;
 import java.io.OutputStream;

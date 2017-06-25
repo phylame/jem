@@ -26,22 +26,24 @@ import jem.util.text.Text;
 import jem.util.text.Texts;
 import lombok.NonNull;
 import lombok.val;
-import pw.phylame.commons.log.Log;
-import pw.phylame.commons.util.Exceptions;
+import jclp.log.Log;
+import jclp.util.Exceptions;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static pw.phylame.commons.util.CollectionUtils.propertiesFor;
-import static pw.phylame.commons.util.CollectionUtils.update;
-import static pw.phylame.commons.util.StringUtils.EMPTY_TEXT;
-import static pw.phylame.commons.util.StringUtils.join;
+import static jclp.util.CollectionUtils.propertiesFor;
+import static jclp.util.CollectionUtils.update;
+import static jclp.util.StringUtils.join;
 
 /**
  * Declares name of standard attributes of book(or chapter) supported by Jem.
  */
 public final class Attributes {
+    private static final String TAG = "Attributes";
+
+    // standard attributes
     public static final String AUTHOR = "author";
     public static final String BINDING = "binding";
     public static final String COVER = "cover";
@@ -67,8 +69,8 @@ public final class Attributes {
     public static final Validator variantValidator = new Validator() {
         @Override
         public void validate(String name, Object value) throws RuntimeException {
-            val type = typeOf(name);
-            if (type == null) { // unknown attribute name, don't validate
+            val type = typeOf(name); // get the type of the attribute
+            if (type == null) { // unknown attribute, don't validate
                 return;
             }
             if (!type.equals(Variants.typeOf(value))) {
@@ -77,14 +79,14 @@ public final class Attributes {
         }
     };
 
-    private static final Map<String, String> typeMapping;
+    private static final Map<String, String> typeMappings;
 
     static {
-        typeMapping = new ConcurrentHashMap<>();
+        typeMappings = new ConcurrentHashMap<>();
         try {
-            update(typeMapping, propertiesFor("!jem/util/attributes.properties"));
+            update(typeMappings, propertiesFor("!jem/attributes.properties"));
         } catch (IOException e) {
-            Log.d("Attributes", e);
+            Log.d(TAG, "error occurred when initialization", e);
         }
     }
 
@@ -94,7 +96,7 @@ public final class Attributes {
      * @return set of attribute names
      */
     public static Set<String> supportedNames() {
-        return typeMapping.keySet();
+        return typeMappings.keySet();
     }
 
     /**
@@ -104,11 +106,7 @@ public final class Attributes {
      * @return the text, or {@literal null} if the name is unknown
      */
     public static String titleOf(@NonNull String name) {
-        try {
-            return M.tr("attribute." + name);
-        } catch (MissingResourceException e) {
-            return null;
-        }
+        return M.optTr("attribute." + name, null);
     }
 
     /**
@@ -118,7 +116,7 @@ public final class Attributes {
      * @param type name of type
      */
     public static void mapType(@NonNull String name, String type) {
-        typeMapping.put(name, Variants.ensureRegistered(type));
+        typeMappings.put(name, Variants.ensureRegistered(type));
     }
 
     /**
@@ -128,7 +126,7 @@ public final class Attributes {
      * @return the type string
      */
     public static String typeOf(String name) {
-        return typeMapping.get(name);
+        return typeMappings.get(name);
     }
 
     /**
@@ -145,7 +143,7 @@ public final class Attributes {
     public static final String VALUES_SEPARATOR = ";";
 
     public static List<String> getValues(Chapter chapter, String name) {
-        val value = chapter.getAttributes().get(name, EMPTY_TEXT);
+        val value = chapter.getAttributes().get(name, "");
         return !value.isEmpty() ? Arrays.asList(value.split(VALUES_SEPARATOR)) : Collections.<String>emptyList();
     }
 
@@ -154,7 +152,7 @@ public final class Attributes {
     }
 
     public static String getTitle(Chapter chapter) {
-        return chapter.getAttributes().get(TITLE, EMPTY_TEXT);
+        return chapter.getAttributes().get(TITLE, "");
     }
 
     public static void setTitle(Chapter chapter, String title) {
@@ -194,7 +192,7 @@ public final class Attributes {
     }
 
     public static String getAuthor(Chapter chapter) {
-        return chapter.getAttributes().get(AUTHOR, EMPTY_TEXT);
+        return chapter.getAttributes().get(AUTHOR, "");
     }
 
     public static void setAuthor(Chapter chapter, String author) {
@@ -222,7 +220,7 @@ public final class Attributes {
     }
 
     public static String getGenre(Chapter chapter) {
-        return chapter.getAttributes().get(GENRE, EMPTY_TEXT);
+        return chapter.getAttributes().get(GENRE, "");
     }
 
     public static void setGenre(Chapter chapter, String genre) {
@@ -238,7 +236,7 @@ public final class Attributes {
     }
 
     public static String getPublisher(Chapter chapter) {
-        return chapter.getAttributes().get(PUBLISHER, EMPTY_TEXT);
+        return chapter.getAttributes().get(PUBLISHER, "");
     }
 
     public static void setPublisher(Chapter chapter, String publisher) {
@@ -246,7 +244,7 @@ public final class Attributes {
     }
 
     public static String getRights(Chapter chapter) {
-        return chapter.getAttributes().get(RIGHTS, EMPTY_TEXT);
+        return chapter.getAttributes().get(RIGHTS, "");
     }
 
     public static void setRights(Chapter chapter, String rights) {
@@ -254,7 +252,7 @@ public final class Attributes {
     }
 
     public static String getState(Chapter chapter) {
-        return chapter.getAttributes().get(STATE, EMPTY_TEXT);
+        return chapter.getAttributes().get(STATE, "");
     }
 
     public static void setState(Chapter chapter, String state) {
@@ -262,7 +260,7 @@ public final class Attributes {
     }
 
     public static String getKeywords(Chapter chapter) {
-        return chapter.getAttributes().get(KEYWORDS, EMPTY_TEXT);
+        return chapter.getAttributes().get(KEYWORDS, "");
     }
 
     public static void setKeywords(Chapter chapter, String keywords) {
@@ -274,7 +272,7 @@ public final class Attributes {
     }
 
     public static String getVendor(Chapter chapter) {
-        return chapter.getAttributes().get(VENDOR, EMPTY_TEXT);
+        return chapter.getAttributes().get(VENDOR, "");
     }
 
     public static void setVendor(Chapter chapter, String vendor) {
@@ -282,7 +280,7 @@ public final class Attributes {
     }
 
     public static String getISBN(Chapter chapter) {
-        return chapter.getAttributes().get(ISBN, EMPTY_TEXT);
+        return chapter.getAttributes().get(ISBN, "");
     }
 
     public static void setISBN(Chapter chapter, String isbn) {
@@ -290,7 +288,7 @@ public final class Attributes {
     }
 
     public static String getProtagonists(Chapter chapter) {
-        return chapter.getAttributes().get(PROTAGONISTS, EMPTY_TEXT);
+        return chapter.getAttributes().get(PROTAGONISTS, "");
     }
 
     public static void setProtagonists(Chapter chapter, String protagonists) {
@@ -302,7 +300,7 @@ public final class Attributes {
     }
 
     public static String getTranslators(Chapter chapter) {
-        return chapter.getAttributes().get(TRANSLATORS, EMPTY_TEXT);
+        return chapter.getAttributes().get(TRANSLATORS, "");
     }
 
     public static void setTranslators(Chapter chapter, String translators) {

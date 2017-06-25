@@ -33,7 +33,7 @@ import java.io.StringWriter;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 
-import static pw.phylame.commons.util.StringUtils.isEmpty;
+import static jclp.util.StringUtils.isEmpty;
 
 /**
  * ePub 2.0 implements.

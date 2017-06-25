@@ -36,13 +36,12 @@ package jem.imabw.app.ui
 
 import com.toedter.calendar.JCalendar
 import com.toedter.components.JLocaleChooser
+import jclp.io.PathUtils
+import jclp.util.Exceptions
 import jem.Book
 import jem.Chapter
-import pw.phylame.commons.io.PathUtils
-import pw.phylame.qaf.core.App
-import pw.phylame.qaf.core.dump
-import pw.phylame.qaf.core.tr
-import pw.phylame.qaf.ixin.*
+import qaf.core.App
+import qaf.ixin.*
 import java.awt.*
 import java.awt.event.ActionEvent
 import java.io.File
@@ -102,7 +101,7 @@ internal class MessageDialog : IOptionDialog {
     var style: MessageStyle = MessageStyle.None
         set(value) {
             if (value.icon.isNotEmpty()) {
-                icon = iconFor(":dialog/" + value.icon + ".png")
+                icon = iconFor("dialog/" + value.icon + ".png")
             }
             setDecorationIfNeed(value.decoration)
             field = value
@@ -291,7 +290,7 @@ internal class LongInputDialog : InputDialog<String, JTextArea> {
     }
 
     private fun loadFile() {
-        val file = Dialogs.openFile(this, tr("d.input.openFile"), false)?.file ?: null
+        val file = Dialogs.openFile(this, App.tr("d.input.openFile"), false)?.file ?: null
         if (file != null) {
             texting.text = file.readText()
         }
@@ -323,7 +322,7 @@ internal class ErrorDialog : BaseDialog<Int> {
 
         val reportButton = JButton(object : IAction("d.error.buttonReport") {
             override fun actionPerformed(e: ActionEvent?) {
-                Dialogs.developing(this@ErrorDialog, tr("d.error.buttonReport" + tipTextSuffix))
+                Dialogs.developing(this@ErrorDialog, App.tr("d.error.buttonReport" + tipTextSuffix))
             }
         })
 
@@ -352,7 +351,7 @@ internal class ErrorDialog : BaseDialog<Int> {
 
     private fun createTextArea(e: Throwable): JTextArea {
         val text = JTextArea()
-        text.text = e.dump()
+        text.text = Exceptions.dumpToString(e)
         text.isEditable = false
         text.caretPosition = 0
         return text
@@ -618,7 +617,7 @@ object Dialogs {
     }
 
     fun setApproveButtonName(id: String) {
-        setApproveButtonName(tr(id), tr(id + IAction.Companion.tipTextSuffix))
+        setApproveButtonName(App.tr(id), App.tr(id + IAction.Companion.tipTextSuffix))
     }
 
     private fun selectedFile(): File {
@@ -672,7 +671,7 @@ object Dialogs {
             val file = selectedFile()
 
             if (file.exists() && askOverwrite) {
-                if (!confirm(parent, title, false, tr("d.saveFile.askOverwrite", file.path)).first) {
+                if (!confirm(parent, title, false, App.tr("d.saveFile.askOverwrite", file.path)).first) {
                     continue
                 }
             }
@@ -692,13 +691,13 @@ object Dialogs {
         val v = extensionDescriptions.getOrPut(key) {
             var name: String? = null
             try {
-                name = tr("common.extension." + key.toLowerCase())
+                name = App.tr("common.extension." + key.toLowerCase())
             } catch (e: MissingResourceException) {
                 App.error("no such extension key: $key")
             }
 
             if (name.isNullOrEmpty()) {
-                name = key.toUpperCase() + tr("common.extension.suffix")
+                name = key.toUpperCase() + App.tr("common.extension.suffix")
             }
             name!!
         }
@@ -824,7 +823,7 @@ object Dialogs {
     }
 
     fun developing(parent: Component, title: String? = null) {
-        info(parent, title ?: tr("app.name"), tr("d.feature.developing"))
+        info(parent, title ?: App.tr("app.name"), App.tr("d.feature.developing"))
     }
 
     fun browse(uri: String?) {
@@ -834,7 +833,7 @@ object Dialogs {
         try {
             Desktop.getDesktop().browse(URI(uri))
         } catch (ex: Exception) {
-            error(null, tr("app.name"), ex.message ?: "")
+            error(null, App.tr("app.name"), ex.message ?: "")
         }
 
     }

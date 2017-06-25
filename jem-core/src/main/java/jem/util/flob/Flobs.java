@@ -18,14 +18,14 @@
 
 package jem.util.flob;
 
+import jclp.io.IOUtils;
+import jclp.io.RAFInputStream;
+import jclp.util.Exceptions;
+import jclp.vdm.VdmEntry;
+import jclp.vdm.VdmReader;
 import jem.util.Variants;
 import lombok.Getter;
 import lombok.NonNull;
-import pw.phylame.commons.io.IOUtils;
-import pw.phylame.commons.io.RAFInputStream;
-import pw.phylame.commons.util.Exceptions;
-import pw.phylame.commons.vam.VamItem;
-import pw.phylame.commons.vam.VamReader;
 
 import java.io.*;
 import java.net.URL;
@@ -51,7 +51,7 @@ public final class Flobs {
         return new EntryFlob(zipFile, entry, mime);
     }
 
-    public static Flob forVam(@NonNull VamReader vam, @NonNull String entry, String mime) throws IOException {
+    public static Flob forVam(@NonNull VdmReader vam, @NonNull String entry, String mime) throws IOException {
         return new VamFlob(vam, entry, mime);
     }
 
@@ -70,7 +70,7 @@ public final class Flobs {
 
     public static class NormalFlob extends AbstractFlob {
         static {
-            Variants.mapType(NormalFlob.class, Variants.FLOB);
+            Variants.mapClass(NormalFlob.class, Variants.FLOB);
         }
 
         @Getter
@@ -101,16 +101,16 @@ public final class Flobs {
     private static class VamFlob extends AbstractFlob {
 
         static {
-            Variants.mapType(VamFlob.class, Variants.FLOB);
+            Variants.mapClass(VamFlob.class, Variants.FLOB);
         }
 
-        private final VamReader vam;
+        private final VdmReader vam;
         private final String entry;
-        private final VamItem item;
+        private final VdmEntry item;
 
-        VamFlob(VamReader vam, String entry, String mime) throws IOException {
+        VamFlob(VdmReader vam, String entry, String mime) throws IOException {
             super(mime);
-            item = vam.itemFor(entry);
+            item = vam.entryFor(entry);
             if (item == null) {
                 throw Exceptions.forIO("No such item in Vam: %s", entry);
             }
@@ -136,7 +136,7 @@ public final class Flobs {
 
     private static class EntryFlob extends AbstractFlob {
         static {
-            Variants.mapType(EntryFlob.class, Variants.FLOB);
+            Variants.mapClass(EntryFlob.class, Variants.FLOB);
         }
 
         private final ZipFile zip;
@@ -172,7 +172,7 @@ public final class Flobs {
      */
     public static class BlockFlob extends AbstractFlob {
         static {
-            Variants.mapType(BlockFlob.class, Variants.FLOB);
+            Variants.mapClass(BlockFlob.class, Variants.FLOB);
         }
 
         private final String name;
@@ -228,7 +228,7 @@ public final class Flobs {
 
     public static class URLFlob extends AbstractFlob {
         static {
-            Variants.mapType(URLFlob.class, Variants.FLOB);
+            Variants.mapClass(URLFlob.class, Variants.FLOB);
         }
 
         @Getter
@@ -257,7 +257,7 @@ public final class Flobs {
 
     private static class ByteFlob extends AbstractFlob {
         static {
-            Variants.mapType(ByteFlob.class, Variants.FLOB);
+            Variants.mapClass(ByteFlob.class, Variants.FLOB);
         }
 
         private final String name;

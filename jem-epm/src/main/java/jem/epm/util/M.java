@@ -19,7 +19,7 @@
 package jem.epm.util;
 
 import lombok.NonNull;
-import pw.phylame.commons.util.Linguist;
+import jclp.util.Linguist;
 
 public final class M {
     private M() {

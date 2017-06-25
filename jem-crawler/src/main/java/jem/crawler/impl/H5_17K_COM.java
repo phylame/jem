@@ -27,18 +27,18 @@ import org.json.JSONTokener;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
-import pw.phylame.commons.io.HttpUtils;
-import pw.phylame.commons.io.IOUtils;
-import pw.phylame.commons.io.PathUtils;
-import pw.phylame.commons.util.DateUtils;
+import jclp.io.HttpUtils;
+import jclp.io.IOUtils;
+import jclp.io.PathUtils;
+import jclp.util.DateUtils;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 
 import static jem.Attributes.*;
-import static pw.phylame.commons.util.StringUtils.join;
-import static pw.phylame.commons.util.StringUtils.trimmed;
+import static jclp.util.StringUtils.join;
+import static jclp.util.StringUtils.trimmed;
 
 public class H5_17K_COM extends CrawlerProvider implements Searchable, Identifiable {
     private static final String ENCODING = "UTF-8";

@@ -19,7 +19,7 @@
 package jem.crawler.util;
 
 import lombok.NonNull;
-import pw.phylame.commons.util.Linguist;
+import jclp.util.Linguist;
 
 /**
  * Internal message translator.

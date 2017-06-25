@@ -16,6 +16,9 @@
 
 package jem.imabw.app
 
+import jclp.io.FileUtils
+import jclp.io.PathUtils
+import jclp.log.Log
 import jem.Book
 import jem.Chapter
 import jem.epm.EpmManager
@@ -24,10 +27,7 @@ import jem.imabw.app.ui.OpenResult
 import jem.imabw.app.ui.Viewer
 import jem.imabw.app.ui.WaitingDialog
 import jem.util.UnsupportedFormatException
-import pw.phylame.commons.io.IOUtils
-import pw.phylame.commons.io.PathUtils
-import pw.phylame.commons.log.Log
-import pw.phylame.qaf.core.tr
+import qaf.core.App
 import rx.Observable
 import rx.Observer
 import rx.functions.Action0
@@ -103,9 +103,9 @@ object Books {
     fun dumpError(err: Throwable): String {
         val str: String
         if (err is UnsupportedFormatException) {
-            str = tr("d.error.unsupportedFormat", err.format)
+            str = App.tr("d.error.unsupportedFormat", err.format)
         } else if (err is FileNotFoundException) {
-            str = tr("d.error.fileNotExists")
+            str = App.tr("d.error.fileNotExists")
         } else {
             str = err.message ?: ""
         }
@@ -113,12 +113,12 @@ object Books {
     }
 
     fun showOpenError(parent: Component?, title: String, param: EpmInParam, err: Throwable) {
-        val str = tr("d.openBook.failed", param.file, dumpError(err))
+        val str = App.tr("d.openBook.failed", param.file, dumpError(err))
         Dialogs.trace(parent, title, str, err)
     }
 
     fun showSaveError(parent: Component?, title: String, param: EpmOutParam, e: Throwable) {
-        val str = tr("d.saveBook.failed", param.file, dumpError(e))
+        val str = App.tr("d.saveBook.failed", param.file, dumpError(e))
         Dialogs.trace(parent, title, str, e)
     }
 
@@ -149,10 +149,10 @@ object Books {
         if (cached) {
             try {
                 cache = File.createTempFile("_imabw_book_", ".tmp")
-                IOUtils.copyFile(param.file, cache)
+                FileUtils.copyFile(param.file, cache)
                 input = cache
             } catch (e: IOException) {
-                Log.e(TAG, e)
+                Log.e(TAG, "cannot create dump file", e)
                 if (cache != null) {
                     deleteFile(cache)
                     cache = null
@@ -180,7 +180,7 @@ object Books {
                  cached: Boolean,
                  params: Array<EpmInParam>,
                  observer: OpeningObserver) {
-        val dialog = Dialogs.waiting(Viewer, title, tr("d.openBook.tip"), "")
+        val dialog = Dialogs.waiting(Viewer, title, App.tr("d.openBook.tip"), "")
         dialog.cancellable = true
         dialog.progressable = true
         observer.dialog = dialog
@@ -223,13 +223,13 @@ object Books {
     fun newBook(parent: Component?, title: String, name: String?): Book? {
         var name = name
         if (name.isNullOrEmpty()) {
-            name = Dialogs.inputText(parent, title, tr("d.newBook.inputTip"), tr("d.newBook.defaultTitle"), false, false)
+            name = Dialogs.inputText(parent, title, App.tr("d.newBook.inputTip"), App.tr("d.newBook.defaultTitle"), false, false)
             if (name == null) {
                 return null
             }
         }
         val book = Book(name)
-        book.append(Chapter(tr("d.newChapter.defaultTitle")))
+        book.append(Chapter(App.tr("d.newChapter.defaultTitle")))
         return book
     }
 

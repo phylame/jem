@@ -27,7 +27,7 @@ import jem.epm.util.text.TextRender;
 import jem.formats.util.M;
 import jem.util.Build;
 import lombok.val;
-import pw.phylame.commons.io.IOUtils;
+import jclp.io.IOUtils;
 
 import java.io.DataOutputStream;
 import java.io.IOException;

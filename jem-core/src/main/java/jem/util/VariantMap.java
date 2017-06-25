@@ -18,12 +18,10 @@
 
 package jem.util;
 
-import lombok.Getter;
 import lombok.NonNull;
-import lombok.Setter;
 import lombok.val;
-import pw.phylame.commons.util.StringUtils;
-import pw.phylame.commons.util.Validate;
+import jclp.util.StringUtils;
+import jclp.util.Validate;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,8 +34,6 @@ public class VariantMap implements Cloneable {
         void validate(String name, Object value) throws RuntimeException;
     }
 
-    @Getter
-    @Setter
     private Validator validator = null;
 
     public VariantMap() {

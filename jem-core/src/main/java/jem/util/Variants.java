@@ -18,22 +18,26 @@
 
 package jem.util;
 
+import jem.util.flob.Flob;
 import jem.util.flob.Flobs;
 import jem.util.text.Text;
 import jem.util.text.Texts;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.val;
-import pw.phylame.commons.function.Function;
-import pw.phylame.commons.io.PathUtils;
-import pw.phylame.commons.log.Log;
-import pw.phylame.commons.util.CollectionUtils;
-import pw.phylame.commons.util.DateUtils;
-import pw.phylame.commons.util.StringUtils;
-import pw.phylame.commons.util.Validate;
+import jclp.function.Function;
+import jclp.function.Provider;
+import jclp.io.PathUtils;
+import jclp.log.Log;
+import jclp.util.DateUtils;
+import jclp.util.Validate;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+
+import static jclp.util.CollectionUtils.getOrPut;
+import static jclp.util.CollectionUtils.propertiesFor;
+import static jclp.value.Values.*;
 
 /**
  * Utilities for variants used by Jem.
@@ -41,6 +45,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class Variants {
     private Variants() {
     }
+
+    private static final String TAG = "Variants";
 
     // declare standard variant type aliases
     public static final String FLOB = "file";
@@ -52,28 +58,60 @@ public final class Variants {
     public static final String LOCALE = "locale";
     public static final String DATETIME = "datetime";
 
-    private static final String TAG = "Variants";
+    // names of registered variants
+    private static final Set<String> names = new HashSet<>();
 
-    private static final Set<String> variantNames = new LinkedHashSet<>();
+    // default value for variant name
+    private static final Map<String, Object> defaults = new HashMap<>();
 
-    private static final Map<Class<?>, String> typeMapping = new ConcurrentHashMap<>();
+    // variant name for java class
+    private static final Map<Class<?>, String> mappings = new IdentityHashMap<>();
 
     /**
      * Loads built-in variant mapping.
      */
     private static void initVariants() {
+        Collections.addAll(names, FLOB, TEXT, STRING, INTEGER, REAL, BOOLEAN, LOCALE, DATETIME);
+        defaults.put(FLOB, lazy(new Provider<Flob>() {
+            @Override
+            public Flob provide() throws Exception {
+                return Flobs.forEmpty("_empty_", PathUtils.UNKNOWN_MIME);
+            }
+        }));
+        defaults.put(TEXT, lazy(new Provider<Text>() {
+            @Override
+            public Text provide() throws Exception {
+                return Texts.forEmpty(Texts.PLAIN);
+            }
+        }));
+        defaults.put(BOOLEAN, Boolean.FALSE);
+        defaults.put(STRING, "");
+        defaults.put(INTEGER, 0);
+        defaults.put(REAL, 0.0D);
+        defaults.put(LOCALE, provider(new Provider<Locale>() {
+            @Override
+            public Locale provide() throws Exception {
+                return Locale.getDefault();
+            }
+        }));
+        defaults.put(DATETIME, provider(new Provider<Date>() {
+            @Override
+            public Date provide() throws Exception {
+                return new Date();
+            }
+        }));
         try {
-            val prop = CollectionUtils.propertiesFor("!jem/util/variants.properties");
+            val prop = propertiesFor("!jem/util/variants.properties");
             if (prop != null) {
-                String type;
+                String name;
                 for (val e : prop.entrySet()) {
-                    type = e.getValue().toString();
-                    typeMapping.put(Class.forName(e.getKey().toString()), type);
-                    variantNames.add(type);
+                    name = e.getValue().toString();
+                    mapClass(Class.forName(e.getKey().toString()), name);
+                    names.add(name);
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
-            Log.e(TAG, e);
+            Log.e(TAG, "error occurred when initialization", e);
         }
     }
 
@@ -87,19 +125,19 @@ public final class Variants {
      * @return set of type names
      */
     public static Set<String> supportedTypes() {
-        return Collections.unmodifiableSet(variantNames);
+        return Collections.unmodifiableSet(names);
     }
 
     /**
-     * Registers the specified type.
+     * Registers the specified variant type.
      *
      * @param type name of type
      * @throws IllegalArgumentException if the type is already registered
      */
     public static void registerType(String type) {
         Validate.requireNotEmpty(type, "type cannot be null or empty");
-        Validate.require(!variantNames.contains(type), "type %s already registered", type);
-        variantNames.add(type);
+        Validate.require(!names.contains(type), "type %s already registered", type);
+        names.add(type);
     }
 
     /**
@@ -111,7 +149,7 @@ public final class Variants {
      */
     public static String ensureRegistered(String type) {
         Validate.requireNotEmpty(type, "type cannot be null or empty");
-        Validate.require(variantNames.contains(type), "type %s in unsupported", type);
+        Validate.require(names.contains(type), "type %s in unsupported", type);
         return type;
     }
 
@@ -122,11 +160,7 @@ public final class Variants {
      * @return the text, or {@literal null} if the type is unknown
      */
     public static String titleOf(@NonNull String type) {
-        try {
-            return M.tr("variant." + type);
-        } catch (MissingResourceException e) {
-            return null;
-        }
+        return M.optTr("variant." + type, null);
     }
 
     /**
@@ -136,8 +170,19 @@ public final class Variants {
      * @param type  name of type
      * @throws IllegalArgumentException if the type is not registered
      */
-    public static void mapType(@NonNull Class<?> clazz, String type) {
-        typeMapping.put(clazz, ensureRegistered(type));
+    public static void mapClass(@NonNull Class<?> clazz, String type) {
+        mappings.put(clazz, ensureRegistered(type));
+    }
+
+    /**
+     * Maps specified value for variant type.
+     * <p>The default value can be fetched by {@link #defaultOf(String)}</p>
+     *
+     * @param type  name of type
+     * @param value the default value, may be instance {@link Provider} called when fetching defaults
+     */
+    public static void setDefault(@NonNull String type, Object value) {
+        defaults.put(type, value);
     }
 
     /**
@@ -148,10 +193,10 @@ public final class Variants {
      * @throws NullPointerException if the object is {@literal null}
      */
     public static String typeOf(@NonNull Object obj) {
-        return CollectionUtils.getOrPut(typeMapping, obj.getClass(), false, new Function<Class<?>, String>() {
+        return getOrPut(mappings, obj.getClass(), false, new Function<Class<?>, String>() {
             @Override
             public String apply(Class<?> clazz) {
-                for (val e : typeMapping.entrySet()) {
+                for (val e : mappings.entrySet()) {
                     if (e.getKey().isAssignableFrom(clazz)) {
                         return e.getValue();
                     }
@@ -168,27 +213,9 @@ public final class Variants {
      * @return the value, or {@literal null} if the type not in jem built-in types
      * @throws IllegalArgumentException if the name of type is empty
      */
+    @SneakyThrows(Exception.class)
     public static Object defaultOf(String type) {
-        switch (ensureRegistered(type)) {
-            case STRING:
-                return StringUtils.EMPTY_TEXT;
-            case TEXT:
-                return Texts.forEmpty(Texts.PLAIN);
-            case FLOB:
-                return Flobs.forEmpty("_empty_", PathUtils.UNKNOWN_MIME);
-            case DATETIME:
-                return new Date();
-            case LOCALE:
-                return Locale.getDefault();
-            case INTEGER:
-                return 0;
-            case REAL:
-                return 0.0D;
-            case BOOLEAN:
-                return Boolean.FALSE;
-            default:
-                return null;
-        }
+        return get(defaults.get(ensureRegistered(type)));
     }
 
     /**

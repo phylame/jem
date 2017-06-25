@@ -23,7 +23,7 @@ import jem.epm.util.config.BadConfigException;
 import jem.epm.util.config.ConfigUtils;
 import jem.epm.util.config.EpmConfig;
 import lombok.Getter;
-import pw.phylame.commons.util.Validate;
+import jclp.util.Validate;
 
 import java.util.Map;
 

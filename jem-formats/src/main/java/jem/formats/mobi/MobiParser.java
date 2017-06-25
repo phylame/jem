@@ -18,6 +18,13 @@
 
 package jem.formats.mobi;
 
+import jclp.io.ByteUtils;
+import jclp.io.IOUtils;
+import jclp.io.Lz77Utils;
+import jclp.log.Log;
+import jclp.util.DateUtils;
+import jclp.util.MiscUtils;
+import jclp.util.StringUtils;
 import jem.Attributes;
 import jem.Book;
 import jem.epm.impl.BinaryParser;
@@ -30,13 +37,6 @@ import jem.util.text.Texts;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.val;
-import pw.phylame.commons.io.ByteUtils;
-import pw.phylame.commons.io.IOUtils;
-import pw.phylame.commons.io.Lz77Utils;
-import pw.phylame.commons.log.Log;
-import pw.phylame.commons.util.DateUtils;
-import pw.phylame.commons.util.MiscUtils;
-import pw.phylame.commons.util.StringUtils;
 
 import java.io.*;
 import java.util.Collections;
@@ -371,7 +371,7 @@ public class MobiParser extends BinaryParser<MobiInConfig> {
                 data.encoding = "CP1252";
                 break;
             default:
-                data.encoding = StringUtils.notEmptyOr(data.config.textEncoding, "CP1252");
+                data.encoding = StringUtils.coalesce(data.config.textEncoding, "CP1252");
                 break;
         }
     }
@@ -474,7 +474,7 @@ public class MobiParser extends BinaryParser<MobiInConfig> {
         @Override
         public InputStream openStream() throws IOException {
             val bb = Lz77Utils.decompress(getTarget().openStream());
-            return new ByteArrayInputStream(bb.getDirectArray());
+            return new ByteArrayInputStream(bb.array());
         }
 
         @Override

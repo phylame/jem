@@ -18,6 +18,11 @@
 
 package jem.formats.epub;
 
+import jclp.io.PathUtils;
+import jclp.log.Log;
+import jclp.util.DateUtils;
+import jclp.util.MiscUtils;
+import jclp.vdm.VdmReader;
 import jem.Attributes;
 import jem.Book;
 import jem.Chapter;
@@ -31,20 +36,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
-import pw.phylame.commons.io.PathUtils;
-import pw.phylame.commons.log.Log;
-import pw.phylame.commons.util.DateUtils;
-import pw.phylame.commons.util.MiscUtils;
-import pw.phylame.commons.vam.VamReader;
 
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static jclp.util.StringUtils.*;
 import static jem.epm.util.xml.XmlUtils.attributeOf;
 import static jem.epm.util.xml.XmlUtils.newPullParser;
-import static pw.phylame.commons.util.StringUtils.*;
 
 public class EpubParser extends VamParser<EpubInConfig> {
     private static final String TAG = EpubParser.class.getSimpleName();
@@ -54,7 +54,7 @@ public class EpubParser extends VamParser<EpubInConfig> {
     }
 
     @Override
-    public Book parse(VamReader vam, EpubInConfig config) throws IOException, ParserException {
+    public Book parse(VdmReader vam, EpubInConfig config) throws IOException, ParserException {
         if (!EPUB.MT_EPUB.equals(VamUtils.textOf(vam, EPUB.MIME_FILE, "ASCII").trim())) {
             throw new ParserException(M.tr("epub.parse.invalidMT", EPUB.MIME_FILE, EPUB.MT_EPUB));
         }
@@ -199,7 +199,7 @@ public class EpubParser extends VamParser<EpubInConfig> {
                 try {
                     value = DateUtils.parse(text, "yyyy-m-D");
                 } catch (ParseException e) {
-                    Log.d(TAG, e);
+                    Log.d(TAG, "invalid date format", e);
                     return;
                 }
             }
@@ -316,7 +316,7 @@ public class EpubParser extends VamParser<EpubInConfig> {
     @RequiredArgsConstructor
     private class Local {
         final Book book;
-        final VamReader vam;
+        final VdmReader vam;
         @SuppressWarnings("unused")
         final EpubInConfig config;
 

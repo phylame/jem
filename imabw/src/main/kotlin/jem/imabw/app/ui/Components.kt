@@ -20,10 +20,10 @@ import jem.imabw.app.GOTO
 import jem.imabw.app.Imabw
 import org.jdesktop.swingx.JXLabel
 import org.jdesktop.swingx.JXPanel
-import pw.phylame.qaf.core.tr
-import pw.phylame.qaf.ixin.iconFor
-import pw.phylame.qaf.swing.label
-import pw.phylame.qaf.swing.north
+import qaf.core.App
+import qaf.ixin.iconFor
+import qaf.swing.label
+import qaf.swing.north
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Dimension
@@ -34,7 +34,7 @@ import javax.swing.*
 object Dashboard : JXPanel(BorderLayout()) {
     init {
         north = label(false) {
-            text = tr("welcome.text")
+            text = App.tr("welcome.text")
             horizontalAlignment = SwingConstants.CENTER
         }
     }
@@ -52,7 +52,7 @@ object Indicator : JXPanel() {
 
     private fun initUI() {
         ruler = JXLabel()
-        ruler.toolTipText = tr("status.ruler.tip")
+        ruler.toolTipText = App.tr("status.ruler.tip")
         ruler.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
                 if (!ruler.isEnabled || e.isMetaDown) {
@@ -63,10 +63,10 @@ object Indicator : JXPanel() {
         })
 
         words = JXLabel()
-        words.toolTipText = tr("status.words.tip")
+        words.toolTipText = App.tr("status.words.tip")
 
-        readonly = JXLabel(iconFor(":status/readwrite.png"))
-        readonly.toolTipText = tr(":status.readonly.tip")
+        readonly = JXLabel(iconFor("status/readwrite.png"))
+        readonly.toolTipText = App.tr("status.readonly.tip")
         readonly.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
                 if (!readonly.isEnabled || e.isMetaDown) {
@@ -83,8 +83,8 @@ object Indicator : JXPanel() {
             }
         })
 
-        val message = JXLabel(iconFor(":status/message.png"))
-        message.toolTipText = tr("status.message.tip")
+        val message = JXLabel(iconFor("status/message.png"))
+        message.toolTipText = App.tr("status.message.tip")
         message.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
                 // todo: show message window
@@ -130,9 +130,9 @@ object Indicator : JXPanel() {
 
     fun setReadonly(readonly: Boolean) {
         if (readonly) {
-            this.readonly.icon = iconFor(":status/readonly.png")
+            this.readonly.icon = iconFor("status/readonly.png")
         } else {
-            this.readonly.icon = iconFor(":status/readwrite.png")
+            this.readonly.icon = iconFor("status/readwrite.png")
         }
     }
 

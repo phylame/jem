@@ -36,7 +36,7 @@ import lombok.NonNull;
 import lombok.val;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
-import pw.phylame.commons.log.Log;
+import jclp.log.Log;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -45,7 +45,7 @@ import java.util.zip.ZipFile;
 
 import static jem.epm.util.xml.XmlUtils.attributeOf;
 import static jem.epm.util.xml.XmlUtils.newPullParser;
-import static pw.phylame.commons.util.StringUtils.*;
+import static jclp.util.StringUtils.*;
 
 /**
  * PMAB e-book parser.

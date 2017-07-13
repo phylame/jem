@@ -18,14 +18,13 @@
 
 package jem.scj.addons;
 
+import jclp.log.Log;
+import jclp.util.StringUtils;
 import jem.scj.app.AppConfig;
 import jem.scj.app.SCI;
 import jem.scj.app.SCJPlugin;
 import lombok.val;
 import org.apache.commons.cli.Option;
-import jclp.log.Log;
-import jclp.util.Reflections;
-import jclp.util.StringUtils;
 import qaf.cli.CLIDelegate;
 import qaf.cli.Command;
 import qaf.cli.TypedFetcher;
@@ -69,7 +68,7 @@ public class ScriptRunner extends SCJPlugin {
             if (StringUtils.isEmpty(name)) {
                 name = DEFAULT_ENGINE;
             }
-            val engine = Reflections.i(clazz.newInstance(), "getEngineByName", name);
+            val engine = clazz.getMethod("getEngineByName", String.class).invoke(clazz.newInstance(), name);
             if (engine == null) {
                 app.error(M.tr("runScript.noSuchEngine", name));
             }

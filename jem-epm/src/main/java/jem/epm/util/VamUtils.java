@@ -18,15 +18,15 @@
 
 package jem.epm.util;
 
-import jem.util.flob.Flob;
-import jem.util.text.Text;
-import lombok.NonNull;
-import lombok.val;
 import jclp.io.IOUtils;
 import jclp.vdm.FileVdmReader;
 import jclp.vdm.VdmReader;
 import jclp.vdm.VdmWriter;
 import jclp.vdm.ZipVdmReader;
+import jem.util.flob.Flob;
+import jem.util.text.Text;
+import lombok.NonNull;
+import lombok.val;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,38 +52,38 @@ public final class VamUtils {
         return file.isDirectory() ? new FileVdmReader(file) : new ZipVdmReader(new ZipFile(file));
     }
 
-    public static InputStream streamOf(@NonNull VdmReader vr, String name) throws IOException {
-        val item = vr.entryFor(name);
+    public static InputStream streamFor(@NonNull VdmReader vdmReader, String name) throws IOException {
+        val item = vdmReader.entryFor(name);
         if (item == null) {
-            throw new IOException(M.tr("err.vam.noEntry", name, vr.getName()));
+            throw new IOException(M.tr("err.vam.noEntry", name, vdmReader.getName()));
         }
-        return vr.streamOf(item);
+        return vdmReader.streamFor(item);
     }
 
-    public static String textOf(VdmReader vr, String name, String encoding) throws IOException {
-        try (val in = streamOf(vr, name)) {
+    public static String textOf(VdmReader vdmReader, String name, String encoding) throws IOException {
+        try (val in = streamFor(vdmReader, name)) {
             return IOUtils.toString(in, encoding);
         }
     }
 
-    public static void write(VdmWriter vw, String name, String str, String encoding) throws IOException {
-        val item = vw.newEntry(name);
-        vw.begin(item);
-        vw.write(item, encoding == null ? str.getBytes() : str.getBytes(encoding));
-        vw.end(item);
+    public static void write(VdmWriter vdmWriter, String name, String str, String encoding) throws IOException {
+        val entry = vdmWriter.newEntry(name);
+        vdmWriter.begin(entry);
+        vdmWriter.write(entry, encoding == null ? str.getBytes() : str.getBytes(encoding));
+        vdmWriter.end(entry);
     }
 
-    public static void write(VdmWriter vw, String name, Flob flob) throws IOException {
-        val item = vw.newEntry(name);
-        flob.writeTo(vw.begin(item));
-        vw.end(item);
+    public static void write(VdmWriter vdmWriter, String name, Flob flob) throws IOException {
+        val entry = vdmWriter.newEntry(name);
+        flob.writeTo(vdmWriter.begin(entry));
+        vdmWriter.end(entry);
     }
 
-    public static void write(VdmWriter vw, String name, Text text, String encoding) throws IOException {
-        val item = vw.newEntry(name);
-        val writer = IOUtils.writerFor(vw.begin(item), encoding);
+    public static void write(VdmWriter vdmWriter, String name, Text text, String encoding) throws IOException {
+        val entry = vdmWriter.newEntry(name);
+        val writer = IOUtils.writerFor(vdmWriter.begin(entry), encoding);
         text.writeTo(writer);
         writer.flush();
-        vw.end(item);
+        vdmWriter.end(entry);
     }
 }

@@ -70,7 +70,7 @@ public class EpubParser extends VamParser<EpubInConfig> {
 
     private void loadOpf(Local data) throws ParserException, IOException {
         val xpp = newPullParser(false);
-        try (val in = VamUtils.streamOf(data.vam, EPUB.CONTAINER_FILE)) {
+        try (val in = VamUtils.streamFor(data.vam, EPUB.CONTAINER_FILE)) {
             xpp.setInput(in, null);
             int event = xpp.getEventType();
             do {
@@ -101,7 +101,7 @@ public class EpubParser extends VamParser<EpubInConfig> {
         String coverId = null;
         val b = new StringBuilder();
         val xpp = newPullParser(false);
-        try (val in = VamUtils.streamOf(data.vam, data.opfPath)) {
+        try (val in = VamUtils.streamFor(data.vam, data.opfPath)) {
             xpp.setInput(in, null);
             boolean hasText = false;
             int event = xpp.getEventType();
@@ -243,7 +243,7 @@ public class EpubParser extends VamParser<EpubInConfig> {
         val book = data.book;
         val b = new StringBuilder();
         val xpp = newPullParser(false);
-        try (val in = VamUtils.streamOf(data.vam, data.opsDir + '/' + item.href)) {
+        try (val in = VamUtils.streamFor(data.vam, data.opsDir + '/' + item.href)) {
             xpp.setInput(in, null);
             boolean hasText = false;
             boolean forChapter = false;

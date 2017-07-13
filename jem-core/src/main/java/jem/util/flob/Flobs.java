@@ -104,33 +104,33 @@ public final class Flobs {
             Variants.mapClass(VamFlob.class, Variants.FLOB);
         }
 
-        private final VdmReader vam;
-        private final String entry;
-        private final VdmEntry item;
+        private final VdmReader vdmReader;
+        private final VdmEntry vdmEntry;
+        private final String name;
 
-        VamFlob(VdmReader vam, String entry, String mime) throws IOException {
+        VamFlob(VdmReader vdmReader, String name, String mime) throws IOException {
             super(mime);
-            item = vam.entryFor(entry);
-            if (item == null) {
-                throw Exceptions.forIO("No such item in Vam: %s", entry);
+            vdmEntry = vdmReader.entryFor(name);
+            if (vdmEntry == null) {
+                throw Exceptions.forIO("No such entry in vdm: %s", name);
             }
-            this.vam = vam;
-            this.entry = entry;
+            this.vdmReader = vdmReader;
+            this.name = name;
         }
 
         @Override
         public String getName() {
-            return entry;
+            return name;
         }
 
         @Override
         public InputStream openStream() throws IOException {
-            return vam.streamOf(item);
+            return vdmReader.streamFor(vdmEntry);
         }
 
         @Override
         public String toString() {
-            return item.toString();
+            return vdmEntry.toString();
         }
     }
 
@@ -139,31 +139,31 @@ public final class Flobs {
             Variants.mapClass(EntryFlob.class, Variants.FLOB);
         }
 
-        private final ZipFile zip;
-        private final String entry;
+        private final ZipFile zipFile;
+        private final String name;
 
-        private EntryFlob(@NonNull ZipFile zipFile, @NonNull String entry, String mime) throws IOException {
+        private EntryFlob(@NonNull ZipFile zipFile, @NonNull String name, String mime) throws IOException {
             super(mime);
-            if (zipFile.getEntry(entry) == null) {
-                throw Exceptions.forIO("No such entry in ZIP: %s", entry);
+            if (zipFile.getEntry(name) == null) {
+                throw Exceptions.forIO("No such entry in ZIP: %s", name);
             }
-            zip = zipFile;
-            this.entry = entry;
+            this.zipFile = zipFile;
+            this.name = name;
         }
 
         @Override
         public String getName() {
-            return entry;
+            return name;
         }
 
         @Override
         public InputStream openStream() throws IOException {
-            return zip.getInputStream(zip.getEntry(entry));
+            return zipFile.getInputStream(zipFile.getEntry(name));
         }
 
         @Override
         public String toString() {
-            return "zip://" + zip.getName() + '!' + super.toString();
+            return "zip://" + zipFile.getName() + '!' + super.toString();
         }
     }
 

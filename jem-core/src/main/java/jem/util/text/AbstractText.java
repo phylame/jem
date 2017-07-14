@@ -18,11 +18,11 @@
 
 package jem.util.text;
 
+import jclp.util.StringUtils;
+import jclp.util.Validate;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;
-import jclp.util.StringUtils;
-import jclp.util.Validate;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -37,7 +37,8 @@ public abstract class AbstractText implements Text {
     private final String type;
 
     protected AbstractText(String type) {
-        this.type = Validate.requireNotEmpty(type, "type cannot be null or empty");
+        Validate.requireNotEmpty(type, "type cannot be null or empty");
+        this.type = type;
     }
 
     @Override

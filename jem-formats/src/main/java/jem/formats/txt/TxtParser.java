@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,6 +18,11 @@
 
 package jem.formats.txt;
 
+import jclp.io.BufferedRandomAccessFile;
+import jclp.io.IOUtils;
+import jclp.log.Log;
+import jclp.util.StringUtils;
+import jclp.value.Triple;
 import jem.Attributes;
 import jem.Book;
 import jem.Chapter;
@@ -29,11 +34,6 @@ import jem.util.flob.Flobs;
 import jem.util.text.Texts;
 import lombok.NonNull;
 import lombok.val;
-import jclp.io.BufferedRandomAccessFile;
-import jclp.io.IOUtils;
-import jclp.log.Log;
-import jclp.util.StringUtils;
-import jclp.value.Triple;
 
 import java.io.*;
 import java.util.regex.Pattern;

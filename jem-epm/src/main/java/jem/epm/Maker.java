@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -38,7 +38,7 @@ public interface Maker {
     String getName();
 
     /**
-     * Writes {@code Book} to book file.
+     * Writes {@code Book} to specified output file.
      *
      * @param book the {@code Book} to be written
      * @param file output file to store book
@@ -47,4 +47,16 @@ public interface Maker {
      * @throws JemException if occurs errors when making book file
      */
     void make(Book book, File file, Map<String, Object> args) throws IOException, JemException;
+
+    /**
+     * Writes {@code Book} to specified output path.
+     *
+     * @param book   book the {@code Book} to be written
+     * @param output the output path
+     * @param args   args arguments to the maker
+     * @throws IOException  if occurs I/O errors
+     * @throws JemException if occurs errors when making book file
+     * @since 3.4.0
+     */
+    void make(Book book, String output, Map<String, Object> args) throws IOException, JemException;
 }

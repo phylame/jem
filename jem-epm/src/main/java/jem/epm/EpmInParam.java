@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,13 +18,17 @@
 
 package jem.epm;
 
+import jclp.util.Validate;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
+import lombok.ToString;
 
 import java.io.File;
 import java.util.Map;
 
 @Data
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class EpmInParam extends EpmParam {
     /**
@@ -32,8 +36,26 @@ public class EpmInParam extends EpmParam {
      */
     private File cache;
 
-    public EpmInParam(File file, String extension, Map<String, Object> arguments, File cache) {
-        super(file, extension, arguments);
-        this.cache = cache;
+    public EpmInParam(@NonNull File file, Map<String, Object> arguments) {
+        this(file, null, null, arguments);
+    }
+
+    public EpmInParam(@NonNull String input, Map<String, Object> arguments) {
+        this(null, input, null, arguments);
+    }
+
+    public EpmInParam(@NonNull File file, String format, Map<String, Object> arguments) {
+        this(file, null, format, arguments);
+    }
+
+    public EpmInParam(@NonNull String input, String format, Map<String, Object> arguments) {
+        this(null, input, format, arguments);
+    }
+
+    public EpmInParam(File file, String path, String format, Map<String, Object> arguments) {
+        super(file, path, format, arguments);
+        if (file == null) {
+            Validate.requireNotEmpty(path, "path cannot be empty");
+        }
     }
 }

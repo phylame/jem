@@ -1,7 +1,7 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
- * This file is part of SCJ.
+ * This file is part of Jem.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,393 +18,255 @@
 
 package jem.scj.app
 
-import jclp.io.IOUtils
 import jclp.io.PathUtils
+import jclp.log.Level
 import jclp.log.Log
-import jclp.util.CollectionUtils
-import jclp.util.Linguist
+import jem.Book
 import jem.crawler.CrawlerManager
+import jem.epm.EpmInParam
 import jem.epm.EpmManager
+import jem.epm.EpmOutParam
 import jem.util.Build
+import mala.cli.*
+import mala.core.App
+import mala.core.App.tr
+import mala.core.AppVerbose
+import mala.core.Plugin
 import org.apache.commons.cli.*
-import qaf.cli.*
-import qaf.core.*
-import java.io.File
 import java.util.*
+import kotlin.collections.HashMap
 
-const val NAME = "scj"
-val VERSION = Build.VERSION
-
-const val I18N_NAME = "jem/scj/res/i18n/scj"
-const val DATE_FORMAT = "yyyy-M-d"
-
-// view key
-const val VIEW_CHAPTER = "^chapter([\\-\\d\\.]+)(\\$.*)?"
-const val VIEW_ITEM = "^item\\$.*"
-const val VIEW_ALL = "all"
-const val VIEW_TOC = "toc"
-const val VIEW_EXTENSION = "ext"
-const val VIEW_NAMES = "names"
-const val VIEW_TEXT = "text"
-const val VIEW_SIZE = "size"
-
-// CLI inTuple
-const val OPTION_HELP = "h"
-const val OPTION_HELP_LONG = "help"
-const val OPTION_VERSION = "v"
-const val OPTION_VERSION_LONG = "version"
-const val OPTION_LIST = "l"
-const val OPTION_LIST_LONG = "list-formats"
-const val OPTION_DEBUG_LEVEL = "d"
-const val OPTION_DEBUG_LEVEL_LONG = "debug-level"
-const val OPTION_INPUT_FORMAT = "f"
-const val OPTION_INPUT_FORMAT_LONG = "input-format"
-const val OPTION_OUTPUT_FORMAT = "t"
-const val OPTION_OUTPUT_FORMAT_LONG = "output-format"
-const val OPTION_OUTPUT = "o"
-const val OPTION_EXTRACT = "x"
-const val OPTION_VIEW = "w"
-const val OPTION_JOIN = "j"
-const val OPTION_CONVERT = "c"
-const val OPTION_OUT_ATTRIBUTES = "a"
-const val OPTION_OUT_EXTENSIONS = "e"
-const val OPTION_IN_ARGUMENTS = "p"
-const val OPTION_OUT_ARGUMENTS = "m"
-
-
-object AppConfig : Settings() {
-    const val SETTING_TEMPLATE_PATH = "!pw/phylame/jem/scj/res/settings.tpl"
-
-    override fun reset() {
-        super.reset()
-        comment = "Configurations of PW's SCJ v$VERSION"
-        val prop = CollectionUtils.propertiesFor(SETTING_TEMPLATE_PATH, AppConfig.javaClass.classLoader)
-        if (prop != null) {
-            @Suppress("unchecked_cast")
-            update(prop as Map<String, String>)
-        }
-    }
-
-    var appLocale: Locale by delegated(Locale.getDefault(), "app.locale")
-
-    var pluginEnable by delegated(true, "app.plugin.enable")
-
-    var debugLevel by delegated(Verbose.ECHO.name.toLowerCase(), "app.debug.level")
-
-    var outputFormat by delegated(EpmManager.PMAB, "jem.output.defaultFormat")
-
-    var viewKeys by delegated(VIEW_ALL, "sci.view.defaultKey")
-
-    var tocIndent by delegated("  ", "sci.view.tocIndent")
-
-    var termWidth by delegated(80, "sci.term.width")
-
-    var blacklist by delegated("", "app.plugin.blacklist")
-
-    val inArguments = HashMap<String, Any>()
-
-    val outAttributes = HashMap<String, Any>()
-
-    val outExtensions = HashMap<String, Any>()
-
-    var output = "."
-
-    val outArguments = HashMap<String, Any>()
+fun main(args: Array<String>) {
+    App.run(SCI, args)
 }
 
-fun checkInputFormat(format: String) = checkInputFormat(format, null)
-
-fun checkInputFormat(format: String, input: String?): Boolean = if (format.isEmpty()) {
-    App.error(App.tr("error.input.unknownFormat", input))
-    false
-} else if (!EpmManager.hasParser(format)) {
-    App.error(App.tr("error.input.unsupported", format))
-    println(App.tr("tip.unsupportedFormat", OPTION_LIST, OPTION_LIST_LONG))
-    false
-} else true
-
-fun checkOutputFormat(format: String): Boolean = if (!EpmManager.hasMaker(format)) {
-    App.error(App.tr("error.output.unsupported", format))
-    println(App.tr("tip.unsupportedFormat", OPTION_LIST, OPTION_LIST_LONG))
-    false
-} else true
-
-fun checkDebugLevel(level: String): Boolean {
-    try {
-        App.verbose = Verbose.valueOf(level.toUpperCase())
-    } catch (e: IllegalArgumentException) {
-        App.error(App.tr("error.invalidDebugLevel", level))
-        return false
-    }
-    return true
-}
-
-object SCI : CLIDelegate() {
+object SCI : CLIDelegate(DefaultParser()) {
     private const val TAG = "SCI"
 
+    override val version = Build.VERSION
+
+    override val name = "scj"
+
+    @Suppress("UNCHECKED_CAST")
+    val inArguments by lazy { context["p"] as? MutableMap<String, Any> ?: HashMap() }
+
+    @Suppress("UNCHECKED_CAST")
+    val outArguments by lazy { context["m"] as? MutableMap<String, Any> ?: HashMap() }
+
+    @Suppress("UNCHECKED_CAST")
+    val outAttributes by lazy { context["a"] as? MutableMap<String, Any> ?: HashMap() }
+
+    @Suppress("UNCHECKED_CAST")
+    val outExtensions by lazy { context["e"] as? MutableMap<String, Any> ?: HashMap() }
+
+    val outputFormat get() = context["t"]?.toString() ?: SCISettings.outputFormat
+
+    val output get() = context["o"]?.toString() ?: "."
+
     override fun onStart() {
-        System.setProperty(EpmManager.AUTO_LOAD_KEY, "true")
-        System.setProperty(CrawlerManager.AUTO_LOAD_KEY, "true")
-        App.ensureHomeExists()
-        Locale.setDefault(AppConfig.appLocale)
-        App.setTranslator(Linguist(I18N_NAME))
-        if (!checkDebugLevel(AppConfig.debugLevel)) {
-            App.exit(-1)
-        }
-        super.onStart()
-        val path = AppConfig.blacklist
-        val blacklist = if (path.isNotBlank()) {
-            IOUtils.openResource(path, SCI.javaClass.classLoader)?.bufferedReader()?.lineSequence()?.toSet() ?: emptySet()
-        } else emptySet()
-        if (AppConfig.pluginEnable) {
-            App.loadPlugins(blacklist)
-        } else {
-            Log.d(TAG, "plugin is not enable")
-        }
-    }
-
-    override fun onQuit() {
-        super.onQuit()
-        if (isTaskPool) {
-            taskPool.shutdown()
-        }
-    }
-
-    override fun createOptions() {
-        // help
-        addOption(Option(OPTION_HELP, OPTION_HELP_LONG, false, App.tr("help.description"))) {
-            val formatter = HelpFormatter()
-            formatter.syntaxPrefix = ""
-            formatter.printHelp(AppConfig.termWidth, App.tr("sci.syntax", App.assembly.name), App.tr("help.prefix"), options, App.tr("help.feedback"))
-            0
-        }
-        // version
-        addOption(Option(OPTION_VERSION, OPTION_VERSION_LONG, false, App.tr("help.version"))) {
-            println("SCI for Jem v$VERSION on ${System.getProperty("os.name")} (${System.getProperty("os.arch")})")
-            println(App.tr("app.copyrights", Calendar.getInstance()[Calendar.YEAR].toString()))
-            0
-        }
-        // list
-        addOption(Option(OPTION_LIST, OPTION_LIST_LONG, false, App.tr("help.list"))) {
-            println(App.tr("list.title"))
-            println(" ${App.tr("list.input")} ${EpmManager.supportedParsers().joinToString(" ")}")
-            println(" ${App.tr("list.output")} ${EpmManager.supportedMakers().joinToString(" ")}")
-            0
-        }
-        // debug level
-        addOption(Option.builder(OPTION_DEBUG_LEVEL)
-                .longOpt(OPTION_DEBUG_LEVEL_LONG)
-                .argName(App.tr("help.debug.argName"))
-                .hasArg()
-                .desc(App.tr("help.debug", AppConfig.debugLevel))
-                .build(),
-                TypedFetcher(OPTION_DEBUG_LEVEL, String::class.java, ::checkDebugLevel)
-        )
-        // input format
-        addOption(Option.builder(OPTION_INPUT_FORMAT)
-                .longOpt(OPTION_INPUT_FORMAT_LONG)
-                .argName(App.tr("help.formatName"))
-                .hasArg()
-                .desc(App.tr("help.inputFormat"))
-                .build(),
-                TypedFetcher(OPTION_INPUT_FORMAT, String::class.java, ::checkInputFormat)
-        )
-        // parser arguments
-        addOption(Option.builder(OPTION_IN_ARGUMENTS)
-                .argName(App.tr("help.kvName"))
-                .numberOfArgs(2)
-                .valueSeparator()
-                .desc(App.tr("help.parserArgs"))
-                .build(),
-                PropertiesFetcher(OPTION_IN_ARGUMENTS)
-        )
-        // output attributes
-        addOption(Option.builder(OPTION_OUT_ATTRIBUTES)
-                .argName(App.tr("help.kvName"))
-                .numberOfArgs(2)
-                .valueSeparator()
-                .desc(App.tr("help.attribute"))
-                .build(),
-                PropertiesFetcher(OPTION_OUT_ATTRIBUTES)
-        )
-        // output extensions
-        addOption(Option.builder(OPTION_OUT_EXTENSIONS)
-                .argName(App.tr("help.kvName"))
-                .numberOfArgs(2)
-                .valueSeparator()
-                .desc(App.tr("help.extension"))
-                .build(),
-                PropertiesFetcher(OPTION_OUT_EXTENSIONS)
-        )
-        // output path
-        addOption(Option.builder(OPTION_OUTPUT)
-                .argName(App.tr("help.output.argName"))
-                .hasArg()
-                .desc(App.tr("help.output.path"))
-                .build(),
-                fetcherOf<String>(OPTION_OUTPUT)
-        )
-        // output format
-        addOption(Option.builder(OPTION_OUTPUT_FORMAT)
-                .longOpt(OPTION_OUTPUT_FORMAT_LONG)
-                .argName(App.tr("help.formatName"))
-                .hasArg()
-                .desc(App.tr("help.outputFormat", AppConfig.outputFormat))
-                .build(),
-                TypedFetcher(OPTION_OUTPUT_FORMAT, String::class.java, ::checkOutputFormat)
-        )
-        // maker arguments
-        addOption(Option.builder(OPTION_OUT_ARGUMENTS)
-                .argName(App.tr("help.kvName"))
-                .numberOfArgs(2)
-                .valueSeparator()
-                .desc(App.tr("help.makerArgs"))
-                .build(),
-                PropertiesFetcher(OPTION_OUT_ARGUMENTS)
-        )
-
-        val group = OptionGroup()
-
-        // convert
-        var option = Option(OPTION_CONVERT, false, App.tr("help.convert", OPTION_OUTPUT_FORMAT))
-        group.addOption(option)
-        addOption(option, object : ConsumerCommand {
-            override fun consume(tuple: InTuple): Boolean = convertBook(tuple, OutTuple())
-        })
-
-
-        // join
-        option = Option(OPTION_JOIN, false, App.tr("help.join"))
-        group.addOption(option)
-        addOption(option) {
-            if (inputs.isEmpty()) {
-                App.error(App.tr("error.input.empty"))
-                -1
-            } else {
-                if (joinBook(OutTuple(File(output)))) 0 else 1
-            }
-        }
-
-        // extract and indices
-        option = Option.builder(OPTION_EXTRACT)
-                .argName(App.tr("help.extract.argName"))
-                .hasArg()
-                .desc(App.tr("help.extract"))
-                .build()
-        group.addOption(option)
-        addOption(option, ExtractBook(OPTION_EXTRACT))
-
-        // view and names
-        val viewBook = ViewBook(OPTION_VIEW)
-        defaultCommand = viewBook
-        addOption(Option.builder(OPTION_VIEW)
-                .argName(App.tr("help.view.argName"))
-                .hasArg()
-                .valueSeparator()
-                .desc(App.tr("help.view"))
-                .build(),
-                viewBook
-        )
-
-        addOptionGroup(group)
+        initApp()
+        initJem()
+        initOptions()
     }
 
     override fun onOptionError(e: ParseException) {
-        when (e) {
-            is UnrecognizedOptionException -> {
-                App.error(App.tr("error.option.unrecognized", e.option))
-            }
-            is MissingArgumentException -> {
-                App.error(App.tr("error.option.missingArgument", e.option.opt))
-            }
-            is AlreadySelectedException -> {
-                App.error(App.tr("error.option.multiOptions", e.option.opt, e.optionGroup.selected))
-            }
-            is MissingOptionException -> {
-                App.error(App.tr("error.option.missingOption", e.missingOptions.joinToString(",")))
-            }
-            else -> e.printStackTrace()
+        val msg = when (e) {
+            is UnrecognizedOptionException -> tr("error.opt.unknown", e.option)
+            is AlreadySelectedException -> tr("error.opt.selected", e.option.opt, e.optionGroup.selected)
+            is MissingArgumentException -> tr("error.opt.noArg", e.option.opt)
+            is MissingOptionException -> tr("error.opt.noOption", e.missingOptions.joinToString(", "))
+            else -> return
         }
-        App.exit(-1)
+        App.die(msg)
     }
 
-    val inFormat: String? by managed(OPTION_INPUT_FORMAT) { null }
-
-    val inArguments: Map<String, Any> by managed(OPTION_IN_ARGUMENTS) { AppConfig.inArguments }
-
-    val outAttributes: Map<String, Any> by managed(OPTION_OUT_ATTRIBUTES) { AppConfig.outAttributes }
-
-    val outExtensions: Map<String, Any>by managed(OPTION_OUT_EXTENSIONS) { AppConfig.outExtensions }
-
-    val output: String by managed(OPTION_OUTPUT) { AppConfig.output }
-
-    val outFormat by managed(OPTION_OUTPUT_FORMAT) { AppConfig.outputFormat }
-
-    val outArguments: Map<String, Any>by managed(OPTION_OUT_ARGUMENTS) { AppConfig.outArguments }
-
-    val chapterIndices by managed(OPTION_EXTRACT) { emptyArray<String>() }
-
-    val viewKeys by managed(OPTION_VIEW) { AppConfig.viewKeys.split(",".toRegex()).toTypedArray() }
-
-    fun consumeInputs(consumer: Consumer): Int {
+    fun processInputs(processor: InputProcessor): Int {
         if (inputs.isEmpty()) {
-            App.error(App.tr("error.input.empty"))
+            App.error(tr("error.input.empty"))
             return -1
         }
-        var status = 0
+        var code = 0
+        Log.d(TAG, "app context: {0}", context)
+        Log.d(TAG, "app inputs: {0}", inputs)
         for (input in inputs) {
-            val format = inFormat ?: EpmManager.formatOfFile(input) ?: PathUtils.extName(input)
-            if (!checkInputFormat(format, input)) {
-                status = -1
-                continue
+            val format = context["f"]?.toString() ?: EpmManager.formatOfFile(input) ?: PathUtils.extName(input)
+            code = if (checkInputFormat(format, input)) {
+                minOf(code, if (processor.process(input, format)) 0 else -1)
+            } else {
+                -1
             }
-            status = Math.min(status, if (consumer.consume(InTuple(input, format))) 0 else 1)
         }
-        return status
+        return code
     }
-}
 
-abstract class SCJPlugin(meta: Metadata) : AbstractPlugin(meta) {
-    val sci = SCI
-    val config = AppConfig
-}
+    private fun initApp() {
+        Log.setLevel(SCISettings.logLevel)
+        App.verbose = SCISettings.appVerbose
+        Locale.setDefault(SCISettings.appLocale)
+        App.translator = App.resourceManager.linguistFor("i18n/app")
 
-data class InTuple(
-        val input: String,
-        val format: String,
-        val arguments: Map<String, Any> = SCI.inArguments
-)
-
-data class OutTuple(
-        val output: File = File(SCI.output),
-        val format: String = SCI.outFormat,
-        val arguments: Map<String, Any> = SCI.outArguments,
-        val attributes: Map<String, Any> = SCI.outAttributes,
-        val extensions: Map<String, Any> = SCI.outExtensions
-)
-
-interface Consumer {
-    fun consume(tuple: InTuple): Boolean
-}
-
-interface ConsumerCommand : Command, Consumer {
-    override fun execute(delegate: CLIDelegate): Int = SCI.consumeInputs(this)
-}
-
-class ExtractBook(option: String) : ListFetcher(option), ConsumerCommand {
-    override fun consume(tuple: InTuple): Boolean {
-        var state = true
-        for (index in SCI.chapterIndices) {
-            state = extractBook(tuple, index, OutTuple())
+        App.pluginManager.isEnable = SCISettings.enablePlugin
+        if (App.pluginManager.isEnable) {
+            App.pluginManager.loader = javaClass.classLoader
+            App.pluginManager.blacklist = SCISettings.pluginBlacklist
         }
-        return state
     }
+
+    private fun initJem() {
+        if (SCISettings.enableEpm) {
+            EpmManager.loadImplementors()
+        }
+        if (SCISettings.enableCrawler) {
+            CrawlerManager.loadCrawlers()
+        }
+    }
+
+    private fun initOptions() {
+        appOptions()
+        jemOptions()
+    }
+
+    private fun appOptions() {
+        newOption("h", "help").action { _ ->
+            val helpFormatter = HelpFormatter()
+            helpFormatter.syntaxPrefix = ""
+            helpFormatter.descPadding = 4
+            helpFormatter.printHelp(SCISettings.termWidth,
+                    tr("opt.syntax", name),
+                    tr("opt.header"),
+                    options,
+                    tr("opt.footer", Build.AUTHOR_EMAIL))
+            App.exit(0)
+        }
+
+        newOption("v", "version").action { _ ->
+            println("SCI for Jem v${Build.VERSION} on ${System.getProperty("os.name")}")
+            println("(C) ${Calendar.getInstance()[Calendar.YEAR]} ${Build.VENDOR}")
+            App.exit(0)
+        }
+
+        Option.builder("L")
+                .hasArg()
+                .longOpt("log-level")
+                .argName(tr("opt.arg.level"))
+                .desc(tr("opt.L.desc", Level.values().joinToString(", "), Log.getLevel()))
+                .action { _, cmd ->
+                    val value = cmd.getOptionValue("L")
+                    try {
+                        Log.setLevel(Level.valueOf(value))
+                    } catch (e: IllegalArgumentException) {
+                        App.die(tr("error.misc.badLogLevel", value))
+                    }
+                }
+
+        Option.builder("V")
+                .hasArg()
+                .longOpt("verbose-level")
+                .argName(tr("opt.arg.level"))
+                .desc(tr("opt.V.desc", AppVerbose.values().joinToString(", "), SCISettings.appVerbose))
+                .action { _, cmd ->
+                    val value = cmd.getOptionValue("V")
+                    try {
+                        App.verbose = (AppVerbose.valueOf(value))
+                    } catch (e: IllegalArgumentException) {
+                        App.die(tr("error.misc.badVerbose", value))
+                    }
+                }
+    }
+
+    private fun jemOptions() {
+        newOption("l", "list-formats").action { _ ->
+            println(tr("list.legend"))
+            println(tr("list.input", EpmManager.supportedParsers().joinToString(" ")))
+            println(tr("list.output", EpmManager.supportedMakers().joinToString(" ")))
+            App.exit(0)
+        }
+
+        newOption("f", "input-format")
+                .hasArg()
+                .argName(tr("opt.arg.format"))
+                .action(RawFetcher("f") {
+                    if (!checkInputFormat(it)) {
+                        App.exit(-1)
+                    }
+                    true
+                })
+
+        valuesOptions("p")
+        valuesOptions("a")
+        valuesOptions("e")
+        valuesOptions("m")
+
+        valueOption("o", "output")
+
+        Option.builder("t")
+                .hasArg()
+                .longOpt("output-format")
+                .argName(tr("opt.arg.format"))
+                .desc(tr("opt.t.desc", SCISettings.outputFormat))
+                .action(RawFetcher("t") {
+                    if (!checkOutputFormat(it)) {
+                        App.exit(-1)
+                    }
+                    true
+                })
+
+        val group = OptionGroup()
+
+        newOption("j").action(JoinBook()).group(group)
+
+        Option.builder("c")
+                .desc(tr("opt.c.desc", "-t", "-o"))
+                .action(ConvertBook())
+                .group(group)
+
+        newOption("x")
+                .hasArg()
+                .argName(tr("opt.x.arg"))
+                .action(ExtractBook())
+                .group(group)
+
+        val action = ViewBook()
+        Option.builder("w")
+                .hasArg()
+                .argName(tr("opt.w.arg"))
+                .desc(tr("opt.w.desc", "-w names"))
+                .action(action)
+                .group(group)
+
+        defaultCommand = action
+        options.addOptionGroup(group)
+    }
+
+    fun valueOption(opt: String, longOpt: String? = null) {
+        newOption(opt, longOpt).hasArg().argName(tr("opt.$opt.arg")).action(RawFetcher(opt))
+    }
+
+    fun valuesOptions(opt: String) {
+        newOption(opt).numberOfArgs(2).argName(tr("opt.arg.kv")).action(PropertiesFetcher(opt))
+    }
+
+    fun newOption(opt: String, longOpt: String? = null): Option.Builder = Option.builder(opt)
+            .longOpt(longOpt)
+            .desc(tr("opt.$opt.desc"))
 }
 
-class ViewBook(option: String) : ListFetcher(option), ConsumerCommand {
-    override fun consume(tuple: InTuple): Boolean = viewBook(tuple, OutTuple(), SCI.viewKeys)
+interface SCIPlugin : Plugin {
+    fun onOpenBook(param: EpmInParam) {}
+
+    fun onOpenFailed(param: EpmInParam, e: Exception) {}
+
+    fun onBookOpened(book: Book) {}
+
+    fun onSaveBook(param: EpmOutParam) {}
+
+    fun onSaveFailed(param: EpmOutParam, e: Exception) {}
 }
 
-fun main(args: Array<String>) {
-    App.run(NAME, VERSION, SCI, args)
+fun App.sciAction(action: SCIPlugin.() -> Unit): Unit {
+    try {
+        pluginManager.with(SCIPlugin::class.java, action)
+    } catch (e: Exception) {
+        error(tr("error.misc.badPlugin"), e)
+    }
 }

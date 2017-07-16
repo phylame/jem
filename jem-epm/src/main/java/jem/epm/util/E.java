@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,8 +18,8 @@
 
 package jem.epm.util;
 
-import jem.epm.util.config.BadConfigException;
 import jclp.util.Exceptions;
+import jem.epm.util.config.BadConfigException;
 
 public class E extends Exceptions {
     public static BadConfigException forBadConfig(String key, Object value, String format, Object... args) {

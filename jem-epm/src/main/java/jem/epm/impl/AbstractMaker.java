@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -38,9 +38,14 @@ public abstract class AbstractMaker<C extends EpmConfig> extends EpmBase<C> impl
     public abstract void make(Book book, OutputStream output, C config) throws IOException, MakerException;
 
     @Override
-    public final void make(@NonNull Book book, @NonNull File file, Map<String, Object> args) throws IOException, JemException {
+    public void make(@NonNull Book book, @NonNull File file, Map<String, Object> args) throws IOException, JemException {
         try (val out = new BufferedOutputStream(new FileOutputStream(file))) {
             make(book, out, fetchConfig(args));
         }
+    }
+
+    @Override
+    public void make(Book book, String output, Map<String, Object> args) throws IOException, JemException {
+        make(book, new File(output), args);
     }
 }

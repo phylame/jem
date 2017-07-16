@@ -18,6 +18,7 @@
 
 package jem.crawler.impl;
 
+import jclp.util.DateUtils;
 import jem.Chapter;
 import jem.crawler.*;
 import jem.crawler.util.SoupUtils;
@@ -29,15 +30,14 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.jsoup.select.Selector;
-import jclp.util.DateUtils;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 
-import static jem.Attributes.*;
 import static jclp.util.StringUtils.isNotEmpty;
 import static jclp.util.StringUtils.valueOfName;
+import static jem.Attributes.*;
 
 public class YD_SOGOU_COM extends CrawlerProvider implements Searchable, Identifiable {
     private static final String ENCODING = "UTF-8";

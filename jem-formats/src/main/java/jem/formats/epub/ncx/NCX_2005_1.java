@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,6 +18,8 @@
 
 package jem.formats.epub.ncx;
 
+import jclp.util.MiscUtils;
+import jclp.util.StringUtils;
 import jem.Attributes;
 import jem.Chapter;
 import jem.epm.util.MakerException;
@@ -31,8 +33,6 @@ import jem.formats.epub.item.Resource;
 import jem.formats.epub.item.Spine;
 import jem.formats.epub.writer.EpubWriter;
 import lombok.val;
-import jclp.util.MiscUtils;
-import jclp.util.StringUtils;
 
 import java.io.IOException;
 import java.util.List;

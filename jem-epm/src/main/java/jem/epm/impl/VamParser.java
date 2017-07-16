@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,10 +18,10 @@
 
 package jem.epm.impl;
 
-import jem.epm.util.config.AbstractConfig;
-import jem.epm.util.config.Configured;
 import jclp.util.StringUtils;
 import jclp.vdm.VdmReader;
+import jem.epm.util.config.AbstractConfig;
+import jem.epm.util.config.Configured;
 
 import java.io.File;
 import java.io.IOException;

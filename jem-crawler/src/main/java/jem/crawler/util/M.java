@@ -18,8 +18,8 @@
 
 package jem.crawler.util;
 
-import lombok.NonNull;
 import jclp.util.Linguist;
+import lombok.NonNull;
 
 /**
  * Internal message translator.

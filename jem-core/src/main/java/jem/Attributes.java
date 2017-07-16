@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,6 +18,8 @@
 
 package jem;
 
+import jclp.log.Log;
+import jclp.util.Exceptions;
 import jem.util.M;
 import jem.util.VariantMap.Validator;
 import jem.util.Variants;
@@ -26,8 +28,6 @@ import jem.util.text.Text;
 import jem.util.text.Texts;
 import lombok.NonNull;
 import lombok.val;
-import jclp.log.Log;
-import jclp.util.Exceptions;
 
 import java.io.IOException;
 import java.util.*;

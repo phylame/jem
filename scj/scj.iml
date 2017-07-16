@@ -29,19 +29,19 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="jem-formats" />
     <orderEntry type="module" module-name="jem-epm" />
+    <orderEntry type="module" module-name="jem-core" />
+    <orderEntry type="library" name="Maven: pw.phylame.util:commons:2.1.0" level="project" />
     <orderEntry type="library" name="Maven: xpp3:xpp3:1.1.4c" level="project" />
+    <orderEntry type="module" module-name="jem-kotlin" />
+    <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-stdlib:1.1.3" level="project" />
+    <orderEntry type="library" name="Maven: org.jetbrains:annotations:13.0" level="project" />
+    <orderEntry type="module" module-name="jem-formats" />
     <orderEntry type="module" module-name="jem-crawler" />
     <orderEntry type="library" name="Maven: org.jsoup:jsoup:1.10.2" level="project" />
     <orderEntry type="library" name="Maven: org.json:json:20170516" level="project" />
-    <orderEntry type="module" module-name="jem-kotlin" />
-    <orderEntry type="module" module-name="jem-core" />
-    <orderEntry type="library" name="Maven: pw.phylame.util:commons:2.1.0" level="project" />
-    <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-stdlib:1.1.3" level="project" />
-    <orderEntry type="library" name="Maven: org.jetbrains:annotations:13.0" level="project" />
-    <orderEntry type="library" name="Maven: pw.phylame.qaf:qaf-cli:1.2.0" level="project" />
-    <orderEntry type="library" name="Maven: pw.phylame.qaf:qaf-core:1.2.0" level="project" />
+    <orderEntry type="library" name="Maven: pw.phylame.mala:mala-cli:2.0" level="project" />
+    <orderEntry type="library" name="Maven: pw.phylame.mala:mala-core:2.0" level="project" />
     <orderEntry type="library" name="Maven: commons-cli:commons-cli:1.4" level="project" />
   </component>
 </module>

@@ -18,12 +18,12 @@
 
 package jem.crawler;
 
+import jclp.cache.Cacheable;
+import jclp.cache.InlineCache;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import org.jsoup.nodes.Document;
-import jclp.cache.Cacheable;
-import jclp.cache.InlineCache;
 
 import java.lang.ref.WeakReference;
 import java.util.concurrent.atomic.AtomicInteger;

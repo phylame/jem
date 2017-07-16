@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,6 +18,8 @@
 
 package jem.formats.epub.opf;
 
+import jclp.util.DateUtils;
+import jclp.util.MiscUtils;
 import jem.Book;
 import jem.epm.util.MakerException;
 import jem.epm.util.xml.XmlRender;
@@ -27,15 +29,13 @@ import jem.formats.epub.item.Guide;
 import jem.formats.epub.item.Resource;
 import jem.formats.epub.item.Spine;
 import lombok.val;
-import jclp.util.DateUtils;
-import jclp.util.MiscUtils;
 
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
-import static jem.Attributes.*;
 import static jclp.util.StringUtils.isNotEmpty;
+import static jem.Attributes.*;
 
 /**
  * OPF 2.0 implements.

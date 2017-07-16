@@ -18,6 +18,10 @@
 
 package jem.crawler.impl;
 
+import jclp.io.HttpUtils;
+import jclp.io.IOUtils;
+import jclp.io.PathUtils;
+import jclp.util.DateUtils;
 import jem.Chapter;
 import jem.crawler.*;
 import jem.util.flob.Flobs;
@@ -27,18 +31,14 @@ import org.json.JSONTokener;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
-import jclp.io.HttpUtils;
-import jclp.io.IOUtils;
-import jclp.io.PathUtils;
-import jclp.util.DateUtils;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 
-import static jem.Attributes.*;
 import static jclp.util.StringUtils.join;
 import static jclp.util.StringUtils.trimmed;
+import static jem.Attributes.*;
 
 public class H5_17K_COM extends CrawlerProvider implements Searchable, Identifiable {
     private static final String ENCODING = "UTF-8";

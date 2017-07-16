@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,8 +18,8 @@
 
 package jem.epm.util;
 
-import lombok.NonNull;
 import jclp.util.Linguist;
+import lombok.NonNull;
 
 public final class M {
     private M() {

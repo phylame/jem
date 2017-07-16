@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,10 +18,10 @@
 
 package jem.util;
 
-import lombok.NonNull;
-import lombok.val;
 import jclp.util.StringUtils;
 import jclp.util.Validate;
+import lombok.NonNull;
+import lombok.val;
 
 import java.util.HashMap;
 import java.util.Map;

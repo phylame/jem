@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -39,6 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static jclp.util.CollectionUtils.isEmpty;
 import static jclp.util.CollectionUtils.setOf;
+import static jclp.util.StringUtils.isNotEmpty;
 
 public final class EpmManager {
     private EpmManager() {
@@ -328,6 +329,14 @@ public final class EpmManager {
         return parserForFormat(format).parse(input, args);
     }
 
+    public static Book readBook(@NonNull EpmInParam param) throws IOException, JemException {
+        if (isNotEmpty(param.getPath())) {
+            return readBook(param.getPath(), param.getFormat(), param.getArguments());
+        } else {
+            return readBook(param.getCache() != null ? param.getCache() : param.getFile(), param.getFormat(), param.getArguments());
+        }
+    }
+
     public static Maker makerForFormat(@NonNull String format) throws UnsupportedFormatException {
         Maker maker = null;
         try {
@@ -355,6 +364,19 @@ public final class EpmManager {
     public static void writeBook(@NonNull Book book, @NonNull File output, String format, Map<String, Object> args)
             throws IOException, JemException {
         makerForFormat(format).make(book, output, args);
+    }
+
+    public static void writeBook(@NonNull Book book, @NonNull String output, String format, Map<String, Object> args)
+            throws IOException, JemException {
+        makerForFormat(format).make(book, output, args);
+    }
+
+    public static void writeBook(@NonNull EpmOutParam param) throws IOException, JemException {
+        if (isNotEmpty(param.getPath())) {
+            writeBook(param.getBook(), param.getPath(), param.getFormat(), param.getArguments());
+        } else {
+            writeBook(param.getBook(), param.getOutput(), param.getFormat(), param.getArguments());
+        }
     }
 
     public static void loadImplementors() {
@@ -387,5 +409,4 @@ public final class EpmManager {
             loadImplementors();
         }
     }
-
 }

@@ -1,0 +1,10 @@
+# list class path of plugin here
+
+# View app information
+jem.scj.addon.AppInspector
+
+# Run script file in SCJ context
+jem.scj.addon.ScriptRunner
+
+# Create new book
+jem.scj.addon.BookCreator

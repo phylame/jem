@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,6 +18,12 @@
 
 package jem.formats.pmab;
 
+import jclp.io.PathUtils;
+import jclp.text.Converters;
+import jclp.util.CollectionUtils;
+import jclp.util.DateUtils;
+import jclp.util.MiscUtils;
+import jclp.util.StringUtils;
 import jem.Attributes;
 import jem.Book;
 import jem.Chapter;
@@ -32,12 +38,6 @@ import jem.util.flob.Flob;
 import jem.util.text.Text;
 import jem.util.text.Texts;
 import lombok.val;
-import jclp.text.Converters;
-import jclp.io.PathUtils;
-import jclp.util.CollectionUtils;
-import jclp.util.DateUtils;
-import jclp.util.MiscUtils;
-import jclp.util.StringUtils;
 
 import java.io.IOException;
 import java.io.StringWriter;

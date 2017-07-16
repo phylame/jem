@@ -18,6 +18,7 @@
 
 package jem.crawler;
 
+import jclp.util.Validate;
 import jem.Attributes;
 import jem.Chapter;
 import jem.util.text.AbstractText;
@@ -26,7 +27,6 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
-import jclp.util.Validate;
 
 import java.io.IOException;
 import java.util.concurrent.*;

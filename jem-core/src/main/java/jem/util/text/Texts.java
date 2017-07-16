@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,13 +18,13 @@
 
 package jem.util.text;
 
+import jclp.io.IOUtils;
+import jclp.util.Exceptions;
 import jem.util.Variants;
 import jem.util.flob.Flob;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
-import jclp.io.IOUtils;
-import jclp.util.Exceptions;
 
 import java.io.IOException;
 import java.io.Writer;

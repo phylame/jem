@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,6 +18,7 @@
 
 package jem.formats.epub;
 
+import jclp.io.PathUtils;
 import jem.Attributes;
 import jem.Book;
 import jem.Chapter;
@@ -33,7 +34,6 @@ import jem.util.flob.Flob;
 import jem.util.text.Text;
 import jem.util.text.Texts;
 import lombok.val;
-import jclp.io.PathUtils;
 
 import java.io.IOException;
 import java.io.StringWriter;

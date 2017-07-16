@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,12 +18,12 @@
 
 package jem.epm.util.xml;
 
+import jclp.util.StringUtils;
 import jem.epm.util.MakerException;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.xmlpull.v1.XmlSerializer;
-import jclp.util.StringUtils;
 
 import java.io.IOException;
 import java.io.OutputStream;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,16 +18,16 @@
 
 package jem.epm.util.config;
 
+import jclp.function.Predicate;
+import jclp.log.Log;
+import jclp.text.Converters;
+import jclp.util.CollectionUtils;
+import jclp.util.Reflections;
 import jem.epm.util.E;
 import jem.epm.util.M;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
-import jclp.text.Converters;
-import jclp.function.Predicate;
-import jclp.log.Log;
-import jclp.util.CollectionUtils;
-import jclp.util.Reflections;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;

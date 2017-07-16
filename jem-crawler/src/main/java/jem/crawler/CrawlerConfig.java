@@ -18,9 +18,9 @@
 
 package jem.crawler;
 
+import jclp.cache.Cacheable;
 import jem.epm.util.config.AbstractConfig;
 import jem.epm.util.config.Configured;
-import jclp.cache.Cacheable;
 
 public class CrawlerConfig extends AbstractConfig {
     public static final String SELF = "config";

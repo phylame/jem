@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,19 +18,19 @@
 
 package jem;
 
+import jclp.function.Consumer;
+import jclp.log.Log;
+import jclp.util.Hierarchical;
 import jem.util.VariantMap;
 import jem.util.flob.Flob;
 import jem.util.text.Text;
 import lombok.*;
-import jclp.function.Consumer;
-import jclp.log.Log;
-import jclp.util.Hierarchical;
 
 import java.lang.ref.WeakReference;
 import java.util.*;
 
-import static jem.Attributes.*;
 import static jclp.util.Validate.require;
+import static jem.Attributes.*;
 
 /**
  * <p>
@@ -114,22 +114,15 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
      * Content of the chapter.
      */
     @Getter
+    @Setter
     private Text text;
-
-    public final void setText(@NonNull Text text) {
-        this.text = text;
-    }
 
     /**
      * Extra data field used by user.
      */
+    @Getter
     @Setter
     private Object tag;
-
-    @SuppressWarnings("unchecked")
-    public final <T> T getTag() {
-        return (T) tag;
-    }
 
     // ****************************
     // ** Sub-chapter operations **

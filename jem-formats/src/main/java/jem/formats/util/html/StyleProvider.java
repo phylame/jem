@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,15 +18,15 @@
 
 package jem.formats.util.html;
 
-import jem.formats.util.M;
-import jem.util.flob.Flob;
-import jem.util.flob.Flobs;
-import lombok.val;
 import jclp.function.Provider;
 import jclp.io.IOUtils;
 import jclp.util.CollectionUtils;
 import jclp.util.StringUtils;
 import jclp.value.Lazy;
+import jem.formats.util.M;
+import jem.util.flob.Flob;
+import jem.util.flob.Flobs;
+import lombok.val;
 
 import java.io.IOException;
 import java.lang.reflect.Modifier;

@@ -146,7 +146,7 @@ internal class BookActivity : BaseActivity() {
         b.append("Supported Parser:\n")
         b.append("  ").append(EpmManager.supportedParsers().joinToString(postfix = "\n", transform = String::toUpperCase))
         b.append("Supported Maker:\n")
-        b.append("  ").append(EpmManager.supportedMakers().joinToString(postfix = "\n", transform = String ::toUpperCase))
+        b.append("  ").append(EpmManager.supportedMakers().joinToString(postfix = "\n", transform = String::toUpperCase))
         message("About Imabw", b)
     }
 

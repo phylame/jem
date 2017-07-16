@@ -19,12 +19,12 @@
 # Registry for crawler providers
 # syntax: host=[path to class]
 
-http\://h5.17k.com=jem.crawler.impl.H5_17K_COM
-https\://yd.sogou.com=jem.crawler.impl.YD_SOGOU_COM
-http\://www.mangg.com=jem.crawler.impl.WWW_MANGG_COM
-http\://m.qidian.com=jem.crawler.impl.M_QIDIAN_COM
-http\://book.qidian.com=jem.crawler.impl.BOOK_QIDIAN_COM
-http\://m.zongheng.com=jem.crawler.impl.M_ZONGHENG_COM
-http\://book.zongheng.com=jem.crawler.impl.BOOK_ZONGHENG_COM
-http\://m.motie.com=jem.crawler.impl.M_MOTIE_COM
-http\://www.zhulang.com=jem.crawler.impl.WWW_ZHULANG_COM
+h5.17k.com=jem.crawler.impl.H5_17K_COM
+yd.sogou.com=jem.crawler.impl.YD_SOGOU_COM
+www.mangg.com=jem.crawler.impl.WWW_MANGG_COM
+m.qidian.com=jem.crawler.impl.M_QIDIAN_COM
+book.qidian.com=jem.crawler.impl.BOOK_QIDIAN_COM
+m.zongheng.com=jem.crawler.impl.M_ZONGHENG_COM
+book.zongheng.com=jem.crawler.impl.BOOK_ZONGHENG_COM
+m.motie.com=jem.crawler.impl.M_MOTIE_COM
+www.zhulang.com=jem.crawler.impl.WWW_ZHULANG_COM

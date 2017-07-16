@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,6 +18,7 @@
 
 package jem.formats.pmab;
 
+import jclp.log.Log;
 import jem.Attributes;
 import jem.Book;
 import jem.Chapter;
@@ -36,16 +37,15 @@ import lombok.NonNull;
 import lombok.val;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
-import jclp.log.Log;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipFile;
 
+import static jclp.util.StringUtils.*;
 import static jem.epm.util.xml.XmlUtils.attributeOf;
 import static jem.epm.util.xml.XmlUtils.newPullParser;
-import static jclp.util.StringUtils.*;
 
 /**
  * PMAB e-book parser.

@@ -18,12 +18,12 @@
 
 package jem.crawler;
 
+import jclp.util.Validate;
 import jem.Book;
 import jem.epm.Parser;
 import jem.epm.impl.EpmBase;
 import jem.util.JemException;
 import lombok.val;
-import jclp.util.Validate;
 
 import java.io.File;
 import java.io.IOException;

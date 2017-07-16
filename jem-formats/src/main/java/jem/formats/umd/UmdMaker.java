@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,6 +18,12 @@
 
 package jem.formats.umd;
 
+import jclp.io.BufferedRandomAccessFile;
+import jclp.io.PathUtils;
+import jclp.io.ZLibUtils;
+import jclp.log.Log;
+import jclp.util.CollectionUtils;
+import jclp.util.StringUtils;
 import jem.Attributes;
 import jem.Book;
 import jem.Chapter;
@@ -29,12 +35,6 @@ import jem.formats.util.M;
 import jem.util.flob.Flob;
 import lombok.NonNull;
 import lombok.val;
-import jclp.io.BufferedRandomAccessFile;
-import jclp.io.PathUtils;
-import jclp.io.ZLibUtils;
-import jclp.log.Log;
-import jclp.util.CollectionUtils;
-import jclp.util.StringUtils;
 
 import java.io.*;
 import java.util.Calendar;

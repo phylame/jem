@@ -18,12 +18,12 @@
 
 package jem.crawler;
 
+import jclp.util.Implementor;
+import jclp.util.MiscUtils;
 import jem.crawler.util.M;
 import jem.epm.util.ParserException;
 import lombok.NonNull;
 import lombok.val;
-import jclp.util.Implementor;
-import jclp.util.MiscUtils;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -67,7 +67,7 @@ public final class CrawlerManager {
         } catch (MalformedURLException e) {
             throw new ParserException(M.tr("err.unknownHost", input), e);
         }
-        val host = url.getProtocol() + "://" + url.getHost();
+        val host = url.getHost();
         final CrawlerProvider crawler;
         try {
             crawler = crawlers.getInstance(host);

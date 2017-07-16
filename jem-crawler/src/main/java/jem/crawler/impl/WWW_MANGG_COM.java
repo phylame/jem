@@ -18,6 +18,8 @@
 
 package jem.crawler.impl;
 
+import jclp.util.DateUtils;
+import jclp.util.Validate;
 import jem.Chapter;
 import jem.crawler.CrawlerProvider;
 import jem.crawler.CrawlerText;
@@ -27,16 +29,14 @@ import lombok.val;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
-import jclp.util.DateUtils;
-import jclp.util.Validate;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
 import java.util.LinkedList;
 
-import static jem.Attributes.*;
 import static jclp.util.StringUtils.*;
+import static jem.Attributes.*;
 
 public class WWW_MANGG_COM extends CrawlerProvider implements Identifiable {
     private static final String HOST = "http://www.mangg.com";

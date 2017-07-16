@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,6 +18,7 @@
 
 package jem.formats.jar;
 
+import jclp.io.IOUtils;
 import jem.Attributes;
 import jem.Book;
 import jem.epm.impl.ZipMaker;
@@ -27,7 +28,6 @@ import jem.epm.util.text.TextRender;
 import jem.formats.util.M;
 import jem.util.Build;
 import lombok.val;
-import jclp.io.IOUtils;
 
 import java.io.DataOutputStream;
 import java.io.IOException;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,13 +18,13 @@
 
 package jem.epm.util.text;
 
+import jclp.util.CollectionUtils;
 import jem.Attributes;
 import jem.Chapter;
 import jem.util.text.Text;
 import jem.util.text.Texts;
 import lombok.NonNull;
 import lombok.val;
-import jclp.util.CollectionUtils;
 
 import java.util.LinkedList;
 

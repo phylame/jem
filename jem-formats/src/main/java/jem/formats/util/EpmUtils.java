@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,10 +18,10 @@
 
 package jem.formats.util;
 
-import jem.epm.util.ParserException;
-import lombok.val;
 import jclp.text.Converters;
 import jclp.util.DateUtils;
+import jem.epm.util.ParserException;
+import lombok.val;
 
 import java.text.ParseException;
 import java.util.Date;

@@ -18,8 +18,8 @@
 
 package jem.crawler.util;
 
-import org.jsoup.nodes.Node;
 import jclp.util.RandomUtils;
+import org.jsoup.nodes.Node;
 
 public final class SoupUtils {
     public static final String[] USER_AGENTS = {

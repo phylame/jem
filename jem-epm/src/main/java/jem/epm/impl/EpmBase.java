@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,12 +18,12 @@
 
 package jem.epm.impl;
 
+import jclp.util.Validate;
 import jem.epm.Parser;
 import jem.epm.util.config.BadConfigException;
 import jem.epm.util.config.ConfigUtils;
 import jem.epm.util.config.EpmConfig;
 import lombok.Getter;
-import jclp.util.Validate;
 
 import java.util.Map;
 

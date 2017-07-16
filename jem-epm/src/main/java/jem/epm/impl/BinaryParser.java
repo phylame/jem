@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,13 +18,13 @@
 
 package jem.epm.impl;
 
+import jclp.io.BufferedRandomAccessFile;
+import jclp.io.ByteUtils;
 import jem.epm.util.E;
 import jem.epm.util.M;
 import jem.epm.util.ParserException;
 import jem.epm.util.config.EpmConfig;
 import lombok.val;
-import jclp.io.BufferedRandomAccessFile;
-import jclp.io.ByteUtils;
 
 import java.io.File;
 import java.io.IOException;

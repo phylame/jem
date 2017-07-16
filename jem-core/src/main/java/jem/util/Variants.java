@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,6 +18,16 @@
 
 package jem.util;
 
+import jclp.function.Function;
+import jclp.function.Provider;
+import jclp.io.IOUtils;
+import jclp.io.PathUtils;
+import jclp.log.Log;
+import jclp.text.ConverterManager;
+import jclp.text.Converters;
+import jclp.text.Parser;
+import jclp.util.DateUtils;
+import jclp.util.Validate;
 import jem.util.flob.Flob;
 import jem.util.flob.Flobs;
 import jem.util.text.Text;
@@ -25,14 +35,9 @@ import jem.util.text.Texts;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
-import jclp.function.Function;
-import jclp.function.Provider;
-import jclp.io.PathUtils;
-import jclp.log.Log;
-import jclp.util.DateUtils;
-import jclp.util.Validate;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.*;
 
 import static jclp.util.CollectionUtils.getOrPut;
@@ -64,8 +69,11 @@ public final class Variants {
     // default value for variant name
     private static final Map<String, Object> defaults = new HashMap<>();
 
-    // variant name for java class
+    // map variant name to class
     private static final Map<Class<?>, String> mappings = new IdentityHashMap<>();
+
+    // map class to variant name
+    private static final Map<String, Class<?>> types = new HashMap<>();
 
     /**
      * Loads built-in variant mapping.
@@ -172,6 +180,18 @@ public final class Variants {
      */
     public static void mapClass(@NonNull Class<?> clazz, String type) {
         mappings.put(clazz, ensureRegistered(type));
+        types.put(type, clazz);
+    }
+
+    /**
+     * Gets the class of specified variant name.
+     *
+     * @param name the variant name
+     * @return the class
+     * @since 3.4.0
+     */
+    public static Class<?> classOf(String name) {
+        return types.get(name);
     }
 
     /**
@@ -245,5 +265,33 @@ public final class Variants {
             default:
                 return null;
         }
+    }
+
+    public static Object parse(String type, String value) {
+        Class<?> clazz = classOf(type);
+        if (clazz == null || CharSequence.class.isAssignableFrom(clazz)) {
+            return value;
+        } else if (Flob.class.isAssignableFrom(clazz)) {
+            clazz = Flob.class;
+        } else if (Text.class.isAssignableFrom(clazz)) {
+            clazz = Text.class;
+        }
+        return Converters.parse(value, clazz);
+    }
+
+    static {
+        ConverterManager.registerParser(Text.class, new Parser<Text>() {
+            @Override
+            public Text parse(String str) {
+                return Texts.forString(str, Texts.PLAIN);
+            }
+        });
+        ConverterManager.registerParser(Flob.class, new Parser<Flob>() {
+            @Override
+            @SneakyThrows(MalformedURLException.class)
+            public Flob parse(String str) {
+                return Flobs.forURL(IOUtils.resourceFor(str), null);
+            }
+        });
     }
 }

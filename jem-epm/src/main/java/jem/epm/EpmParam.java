@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,42 +18,45 @@
 
 package jem.epm;
 
-import lombok.*;
 import jclp.io.PathUtils;
-import jclp.util.StringUtils;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
 
 import java.io.File;
 import java.util.Map;
+
+import static jclp.util.StringUtils.coalesce;
+import static jclp.util.StringUtils.isNotEmpty;
 
 @Data
 @RequiredArgsConstructor
 abstract class EpmParam {
     /**
-     * The book file.
+     * Input/output file
      */
-    @NonNull
     private final File file;
 
     /**
-     * Extension name of file.
+     * Input/output path
      */
-    private final String extension;
+    private final String path;
 
     /**
-     * Name of epm maker.
+     * Name of epm worker
      */
-    @Getter(lazy = true)
-    private final String format = detectFormat();
+    private final String format;
 
     /**
      * Epm worker arguments.
      */
     private final Map<String, Object> arguments;
 
-    private String detectFormat() {
-        val ext = StringUtils.isNotEmpty(extension)
-                ? extension
-                : PathUtils.extName(file.getPath()).toLowerCase();
-        return StringUtils.coalesce(EpmManager.nameOfExtension(ext), ext);
+    public final String getFormat() {
+        if (isNotEmpty(format)) {
+            return format;
+        }
+        val suffix = PathUtils.extName(isNotEmpty(path) ? path : file.getPath());
+        return coalesce(EpmManager.nameOfExtension(suffix), suffix);
     }
 }

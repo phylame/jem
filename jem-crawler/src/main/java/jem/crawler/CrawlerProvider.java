@@ -18,6 +18,12 @@
 
 package jem.crawler;
 
+import jclp.io.HttpUtils;
+import jclp.io.IOUtils;
+import jclp.log.Log;
+import jclp.text.Render;
+import jclp.util.StringUtils;
+import jclp.util.Validate;
 import jem.crawler.util.SoupUtils;
 import jem.epm.util.InputCleaner;
 import lombok.Getter;
@@ -29,12 +35,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
-import jclp.text.Render;
-import jclp.io.HttpUtils;
-import jclp.io.IOUtils;
-import jclp.log.Log;
-import jclp.util.StringUtils;
-import jclp.util.Validate;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Peng Wan <phylame@163.com>
+ * Copyright 2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,14 +18,14 @@
 
 package jem.epm.util;
 
+import jclp.io.PathUtils;
+import jclp.util.StringUtils;
 import jem.Book;
 import jem.Chapter;
 import jem.epm.EpmManager;
 import jem.util.JemException;
 import jem.util.Variants;
 import lombok.val;
-import jclp.io.PathUtils;
-import jclp.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;

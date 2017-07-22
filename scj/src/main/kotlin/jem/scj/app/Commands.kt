@@ -19,7 +19,6 @@
 package jem.scj.app
 
 import jem.Book
-import jem.epm.EpmInParam
 import mala.cli.CLIDelegate
 import mala.cli.Command
 import mala.cli.ValuesFetcher

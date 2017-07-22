@@ -28,7 +28,6 @@ import jem.imabw.app.ui.Dialogs
 import jem.imabw.app.ui.OpenResult
 import jem.imabw.app.ui.Viewer
 import jem.imabw.app.ui.WaitingDialog
-import jem.util.UnsupportedFormatException
 import qaf.core.App
 import rx.Observable
 import rx.Observer

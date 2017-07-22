@@ -23,46 +23,40 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * A file-like object providing reused and read-only input source.
+ * A file-like object providing large and reusable binary data.
  */
 public interface Flob {
     /**
-     * Returns name of the object.
+     * Returns the name of this object.
      *
-     * @return the name, never be {@literal null}
+     * @return the name of this object
      */
     String getName();
 
     /**
-     * Returns the MIME type of the content.
+     * Returns the mime type of this object.
      *
-     * @return the MIME string, never be {@literal null}
+     * @return the mime type of this object
      */
     String getMime();
 
     /**
-     * Opens an {@code InputStream} for reading the content.
+     * Opens an {@code InputStream} for reading data of this object.
+     * <p>
+     * This method can be called multiple times.
      *
-     * @return the stream, never be {@literal null}
-     * @throws IOException if occurs I/O errors
+     * @return an input stream for reading this object
+     * @throws IOException if an I/O error occurs
      */
     InputStream openStream() throws IOException;
 
     /**
-     * Reads all bytes from the object.
+     * Writes data of this object to specified output stream.
      *
-     * @return the byte array, may be an empty array
-     * @throws IOException if occurs I/O errors
-     */
-    byte[] readAll() throws IOException;
-
-    /**
-     * Writes content of the object to specified output stream.
-     *
-     * @param out the destination output stream
+     * @param output the destination output stream
      * @return number of written bytes
-     * @throws NullPointerException if the output stream is {@literal null}
-     * @throws IOException          if occurs I/O errors
+     * @throws NullPointerException if specified output is null
+     * @throws IOException          if an I/O error occurs
      */
-    long writeTo(OutputStream out) throws IOException;
+    long writeTo(OutputStream output) throws IOException;
 }

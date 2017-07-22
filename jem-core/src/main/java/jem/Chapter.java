@@ -20,206 +20,215 @@ package jem;
 
 import jclp.function.Consumer;
 import jclp.log.Log;
-import jclp.util.Hierarchical;
+import jem.util.Hierarchial;
 import jem.util.VariantMap;
-import jem.util.flob.Flob;
 import jem.util.text.Text;
 import lombok.*;
 
-import java.lang.ref.WeakReference;
 import java.util.*;
 
 import static jclp.util.Validate.require;
-import static jem.Attributes.*;
 
 /**
+ * The chapter/section in Jem book models.
  * <p>
- * Common chapter model in book contents.
- * </p>
- * <p>
- * The <code>Chapter</code> represents base element of book, it may be:
+ * A chapter includes several parts:
  * </p>
  * <ul>
- * <li>Chapter: common chapter</li>
- * <li>Section: collection of chapters</li>
- * <li>and others</li>
- * </ul>
- * <p>
- * A common <code>Chapter</code> structure contains following parts:
- * </p>
- * <ul>
- * <li>attributes map: a string-value map contains information of chapter</li>
- * <li>text text: main text of the chapter, provided by {@code Text} text</li>
- * <li>sub-chapter list: list of sub chapters</li>
- * <li>clean works: task for cleaning resources and others</li>
+ * <li>Attributes: a key-value map containing information of the chapter</li>
+ * <li>Sub-chapters: a list containing all sub-chapters, optional</li>
+ * <li>Text: main text of the chapter, optional</li>
+ * <li>Tag: extra data field used by user, optional</li>
+ * <li>Cleanups: actions for cleanup resources of the chapter</li>
  * </ul>
  */
-public class Chapter implements Hierarchical<Chapter>, Cloneable {
-    /**
-     * Constructs chapter with empty title.
-     */
-    public Chapter() {
-        setTitle(this, "");
-    }
-
-    /**
-     * Constructs chapter with specified title.
-     *
-     * @param title title of chapter
-     * @throws NullPointerException if the <code>title</code> is <code>null</code>
-     */
-    public Chapter(String title) {
-        setTitle(this, title);
-    }
-
-    /**
-     * Constructs chapter with specified title and text.
-     *
-     * @param title title of chapter
-     * @param text  text text provider
-     * @throws NullPointerException if the title or text is {@literal null}
-     */
-    public Chapter(String title, Text text) {
-        setTitle(this, title);
-        setText(text);
-    }
-
-    /**
-     * Constructs chapter with specified title, text, cover image and intro text.
-     *
-     * @param title title of chapter
-     * @param cover <code>Flob</code> contains cover image, <code>null</code> will be ignored
-     * @param intro intro text, <code>null</code> will be ignored
-     * @param text  text text provider
-     * @throws NullPointerException if the argument list contains <code>null</code>
-     */
-    public Chapter(String title, Flob cover, Text intro, Text text) {
-        setTitle(this, title);
-        setCover(this, cover);
-        setIntro(this, intro);
-        setText(text);
-    }
-
-    public Chapter(@NonNull Chapter chapter) {
-        chapter.dumpTo(this);
-    }
+public class Chapter implements Hierarchial<Chapter>, Cloneable {
+    private static final String TAG = "Chapter";
 
     /**
      * Attributes of the chapter.
      */
     @Getter
-    private VariantMap attributes = new VariantMap(new HashMap<String, Object>(), variantValidator);
-
-    /**
-     * Content of the chapter.
-     */
-    @Getter
-    @Setter
-    private Text text;
+    private VariantMap attributes = Attributes.newAttributes();
 
     /**
      * Extra data field used by user.
      */
     @Getter
     @Setter
-    private Object tag;
-
-    // ****************************
-    // ** Sub-chapter operations **
-    // ****************************
+    private Object tag = null;
 
     /**
-     * Parent of current chapter.
+     * Optional text of the chapter.
      */
-    private WeakReference<Chapter> parent = null;
+    @Getter
+    @Setter
+    private Text text = null;
 
     /**
-     * Returns parent chapter of current chapter.
+     * Constructs instance without attributes.
+     */
+    public Chapter() {
+    }
+
+    /**
+     * Constructs instance with specified title
      *
-     * @return the parent or <code>null</code> if not present
+     * @param title the chapter title
+     * @throws NullPointerException if the title is null
      */
-    @Override
-    public final Chapter getParent() {
-        return parent != null ? parent.get() : null;
-    }
-
-    private void setParent(Chapter parent) {
-        this.parent = new WeakReference<>(parent);
+    public Chapter(String title) {
+        Attributes.set(this, Attributes.TITLE, title);
     }
 
     /**
-     * Sub-chapters list.
-     */
-    private List<Chapter> chapters = new ArrayList<>();
-
-    private Chapter checkChapter(@NonNull Chapter chapter) {
-        require(chapter != this, "Cannot add self to sub chapter list: %s", chapter);
-        require(chapter.getParent() == null, "Chapter already in a certain section: %s", chapter);
-        require(chapter != getParent(), "Cannot add parent chapter to its sub chapter list: %s", chapter);
-        return chapter;
-    }
-
-    /**
-     * Appends the specified chapter to the end of sub-chapter list.
+     * Constructs instance with specified title and specified text.
      *
-     * @param chapter the <code>Chapter</code> to be added
-     * @throws NullPointerException if the <code>chapter</code> is <code>null</code>
+     * @param title the chapter title
+     * @param text  main text
+     * @throws NullPointerException if the title is null
      */
-    public final void append(Chapter chapter) {
-        chapters.add(checkChapter(chapter));
-        chapter.setParent(this);
+    public Chapter(String title, Text text) {
+        Attributes.set(this, Attributes.TITLE, title);
+        this.text = text;
     }
 
     /**
-     * Inserts the specified chapter at specified position in sub-chapter list.
+     * Constructs instance with coping data from specified chapter.
      *
-     * @param index   index of the chapter to be inserted
-     * @param chapter the <code>Chapter</code> to be added
-     * @throws NullPointerException      if the <code>chapter</code> is <code>null</code>
-     * @throws IndexOutOfBoundsException if the index is out of range (index &lt; 0 || index &ge; size())
+     * @param chapter  the chapter to be copied
+     * @param deepCopy {@code true} to clone all sub-chapters
+     * @throws NullPointerException if the chapter is null
      */
-    public final void insert(int index, Chapter chapter) {
-        chapters.add(index, checkChapter(chapter));
-        chapter.setParent(this);
+    public Chapter(@NonNull Chapter chapter, boolean deepCopy) {
+        dumpTo(chapter, deepCopy);
+    }
+
+    // *************************************** \\
+    // **** Contents Hierarchy Operations **** \\
+    // *************************************** \\
+
+    @Getter
+    private Chapter parent = null;
+
+    private ArrayList<Chapter> children = new ArrayList<>();
+
+    /**
+     * Appends specified chapter to the end of sub-chapter list.
+     *
+     * @param chapter chapter to be appended to sub-chapter list
+     * @throws NullPointerException     if the specified chapter is null
+     * @throws IllegalArgumentException if the specified chapter is not solitary
+     */
+    public final void append(@NonNull Chapter chapter) {
+        children.add(requireSolitary(chapter));
+        chapter.parent = this;
     }
 
     /**
-     * Returns the index of the first occurrence of the specified chapter in sub chapters list.
+     * Inserts the specified chapter at the specified position in sub-chapter list.
      *
-     * @param chapter the chapter to search of
-     * @return the index or <code>-1</code> if specified chapter not presents
-     * @throws NullPointerException if the <code>chapter</code> is <code>null</code>
+     * @param index   index at which the specified chapter is to be inserted
+     * @param chapter chapter to be inserted
+     * @throws NullPointerException      if the specified chapter is null
+     * @throws IllegalArgumentException  if the specified chapter is not solitary
+     * @throws IndexOutOfBoundsException if the index is out of range (<tt>index &lt; 0 || index &gt; size()</tt>)
      */
-    public final int indexOf(@NonNull Chapter chapter) {
-        return chapter.getParent() != this ? -1 : chapters.indexOf(chapter);
+    public final void insert(int index, @NonNull Chapter chapter) {
+        children.add(index, requireSolitary(chapter));
+        chapter.parent = this;
     }
 
     /**
-     * Removes the chapter at specified position from sub-chapter list.
+     * Returns the number of chapters in sub-chapter list.
      *
-     * @param index index of the chapter to be removed
-     * @return the chapter at specified position or <code>null</code> if <code>index</code> not exists
-     * @throws IndexOutOfBoundsException if the index is out of range (index &lt; 0 || index &ge; size())
+     * @return the number of chapters in sub-chapter list
      */
-    public final Chapter removeAt(int index) {
-        val chapter = chapters.remove(index);
-        chapter.parent = null;
-        return chapter;
+    public final int size() {
+        return children.size();
     }
 
     /**
-     * Removes the specified chapter from sub-chapter list.
+     * Returns <tt>true</tt> if sub-chapter list is not empty.
      *
-     * @param chapter chapter to be removed from sub-chapter list, if present
-     * @return <code>true</code> if sub-chapter list contained the specified chapter
-     * @throws NullPointerException if the <code>chapter</code> is <code>null</code>
+     * @return <tt>true</tt> if sub-chapter list is not empty
      */
-    public final boolean remove(@NonNull Chapter chapter) {
-        // not contained in children list
-        if (chapter.getParent() != this) { // to be faster
+    public final boolean isSection() {
+        return !children.isEmpty();
+    }
+
+    /**
+     * Returns the index of the first occurrence of the specified chapter in sub-chapter list, or -1 if sub-chapter list
+     * does not contain the chapter.
+     *
+     * @param chapter chapter to search for
+     * @return the index of the first occurrence of the specified chapter in sub-chapter list, or -1 if sub-chapter list
+     * does not contain the chapter
+     */
+    public final int indexOf(Chapter chapter) {
+        return chapter == null || chapter.parent != this ? -1 : children.indexOf(chapter);
+    }
+
+    /**
+     * Returns the chapter at the specified position in sub-chapter list.
+     *
+     * @param index index of the chapter to return
+     * @return the chapter at the specified position in sub-chapter list
+     * @throws IndexOutOfBoundsException if the index is out of range (<tt>index &lt; 0 || index &gt;= size()</tt>)
+     */
+    public final Chapter chapterAt(int index) {
+        return children.get(index);
+    }
+
+    /**
+     * Replaces the specified chapter in sub-chapter list with the specified new chapter.
+     *
+     * @param chapter the chapter to be replaced
+     * @param target  chapter to be stored at the specified position
+     * @return <tt>true</tt> if sub-chapter list contained the specified chapter
+     * @throws NullPointerException     if the specified chapter is null
+     * @throws IllegalArgumentException if the specified chapter is not solitary
+     */
+    public final boolean replace(@NonNull Chapter chapter, @NonNull Chapter target) {
+        val index = indexOf(chapter);
+        if (index == -1) {
             return false;
         }
-        if (chapters.remove(chapter)) { // contained in list
+        children.set(index, requireSolitary(target));
+        chapter.parent = this;
+        chapter.parent = null;
+        return true;
+    }
+
+    /**
+     * Replaces the chapter at the specified position in sub-chapter with the specified chapter.
+     *
+     * @param index   index of the chapter to replace
+     * @param chapter chapter to be stored at the specified position
+     * @return chapter previously at the specified position
+     * @throws NullPointerException      if the specified chapter is null
+     * @throws IllegalArgumentException  if the specified chapter is not solitary
+     * @throws IndexOutOfBoundsException if the index is out of range (<tt>index &lt; 0 || index &gt; size()</tt>)
+     */
+    public final Chapter replaceAt(int index, @NonNull Chapter chapter) {
+        val current = children.set(index, requireSolitary(chapter));
+        chapter.parent = this;
+        current.parent = null;
+        return current;
+    }
+
+    /**
+     * Removes the first occurrence of the specified chapter from sub-chapter list, if it is present.
+     *
+     * @param chapter chapter to be removed from this sub-chapter list, if present
+     * @return <tt>true</tt> if sub-chapter list contained the specified chapter
+     * @throws NullPointerException if the specified chapter is null
+     */
+    public final boolean remove(@NonNull Chapter chapter) {
+        if (chapter.parent != this) {
+            return false;
+        }
+        if (children.remove(chapter)) {
             chapter.parent = null;
             return true;
         }
@@ -227,200 +236,149 @@ public class Chapter implements Hierarchical<Chapter>, Cloneable {
     }
 
     /**
-     * Replaces the chapter at specified position in sub-chapter list with specified chapter.
+     * Removes the chapter at the specified position in sub-chapter.
      *
-     * @param index   index of the chapter to replace
-     * @param chapter chapter to be stored at the specified position
+     * @param index the index of the chapter to be removed
      * @return the chapter previously at the specified position
-     * @throws NullPointerException      if the <code>chapter</code> is <code>null</code>
-     * @throws IndexOutOfBoundsException if the index is out of range (index &lt; 0 || index &ge; size())
      */
-    public final Chapter replace(int index, Chapter chapter) {
-        val previous = chapters.set(index, checkChapter(chapter));
-        chapter.setParent(this);
-        previous.parent = null;
-        return previous;
+    public final Chapter removeAt(int index) {
+        val current = children.remove(index);
+        current.parent = null;
+        return current;
     }
 
     /**
-     * Returns the chapter at specified position in sub-chapter list.
+     * Swaps the chapters at the specified positions in sub-chapter list.
      *
-     * @param index index of the chapter to return
-     * @return the chapter at specified position or <code>null</code> if <code>index</code> not exists
-     * @throws IndexOutOfBoundsException if the index is out of range (index &lt; 0 || index &ge; size())
-     */
-    public final Chapter chapterAt(int index) {
-        return chapters.get(index);
-    }
-
-    /**
-     * Swaps position of two specified chapters.
-     *
-     * @param from position of the chapter
-     * @param to   position of another chapter
+     * @param from the index of one chapter to be swapped
+     * @param to   the index of the other chapter to be swapped
+     * @throws IndexOutOfBoundsException if either <tt>from</tt> or <tt>to</tt> is out of range (from &lt; 0 || from
+     *                                   &gt;= size() || to &lt; 0 || to &gt;= size()).
      */
     public final void swap(int from, int to) {
-        Collections.swap(chapters, from, to);
+        Collections.swap(children, from, to);
     }
 
+    /**
+     * Removes all of the chapters from sub-chapter list.
+     * <p>
+     * Cleanups of chapters in sub-chapter list will be called.
+     * </p>
+     */
     public final void clear() {
         clear(true);
     }
 
     /**
-     * Removes all chapters from sub-chapter list.
+     * Removes all of the chapters from sub-chapter list.
+     *
+     * @param cleanup <tt>true</tt> to call <tt>cleanup</tt> for all chapters
      */
     public final void clear(boolean cleanup) {
-        for (val chapter : chapters) {
+        for (val chapter : children) {
+            chapter.parent = null;
             if (cleanup) {
                 chapter.cleanup();
             }
-            chapter.parent = null;
         }
-        chapters.clear();
+        children.clear();
     }
 
-    /**
-     * Returns size of sub-chapter list.
-     *
-     * @return number of sub-chapters
-     */
-    @Override
-    public final int size() {
-        return chapters.size();
-    }
-
-    @Override
-    public List<Chapter> getChildren() {
-        return Collections.unmodifiableList(chapters);
-    }
-
-    /**
-     * Tests this object is a section or not.
-     * <p>
-     * A section without text text is a container of chapters.
-     * </p>
-     *
-     * @return <code>true</code> if has sub-chapters otherwise <code>false</code>
-     */
-    public final boolean isSection() {
-        return !chapters.isEmpty();
-    }
-
-    /**
-     * Returns an iterator over sub-chapter list.
-     *
-     * @return an Iterator for chapter.
-     */
     @Override
     public final Iterator<Chapter> iterator() {
-        return chapters.iterator();
+        return children.iterator();
     }
 
-    // *****************
-    // ** Clean works **
-    // *****************
+    private Chapter requireSolitary(Chapter chapter) {
+        require(chapter != this, "Cannot add self to sub-chapter list: %s", chapter);
+        require(chapter.parent == null, "Chapter has been in certain chapter: %s", chapter);
+        require(chapter != parent, "Cannot add parent to sub-chapter list: %s", chapter);
+        return chapter;
+    }
+
+    // ************************************** \\
+    // **** Resources Cleanup Operations **** \\
+    // ************************************** \\
+
+    private boolean cleaned = false;
+
+    private Set<Consumer<? super Chapter>> cleanups = new LinkedHashSet<>();
 
     /**
-     * Clean works
-     */
-    private final Set<Consumer<? super Chapter>> cleaners = new LinkedHashSet<>();
-
-    /**
-     * Registers the specified clean task to clean works list.
+     * Registers specified cleanup action.
      *
-     * @param task the clean task instance
-     * @throws NullPointerException if the specified clean task is <code>null</code>
+     * @param cleanup the action to be executed when cleaning up the chapter
      */
-    public void registerCleanup(@NonNull Consumer<? super Chapter> task) {
-        cleaners.add(task);
+    public final void registerCleanup(@NonNull Consumer<? super Chapter> cleanup) {
+        cleanups.add(cleanup);
     }
 
     /**
-     * Removes the specified clean task from clean works list.
+     * Removes specified cleanup action from cleanup list.
      *
-     * @param task the clean task to be removed, if <code>null</code> do nothing
+     * @param cleanup the cleanup to be removed
      */
-    public void removeCleanup(Consumer<? super Chapter> task) {
-        if (task != null) {
-            cleaners.remove(task);
-        }
+    public final void removeCleanup(@NonNull Consumer<? super Chapter> cleanup) {
+        cleanups.remove(cleanup);
     }
 
     /**
-     * Cleans up the chapter.
+     * Cleans up this chapter.
      * <p>
-     * Tasks to process:
+     * Steps of cleanup:
+     * </p>
      * <ul>
-     * <li>Invoke all registered clean task(the task list will also be cleared)</li>
-     * <li>Remove all attributes.</li>
-     * <li>Do clean up of all sub-chapter.(the sub-chapter list will also be cleared)</li>
+     * <li>Executes all register cleanup actions in registering order</li>
+     * <li>Removes all attributes of this chapter</li>
+     * <li>Cleans up chapters in sub-chapter list</li>
+     * <li>Removes this chapter form its parent, if present</li>
      * </ul>
      */
     public void cleanup() {
-        for (val work : cleaners) {
-            work.accept(this);
+        if (cleaned) {
+            return;
         }
-        cleaners.clear();
-        // remove all attributes
+        for (val cleanup : cleanups) {
+            cleanup.accept(this);
+        }
+        cleanups.clear();
         attributes.clear();
-
-        // clean all sub chapters
         clear(true);
-
+        if (parent != null) {
+            parent.remove(this);
+        }
         cleaned = true;
     }
-
-    private boolean cleaned = false;
 
     @Override
     protected void finalize() throws Throwable {
         super.finalize();
         if (!cleaned) {
-            Log.e("Book", "*** BUG: Chapter \"{0}@{1}\" not cleaned ***\n", getTitle(this), hashCode());
+            Log.w(TAG, "chapter {0} is not cleaned", this);
         }
     }
 
-    @SuppressWarnings("unchecked")
-    @SneakyThrows({InstantiationException.class, IllegalAccessException.class})
-    protected void dumpTo(Chapter chapter) {
-        chapter.text = text;
-        chapter.attributes = attributes.clone();
-        chapter.chapters = chapters.getClass().newInstance();
-        chapter.chapters.addAll(chapters);
-    }
-
-    /**
-     * Returns a shallow copy of this <code>Chapter</code> instance.
-     *
-     * @return a shallow copy of this chapter
-     */
     @Override
+    @SneakyThrows(CloneNotSupportedException.class)
     public Chapter clone() {
-        final Chapter copy;
-        try {
-            copy = (Chapter) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new InternalError();
-        }
-        dumpTo(copy);
+        val copy = (Chapter) super.clone();
+        copy.parent = null;
+        dumpTo(copy, true);
         return copy;
+    }
+
+    protected void dumpTo(Chapter chapter, boolean deepCopy) {
+        chapter.attributes = attributes.clone();
+        if (deepCopy) {
+            chapter.children = new ArrayList<>(children.size());
+            for (val i : children) {
+                chapter.append(i.clone());
+            }
+        }
     }
 
     @Override
     public String toString() {
-        return debug();
-    }
-
-    /**
-     * Renders debug string of this chapter
-     *
-     * @return the string
-     */
-    public String debug() {
-        if (text == null) {
-            return String.format("%s@%d: attributes: %s", getClass().getSimpleName(), hashCode(), attributes);
-        }
-        return String.format("%s@%d: attributes: %s, text: %s", getClass().getSimpleName(), hashCode(), attributes, text);
+        return String.format("Chapter{attributes=%s, tag=%s, text=%s}", attributes, text, tag);
     }
 }

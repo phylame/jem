@@ -22,7 +22,6 @@ import jclp.log.Log;
 import jem.Attributes;
 import jem.Book;
 import jem.Chapter;
-import jem.epm.impl.ZipParser;
 import jem.epm.util.NumberUtils;
 import jem.epm.util.ParserException;
 import jem.epm.util.ZipUtils;

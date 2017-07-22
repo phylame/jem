@@ -24,15 +24,15 @@ import lombok.RequiredArgsConstructor;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Iterator;
-import java.util.List;
 
 @RequiredArgsConstructor
 public class TextWrapper implements Text {
     @NonNull
     private final Text actual;
 
-    public final Text getTarget() {
-        return actual;
+    @Override
+    public String getType() {
+        return actual.getType();
     }
 
     @Override
@@ -41,22 +41,12 @@ public class TextWrapper implements Text {
     }
 
     @Override
-    public String getType() {
-        return actual.getType();
-    }
-
-    @Override
-    public String getText() {
-        return actual.getText();
-    }
-
-    @Override
-    public List<String> getLines(boolean skipEmpty) {
-        return actual.getLines(skipEmpty);
-    }
-
-    @Override
     public long writeTo(Writer writer) throws IOException {
         return actual.writeTo(writer);
+    }
+
+    @Override
+    public String toString() {
+        return actual.toString();
     }
 }

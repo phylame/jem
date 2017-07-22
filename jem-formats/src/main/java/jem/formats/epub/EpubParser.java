@@ -26,9 +26,9 @@ import jclp.vdm.VdmReader;
 import jem.Attributes;
 import jem.Book;
 import jem.Chapter;
-import jem.epm.impl.VamParser;
+import jem.epm.impl.VdmParser;
 import jem.epm.util.ParserException;
-import jem.epm.util.VamUtils;
+import jem.epm.util.VdmUtils;
 import jem.formats.util.M;
 import jem.util.flob.Flobs;
 import jem.util.text.Texts;
@@ -46,7 +46,7 @@ import static jclp.util.StringUtils.*;
 import static jem.epm.util.xml.XmlUtils.attributeOf;
 import static jem.epm.util.xml.XmlUtils.newPullParser;
 
-public class EpubParser extends VamParser<EpubInConfig> {
+public class EpubParser extends VdmParser<EpubInConfig> {
     private static final String TAG = EpubParser.class.getSimpleName();
 
     public EpubParser() {
@@ -55,7 +55,7 @@ public class EpubParser extends VamParser<EpubInConfig> {
 
     @Override
     public Book parse(VdmReader vam, EpubInConfig config) throws IOException, ParserException {
-        if (!EPUB.MT_EPUB.equals(VamUtils.textOf(vam, EPUB.MIME_FILE, "ASCII").trim())) {
+        if (!EPUB.MT_EPUB.equals(VdmUtils.textOf(vam, EPUB.MIME_FILE, "ASCII").trim())) {
             throw new ParserException(M.tr("epub.parse.invalidMT", EPUB.MIME_FILE, EPUB.MT_EPUB));
         }
         if (config == null) {
@@ -70,7 +70,7 @@ public class EpubParser extends VamParser<EpubInConfig> {
 
     private void loadOpf(Local data) throws ParserException, IOException {
         val xpp = newPullParser(false);
-        try (val in = VamUtils.streamFor(data.vam, EPUB.CONTAINER_FILE)) {
+        try (val in = VdmUtils.streamFor(data.vam, EPUB.CONTAINER_FILE)) {
             xpp.setInput(in, null);
             int event = xpp.getEventType();
             do {
@@ -101,7 +101,7 @@ public class EpubParser extends VamParser<EpubInConfig> {
         String coverId = null;
         val b = new StringBuilder();
         val xpp = newPullParser(false);
-        try (val in = VamUtils.streamFor(data.vam, data.opfPath)) {
+        try (val in = VdmUtils.streamFor(data.vam, data.opfPath)) {
             xpp.setInput(in, null);
             boolean hasText = false;
             int event = xpp.getEventType();
@@ -243,7 +243,7 @@ public class EpubParser extends VamParser<EpubInConfig> {
         val book = data.book;
         val b = new StringBuilder();
         val xpp = newPullParser(false);
-        try (val in = VamUtils.streamFor(data.vam, data.opsDir + '/' + item.href)) {
+        try (val in = VdmUtils.streamFor(data.vam, data.opsDir + '/' + item.href)) {
             xpp.setInput(in, null);
             boolean hasText = false;
             boolean forChapter = false;

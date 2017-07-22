@@ -21,39 +21,33 @@ package jem.util;
 import jclp.function.Function;
 import jclp.function.Provider;
 import jclp.io.IOUtils;
-import jclp.io.PathUtils;
-import jclp.log.Log;
 import jclp.text.ConverterManager;
 import jclp.text.Converters;
 import jclp.text.Parser;
-import jclp.util.DateUtils;
-import jclp.util.Validate;
+import jclp.value.Values;
 import jem.util.flob.Flob;
 import jem.util.flob.Flobs;
 import jem.util.text.Text;
 import jem.util.text.Texts;
 import lombok.NonNull;
-import lombok.SneakyThrows;
 import lombok.val;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
+import java.text.DateFormat;
 import java.util.*;
 
 import static jclp.util.CollectionUtils.getOrPut;
-import static jclp.util.CollectionUtils.propertiesFor;
-import static jclp.value.Values.*;
+import static jclp.util.Validate.requireNotNull;
 
 /**
- * Utilities for variants used by Jem.
+ * Utilities for values used in Jem.
  */
 public final class Variants {
     private Variants() {
     }
 
-    private static final String TAG = "Variants";
-
-    // declare standard variant type aliases
+    // standard type names
     public static final String FLOB = "file";
     public static final String TEXT = "text";
     public static final String STRING = "str";
@@ -63,162 +57,58 @@ public final class Variants {
     public static final String LOCALE = "locale";
     public static final String DATETIME = "datetime";
 
-    // names of registered variants
-    private static final Set<String> names = new HashSet<>();
+    private static Map<String, Class<?>> typeMappings = new HashMap<>();
 
-    // default value for variant name
-    private static final Map<String, Object> defaults = new HashMap<>();
+    private static Map<Class<?>, String> classMappings = new IdentityHashMap<>();
 
-    // map variant name to class
-    private static final Map<Class<?>, String> mappings = new IdentityHashMap<>();
-
-    // map class to variant name
-    private static final Map<String, Class<?>> types = new HashMap<>();
+    private static Map<String, Object> typeDefaults = new HashMap<>();
 
     /**
-     * Loads built-in variant mapping.
-     */
-    private static void initVariants() {
-        Collections.addAll(names, FLOB, TEXT, STRING, INTEGER, REAL, BOOLEAN, LOCALE, DATETIME);
-        defaults.put(FLOB, lazy(new Provider<Flob>() {
-            @Override
-            public Flob provide() throws Exception {
-                return Flobs.forEmpty("_empty_", PathUtils.UNKNOWN_MIME);
-            }
-        }));
-        defaults.put(TEXT, lazy(new Provider<Text>() {
-            @Override
-            public Text provide() throws Exception {
-                return Texts.forEmpty(Texts.PLAIN);
-            }
-        }));
-        defaults.put(BOOLEAN, Boolean.FALSE);
-        defaults.put(STRING, "");
-        defaults.put(INTEGER, 0);
-        defaults.put(REAL, 0.0D);
-        defaults.put(LOCALE, provider(new Provider<Locale>() {
-            @Override
-            public Locale provide() throws Exception {
-                return Locale.getDefault();
-            }
-        }));
-        defaults.put(DATETIME, provider(new Provider<Date>() {
-            @Override
-            public Date provide() throws Exception {
-                return new Date();
-            }
-        }));
-        try {
-            val prop = propertiesFor("!jem/util/variants.properties");
-            if (prop != null) {
-                String name;
-                for (val e : prop.entrySet()) {
-                    name = e.getValue().toString();
-                    mapClass(Class.forName(e.getKey().toString()), name);
-                    names.add(name);
-                }
-            }
-        } catch (IOException | ClassNotFoundException e) {
-            Log.e(TAG, "error occurred when initialization", e);
-        }
-    }
-
-    static {
-        initVariants();
-    }
-
-    /**
-     * Returns names of all registered variant type.
+     * Returns a set containing all type names.
      *
      * @return set of type names
      */
-    public static Set<String> supportedTypes() {
-        return Collections.unmodifiableSet(names);
+    public static Set<String> getTypes() {
+        return typeMappings.keySet();
     }
 
     /**
-     * Registers the specified variant type.
+     * Associates the specified class with the specified type name.
      *
-     * @param type name of type
-     * @throws IllegalArgumentException if the type is already registered
+     * @param type  the type name to mapping
+     * @param clazz the class to be mapped
+     * @throws NullPointerException if the type name or class is null
      */
-    public static void registerType(String type) {
-        Validate.requireNotEmpty(type, "type cannot be null or empty");
-        Validate.require(!names.contains(type), "type %s already registered", type);
-        names.add(type);
+    public static void mapClass(@NonNull String type, @NonNull Class<?> clazz) {
+        typeMappings.put(type, clazz);
+        classMappings.put(clazz, type);
     }
 
     /**
-     * Ensures specified variant type is registered.
+     * Gets the class of specified type name.
      *
-     * @param type name of type
-     * @return the input type
-     * @throws IllegalArgumentException if the type is not registered
+     * @param type the type name
+     * @return class of the type, or {@literal null} if no class found
+     * @throws NullPointerException if the value is null
      */
-    public static String ensureRegistered(String type) {
-        Validate.requireNotEmpty(type, "type cannot be null or empty");
-        Validate.require(names.contains(type), "type %s in unsupported", type);
-        return type;
+    public static Class<?> getClass(@NonNull String type) {
+        return typeMappings.get(type);
     }
 
     /**
-     * Gets readable title text for variant type.
+     * Gets the type name of specified value.
      *
-     * @param type name of type
-     * @return the text, or {@literal null} if the type is unknown
+     * @param value the value
+     * @return the type name of specified value, or {@literal null} if type of the value is unknown
+     * @throws NullPointerException if the value is null
      */
-    public static String titleOf(@NonNull String type) {
-        return M.optTr("variant." + type, null);
-    }
-
-    /**
-     * Maps specified class for specified variant type.
-     *
-     * @param clazz the class
-     * @param type  name of type
-     * @throws IllegalArgumentException if the type is not registered
-     */
-    public static void mapClass(@NonNull Class<?> clazz, String type) {
-        mappings.put(clazz, ensureRegistered(type));
-        types.put(type, clazz);
-    }
-
-    /**
-     * Gets the class of specified variant name.
-     *
-     * @param name the variant name
-     * @return the class
-     * @since 3.4.0
-     */
-    public static Class<?> classOf(String name) {
-        return types.get(name);
-    }
-
-    /**
-     * Maps specified value for variant type.
-     * <p>The default value can be fetched by {@link #defaultOf(String)}</p>
-     *
-     * @param type  name of type
-     * @param value the default value, may be instance {@link Provider} called when fetching defaults
-     */
-    public static void setDefault(@NonNull String type, Object value) {
-        defaults.put(type, value);
-    }
-
-    /**
-     * Detects the type of specified variant object.
-     *
-     * @param obj the object
-     * @return the type name or {@literal null} if unknown
-     * @throws NullPointerException if the object is {@literal null}
-     */
-    public static String typeOf(@NonNull Object obj) {
-        return getOrPut(mappings, obj.getClass(), false, new Function<Class<?>, String>() {
+    public static String getType(@NonNull Object value) {
+        return getOrPut(classMappings, value.getClass(), false, new Function<Class<?>, String>() {
             @Override
             public String apply(Class<?> clazz) {
-                for (val e : mappings.entrySet()) {
-                    if (e.getKey().isAssignableFrom(clazz)) {
-                        return e.getValue();
+                for (val entry : classMappings.entrySet()) {
+                    if (entry.getKey().isAssignableFrom(clazz)) {
+                        return entry.getValue();
                     }
                 }
                 return null;
@@ -227,25 +117,49 @@ public final class Variants {
     }
 
     /**
-     * Returns default value for specified variant type.
+     * Associates the specified default value with the specified type name.
+     * <p>The value can be instance of {@link jclp.value.Value}, so its {@code get()} method will be invoked
+     * when querying defaults.</p>
      *
-     * @param type name of type
-     * @return the value, or {@literal null} if the type not in jem built-in types
-     * @throws IllegalArgumentException if the name of type is empty
+     * @param type  the type name to mapping
+     * @param value the default value to be mapped
+     * @throws NullPointerException if the type is null
      */
-    @SneakyThrows(Exception.class)
-    public static Object defaultOf(String type) {
-        return get(defaults.get(ensureRegistered(type)));
+    public static void setDefault(@NonNull String type, Object value) {
+        typeDefaults.put(type, value);
     }
 
     /**
-     * Converts specified variant object to printable string.
+     * Gets default value for specified type name.
      *
-     * @param obj the object or {@literal null} if the type of object is unknown
-     * @return a string represent the object
+     * @param type the type name
+     * @return the default value, or {@literal null} if the type is unknown or no default value found
+     * @throws NullPointerException if the type is null
      */
-    public static String printable(@NonNull Object obj) {
-        val type = typeOf(obj);
+    public static Object getDefault(@NonNull String type) {
+        return Values.get(typeDefaults.get(type));
+    }
+
+    /**
+     * Gets a readable text for specified type name.
+     *
+     * @param type the type name
+     * @return a readable text, or {@literal null} if not text found
+     * @throws NullPointerException if the type is null
+     */
+    public static String getTitle(@NonNull String type) {
+        return M.translator().optTr("variant." + type, null);
+    }
+
+    /**
+     * Makes a printable text for specified value.
+     *
+     * @param value the value to be made
+     * @return a printable text for specified value, or {@literal null} if class of value is unknown
+     * @throws NullPointerException if the value is null
+     */
+    public static String printable(@NonNull Object value) {
+        val type = getType(value);
         if (type == null) {
             return null;
         }
@@ -254,32 +168,80 @@ public final class Variants {
             case BOOLEAN:
             case REAL:
             case INTEGER:
-            case FLOB:
-                return obj.toString();
             case TEXT:
-                return ((Text) obj).getText();
+            case FLOB:
+                return value.toString();
             case DATETIME:
-                return DateUtils.format((Date) obj, "yyyy-M-d");
+                return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format((Date) value);
             case LOCALE:
-                return ((Locale) obj).getDisplayName();
+                return ((Locale) value).getDisplayName();
             default:
                 return null;
         }
     }
 
-    public static Object parse(String type, String value) {
-        Class<?> clazz = classOf(type);
+    /**
+     * Parses specified string value to object with specified type.
+     * <p>This method is backed by JCLP Converter API</p>
+     *
+     * @param value the string value to be parsed
+     * @param type  the type name of the value
+     * @return the object value, or {@literal null} if the type is unknown
+     * @throws NullPointerException if the value or type is null
+     * @see jclp.text.Converters
+     * @see jclp.text.ConverterManager
+     */
+    public static Object parse(@NonNull String value, @NonNull String type) {
+        Class<?> clazz = getClass(type);
         if (clazz == null || CharSequence.class.isAssignableFrom(clazz)) {
             return value;
-        } else if (Flob.class.isAssignableFrom(clazz)) {
-            clazz = Flob.class;
         } else if (Text.class.isAssignableFrom(clazz)) {
             clazz = Text.class;
+        } else if (Flob.class.isAssignableFrom(clazz)) {
+            clazz = Flob.class;
         }
         return Converters.parse(value, clazz);
     }
 
-    static {
+    private static void mapBuiltins() {
+        mapClass(REAL, Float.class);
+        mapClass(REAL, Double.class);
+        mapClass(INTEGER, Byte.class);
+        mapClass(INTEGER, Short.class);
+        mapClass(INTEGER, Integer.class);
+        mapClass(INTEGER, Long.class);
+        mapClass(BOOLEAN, Boolean.class);
+        mapClass(STRING, Character.class);
+        mapClass(STRING, CharSequence.class);
+        mapClass(DATETIME, Date.class);
+        mapClass(LOCALE, Locale.class);
+        mapClass(TEXT, Text.class);
+        mapClass(FLOB, Flob.class);
+    }
+
+    private static void setDefaults() {
+        setDefault(REAL, 0.0D);
+        setDefault(INTEGER, 0);
+        setDefault(STRING, "");
+        setDefault(BOOLEAN, false);
+        setDefault(DATETIME, Values.lazy(new Provider<Date>() {
+            @Override
+            public Date provide() throws Exception {
+                return new Date();
+            }
+        }));
+
+        setDefault(LOCALE, Values.lazy(new Provider<Locale>() {
+            @Override
+            public Locale provide() throws Exception {
+                return Locale.getDefault();
+            }
+        }));
+        setDefault(FLOB, null);
+        setDefault(TEXT, null);
+    }
+
+    private static void registerParsers() {
         ConverterManager.registerParser(Text.class, new Parser<Text>() {
             @Override
             public Text parse(String str) {
@@ -288,10 +250,22 @@ public final class Variants {
         });
         ConverterManager.registerParser(Flob.class, new Parser<Flob>() {
             @Override
-            @SneakyThrows(MalformedURLException.class)
             public Flob parse(String str) {
-                return Flobs.forURL(IOUtils.resourceFor(str), null);
+                URL url;
+                try {
+                    url = IOUtils.resourceFor(str);
+                } catch (MalformedURLException e) {
+                    throw new IllegalArgumentException("bad url " + str, e);
+                }
+                requireNotNull(url, "no such resource %s", str);
+                return Flobs.forURL(url);
             }
         });
+    }
+
+    static {
+        mapBuiltins();
+        setDefaults();
+        registerParsers();
     }
 }

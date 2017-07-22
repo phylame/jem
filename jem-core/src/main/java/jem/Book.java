@@ -20,77 +20,58 @@ package jem;
 
 import jem.util.VariantMap;
 import lombok.Getter;
+import lombok.NonNull;
 
 /**
- * Common {@code Book} model describes book structure.
- * <p>
- * A book structure contains the following parts:
- * </p>
- * <ul>
- * <li>attributes - meta attributes of book</li>
- * <li>contents - table of contents</li>
- * <li>extensions - extension data, like attributes but not part of book itself</li>
- * </ul>
+ * The book in Jem book models.
  */
 public class Book extends Chapter {
     /**
-     * Constructs instance with empty title.
+     * Constructs instance without attributes.
      */
     public Book() {
-        super();
     }
 
     /**
-     * Constructs instance with specified title.
+     * Constructs instance with specified book title.
      *
-     * @param title the title of book
+     * @param title the book title
+     * @throws NullPointerException if the title is null
      */
     public Book(String title) {
         super(title);
     }
 
     /**
-     * Constructs instance with specified title and author.
+     * Constructs instance with coping data form specified chapter.
      *
-     * @param title  the title string
-     * @param author the author string
-     * @throws NullPointerException if the argument list contains {@literal null}
+     * @param chapter  the chapter to be copied
+     * @param deepCopy {@code true} to clone all sub-chapters
+     * @throws NullPointerException if the chapter is null
      */
-    public Book(String title, String author) {
-        super(title);
-        Attributes.setAuthor(this, author);
+    public Book(@NonNull Chapter chapter, boolean deepCopy) {
+        chapter.dumpTo(chapter, deepCopy);
     }
-
-    public Book(Chapter chapter) {
-        chapter.dumpTo(this);
-    }
-
-    // *********************
-    // ** Extension items **
-    // *********************
 
     /**
-     * Extensions map.
+     * Extensions of the book.
      */
     @Getter
     private VariantMap extensions = new VariantMap();
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void cleanup() {
-        extensions.clear();
-        super.cleanup();
-    }
-
-    @Override
-    protected void dumpTo(Chapter chapter) {
-        super.dumpTo(chapter);
+    protected void dumpTo(Chapter chapter, boolean deepCopy) {
+        super.dumpTo(chapter, deepCopy);
         if (chapter instanceof Book) {
             ((Book) chapter).extensions = extensions.clone();
         }
     }
 
     @Override
-    public String debug() {
-        return super.debug() + ", extensions: " + extensions;
+    public String toString() {
+        return super.toString() + ",extension=" + extensions;
     }
 }

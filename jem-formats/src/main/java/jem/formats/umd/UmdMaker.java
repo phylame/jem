@@ -27,7 +27,6 @@ import jclp.util.StringUtils;
 import jem.Attributes;
 import jem.Book;
 import jem.Chapter;
-import jem.epm.impl.AbstractMaker;
 import jem.epm.util.MakerException;
 import jem.epm.util.NumberUtils;
 import jem.epm.util.text.TextRender;

@@ -19,21 +19,12 @@
 package jem.epm.util;
 
 import jclp.util.Linguist;
-import lombok.NonNull;
+import jclp.util.Translator;
 
 public final class M {
-    private M() {
-    }
+    private static final String NAME = "jem/epm/util/messages";
 
-    private static final String MESSAGES_PATH = "jem/epm/util/messages";
-
-    private static final Linguist linguist = new Linguist(MESSAGES_PATH);
-
-    public static String tr(@NonNull String key) {
-        return linguist.tr(key);
-    }
-
-    public static String tr(@NonNull String key, Object... args) {
-        return linguist.tr(key, args);
+    public static Translator translator() {
+        return new Linguist(NAME);
     }
 }

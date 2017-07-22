@@ -18,59 +18,50 @@
 
 package jem.epm.impl;
 
+import jclp.io.IOUtils;
+import jclp.setting.Settings;
 import jem.Book;
-import jem.epm.Parser;
-import jem.epm.util.E;
 import jem.epm.util.InputCleaner;
-import jem.epm.util.ParserException;
-import jem.epm.util.config.EpmConfig;
 import jem.util.JemException;
-import lombok.NonNull;
 import lombok.val;
 
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Map;
 
-public abstract class AbstractParser<I extends Closeable, C extends EpmConfig> extends EpmBase<C> implements Parser {
+import static jclp.util.Validate.checkNotNull;
 
-    protected AbstractParser(String name, Class<C> clazz) {
-        super(name, clazz);
-    }
+public abstract class AbstractParser<IN extends Closeable> implements FileParser {
+    protected abstract IN open(File file, Settings arguments) throws IOException;
 
-    protected abstract I openInput(File file, C config) throws IOException;
+    protected abstract Book parse(IN input, Settings arguments) throws IOException, JemException;
 
-    public abstract Book parse(I input, C config) throws IOException, ParserException;
-
-    @Override
-    public Book parse(@NonNull File file, Map<String, Object> args) throws IOException, JemException {
+    public Book parse(File file, Settings arguments) throws IOException, JemException {
         if (!file.exists()) {
-            throw E.forFileNotFound("No such file: %s", file.getPath());
+            throw new FileNotFoundException("No such file or directory: " + file);
         }
-        val config = fetchConfig(args);
-        val input = openInput(file, config);
-        if (input == null) {
-            throw E.forParser("'open(File, C)' of '%s' returned null", getClass().getName());
-        }
-        val cleaner = new InputCleaner(input);
-        final Book book;
+        val input = open(file, arguments);
+        checkNotNull(input, "openFile of %s returned null", this);
+        Book book;
         try {
-            book = parse(input, config);
-            if (book == null) {
-                throw E.forParser("'parse(I, C)' of '%s' returned null", getClass().getName());
-            }
-        } catch (IOException | JemException | RuntimeException e) {
-            cleaner.accept(null);
+            book = parse(input, arguments);
+            checkNotNull(book, "parse of %s returned null", this);
+        } catch (Exception e) {
+            IOUtils.closeQuietly(input);
             throw e;
         }
-        // close the input when book is in cleanup
-        book.registerCleanup(cleaner);
+        book.registerCleanup(new InputCleaner(input));
         return book;
     }
 
     @Override
-    public Book parse(String input, Map<String, Object> args) throws IOException, JemException {
-        return parse(new File(input), args);
+    public Book parse(String input, Settings arguments) throws IOException, JemException {
+        return parse(new File(input), arguments);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <T> T get(Settings arguments, String key) {
+        return (T) arguments.get("parser." + key);
     }
 }

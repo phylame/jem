@@ -28,35 +28,25 @@ import java.io.OutputStream;
 @RequiredArgsConstructor
 public class FlobWrapper implements Flob {
     @NonNull
-    private final Flob flob;
-
-    public final Flob getTarget() {
-        return flob;
-    }
+    private final Flob actual;
 
     @Override
     public String getName() {
-        return flob.getMime();
+        return actual.getName();
     }
 
     @Override
     public String getMime() {
-        return flob.getMime();
+        return actual.getMime();
     }
 
     @Override
     public InputStream openStream() throws IOException {
-        return flob.openStream();
+        return actual.openStream();
     }
 
     @Override
-    public byte[] readAll() throws IOException {
-        return flob.readAll();
+    public long writeTo(OutputStream output) throws IOException {
+        return actual.writeTo(output);
     }
-
-    @Override
-    public long writeTo(OutputStream out) throws IOException {
-        return flob.writeTo(out);
-    }
-
 }

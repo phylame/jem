@@ -18,21 +18,30 @@
 
 package jem.epm.impl;
 
-import jclp.setting.Settings;
-import jem.Book;
-import jem.util.JemException;
+import jem.epm.EpmFactory;
+import jem.epm.Maker;
+import jem.epm.Parser;
 
-import java.io.File;
-import java.io.IOException;
+import java.util.Set;
 
-public abstract class AbstractMaker implements FileMaker {
+public abstract class AbstractFactory implements EpmFactory {
     @Override
-    public void make(Book book, String output, Settings arguments) throws IOException, JemException {
-        make(book, new File(output), arguments);
+    public Set<String> getNames() {
+        return null;
     }
 
-    @SuppressWarnings("unchecked")
-    protected <T> T get(Settings settings, String key) {
-        return (T) settings.get("maker." + key);
+    @Override
+    public Parser getParser() {
+        return null;
+    }
+
+    @Override
+    public Maker getMaker() {
+        return null;
+    }
+
+    @Override
+    public String toString() {
+        return getName();
     }
 }

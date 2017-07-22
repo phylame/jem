@@ -18,24 +18,25 @@
 
 package jem.util;
 
-/**
- * The base exception class for Jem errors.
- */
-@SuppressWarnings("serial")
 public class JemException extends Exception {
+    private static final long serialVersionUID = 8978119357046447868L;
+
     public JemException() {
-        super();
     }
 
     public JemException(String message) {
         super(message);
     }
 
+    public JemException(Throwable cause) {
+        super(cause);
+    }
+
     public JemException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public JemException(Throwable cause) {
-        super(cause);
+    public JemException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
     }
 }

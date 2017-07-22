@@ -16,23 +16,26 @@
  * limitations under the License.
  */
 
-package jem.epm.impl;
+package jem.util.text.impl;
 
-import jclp.setting.Settings;
-import jem.Book;
-import jem.util.JemException;
+import jem.util.Variants;
+import jem.util.text.AbstractText;
+import lombok.NonNull;
 
-import java.io.File;
-import java.io.IOException;
-
-public abstract class AbstractMaker implements FileMaker {
-    @Override
-    public void make(Book book, String output, Settings arguments) throws IOException, JemException {
-        make(book, new File(output), arguments);
+public class RawText extends AbstractText {
+    static {
+        Variants.mapClass(Variants.TEXT, RawText.class);
     }
 
-    @SuppressWarnings("unchecked")
-    protected <T> T get(Settings settings, String key) {
-        return (T) settings.get("maker." + key);
+    private final CharSequence text;
+
+    public RawText(String type, @NonNull CharSequence text) {
+        super(type);
+        this.text = text;
+    }
+
+    @Override
+    public String toString() {
+        return text.toString();
     }
 }

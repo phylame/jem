@@ -18,7 +18,7 @@
 
 package jem.formats.epub;
 
-import jem.epm.impl.VamParser.VamInConfig;
+import jem.epm.impl.VdmParser.VamInConfig;
 
 public class EpubInConfig extends VamInConfig {
 

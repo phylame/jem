@@ -21,9 +21,7 @@ package jem.scj.app
 import jclp.log.Log
 import jem.Attributes
 import jem.Book
-import jem.epm.EpmInParam
 import jem.epm.EpmManager
-import jem.epm.EpmOutParam
 import jem.kotlin.set
 import jem.util.Variants
 import mala.core.App
@@ -115,7 +113,7 @@ fun makeBook(param: EpmOutParam): String? {
 private fun attachAttributes(book: Book) {
     for ((k, v) in SCI.outAttributes) {
         try {
-            val value = Variants.parse(Attributes.typeOf(k), v.toString())
+            val value = Variants.parse(v.toString(), Attributes.typeOf(k))
             if (value == null) {
                 App.error(tr("error.misc.badString", v))
                 Log.d(TAG, "cannot convert \"{0}\" to \"{1}\"", v, k)

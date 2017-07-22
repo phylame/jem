@@ -19,7 +19,6 @@
 package jem.util.text;
 
 import jclp.util.StringUtils;
-import jclp.util.Validate;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;
@@ -27,39 +26,30 @@ import lombok.val;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Iterator;
-import java.util.List;
 
-/**
- * Abstract class for {@code Text}.
- */
+import static jclp.util.Validate.requireNotEmpty;
+
 public abstract class AbstractText implements Text {
     @Getter
-    private final String type;
+    private String type;
 
     protected AbstractText(String type) {
-        Validate.requireNotEmpty(type, "type cannot be null or empty");
+        requireNotEmpty(type, "type cannot be null or empty");
         this.type = type;
     }
 
     @Override
-    public List<String> getLines(boolean skipEmpty) {
-        return StringUtils.splitLines(getText(), skipEmpty);
+    public abstract String toString();
+
+    @Override
+    public Iterator<String> iterator() {
+        return StringUtils.splitLines(toString(), false).iterator();
     }
 
     @Override
     public long writeTo(@NonNull Writer writer) throws IOException {
-        val text = getText();
-        writer.append(text).flush();
+        val text = toString();
+        writer.write(text);
         return text.length();
-    }
-
-    @Override
-    public Iterator<String> iterator() {
-        return getLines(false).iterator();
-    }
-
-    @Override
-    public String toString() {
-        return getText();
     }
 }

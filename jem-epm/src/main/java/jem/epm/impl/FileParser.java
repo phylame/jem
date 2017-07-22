@@ -20,19 +20,12 @@ package jem.epm.impl;
 
 import jclp.setting.Settings;
 import jem.Book;
+import jem.epm.Parser;
 import jem.util.JemException;
 
 import java.io.File;
 import java.io.IOException;
 
-public abstract class AbstractMaker implements FileMaker {
-    @Override
-    public void make(Book book, String output, Settings arguments) throws IOException, JemException {
-        make(book, new File(output), arguments);
-    }
-
-    @SuppressWarnings("unchecked")
-    protected <T> T get(Settings settings, String key) {
-        return (T) settings.get("maker." + key);
-    }
+public interface FileParser extends Parser {
+    Book parse(File file, Settings arguments) throws IOException, JemException;
 }

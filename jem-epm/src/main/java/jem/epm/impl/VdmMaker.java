@@ -20,19 +20,15 @@ package jem.epm.impl;
 
 import jclp.setting.Settings;
 import jem.Book;
+import jem.epm.util.VdmUtils;
 import jem.util.JemException;
 
 import java.io.File;
 import java.io.IOException;
 
-public abstract class AbstractMaker implements FileMaker {
+public abstract class VdmMaker extends AbstractMaker {
     @Override
-    public void make(Book book, String output, Settings arguments) throws IOException, JemException {
-        make(book, new File(output), arguments);
-    }
+    public void make(Book book, File file, Settings arguments) throws IOException, JemException {
 
-    @SuppressWarnings("unchecked")
-    protected <T> T get(Settings settings, String key) {
-        return (T) settings.get("maker." + key);
     }
 }

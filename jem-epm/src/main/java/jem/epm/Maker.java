@@ -18,45 +18,12 @@
 
 package jem.epm;
 
+import jclp.setting.Settings;
 import jem.Book;
 import jem.util.JemException;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 
-/**
- * {@code Maker} used for making {@code Book} to book file.
- * <p><strong>NOTE: </strong> the instance of {@code Maker} must be reusable.
- */
 public interface Maker {
-    /**
-     * Returns the format name (normally be the extension name).
-     *
-     * @return the name of format for this maker
-     */
-    String getName();
-
-    /**
-     * Writes {@code Book} to specified output file.
-     *
-     * @param book the {@code Book} to be written
-     * @param file output file to store book
-     * @param args arguments to the maker
-     * @throws IOException  if occurs I/O errors
-     * @throws JemException if occurs errors when making book file
-     */
-    void make(Book book, File file, Map<String, Object> args) throws IOException, JemException;
-
-    /**
-     * Writes {@code Book} to specified output path.
-     *
-     * @param book   book the {@code Book} to be written
-     * @param output the output path
-     * @param args   args arguments to the maker
-     * @throws IOException  if occurs I/O errors
-     * @throws JemException if occurs errors when making book file
-     * @since 3.4.0
-     */
-    void make(Book book, String output, Map<String, Object> args) throws IOException, JemException;
+    void make(Book book, String output, Settings arguments) throws IOException, JemException;
 }

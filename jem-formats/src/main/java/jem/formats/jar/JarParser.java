@@ -21,7 +21,6 @@ package jem.formats.jar;
 import jem.Attributes;
 import jem.Book;
 import jem.Chapter;
-import jem.epm.impl.ZipParser;
 import jem.epm.util.ParserException;
 import jem.epm.util.ZipUtils;
 import jem.formats.util.M;

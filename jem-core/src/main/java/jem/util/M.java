@@ -19,31 +19,12 @@
 package jem.util;
 
 import jclp.util.Linguist;
+import jclp.util.Translator;
 
-/**
- * Internal message translator.
- */
 public final class M {
-    private M() {
-    }
+    private static final String NAME = "jem/util/messages";
 
-    private static final String MESSAGES_PATH = "jem/util/messages";
-
-    private static final Linguist linguist = new Linguist(MESSAGES_PATH);
-
-    public static String tr(String key) {
-        return linguist.tr(key);
-    }
-
-    public static String tr(String key, Object... args) {
-        return linguist.tr(key, args);
-    }
-
-    public static String optTr(String key, String fallback) {
-        return linguist.optTr(key, fallback);
-    }
-
-    public static String optTr(String key, String fallback, Object... args) {
-        return linguist.optTr(key, fallback, args);
+    public static Translator translator() {
+        return new Linguist(NAME);
     }
 }

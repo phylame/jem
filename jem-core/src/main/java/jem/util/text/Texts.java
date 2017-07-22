@@ -18,23 +18,12 @@
 
 package jem.util.text;
 
-import jclp.io.IOUtils;
-import jclp.util.Exceptions;
-import jem.util.Variants;
 import jem.util.flob.Flob;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.val;
-
-import java.io.IOException;
-import java.io.Writer;
-import java.nio.charset.Charset;
-import java.util.Iterator;
-import java.util.List;
-
+import jem.util.text.impl.FlobText;
+import jem.util.text.impl.RawText;
 
 /**
- * Factory class for creating {@code Text} instance.
+ * Factory for {@code Text}.
  */
 public final class Texts {
     private Texts() {
@@ -50,82 +39,15 @@ public final class Texts {
      */
     public static final String PLAIN = "plain";
 
-    public static Text forEmpty(String type) {
-        return forString("", type);
+    public static Text empty() {
+        return forString("", PLAIN);
     }
 
-    public static Text forString(@NonNull CharSequence cs, String type) {
-        return new RawText(cs, type);
+    public static Text forString(CharSequence cs, String type) {
+        return new RawText(type, cs);
     }
 
-    public static Text forFlob(@NonNull Flob file, String encoding, String type) {
-        return new FlobText(file, encoding, type);
-    }
-
-    private static class RawText extends AbstractText {
-        static {
-            Variants.mapClass(RawText.class, Variants.TEXT);
-        }
-
-        private final CharSequence text;
-
-        RawText(CharSequence cs, String type) {
-            super(type);
-            this.text = cs;
-        }
-
-        @Override
-        public String getText() {
-            return text.toString();
-        }
-    }
-
-    private static class FlobText extends AbstractText {
-        static {
-            Variants.mapClass(FlobText.class, Variants.TEXT);
-        }
-
-        private final Flob file;
-        private final String encoding;
-
-        private FlobText(Flob file, String encoding, String type) {
-            super(type);
-            this.file = file;
-            this.encoding = encoding;
-            if (encoding != null && !Charset.isSupported(encoding)) {
-                throw Exceptions.forIllegalArgument("charset %s is unsupported", encoding);
-            }
-        }
-
-        @Override
-        @SneakyThrows(IOException.class)
-        public String getText() {
-            try (val in = file.openStream()) {
-                return IOUtils.toString(in, encoding);
-            }
-        }
-
-        @Override
-        @SneakyThrows(IOException.class)
-        public List<String> getLines(boolean skipEmpty) {
-            try (val in = file.openStream()) {
-                return IOUtils.toLines(in, encoding, skipEmpty);
-            }
-        }
-
-        @Override
-        @SneakyThrows(IOException.class)
-        public Iterator<String> iterator() {
-            try (val in = file.openStream()) {
-                return IOUtils.linesOf(in, encoding, false);
-            }
-        }
-
-        @Override
-        public long writeTo(@NonNull Writer writer) throws IOException {
-            try (val reader = IOUtils.readerFor(file.openStream(), encoding)) {
-                return IOUtils.copy(reader, writer, -1);
-            }
-        }
+    public static Text forFlob(Flob flob, String encoding, String type) {
+        return new FlobText(type, flob, encoding);
     }
 }

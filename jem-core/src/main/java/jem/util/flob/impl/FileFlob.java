@@ -16,23 +16,38 @@
  * limitations under the License.
  */
 
-package jem.epm.impl;
+package jem.util.flob.impl;
 
-import jclp.setting.Settings;
-import jem.Book;
-import jem.util.JemException;
+import jem.util.Variants;
+import jem.util.flob.AbstractFlob;
+import lombok.Getter;
+import lombok.NonNull;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
-public abstract class AbstractMaker implements FileMaker {
-    @Override
-    public void make(Book book, String output, Settings arguments) throws IOException, JemException {
-        make(book, new File(output), arguments);
+public class FileFlob extends AbstractFlob {
+    static {
+        Variants.mapClass(Variants.FLOB, FileFlob.class);
     }
 
-    @SuppressWarnings("unchecked")
-    protected <T> T get(Settings settings, String key) {
-        return (T) settings.get("maker." + key);
+    @Getter
+    private final File file;
+
+    public FileFlob(@NonNull File file, String mime) {
+        super(mime);
+        this.file = file;
+    }
+
+    @Override
+    public String getName() {
+        return file.getPath();
+    }
+
+    @Override
+    public InputStream openStream() throws IOException {
+        return new FileInputStream(file);
     }
 }

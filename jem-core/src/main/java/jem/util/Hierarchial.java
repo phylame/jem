@@ -16,23 +16,8 @@
  * limitations under the License.
  */
 
-package jem.epm.impl;
+package jem.util;
 
-import jclp.setting.Settings;
-import jem.Book;
-import jem.util.JemException;
-
-import java.io.File;
-import java.io.IOException;
-
-public abstract class AbstractMaker implements FileMaker {
-    @Override
-    public void make(Book book, String output, Settings arguments) throws IOException, JemException {
-        make(book, new File(output), arguments);
-    }
-
-    @SuppressWarnings("unchecked")
-    protected <T> T get(Settings settings, String key) {
-        return (T) settings.get("maker." + key);
-    }
+public interface Hierarchial<T extends Hierarchial<T>> extends Iterable<T> {
+    T getParent();
 }

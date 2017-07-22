@@ -18,124 +18,103 @@
 
 package jem.util;
 
-import jclp.util.StringUtils;
-import jclp.util.Validate;
+import jclp.function.EntryToPair;
+import jclp.value.Pair;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.val;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
-public class VariantMap implements Cloneable {
-    private Map<String, Object> map;
+import static jclp.util.CollectionUtils.map;
+import static jclp.util.StringUtils.isEmpty;
+import static jclp.util.Validate.requireNotEmpty;
+import static jclp.util.Validate.requireNotNull;
 
-    public interface Validator {
-        void validate(String name, Object value) throws RuntimeException;
-    }
+public class VariantMap implements Iterable<Pair<String, Object>>, Cloneable {
+    private HashMap<String, Object> values = new HashMap<>();
 
-    private Validator validator = null;
+    private Validator validator;
 
     public VariantMap() {
-        this(new HashMap<String, Object>(), null);
+        this(null);
     }
 
-    public VariantMap(@NonNull Map<String, Object> map, Validator validator) {
-        this.map = map;
+    public VariantMap(Validator validator) {
         this.validator = validator;
     }
 
-    public void set(String name, @NonNull Object value) {
-        Validate.requireNotEmpty(name, "name cannot be empty");
+    public void set(String name, Object value) {
+        requireNotEmpty(name, "Name of attribute cannot be empty");
+        requireNotNull(value, "Value of attribute cannot be null");
         if (validator != null) {
             validator.validate(name, value);
         }
-        map.put(name, value);
+        values.put(name, value);
     }
 
-    public void update(@NonNull Map<String, Object> map) {
-        for (val e : map.entrySet()) {
-            set(e.getKey(), e.getValue());
+    public void update(@NonNull VariantMap others) {
+        update(others.values);
+    }
+
+    public void update(@NonNull Map<String, Object> values) {
+        for (val entry : values.entrySet()) {
+            set(entry.getKey(), entry.getValue());
         }
-    }
-
-    public void update(@NonNull VariantMap rhs) {
-        update(rhs.map);
     }
 
     public boolean contains(String name) {
-        return !StringUtils.isEmpty(name) && map.containsKey(name);
+        return !isEmpty(name) && values.containsKey(name);
     }
 
     public Object get(String name) {
-        return StringUtils.isEmpty(name) ? null : map.get(name);
+        return isEmpty(name) ? null : values.get(name);
     }
 
-    public Object get(String name, Object fallback) {
-        if (StringUtils.isEmpty(name)) {
+    @SuppressWarnings("unchecked")
+    public <T> T get(String name, T fallback) {
+        if (isEmpty(name)) {
             return fallback;
         }
-        val value = map.get(name);
-        return value != null ? value : fallback;
-    }
-
-    public String get(String name, String fallback) {
-        if (StringUtils.isEmpty(name)) {
-            return fallback;
-        }
-        val value = map.get(name);
-        return (value != null) ? value.toString() : fallback;
-    }
-
-    public <T> T get(String name, @NonNull Class<T> type, T fallback) {
-        if (StringUtils.isEmpty(name)) {
-            return fallback;
-        }
-        val value = map.get(name);
-        return (value != null && type.isInstance(value)) ? type.cast(value) : fallback;
-    }
-
-    public Object remove(String name) {
-        return StringUtils.isEmpty(name) ? null : map.remove(name);
-    }
-
-    public void clear() {
-        map.clear();
+        val value = values.get(name);
+        return value != null ? (T) value : fallback;
     }
 
     public int size() {
-        return map.size();
+        return values.size();
     }
 
-    public Set<Map.Entry<String, Object>> entries() {
-        return map.entrySet();
+    @Override
+    public Iterator<Pair<String, Object>> iterator() {
+        return map(values.entrySet().iterator(), new EntryToPair<String, Object>());
     }
 
-    public Set<String> names() {
-        return map.keySet();
+    public Object remove(String name) {
+        return isEmpty(name) ? null : values.remove(name);
     }
 
-    /**
-     * Returns a shallow copy of this {@code VariantMap} instance: the names and values themselves are not cloned.
-     *
-     * @return a shallow copy of this map
-     */
+    public void clear() {
+        values.clear();
+    }
+
     @Override
     @SuppressWarnings("unchecked")
+    @SneakyThrows(CloneNotSupportedException.class)
     public VariantMap clone() {
-        final VariantMap copy;
-        try {
-            copy = (VariantMap) super.clone();
-            copy.map = map.getClass().newInstance();
-        } catch (CloneNotSupportedException | InstantiationException | IllegalAccessException e) {
-            throw new InternalError();
-        }
-        copy.map.putAll(map);
+        val copy = (VariantMap) super.clone();
+        copy.values = (HashMap<String, Object>) values.clone();
+        copy.validator = validator;
         return copy;
     }
 
     @Override
     public String toString() {
-        return map.toString();
+        return values.toString();
+    }
+
+    public interface Validator {
+        void validate(String name, Object value) throws IllegalArgumentException;
     }
 }

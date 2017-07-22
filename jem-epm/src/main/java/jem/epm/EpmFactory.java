@@ -16,23 +16,16 @@
  * limitations under the License.
  */
 
-package jem.epm.impl;
+package jem.epm;
 
-import jclp.setting.Settings;
-import jem.Book;
-import jem.util.JemException;
+import java.util.Set;
 
-import java.io.File;
-import java.io.IOException;
+public interface EpmFactory {
+    String getName();
 
-public abstract class AbstractMaker implements FileMaker {
-    @Override
-    public void make(Book book, String output, Settings arguments) throws IOException, JemException {
-        make(book, new File(output), arguments);
-    }
+    Set<String> getNames();
 
-    @SuppressWarnings("unchecked")
-    protected <T> T get(Settings settings, String key) {
-        return (T) settings.get("maker." + key);
-    }
+    Parser getParser();
+
+    Maker getMaker();
 }

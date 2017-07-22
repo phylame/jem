@@ -20,41 +20,40 @@ package jem.util.text;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.List;
+import java.util.Iterator;
 
 /**
- * Provides reused and read-only unicode text source.
+ * An object providing large unicode text.
  */
 public interface Text extends Iterable<String> {
     /**
-     * Returns the type of content.
+     * Returns the content type of content.
      *
-     * @return the type string
+     * @return the content type of content
      */
     String getType();
 
     /**
-     * Returns text of this object.
+     * Returns the content of this object.
      *
-     * @return the string of text, never be {@literal null}
+     * @return the content of this object
      */
-    String getText();
+    String toString();
 
     /**
-     * Returns list of string of text split by line separator.
+     * Returns an iterator over lines of content.
      *
-     * @param skipEmpty {@literal true} to skip empty lines
-     * @return list of string, may be empty list
+     * @return an iterator
      */
-    List<String> getLines(boolean skipEmpty);
+    Iterator<String> iterator();
 
     /**
-     * Writes text of this object to output writer.
+     * Writes content of this object to specified writer.
      *
-     * @param writer output to store text text
+     * @param writer the writer to be written to
      * @return number of written characters
-     * @throws NullPointerException if the writer is {@literal null}
-     * @throws IOException          if occur I/O errors
+     * @throws NullPointerException if specified output is null
+     * @throws IOException          if an I/O error occurs
      */
     long writeTo(Writer writer) throws IOException;
 }

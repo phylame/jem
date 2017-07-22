@@ -26,7 +26,6 @@ import jclp.value.Triple;
 import jem.Attributes;
 import jem.Book;
 import jem.Chapter;
-import jem.epm.impl.AbstractParser;
 import jem.epm.util.InputCleaner;
 import jem.epm.util.ParserException;
 import jem.formats.util.M;

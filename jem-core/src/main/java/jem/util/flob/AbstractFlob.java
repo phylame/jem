@@ -21,47 +21,32 @@ package jem.util.flob;
 import jclp.io.IOUtils;
 import jclp.io.PathUtils;
 import lombok.Getter;
-import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
-/**
- * Abstract {@code Flob} implementation.
- */
+@RequiredArgsConstructor
 public abstract class AbstractFlob implements Flob {
+    private final String _mime;
 
-    @NonNull
     @Getter(lazy = true)
     private final String mime = detectMime();
-
-    protected AbstractFlob(String mime) {
-        _mime = mime;
-    }
-
-    private final String _mime;
 
     private String detectMime() {
         return PathUtils.mimeOrDetect(getName(), _mime);
     }
 
     @Override
-    public byte[] readAll() throws IOException {
-        try (val in = openStream()) {
-            return IOUtils.toBytes(in);
-        }
-    }
-
-    @Override
-    public long writeTo(@NonNull OutputStream out) throws IOException {
-        try (val in = openStream()) {
-            return IOUtils.copy(in, out, -1);
+    public long writeTo(OutputStream output) throws IOException {
+        try (val input = openStream()) {
+            return IOUtils.copy(input, output, -1);
         }
     }
 
     @Override
     public String toString() {
-        return getName() + ";mime=" + getMime();
+        return getMime() + ";mime=" + getMime();
     }
 }

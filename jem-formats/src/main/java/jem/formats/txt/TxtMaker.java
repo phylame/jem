@@ -22,7 +22,6 @@ import jclp.io.IOUtils;
 import jclp.util.StringUtils;
 import jem.Attributes;
 import jem.Book;
-import jem.epm.impl.AbstractMaker;
 import jem.epm.util.MakerException;
 import jem.epm.util.text.TextRender;
 import lombok.NonNull;

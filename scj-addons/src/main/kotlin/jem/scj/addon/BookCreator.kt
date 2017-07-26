@@ -22,7 +22,7 @@ import jem.scj.app.SCI
 import jem.scj.app.newBook
 import jem.scj.app.outParam
 import jem.scj.app.saveBook
-import mala.cli.CLIDelegate
+import mala.cli.CDelegate
 import mala.cli.Command
 import mala.cli.action
 import mala.core.Plugin
@@ -34,7 +34,7 @@ class BookCreator : Plugin, Command {
         SCI.newOption("C", "create-book").action(this)
     }
 
-    override fun execute(delegate: CLIDelegate): Int {
+    override fun execute(delegate: CDelegate): Int {
         val book = newBook(true)
         val path = saveBook(outParam(book)) ?: return -1
         println(path)

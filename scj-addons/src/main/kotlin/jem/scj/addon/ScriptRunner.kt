@@ -60,7 +60,7 @@ class ScriptRunner : ValuesFetcher("R"), SCIPlugin, Command {
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun execute(delegate: CLIDelegate): Int {
+    override fun execute(delegate: CDelegate): Int {
         val paths = SCI.context["R"] as? List<String> ?: return -1
         var code = 0
         paths.map(::File).forEach {

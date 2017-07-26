@@ -40,7 +40,7 @@ fun main(args: Array<String>) {
     App.run(SCI, args)
 }
 
-object SCI : CLIDelegate(DefaultParser()) {
+object SCI : CDelegate(DefaultParser()) {
     private const val TAG = "SCI"
 
     override val version = Build.VERSION

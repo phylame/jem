@@ -20,7 +20,7 @@ package jem.scj.app
 
 import jem.Book
 import jem.epm.EpmInParam
-import mala.cli.CLIDelegate
+import mala.cli.CDelegate
 import mala.cli.Command
 import mala.cli.ValuesFetcher
 import mala.core.App.tr
@@ -30,7 +30,7 @@ interface InputProcessor {
 }
 
 interface ProcessorCommand : Command, InputProcessor {
-    override fun execute(delegate: CLIDelegate): Int = SCI.processInputs(this)
+    override fun execute(delegate: CDelegate): Int = SCI.processInputs(this)
 }
 
 interface BookConsumer : ProcessorCommand {
@@ -69,7 +69,7 @@ class ConvertBook : BookConsumer {
 class JoinBook : Command, InputProcessor {
     private val book = Book()
 
-    override fun execute(delegate: CLIDelegate): Int {
+    override fun execute(delegate: CDelegate): Int {
         var code = SCI.processInputs(this)
         if (!book.isSection) { // no input books
             return -1

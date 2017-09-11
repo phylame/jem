@@ -45,16 +45,13 @@ object Variants {
         typeDefaults[type] = value
     }
 
-    fun getDefault(type: String): Any? {
-        if (type.isEmpty()) {
-            return null
-        }
-        return typeDefaults[type]?.let {
-            when (it) {
-                is Function0<*> -> return it.invoke()
-                is Supplier<*> -> return it.get()
-                else -> it
-            }
+    fun getDefault(type: String) = if (type.isEmpty()) {
+        null
+    } else typeDefaults[type]?.let {
+        when (it) {
+            is Function0<*> -> return it.invoke()
+            is Supplier<*> -> return it.get()
+            else -> it
         }
     }
 }

@@ -3,7 +3,6 @@ package jclp
 import java.text.MessageFormat
 import java.util.*
 
-
 interface Translator {
     fun tr(key: String): String
 

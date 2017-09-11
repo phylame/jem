@@ -1,1 +1,0 @@
-# jem-crawler - Web crawler for online ebooks

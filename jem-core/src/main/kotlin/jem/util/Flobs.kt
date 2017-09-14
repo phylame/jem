@@ -1,9 +1,9 @@
 package jem.util
 
-import jclp.io.copyTo
+import jclp.io.copyLimited
 import jclp.io.detectMime
 import jclp.io.getResource
-import jclp.io.inputStream
+import jclp.io.clippedStream
 import java.io.*
 import java.net.URL
 
@@ -14,7 +14,7 @@ interface Flob {
 
     fun openStream(): InputStream
 
-    fun writeTo(output: OutputStream) = openStream().copyTo(output)
+    fun writeTo(output: OutputStream) = openStream().copyLimited(output)
 
     companion object {
         fun of(url: URL, mime: String = ""): Flob = URLFlob(url, mime)
@@ -96,11 +96,11 @@ internal class BlockFlob(
 
     override fun openStream(): InputStream {
         file.seek(offset)
-        return file.inputStream(offset, length)
+        return file.clippedStream(offset, length)
     }
 
     override fun writeTo(output: OutputStream): Long {
         file.seek(offset)
-        return file.copyTo(output, length)
+        return file.copyLimited(output, length)
     }
 }

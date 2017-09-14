@@ -16,10 +16,10 @@ fun mapMimes(m: Map<String, String>) {
     mimeMap.putAll(m)
 }
 
-fun getMime(path: String) = if (!path.isEmpty()) extName(path).let {
+fun getMime(path: String) = if (path.isNotEmpty()) extName(path).let {
     if (it.isEmpty()) UNKNOWN_MIME else mimeMap.getProperty(it) ?: UNKNOWN_MIME
 } else {
     ""
 }
 
-fun detectMime(path: String, mime: String) = if (mime.isNotEmpty()) mime else getMime(path)
+fun detectMime(path: String, mime: String) = mime.takeIf(String::isNotEmpty) ?: getMime(path)

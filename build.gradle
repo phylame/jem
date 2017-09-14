@@ -6,17 +6,9 @@
  * user guide available at https://docs.gradle.org/4.1/userguide/tutorial_java_projects.html
  */
 
-buildscript {
-    ext.javaVersion = '1.8'
-
-    repositories {
-        mavenLocal()
-        jcenter()
-    }
-}
-
 allprojects {
-    apply plugin: 'maven'
+    apply plugin: 'java'
+    apply plugin: 'maven-publish'
 
     group = 'pw.phylame.jem'
     version = '5.0-SNAPSHOT'
@@ -24,5 +16,25 @@ allprojects {
     repositories {
         mavenLocal()
         jcenter()
+    }
+
+    task sourcesJar(type: Jar) {
+        from sourceSets.main.allSource
+        classifier 'sources'
+    }
+
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        from javadoc.destinationDir
+        classifier 'javadoc'
+    }
+
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                artifact sourcesJar
+                artifact javadocJar
+                from components.java
+            }
+        }
     }
 }

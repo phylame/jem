@@ -11,5 +11,5 @@ dependencies {
 }
 
 compileKotlin {
-    kotlinOptions.jvmTarget = "$javaVersion"
+    kotlinOptions.jvmTarget = javaVersion
 }

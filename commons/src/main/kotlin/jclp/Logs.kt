@@ -144,6 +144,5 @@ object JDKFacade : LogFacade {
         LogLevel.WARN -> Level.WARNING
         LogLevel.ERROR -> Level.SEVERE
         LogLevel.OFF -> Level.OFF
-        else -> null
     }
 }

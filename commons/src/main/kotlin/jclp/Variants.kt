@@ -10,6 +10,8 @@ import java.util.function.Supplier
 import kotlin.collections.HashMap
 import kotlin.collections.HashSet
 
+val <T : Any> Class<T>.canonicalType get() = if (isPrimitive) kotlin.javaObjectType else this
+
 fun detectValue(value: Any) = when (value) {
     is Function0<*> -> value.invoke()
     is Supplier<*> -> value.get()

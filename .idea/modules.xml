@@ -5,7 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/commons/commons.iml" filepath="$PROJECT_DIR$/.idea/modules/commons/commons.iml" group="commons" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/commons/commons_main.iml" filepath="$PROJECT_DIR$/.idea/modules/commons/commons_main.iml" group="commons" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/commons/commons_test.iml" filepath="$PROJECT_DIR$/.idea/modules/commons/commons_test.iml" group="commons" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/jem.iml" filepath="$PROJECT_DIR$/.idea/modules/jem.iml" />
+      <module fileurl="file://$PROJECT_DIR$/jem.iml" filepath="$PROJECT_DIR$/jem.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/jem-core/jem-core.iml" filepath="$PROJECT_DIR$/.idea/modules/jem-core/jem-core.iml" group="jem-core" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/jem-core/jem-core_main.iml" filepath="$PROJECT_DIR$/.idea/modules/jem-core/jem-core_main.iml" group="jem-core" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/jem-core/jem-core_test.iml" filepath="$PROJECT_DIR$/.idea/modules/jem-core/jem-core_test.iml" group="jem-core" />

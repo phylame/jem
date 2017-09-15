@@ -2,15 +2,13 @@ package jclp
 
 import java.util.*
 
-inline fun <K, V> Map<K, V>.getOrElse(key: K, nullabe: Boolean = false, default: (K) -> V): V? {
-    return get(key) ?: if (!nullabe || key !in this) default(key) else null
-}
+fun MutableList<*>.swap(from: Int, to: Int) = Collections.swap(this, from, to)
 
-inline fun <K, V> MutableMap<K, V>.getOrPut(key: K, nullabe: Boolean = false, default: (K) -> V): V? {
+inline fun <K, V> MutableMap<K, V>.getOrPut(key: K, default: (K) -> V?): V? {
     var value = get(key)
-    if (value == null && (!nullabe || key !in this)) {
+    if (value == null && (key !in this)) {
         value = default(key)
-        if (nullabe || value != null) {
+        if (value != null) {
             put(key, value)
         }
     }
@@ -23,8 +21,4 @@ fun MutableMap<in String, in String>.putAll(from: Properties) {
             put(key.toString(), value.toString())
         }
     }
-}
-
-operator fun MutableMap<in String, in String>.plusAssign(props: Properties) {
-    putAll(props)
 }

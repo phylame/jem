@@ -1,5 +1,7 @@
-package jclp
+package jclp.text
 
+import jclp.*
+import jclp.value.canonicalType
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime

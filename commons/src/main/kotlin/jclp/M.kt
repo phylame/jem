@@ -1,3 +1,3 @@
 package jclp
 
-object M : Linguist("!jclp/messages")
+internal object M : Linguist("!jclp/messages")

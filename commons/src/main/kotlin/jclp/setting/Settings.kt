@@ -1,5 +1,9 @@
-package jclp
+package jclp.setting
 
+import jclp.log.Log
+import jclp.value.actualValue
+import jclp.putAll
+import jclp.text.Converters
 import java.io.Reader
 import java.io.Writer
 import java.util.*
@@ -15,7 +19,7 @@ interface Settings : Iterable<Pair<String, Any>> {
 
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> get(key: String, type: Class<T>, fallback: T) = try {
-        get(key, type)?.let { detectValue(this) as T } ?: fallback
+        get(key, type)?.actualValue ?: fallback
     } catch (e: Exception) {
         fallback
     }
@@ -74,22 +78,27 @@ abstract class AbstractSettings : Settings {
 
     fun setDefinition(key: String, definition: Definition) = definitions.put(key, definition)
 
-    override fun get(key: String) = handleGet(key) ?: definitions[key]?.default?.let(::detectValue)
+    override fun get(key: String) = handleGet(key) ?: definitions[key]?.default?.actualValue
 
     @Suppress("UNCHECKED_CAST")
     override operator fun <T : Any> get(key: String, type: Class<T>): T? {
         val value = handleGet(key)
         return when {
-            value == null -> definitions[key]?.default?.let(::detectValue) as? T
+            value == null -> definitions[key]?.default?.actualValue as? T
             type.isInstance(value) -> value as T
             else -> convertValue(value, type)
         }
     }
 
     override fun set(key: String, value: Any): Any? {
-        definitions[key]?.type?.let {
-            if (!it.isInstance(value)) {
-                throw IllegalArgumentException("'$key' require '$it'")
+        definitions[key]?.let {
+            it.type?.let {
+                if (!it.isInstance(value)) {
+                    throw IllegalArgumentException("'$key' require '$it'")
+                }
+            }
+            if (it.constraint?.invoke(value) == false) {
+                throw IllegalArgumentException("illegal '$value' for '$key'")
             }
         }
         return handleSet(key, value)
@@ -129,7 +138,7 @@ class MapSettings(values: Map<*, Any>? = null, definitions: Map<String, Definiti
         val props = Properties()
         props.load(reader)
         if (props.isNotEmpty()) {
-            values += props
+            values.putAll(props)
             initValues()
         }
     }
@@ -148,7 +157,7 @@ class MapSettings(values: Map<*, Any>? = null, definitions: Map<String, Definiti
             try {
                 entry.setValue(Converters.parse(entry.value.toString(), type) ?: continue)
             } catch (e: Exception) {
-                Log.e(javaClass.simpleName, "invalid value(${entry.value}) for type($type)", e)
+                Log.e(javaClass.simpleName, e) { "invalid value(${entry.value}) for type($type)" }
             }
         }
     }

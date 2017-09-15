@@ -1,9 +1,9 @@
-package jem.util
+package jclp.value
 
+import jclp.io.clippedStream
 import jclp.io.copyLimited
 import jclp.io.detectMime
 import jclp.io.getResource
-import jclp.io.clippedStream
 import java.io.*
 import java.net.URL
 
@@ -14,7 +14,7 @@ interface Flob {
 
     fun openStream(): InputStream
 
-    fun writeTo(output: OutputStream) = openStream().copyLimited(output)
+    fun writeTo(output: OutputStream) = openStream().copyTo(output)
 
     companion object {
         fun of(url: URL, mime: String = ""): Flob = URLFlob(url, mime)
@@ -52,8 +52,8 @@ open class FlobWrapper(private val flob: Flob) : Flob {
     override fun toString() = flob.toString()
 }
 
-abstract class AbstractFlob(mime: String) : Flob {
-    override val mime by lazy { detectMime(name, mime) }
+abstract class AbstractFlob(private val _mime: String) : Flob {
+    override val mime get() = detectMime(name, _mime)
 
     override fun toString() = "$name;mime=$mime"
 }

@@ -1,13 +1,30 @@
+/*
+ * Copyright 2017 Peng Wan <phylame@163.com>
+ *
+ * This file is part of Jem.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package jem
 
-import jclp.value.Types
-import jclp.value.VariantMap
+import jclp.Types
+import jclp.VariantMap
+import jclp.flob.Flob
 import jclp.io.getProperties
 import jclp.log.Log
 import jclp.putAll
-import jclp.value.Flob
-import jem.util.M
-import jclp.value.Text
+import jclp.text.Text
 import java.io.IOException
 import java.time.LocalDate
 import java.util.*
@@ -36,12 +53,10 @@ object Attributes {
     private val types = HashMap<String, String>()
 
     init {
-        initBuiltins()
-    }
-
-    fun newAttributes() = VariantMap { name, value ->
-        getType(name)?.let {
-            require(Types.getClass(it)?.isInstance(value) != false) { "attribute '$name' must be '$it', found '${Types.getType(value)}'" }
+        try {
+            getProperties("!jem/attributes.properties")?.takeIf(Properties::isNotEmpty)?.let { types.putAll(it) }
+        } catch (e: IOException) {
+            Log.e("Types", e) { "cannot load attribute mapping" }
         }
     }
 
@@ -49,21 +64,16 @@ object Attributes {
 
     fun getType(name: String) = types[name]
 
-    fun mapType(name: String, typeId: String) = types.put(name, typeId)
+    fun mapType(name: String, id: String) = types.put(name, id)
 
-    fun getName(name: String) = M.optTr("attribute.$name", "")
+    fun getName(name: String) = if (name.isNotEmpty()) M.optTr("attribute.$name", "") else ""
 
-    private fun initBuiltins() {
-        var props: Properties? = null
-        try {
-            props = getProperties("!jem/attributes.properties")
-        } catch (e: IOException) {
-            Log.e("Types", e) { "cannot load attribute mapping" }
+    fun newAttributes() = VariantMap { name, value ->
+        getType(name)?.let {
+            require(Types.getClass(it)?.isInstance(value) != false) {
+                "attribute '$name' must be '$it', found '${Types.getType(value)}'"
+            }
         }
-        if (props == null || props.isEmpty) {
-            return
-        }
-        types.putAll(props)
     }
 }
 

@@ -1,7 +1,26 @@
+/*
+ * Copyright 2017 Peng Wan <phylame@163.com>
+ *
+ * This file is part of Jem.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package jclp.setting
 
+import jclp.actualValue
+import jclp.canonicalType
 import jclp.log.Log
-import jclp.value.actualValue
 import jclp.putAll
 import jclp.text.Converters
 import java.io.Reader
@@ -17,16 +36,9 @@ interface Settings : Iterable<Pair<String, Any>> {
 
     fun <T : Any> get(key: String, type: Class<T>): T?
 
-    @Suppress("UNCHECKED_CAST")
-    fun <T : Any> get(key: String, type: Class<T>, fallback: T) = try {
-        get(key, type)?.actualValue ?: fallback
-    } catch (e: Exception) {
-        fallback
-    }
+    operator fun set(key: String, value: Any): Any?
 
     operator fun contains(key: String): Boolean
-
-    operator fun set(key: String, value: Any): Any?
 
     fun update(values: Map<String, Any>) {
         for ((key, value) in values) {
@@ -45,13 +57,13 @@ interface Settings : Iterable<Pair<String, Any>> {
     fun clear()
 }
 
-fun Settings.getInt(key: String, fallback: Int = 0) = get(key, Int::class.java, fallback)
+fun Settings.getInt(key: String) = get(key, Int::class.java)
 
-fun Settings.getDouble(key: String, fallback: Double = 0.0) = get(key, Double::class.java, fallback)
+fun Settings.getDouble(key: String) = get(key, Double::class.java)
 
-fun Settings.getString(key: String, fallback: String = "") = get(key, String::class.java, fallback)
+fun Settings.getString(key: String) = get(key, String::class.java)
 
-fun Settings.getBoolean(key: String, fallback: Boolean = false) = get(key, Boolean::class.java, fallback)
+fun Settings.getBoolean(key: String) = get(key, Boolean::class.java)
 
 operator fun Settings.plusAssign(values: Map<String, Any>) {
     update(values)
@@ -71,8 +83,8 @@ abstract class AbstractSettings : Settings {
     protected abstract fun <T : Any> convertValue(value: Any, type: Class<T>): T?
 
     override fun isEnable(key: String): Boolean = definitions[key]?.dependencies?.all {
-        isEnable(it.key) && it.condition?.invoke(get(it.key)) ?: true
-    } ?: true
+        isEnable(it.key) && it.condition?.invoke(get(it.key)) != false
+    } != false
 
     fun getDefinition(key: String) = definitions[key]
 
@@ -83,10 +95,11 @@ abstract class AbstractSettings : Settings {
     @Suppress("UNCHECKED_CAST")
     override operator fun <T : Any> get(key: String, type: Class<T>): T? {
         val value = handleGet(key)
+        val clazz = type.canonicalType
         return when {
             value == null -> definitions[key]?.default?.actualValue as? T
-            type.isInstance(value) -> value as T
-            else -> convertValue(value, type)
+            clazz.isInstance(value) -> value as T
+            else -> convertValue(value, clazz)
         }
     }
 
@@ -133,6 +146,8 @@ class MapSettings(values: Map<*, Any>? = null, definitions: Map<String, Definiti
     override fun <T : Any> convertValue(value: Any, type: Class<T>) = (value as? String)?.let {
         Converters.parse(it, type)
     } ?: throw IllegalStateException("value is not string $value")
+
+    override fun toString() = values.toString()
 
     fun load(reader: Reader) {
         val props = Properties()

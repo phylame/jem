@@ -1,3 +1,21 @@
+/*
+ * Copyright 2017 Peng Wan <phylame@163.com>
+ *
+ * This file is part of Jem.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package jclp
 
 import jclp.io.contextClassLoader
@@ -20,9 +38,9 @@ interface Translator {
         default
     }
 
-    fun tr(key: String, vararg args: Any) = MessageFormat.format(tr(key), *args)
+    fun tr(key: String, vararg args: Any): String = MessageFormat.format(tr(key), *args)
 
-    fun optTr(key: String, fallback: String, vararg args: Any) = MessageFormat.format(optTr(key, fallback), *args)
+    fun optTr(key: String, fallback: String, vararg args: Any): String = MessageFormat.format(optTr(key, fallback), *args)
 
     fun attach(translators: Collection<Translator>) {
         throw UnsupportedOperationException()
@@ -45,8 +63,8 @@ abstract class AbstractTranslator : Translator {
     protected abstract fun handleGet(key: String): String?
 
     override fun tr(key: String): String {
-        try {
-            return handleGet(key) ?: throw MissingResourceException(null, javaClass.name, key)
+        return try {
+            handleGet(key) ?: throw MissingResourceException(null, javaClass.name, key)
         } catch (e: MissingResourceException) {
             for (translator in attachments) {
                 try {
@@ -109,7 +127,7 @@ open class Linguist(
         private val loader: ClassLoader? = null,
         private val isDummy: Boolean = true
 ) : AbstractTranslator() {
-    override fun handleGet(key: String) = bundle.getString(key)
+    override fun handleGet(key: String): String = bundle.getString(key)
 
     private val bundle: ResourceBundle by lazy {
         try {
@@ -136,7 +154,7 @@ open class Linguist(
     private object DummyBundle : ResourceBundle() {
         override fun handleGetObject(key: String) = null
 
-        override fun getKeys() = Collections.emptyEnumeration<String>()
+        override fun getKeys(): Enumeration<String> = Collections.emptyEnumeration<String>()
     }
 }
 

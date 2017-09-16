@@ -1,19 +1,50 @@
+/*
+ * Copyright 2017 Peng Wan <phylame@163.com>
+ *
+ * This file is part of Jem.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package jem
 
 import jclp.Hierarchy
+import jclp.VariantMap
+import jclp.flob.Flob
 import jclp.log.Log
-import jclp.value.VariantMap
-import jclp.value.Text
+import jclp.text.Text
 import java.util.*
 
-private typealias Cleaner = (Chapter) -> Unit
+typealias ChapterCleaner = (Chapter) -> Unit
 
-open class Chapter(title: String = "", var text: Text? = null, var tag: Any? = null) : Hierarchy<Chapter>(), Cloneable {
+open class Chapter(
+        title: String = "",
+        var text: Text? = null,
+        cover: Flob? = null,
+        intro: Text? = null,
+        var tag: Any? = null
+) : Hierarchy<Chapter>(), Cloneable {
     var attributes = Attributes.newAttributes()
         private set
 
     init {
         set(TITLE, title)
+        if (cover != null) {
+            set(COVER, cover)
+        }
+        if (intro != null) {
+            set(INTRO, intro)
+        }
     }
 
     constructor(chapter: Chapter, deepCopy: Boolean) : this() {
@@ -28,15 +59,13 @@ open class Chapter(title: String = "", var text: Text? = null, var tag: Any? = n
 
     operator fun set(name: String, values: Collection<Any>) = attributes.set(name, values.joinToString(";"))
 
-    fun newChapter(title: String): Chapter {
-        val chapter = Chapter(title)
+    fun newChapter(title: String = "", text: Text? = null, cover: Flob? = null, intro: Text? = null): Chapter {
+        val chapter = Chapter(title, text, cover, intro)
         append(chapter)
         return chapter
     }
 
     val isSection get() = size != 0
-
-    fun chapterAt(index: Int) = get(index)
 
     fun clear(cleanup: Boolean) {
         if (cleanup) {
@@ -49,13 +78,13 @@ open class Chapter(title: String = "", var text: Text? = null, var tag: Any? = n
 
     private var isCleaned = false
 
-    private val cleanups = LinkedHashSet<Cleaner>()
+    private val cleanups = LinkedHashSet<ChapterCleaner>()
 
-    fun addCleanup(cleanup: Cleaner) {
+    operator fun plusAssign(cleanup: ChapterCleaner) {
         cleanups += cleanup
     }
 
-    fun removeCleanup(cleanup: Cleaner) {
+    operator fun minusAssign(cleanup: ChapterCleaner) {
         cleanups -= cleanup
     }
 
@@ -72,7 +101,6 @@ open class Chapter(title: String = "", var text: Text? = null, var tag: Any? = n
         isCleaned = true
     }
 
-    @Throws(Throwable::class)
     protected fun finalize() {
         if (!isCleaned) {
             Log.w(javaClass.simpleName) { "chapter ${get(TITLE)} is not cleaned" }
@@ -96,7 +124,21 @@ open class Chapter(title: String = "", var text: Text? = null, var tag: Any? = n
         }
     }
 
-    override fun toString() = "${javaClass.simpleName}:attributes=$attributes, tag=$tag, text=$text"
+    override fun toString(): String {
+        val b = StringBuilder(javaClass.simpleName).append('@').append(attributes)
+        if (text != null) {
+            b.append(", text")
+        }
+        if (isSection) {
+            b.append(", ").append(size).append(" chapter(s)")
+        }
+        if (tag != null) {
+            b.append(", [").append(tag).append(']')
+        }
+        return b.toString()
+    }
+
+    companion object
 }
 
 open class Book(title: String = "", author: String = "") : Chapter(title) {
@@ -118,5 +160,13 @@ open class Book(title: String = "", author: String = "") : Chapter(title) {
         }
     }
 
-    override fun toString() = "${super.toString()}, extensions=$extensions"
+    override fun toString(): String {
+        val b = StringBuilder(super.toString())
+        if (extensions.isNotEmpty()) {
+            b.append(", #").append(extensions)
+        }
+        return b.toString()
+    }
+
+    companion object
 }

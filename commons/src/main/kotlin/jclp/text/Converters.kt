@@ -1,7 +1,25 @@
+/*
+ * Copyright 2017 Peng Wan <phylame@163.com>
+ *
+ * This file is part of Jem.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package jclp.text
 
 import jclp.*
-import jclp.value.canonicalType
+import jclp.flob.Flob
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -24,8 +42,6 @@ object Converters {
 
     @Suppress("UNCHECKED_CAST")
     operator fun <T : Any> get(type: Class<T>) = converters[type.canonicalType] as Converter<T>?
-
-    inline fun <reified T : Any> set(converter: Converter<T>?) = set(T::class.java, converter)
 
     operator fun <T : Any> set(type: Class<T>, converter: Converter<T>?) = converters.put(type.canonicalType, converter)
 
@@ -55,6 +71,18 @@ object Converters {
         Long::class.java.let { set(it, DefaultConverter(it)) }
         Float::class.java.let { set(it, DefaultConverter(it)) }
         Double::class.java.let { set(it, DefaultConverter(it)) }
+
+        set(Text::class.java, object : Converter<Text> {
+            override fun parse(str: String) = Text.of(str)
+
+            override fun render(obj: Text) = throw UnsupportedOperationException()
+        })
+
+        set(Flob::class.java, object : Converter<Flob> {
+            override fun parse(str: String) = Flob.of(str)
+
+            override fun render(obj: Flob) = throw UnsupportedOperationException()
+        })
     }
 }
 
@@ -77,7 +105,7 @@ class DefaultConverter<T>(private val type: Class<T>) : Converter<T> {
             Double::class.java -> java.lang.Double.valueOf(str) as T
             Boolean::class.java -> java.lang.Boolean.valueOf(str) as T
             Date::class.java -> str.toDate("yyyy-M-d H:m:s", "yyyy-M-d", "H:m:s") as T? ?: throw IllegalArgumentException("Illegal date string: $str")
-            Locale::class.java -> Locale.forLanguageTag(str) as T
+            Locale::class.java -> Locale.forLanguageTag(str.replace('_', '-')) as T
             LocalDate::class.java -> LocalDate.parse(str, LOOSE_ISO_DATE) as T
             LocalTime::class.java -> LocalTime.parse(str, LOOSE_ISO_TIME) as T
             LocalDateTime::class.java -> LocalDateTime.parse(str, LOOSE_ISO_DATE_TIME) as T

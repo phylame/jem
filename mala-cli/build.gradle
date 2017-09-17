@@ -22,11 +22,11 @@ plugins {
 }
 
 version = '3.0'
-group = 'pw.phylame.util'
-description = 'Commons & Utilities for Java'
+group = 'pw.phylame.mala'
 
 dependencies {
-    api 'org.jetbrains.kotlin:kotlin-stdlib'
+    api project(':mala-core')
+    api "commons-cli:commons-cli:$commonsCliVersion"
 }
 
 compileKotlin {

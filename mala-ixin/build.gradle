@@ -16,17 +16,17 @@
  * limitations under the License.
  */
 
+
 plugins {
     id 'java-library'
     id 'org.jetbrains.kotlin.jvm' version '1.1.4-3'
 }
 
 version = '3.0'
-group = 'pw.phylame.util'
-description = 'Commons & Utilities for Java'
+group = 'pw.phylame.mala'
 
 dependencies {
-    api 'org.jetbrains.kotlin:kotlin-stdlib'
+    api project(':mala-core')
 }
 
 compileKotlin {

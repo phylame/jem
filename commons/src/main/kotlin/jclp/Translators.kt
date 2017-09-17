@@ -90,7 +90,7 @@ abstract class AbstractTranslator : Translator {
 private const val ERR_NO_TRANSLATOR = "translator is not initialized"
 
 open class TranslatorWrapper : Translator {
-    var translator: Translator? = null
+    protected var translator: Translator? = null
 
     override fun tr(key: String) = translator?.tr(key) ?: throw IllegalStateException(ERR_NO_TRANSLATOR)
 

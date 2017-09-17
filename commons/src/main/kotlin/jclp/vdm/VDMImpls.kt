@@ -18,7 +18,7 @@
 
 package jclp.vdm
 
-import jclp.io.createDirectory
+import jclp.io.createRecursively
 import jclp.synchronized
 import java.io.*
 import java.nio.file.NotDirectoryException
@@ -95,7 +95,7 @@ private class FileVDMWriter(val dir: File) : VDMWriter {
 
     override fun putEntry(entry: VDMEntry) = if (entry !is FileVDMEntry || entry.writer !== this) {
         throw IllegalArgumentException("Invalid entry $entry")
-    } else if (!entry.file.parentFile.createDirectory()) {
+    } else if (!entry.file.parentFile.createRecursively()) {
         throw IOException("Cannot create directory ${entry.file.parent}")
     } else if (entry.stream != null) {
         throw IllegalArgumentException("Entry is opened")

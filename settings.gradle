@@ -35,6 +35,13 @@ include 'services:webservice'
 
 rootProject.name = 'jem'
 
-include 'commons', 'jem-core', 'jem-epm', 'jem-formats'
+include 'commons'
+include 'jem-core'
+include 'jem-epm'
+include 'jem-formats'
+include 'mala-core'
+include 'mala-cli'
+include 'mala-ixin'
+include 'scj'
 
 

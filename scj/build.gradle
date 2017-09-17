@@ -1,0 +1,21 @@
+plugins {
+    id 'application'
+    id 'org.jetbrains.kotlin.jvm' version '1.1.4-3'
+}
+
+description = 'SCJ for Jem'
+
+mainClassName = 'jem.scj.AppsKt'
+
+dependencies {
+    compile project(':jem-formats')
+    compile project(':mala-cli')
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = javaVersion
+}
+
+compileTestKotlin {
+    kotlinOptions.jvmTarget = javaVersion
+}

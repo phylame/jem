@@ -23,9 +23,11 @@ import jclp.canonicalType
 import jclp.log.Log
 import jclp.putAll
 import jclp.text.Converters
+import jclp.text.or
 import java.io.Reader
 import java.io.Writer
 import java.util.*
+import kotlin.reflect.KProperty
 
 private typealias Predicate = (Any?) -> Boolean
 
@@ -71,6 +73,21 @@ operator fun Settings.plusAssign(values: Map<String, Any>) {
 
 operator fun Settings.plusAssign(settings: Settings) {
     update(settings)
+}
+
+class SettingsDelegate<T : Any>(private val type: Class<T>, private val default: T, private val key: String = "") {
+    @Suppress("UNCHECKED_CAST")
+    operator fun getValue(settings: Settings, property: KProperty<*>): T {
+        return settings.get(key or { property.name }, type) ?: default
+    }
+
+    operator fun setValue(settings: Settings, property: KProperty<*>, value: T) {
+        settings[key or { property.name }] = value
+    }
+}
+
+inline fun <reified T : Any> Settings.delegate(default: T, key: String = ""): SettingsDelegate<T> {
+    return SettingsDelegate(T::class.java, default, key)
 }
 
 abstract class AbstractSettings : Settings {
@@ -120,7 +137,7 @@ abstract class AbstractSettings : Settings {
     override fun contains(key: String) = handleGet(key) != null
 }
 
-class MapSettings(values: Map<*, Any>? = null, definitions: Map<String, Definition>? = null) : AbstractSettings() {
+open class MapSettings(values: Map<*, Any>? = null, definitions: Map<String, Definition>? = null) : AbstractSettings() {
     private val values = HashMap<String, Any>()
 
     init {

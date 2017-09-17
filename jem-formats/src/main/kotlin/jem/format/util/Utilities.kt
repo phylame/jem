@@ -32,6 +32,7 @@ import jem.epm.ParserException
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import org.xmlpull.v1.XmlPullParserFactory
+import java.io.OutputStream
 import java.io.Writer
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -39,51 +40,47 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-
 internal object M : Linguist("!jem/format/util/messages")
 
 fun Parser.fail(key: String, vararg args: Any): Nothing = throw ParserException(M.tr(key, *args))
 
 fun Parser.fail(e: Throwable, key: String, vararg args: Any): Nothing = throw ParserException(M.tr(key, *args), e)
 
-inline fun Parser.parseInt(str: String, what: () -> String) = try {
-    str.toInt()
+inline fun Parser.parseInt(text: String, error: () -> String) = try {
+    text.toInt()
 } catch (e: NumberFormatException) {
-    fail(e, "err.parser.badNumber", str, what())
+    fail(e, "err.parser.badNumber", text, error())
 }
 
-inline fun Parser.parseDouble(str: String, what: () -> String) = try {
-    str.toDouble()
+inline fun Parser.parseDouble(text: String, error: () -> String) = try {
+    text.toDouble()
 } catch (e: NumberFormatException) {
-    fail(e, "err.parser.badNumber", str, what())
+    fail(e, "err.parser.badNumber", text, error())
 }
 
-inline fun Parser.parseDateTime(str: String, format: String, what: () -> String): LocalDateTime = try {
-    val formatter = if (format.isEmpty()) LOOSE_ISO_DATE_TIME else DateTimeFormatter.ofPattern(format)
-    LocalDateTime.parse(str, formatter)
+inline fun Parser.parseDateTime(text: String, format: String, error: () -> String): LocalDateTime = try {
+    LocalDateTime.parse(text, if (format.isNotEmpty()) DateTimeFormatter.ofPattern(format) else LOOSE_ISO_DATE_TIME)
 } catch (e: Exception) {
-    fail(e, "err.parser.badDate", str, what())
+    fail(e, "err.parser.badDate", text, error())
 }
 
-inline fun Parser.parseDate(str: String, format: String, what: () -> String): LocalDate = try {
-    val formatter = if (format.isEmpty()) LOOSE_ISO_DATE else DateTimeFormatter.ofPattern(format)
-    LocalDate.parse(str, formatter)
+inline fun Parser.parseDate(text: String, format: String, error: () -> String): LocalDate = try {
+    LocalDate.parse(text, if (format.isNotEmpty()) DateTimeFormatter.ofPattern(format) else LOOSE_ISO_DATE)
 } catch (e: Exception) {
-    fail(e, "err.parser.badDate", str, what())
+    fail(e, "err.parser.badDate", text, error())
 }
 
-inline fun Parser.parseTime(str: String, format: String, what: () -> String): LocalTime = try {
-    val formatter = if (format.isEmpty()) LOOSE_ISO_TIME else DateTimeFormatter.ofPattern(format)
-    LocalTime.parse(str, formatter)
+inline fun Parser.parseTime(text: String, format: String, error: () -> String): LocalTime = try {
+    LocalTime.parse(text, if (format.isNotEmpty()) DateTimeFormatter.ofPattern(format) else LOOSE_ISO_TIME)
 } catch (e: Exception) {
-    fail(e, "err.parser.badDate", str, what())
+    fail(e, "err.parser.badDate", text, error())
 }
 
-fun Parser.xmlAttribute(xpp: XmlPullParser, name: String, where: Any, np: String? = null): String {
-    return xpp.getAttributeValue(np, name) ?: fail("err.parser.noAttribute", name, xpp.name, where, xpp.lineNumber)
+fun Parser.xmlAttribute(xpp: XmlPullParser, name: String, where: Any, namespace: String? = null): String {
+    return xpp.getAttributeValue(namespace, name) ?: fail("err.parser.noAttribute", name, xpp.name, where, xpp.lineNumber)
 }
 
-inline fun Parser.useXml(xpp: XmlPullParser, name: String, action: (Boolean, StringBuilder) -> Boolean) {
+inline fun Parser.useXml(xpp: XmlPullParser, where: Any, action: (Boolean, StringBuilder) -> Boolean) {
     var hasText = false
     val sb = StringBuilder()
     try {
@@ -97,7 +94,7 @@ inline fun Parser.useXml(xpp: XmlPullParser, name: String, action: (Boolean, Str
             event = xpp.next()
         } while (event != XmlPullParser.END_DOCUMENT)
     } catch (e: XmlPullParserException) {
-        fail(e, "err.parser.badXml", name)
+        fail(e, "err.parser.badXml", where)
     }
 }
 
@@ -116,6 +113,11 @@ class XmlRender(private val settings: Settings?) {
 
     private val serializer = XmlPullParserFactory.newInstance().newSerializer()
 
+    fun output(stream: OutputStream, encoding: String? = null): XmlRender {
+        serializer.setOutput(stream, encoding ?: this.encoding)
+        return this
+    }
+
     fun output(writer: Writer): XmlRender {
         serializer.setOutput(writer)
         return this
@@ -131,8 +133,6 @@ class XmlRender(private val settings: Settings?) {
         tags.clear()
         return this
     }
-
-    fun encoding() = encoding
 
     fun beginXml(): XmlRender {
         val standalone = settings?.getBoolean("maker.xml.standalone") == true

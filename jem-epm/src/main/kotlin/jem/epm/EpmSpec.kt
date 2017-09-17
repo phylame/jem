@@ -51,14 +51,12 @@ object EpmManager : ServiceManager<EpmFactory>(EpmFactory::class.java) {
     fun getParser(name: String) = get(name)?.parser
 
     fun readBook(param: ParserParam): Book? {
-        val epmName = param.epmName
-        require(epmName.isNotEmpty()) { "Not found epm format" }
+        val epmName = param.epmName.takeIf(String::isNotEmpty) ?: throw IllegalArgumentException("Not found epm format")
         return getParser(epmName)?.parse(param.path, param.arguments)
     }
 
     fun writeBook(param: MakerParam): String? {
-        val epmName = param.epmName
-        require(epmName.isNotEmpty()) { "Not found epm format" }
+        val epmName = param.epmName.takeIf(String::isNotEmpty) ?: throw IllegalArgumentException("Not found epm format")
         var file = File(param.path)
         val maker = getMaker(epmName) ?: return null
         if (file.isDirectory && (maker !is VDMMaker || param.arguments?.getString("maker.vdm.type") != "dir")) {
@@ -74,10 +72,10 @@ object EpmManager : ServiceManager<EpmFactory>(EpmFactory::class.java) {
     }
 }
 
-fun Book.Companion.from(path: String, format: String = "", arguments: Settings? = null) = ParserParam(path, format, arguments).let {
-    EpmManager.readBook(it)
+fun parseBook(path: String, format: String = "", arguments: Settings? = null): Book? {
+    return ParserParam(path, format, arguments).let(EpmManager::readBook)
 }
 
-fun Book.write(path: String, format: String = "", arguments: Settings? = null) = MakerParam(this, path, format, arguments).let {
-    EpmManager.writeBook(it)
+fun Book.write(path: String, format: String = "", arguments: Settings? = null): String? {
+    return MakerParam(this, path, format, arguments).let(EpmManager::writeBook)
 }

@@ -19,9 +19,8 @@
 import jclp.log.Log
 import jclp.log.LogLevel
 import jclp.setting.MapSettings
-import jem.Book
 import jem.Build
-import jem.epm.from
+import jem.epm.parseBook
 import jem.epm.write
 import java.util.zip.Deflater
 
@@ -35,7 +34,7 @@ fun main(args: Array<String>) {
     settings["maker.pmab.encoding"] = "GB18030"
     settings["maker.xml.indent"] = "  "
     settings["maker.pmab.meta"] = mapOf("version" to "5.0", "vendor" to null)
-    Book.from("E:/tmp/3.pmab")?.apply {
+    parseBook("E:/tmp/3.pmab")?.apply {
         write("E:/tmp/4.pmab/.", arguments = settings)
     }
 }

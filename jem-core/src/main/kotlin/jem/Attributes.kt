@@ -18,17 +18,17 @@
 
 package jem
 
-import jclp.Types
 import jclp.VariantMap
+import jclp.Variants
 import jclp.flob.Flob
 import jclp.io.getProperties
+import jclp.io.getResource
 import jclp.log.Log
 import jclp.putAll
 import jclp.text.Text
 import java.io.IOException
 import java.time.LocalDate
 import java.util.*
-import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
 const val AUTHOR = "author"
@@ -54,9 +54,9 @@ object Attributes {
 
     init {
         try {
-            getProperties("!jem/attributes.properties")?.takeIf(Properties::isNotEmpty)?.let { types.putAll(it) }
+            getProperties("!jem/attributes.properties")?.let { types.putAll(it) }
         } catch (e: IOException) {
-            Log.e("Types", e) { "cannot load attribute mapping" }
+            Log.e("Attributes", e) { "cannot load attribute mapping" }
         }
     }
 
@@ -66,32 +66,41 @@ object Attributes {
 
     fun mapType(name: String, id: String) = types.put(name, id)
 
-    fun getName(name: String) = if (name.isNotEmpty()) M.optTr("attribute.$name", "") else ""
+    fun getName(name: String) = if (name.isNotEmpty()) M.optTr("attribute.$name") else null
 
     fun newAttributes() = VariantMap { name, value ->
         getType(name)?.let {
-            require(Types.getClass(it)?.isInstance(value) != false) {
-                "attribute '$name' must be '$it', found '${Types.getType(value)}'"
+            require(Variants.getClass(it)?.isInstance(value) != false) {
+                "attribute '$name' must be '$it', found '${Variants.getType(value)}'"
             }
         }
     }
 }
 
-private class AttributeDelegate<T : Any?>(private val default: T) : ReadWriteProperty<Chapter, T> {
+class AttributeDelegate<T : Any?>(private val default: T) {
     @Suppress("UNCHECKED_CAST")
-    override fun getValue(thisRef: Chapter, property: KProperty<*>): T {
-        return thisRef.attributes[property.name] as? T ?: default
+    operator fun getValue(chapter: Chapter, property: KProperty<*>): T {
+        return chapter.attributes[property.name] as? T ?: default
     }
 
-    override fun setValue(thisRef: Chapter, property: KProperty<*>, value: T) {
-        thisRef.attributes[property.name] = value!!
+    operator fun setValue(chapter: Chapter, property: KProperty<*>, value: T) {
+        chapter.attributes[property.name] = value!!
     }
 }
 
 var Chapter.title by AttributeDelegate("")
 var Chapter.author by AttributeDelegate("")
+
 var Chapter.cover by AttributeDelegate(null as Flob?)
+fun Chapter.setCover(uri: String, loader: ClassLoader? = null) {
+    this[COVER] = Flob.of(getResource(uri, loader) ?: throw IllegalArgumentException("No such resource $uri"))
+}
+
 var Chapter.intro by AttributeDelegate(null as Text?)
+fun Chapter.setIntro(intro: CharSequence) {
+    this[INTRO] = Text.of(intro)
+}
+
 var Chapter.genre by AttributeDelegate("")
 var Chapter.date by AttributeDelegate(null as LocalDate?)
 var Chapter.state by AttributeDelegate("")
@@ -99,4 +108,8 @@ var Chapter.language by AttributeDelegate(null as Locale?)
 var Chapter.publisher by AttributeDelegate("")
 var Chapter.rights by AttributeDelegate("")
 var Chapter.vendor by AttributeDelegate("")
+
 var Chapter.words by AttributeDelegate("")
+fun Chapter.setWords(words: Int) {
+    this[WORDS] = words.toString()
+}

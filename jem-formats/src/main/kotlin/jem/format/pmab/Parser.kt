@@ -18,8 +18,8 @@
 
 package jem.format.pmab
 
-import jclp.Types
 import jclp.VariantMap
+import jclp.Variants
 import jclp.flob.Flob
 import jclp.setting.Settings
 import jclp.setting.getString
@@ -36,7 +36,6 @@ import jem.format.util.*
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.InputStream
-import java.nio.file.NoSuchFileException
 import java.util.*
 
 internal object PmabParser : VDMParser {
@@ -53,8 +52,8 @@ internal object PmabParser : VDMParser {
         val xpp = data.newXpp()
         data.openStream(PBM_PATH).use {
             xpp.setInput(it, null)
-            useXml(xpp, PBM_PATH) { start, sb ->
-                if (start) {
+            useXml(xpp, PBM_PATH) { begin, sb ->
+                if (begin) {
                     var hasText = false
                     when {
                         version == 3 -> hasText = beginPBMv3(xpp.name, data)
@@ -145,44 +144,44 @@ internal object PmabParser : VDMParser {
         }
     }
 
-    private fun parseItem(str: String, data: Local): Any {
-        val itemType = data.itemType ?: Attributes.getType(data.itemName) ?: return str
+    private fun parseItem(text: String, data: Local): Any {
+        val itemType = data.itemType ?: Attributes.getType(data.itemName) ?: return text
         val parts = itemType.split(';')
         val type = parts.first()
         return when (type) {
-            Types.STRING, "" -> str
-            Types.REAL -> parseDouble(str) { data.xmlPosition() }
-            Types.BOOLEAN -> str.toBoolean()
-            Types.INTEGER, "unit" -> parseInt(str) { data.xmlPosition() }
-            Types.LOCALE -> Locale.forLanguageTag(str.replace('_', '-'))
-            Types.DATETIME -> {
+            Variants.STRING, "" -> text
+            Variants.REAL -> parseDouble(text) { data.xmlPosition() }
+            Variants.BOOLEAN -> text.toBoolean()
+            Variants.INTEGER, "unit" -> parseInt(text) { data.xmlPosition() }
+            Variants.LOCALE -> Locale.forLanguageTag(text.replace('_', '-'))
+            Variants.DATETIME -> {
                 val format = data.getConfig("datetimeFormat") ?: itemType.valueFor("format") ?: ""
-                parseDateTime(str, format) { data.xmlPosition() }
+                parseDateTime(text, format) { data.xmlPosition() }
             }
-            Types.DATE -> {
+            Variants.DATE -> {
                 val format = data.getConfig("dateFormat") ?: itemType.valueFor("format") ?: ""
-                parseDate(str, format) { data.xmlPosition() }
+                parseDate(text, format) { data.xmlPosition() }
             }
-            Types.TIME -> {
+            Variants.TIME -> {
                 val format = data.getConfig("timeFormat") ?: itemType.valueFor("format") ?: ""
-                parseTime(str, format) { data.xmlPosition() }
+                parseTime(text, format) { data.xmlPosition() }
             }
             else -> when {
                 type.startsWith("text/") -> {
                     val encoding = data.getConfig("encoding") ?: itemType.valueFor("encoding")
-                    Text.of(Flob.of(data.reader, str, type), encoding, type.substring(5))
+                    Text.of(Flob.of(data.reader, text, type), encoding, type.substring(5))
                 }
-                type.matches("[a-z]+/[a-z]+".toRegex()) -> Flob.of(data.reader, str, type)
-                else -> str
+                type.matches("[a-z]+/[a-z]+".toRegex()) -> Flob.of(data.reader, text, type)
+                else -> text
             }
         }
     }
 
-    private fun getVersion(xpp: XmlPullParser, msg: String, data: Local) = xmlAttribute(xpp, "version", data.entry).let {
+    private fun getVersion(xpp: XmlPullParser, key: String, data: Local) = data.getAttribute("version").let {
         when (it) {
             "3.0" -> 3
             "2.0" -> 2
-            else -> fail(msg, it, xpp.lineNumber, data.entry)
+            else -> fail(key, it, xpp.lineNumber, data.entry)
         }
     }
 
@@ -215,7 +214,7 @@ internal object PmabParser : VDMParser {
         fun xmlPosition() = "${xpp.lineNumber}:${xpp.columnNumber - 2}@$entry"
 
         fun openStream(path: String): InputStream {
-            entry = reader.getEntry(path) ?: throw NoSuchFileException(M.tr("pmab.parse.notFoundFile", path, reader.name))
+            entry = reader.getEntry(path) ?: fail("pmab.parse.notFoundFile", path, reader.name)
             return reader.getInputStream(entry)
         }
 

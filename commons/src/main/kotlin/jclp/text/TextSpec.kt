@@ -24,12 +24,12 @@ import java.io.Writer
 const val TEXT_HTML = "html"
 const val TEXT_PLAIN = "plain"
 
-interface Text : Iterable<String> {
+interface Text {
     val type get() = TEXT_PLAIN
 
     override fun toString(): String
 
-    override fun iterator() = toString().split("\r\n", "\n", "\r").iterator()
+    operator fun iterator() = toString().split("\r\n", "\n", "\r").iterator()
 
     fun writeTo(output: Writer) = toString().let {
         output.write(it)
@@ -39,7 +39,7 @@ interface Text : Iterable<String> {
     companion object {
         fun empty(type: String = TEXT_PLAIN) = of("", type)
 
-        fun of(cs: CharSequence, type: String = TEXT_PLAIN): Text = RawText(type, cs)
+        fun of(cs: CharSequence, type: String = TEXT_PLAIN): Text = StringText(type, cs)
 
         fun of(flob: Flob, encoding: String? = null, type: String = TEXT_PLAIN): Text = FlobText(type, flob, encoding)
     }

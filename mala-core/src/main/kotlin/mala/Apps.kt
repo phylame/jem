@@ -19,9 +19,7 @@
 package mala
 
 import jclp.TranslatorWrapper
-import jclp.io.createRecursively
 import jclp.text.or
-import java.io.File
 
 private typealias Cleanup = () -> Unit
 
@@ -49,9 +47,6 @@ interface AppDelegate : Runnable {
 }
 
 object App : TranslatorWrapper() {
-    private const val APP_HOME_KEY = "mala.home"
-    private const val PLUGIN_REGISTRY_PATH = "META-INF/mala/plugin.prop"
-
     var code: Int = 0
         private set
 
@@ -67,19 +62,19 @@ object App : TranslatorWrapper() {
     lateinit var arguments: Array<String>
         private set
 
-    val assets by lazy { AssetManager(home, javaClass.classLoader) }
+    val home by lazy {
+        System.getProperty("mala.home") or { "${System.getProperty("user.home")}/.${delegate.name}" }
+    }
 
-    val appAssets by lazy { AssetManager(appHome, javaClass.classLoader) }
+    val assets by lazy {
+        "!${delegate.javaClass.`package`?.name?.replace('.', '/').orEmpty()}/res".let {
+            AssetManager(it, javaClass.classLoader)
+        }
+    }
 
-    val plugins by lazy { PluginManager(PLUGIN_REGISTRY_PATH, javaClass.classLoader) }
-
-    val home by lazy { "!${delegate.javaClass.`package`?.name?.replace('.', '/').orEmpty()}/res" }
-
-    val appHome by lazy { System.getProperty(APP_HOME_KEY) or { "${System.getProperty("user.home")}/.${delegate.name}" } }
-
-    fun initAppHome() = File(appHome).createRecursively()
-
-    fun resetAppHome() = File(appHome).deleteRecursively()
+    val plugins by lazy {
+        PluginManager("META-INF/mala/plugin.prop", javaClass.classLoader)
+    }
 
     fun run(delegate: AppDelegate, args: Array<String>) {
         this.delegate = delegate
@@ -93,27 +88,6 @@ object App : TranslatorWrapper() {
         throw InternalError()
     }
 
-    private fun onStart() {
-        state = AppState.STARTING
-        delegate.onStart()
-        plugins.init()
-        state = AppState.RUNNING
-        delegate.run()
-        Runtime.getRuntime().addShutdownHook(Thread({
-            if (state != AppState.STOPPING) {
-                onQuit(-1)
-            }
-        }))
-    }
-
-    private fun onQuit(code: Int) {
-        this.code = code
-        state = AppState.STOPPING
-        plugins.destroy()
-        delegate.onStop()
-        cleanups.forEach(Cleanup::invoke)
-    }
-
     fun echo(msg: Any) {
         System.out.println("${delegate.name}: $msg")
     }
@@ -123,8 +97,7 @@ object App : TranslatorWrapper() {
     }
 
     fun error(msg: Any, e: Throwable) {
-        error(msg)
-        traceback(e, verbose)
+        error(msg, e, verbose)
     }
 
     fun error(msg: Any, e: Throwable, level: AppVerbose) {
@@ -163,5 +136,26 @@ object App : TranslatorWrapper() {
 
     operator fun minusAssign(action: Cleanup) {
         cleanups -= action
+    }
+
+    private fun onStart() {
+        state = AppState.STARTING
+        delegate.onStart()
+        plugins.init()
+        state = AppState.RUNNING
+        delegate.run()
+        Runtime.getRuntime().addShutdownHook(Thread({
+            if (state != AppState.STOPPING) {
+                onQuit(-1)
+            }
+        }))
+    }
+
+    private fun onQuit(code: Int) {
+        this.code = code
+        state = AppState.STOPPING
+        plugins.destroy()
+        delegate.onStop()
+        cleanups.forEach(Cleanup::invoke)
     }
 }

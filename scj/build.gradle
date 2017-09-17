@@ -5,10 +5,11 @@ plugins {
 
 description = 'SCJ for Jem'
 
-mainClassName = 'jem.scj.AppsKt'
+mainClassName = 'jem.scj.AppKt'
 
 dependencies {
-    compile project(':jem-formats')
+    compile project(':jem-epm')
+    runtime project(':jem-formats')
     compile project(':mala-cli')
 }
 

@@ -25,14 +25,10 @@ import jclp.log.Log
 import jclp.text.Text
 import java.util.*
 
-typealias ChapterCleaner = (Chapter) -> Unit
+private typealias Cleanup = (Chapter) -> Unit
 
 open class Chapter(
-        title: String = "",
-        var text: Text? = null,
-        cover: Flob? = null,
-        intro: Text? = null,
-        var tag: Any? = null
+        title: String = "", var text: Text? = null, cover: Flob? = null, intro: Text? = null, var tag: Any? = null
 ) : Hierarchy<Chapter>(), Cloneable {
     var attributes = Attributes.newAttributes()
         private set
@@ -69,22 +65,20 @@ open class Chapter(
 
     fun clear(cleanup: Boolean) {
         if (cleanup) {
-            for (chapter in this) {
-                chapter.cleanup()
-            }
+            forEach(Chapter::cleanup)
         }
         clear()
     }
 
     private var isCleaned = false
 
-    private val cleanups = LinkedHashSet<ChapterCleaner>()
+    private val cleanups = LinkedHashSet<Cleanup>()
 
-    operator fun plusAssign(cleanup: ChapterCleaner) {
+    operator fun plusAssign(cleanup: Cleanup) {
         cleanups += cleanup
     }
 
-    operator fun minusAssign(cleanup: ChapterCleaner) {
+    operator fun minusAssign(cleanup: Cleanup) {
         cleanups -= cleanup
     }
 
@@ -92,11 +86,8 @@ open class Chapter(
         if (isCleaned) {
             return
         }
-        for (cleanup in cleanups) {
-            cleanup(this)
-        }
+        cleanups.onEach { it(this) }.clear()
         clear(true)
-        cleanups.clear()
         attributes.clear()
         isCleaned = true
     }
@@ -107,11 +98,9 @@ open class Chapter(
         }
     }
 
-    public override fun clone(): Chapter {
-        val copy = super.clone() as Chapter
-        dumpTo(copy, true)
-        copy.parent = null
-        return copy
+    public override fun clone() = (super.clone() as Chapter).also {
+        dumpTo(it, true)
+        it.parent = null
     }
 
     protected open fun dumpTo(chapter: Chapter, deepCopy: Boolean) {
@@ -137,8 +126,6 @@ open class Chapter(
         }
         return b.toString()
     }
-
-    companion object
 }
 
 open class Book(title: String = "", author: String = "") : Chapter(title) {
@@ -167,6 +154,4 @@ open class Book(title: String = "", author: String = "") : Chapter(title) {
         }
         return b.toString()
     }
-
-    companion object
 }

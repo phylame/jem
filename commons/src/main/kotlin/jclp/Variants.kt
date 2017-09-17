@@ -30,11 +30,6 @@ import java.util.*
 import java.util.function.Supplier
 import kotlin.collections.HashSet
 
-val Class<*>.typeId get() = Types.getType(this)
-
-val <T : Any> Class<T>.canonicalType
-    get() = if (isPrimitive) kotlin.javaObjectType else this
-
 val Any?.actualValue
     get() = when (this) {
         is Function0<*> -> invoke()
@@ -43,7 +38,12 @@ val Any?.actualValue
         else -> this
     }
 
-object Types {
+val Class<*>.typeId get() = Variants.getType(this)
+
+val <T : Any> Class<T>.canonicalType
+    get() = if (isPrimitive) kotlin.javaObjectType else this
+
+object Variants {
     // standard type ids
     const val REAL = "real"
     const val INTEGER = "int"
@@ -89,13 +89,21 @@ object Types {
         }?.key
     }
 
-    fun getName(id: String) = if (id.isNotEmpty()) M.optTr("type.$id", "") else ""
+    fun getName(id: String) = if (id.isNotEmpty()) M.optTr("type.$id") else null
 
     fun setDefault(id: String, value: Any) {
         requiredType(id).value = value
     }
 
     fun getDefault(id: String) = if (id.isNotEmpty()) lookupType(id)?.value?.actualValue else null
+
+    fun printable(obj: Any) = getType(obj)?.let {
+        when (it) {
+            STRING, BOOLEAN, INTEGER, REAL, DATETIME, DATE, TIME -> obj.toString()
+            LOCALE -> (obj as Locale).displayName
+            else -> null
+        }
+    }
 
     private fun requiredType(id: String): Item {
         require(id.isNotEmpty()) { "type id cannot be empty" }
@@ -116,17 +124,17 @@ object Types {
 
     private fun initBuiltins() {
         try {
-            getProperties("!jclp/value/types.properties")?.takeIf(Properties::isNotEmpty)?.let {
+            getProperties("!jclp/value/types.properties")?.let {
                 for ((key, value) in it) {
                     try {
                         mapClass(value.toString(), Class.forName(key.toString()))
                     } catch (e: ClassNotFoundException) {
-                        Log.e("Types", e) { "cannot load type class" }
+                        Log.e("Variants", e) { "cannot load type class" }
                     }
                 }
             }
         } catch (e: IOException) {
-            Log.e("Types", e) { "cannot load types mapping" }
+            Log.e("Variants", e) { "cannot load types mapping" }
         }
     }
 
@@ -155,11 +163,11 @@ object Types {
 private typealias Validator = (String, Any) -> Unit
 
 class VariantMap(private val validator: Validator? = null) : Iterable<Pair<String, Any>>, Cloneable {
-    private var values = HashMap<String, Any>()
-
     val size get() = values.size
 
     val names get() = values.keys
+
+    private var values = HashMap<String, Any>()
 
     fun isEmpty() = values.isEmpty()
 

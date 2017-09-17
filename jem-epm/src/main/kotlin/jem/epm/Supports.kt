@@ -19,31 +19,16 @@
 package jem.epm
 
 import jclp.Linguist
-import jem.Chapter
-import jem.ChapterCleaner
 import jem.JemException
-import java.io.Closeable
 
 internal object M : Linguist("!jem/epm/messages")
 
 class MakerException : JemException {
-    constructor() : super()
-    constructor(message: String?) : super(message)
-    constructor(message: String?, cause: Throwable?) : super(message, cause)
-    constructor(cause: Throwable?) : super(cause)
-    constructor(message: String?, cause: Throwable?, enableSuppression: Boolean, writableStackTrace: Boolean) : super(message, cause, enableSuppression, writableStackTrace)
+    constructor(message: String) : super(message)
+    constructor(message: String, cause: Throwable) : super(message, cause)
 }
 
 class ParserException : JemException {
-    constructor() : super()
-    constructor(message: String?) : super(message)
-    constructor(message: String?, cause: Throwable?) : super(message, cause)
-    constructor(cause: Throwable?) : super(cause)
-    constructor(message: String?, cause: Throwable?, enableSuppression: Boolean, writableStackTrace: Boolean) : super(message, cause, enableSuppression, writableStackTrace)
-}
-
-class SourceCleaner(private val source: Closeable) : ChapterCleaner {
-    override fun invoke(chapter: Chapter) {
-        source.close()
-    }
+    constructor(message: String) : super(message)
+    constructor(message: String, cause: Throwable) : super(message, cause)
 }

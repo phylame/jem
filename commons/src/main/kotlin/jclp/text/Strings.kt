@@ -20,9 +20,9 @@ package jclp.text
 
 operator fun String.get(start: Int, end: Int) = substring(start, end)
 
-infix fun CharSequence?.or(default: CharSequence) = if (isNullOrEmpty()) default.toString() else this!!.toString()
+infix fun CharSequence?.or(default: CharSequence) = if (this != null && isNotEmpty()) toString() else default.toString()
 
-infix inline fun CharSequence?.or(default: () -> CharSequence) = if (isNullOrEmpty()) default().toString() else this!!.toString()
+infix inline fun CharSequence?.or(default: () -> CharSequence) = if (this != null && isNotEmpty()) toString() else default().toString()
 
 fun String.valueFor(name: String, partSeparator: String = ";", valueSeparator: String = "="): String? {
     split(partSeparator).map(String::trim).forEach {

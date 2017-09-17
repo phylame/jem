@@ -19,6 +19,7 @@
 package jclp.text
 
 import jclp.flob.Flob
+import java.io.Reader
 import java.io.Writer
 import java.nio.charset.Charset
 
@@ -28,7 +29,7 @@ abstract class AbstractText(final override val type: String) : Text {
     }
 }
 
-internal class RawText(type: String, private val text: CharSequence) : AbstractText(type) {
+internal class StringText(type: String, private val text: CharSequence) : AbstractText(type) {
     override fun toString() = text.toString()
 }
 
@@ -39,11 +40,11 @@ internal class FlobText(type: String, private val flob: Flob, encoding: String? 
         else -> throw IllegalArgumentException("Unsupported encoding: $encoding")
     }
 
-    override fun toString() = openReader().readText()
+    override fun toString() = openReader().use(Reader::readText)
 
-    override fun iterator() = openReader().readLines().iterator()
+    override fun iterator() = openReader().useLines { it.toList().iterator() }
 
-    override fun writeTo(output: Writer) = openReader().copyTo(output)
+    override fun writeTo(output: Writer) = openReader().use { it.copyTo(output) }
 
     private fun openReader() = flob.openStream().bufferedReader(charset)
 }

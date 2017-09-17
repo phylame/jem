@@ -31,12 +31,12 @@ interface Plugin {
 
 private const val COMMENT_LABEL = "#"
 
-class PluginManager(private val path: String, private val loader: ClassLoader? = null) : Iterable<Plugin> {
-    var isEnable: Boolean = true
-
-    var blacklist = emptySet<String>()
+class PluginManager(private val path: String, private val loader: ClassLoader? = null) {
+    var isEnable: Boolean = false
 
     var filter: ((Plugin) -> Boolean)? = null
+
+    var blacklist: Collection<String> = emptySet()
 
     private val plugins = LinkedList<Plugin>()
 
@@ -47,9 +47,9 @@ class PluginManager(private val path: String, private val loader: ClassLoader? =
         }
     }
 
-    fun <T : Plugin> with(type: Class<T>, action: T.() -> Unit) {
+    inline fun <reified T : Plugin> with(action: T.() -> Unit) {
         if (isEnable) {
-            plugins.filter(type::isInstance).map(type::cast).forEach(action)
+            get(T::class.java).forEach(action)
         }
     }
 
@@ -59,7 +59,11 @@ class PluginManager(private val path: String, private val loader: ClassLoader? =
         }
     }
 
-    override fun iterator() = plugins.iterator()
+    operator fun <T : Plugin> get(type: Class<T>): List<T> {
+        return plugins.filter(type::isInstance).map(type::cast)
+    }
+
+    operator fun iterator() = plugins.iterator()
 
     private fun parseRegistries() {
         val loader = loader ?: App.javaClass.classLoader
@@ -83,7 +87,7 @@ class PluginManager(private val path: String, private val loader: ClassLoader? =
                 error(optTr("mala.err.badPlugin", "plugin must be sub-class of ''{0}'': {1}", Plugin::class.java.name, path))
             }
             val plugin: Plugin = try {
-                clazz.getField("INSTANCE").get(null) as Plugin
+                clazz.getField("INSTANCE").get(null) as Plugin // for kotlin object
             } catch (ignored: ReflectiveOperationException) {
                 clazz.newInstance() as Plugin
             }

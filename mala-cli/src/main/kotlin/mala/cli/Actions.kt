@@ -22,10 +22,14 @@ import jclp.text.Converters
 import mala.App
 import org.apache.commons.cli.CommandLine
 
+internal typealias Validator<T> = (T) -> Boolean
+
+internal typealias AppContext = MutableMap<String, Any>
+
 interface Action
 
 interface Command : Action {
-    fun execute(delegate: CLIDelegate): Int
+    fun execute(delegate: CDelegate): Int
 }
 
 interface Initializer : Action {
@@ -55,10 +59,14 @@ class TypedFetcher<T : Any>(
         private val type: Class<T>, override val opt: String, override val validator: Validator<T>? = null
 ) : ValueFetcher<T> {
     override fun parse(str: String) = try {
-        Converters.parse(str, type) ?: App.die("cannot convert $str to $type")
+        Converters.parse(str, type) ?: App.die("cannot convert '$str' with type '$type'")
     } catch (e: RuntimeException) {
-        App.die("cannot convert input '$str' to '$type'", e)
+        App.die("cannot convert input '$str' with type '$type'", e)
     }
+}
+
+inline fun <reified T : Any> fetcherFor(opt: String, noinline validator: Validator<T>?): TypedFetcher<T> {
+    return TypedFetcher(T::class.java, opt, validator)
 }
 
 abstract class SingleFetcher : Initializer {

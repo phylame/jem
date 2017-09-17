@@ -40,9 +40,19 @@ inline fun <K, V> MutableMap<K, V>.getOrPut(key: K, default: (K) -> V?): V? {
 }
 
 fun MutableMap<in String, in String>.putAll(from: Properties) {
-    if (from.isNotEmpty()) {
-        for ((key, value) in from) {
-            put(key.toString(), value.toString())
-        }
+    for ((key, value) in from) {
+        put(key.toString(), value.toString())
+    }
+}
+
+fun <E : Iterable<E>> E.walk(action: E.(Int, Int) -> Unit) {
+    walkInternal(0, 0, action)
+}
+
+private fun <E : Iterable<E>> E.walkInternal(level: Int, index: Int, action: E.(Int, Int) -> Unit) {
+    val l = level + 1
+    action(level, index)
+    for ((i, e) in this.withIndex()) {
+        e.walkInternal(l, i, action)
     }
 }

@@ -18,35 +18,31 @@
 
 package jem.scj
 
-import jclp.util.MiscUtils
+import jclp.Variants
+import jclp.locate
+import jclp.text.or
+import jclp.walk
 import jem.Attributes.getName
 import jem.Book
 import jem.Chapter
-import jem.kotlin.get
-import jem.kotlin.title
-import jem.scj.app.SCI.name
-import jem.util.Variants
-import mala.core.App
-import mala.core.App.tr
-import mala.core.or
-import mala.core.walk
+import jem.title
+import mala.App
+import mala.App.tr
 import java.util.*
 
 data class ViewConfig(var separator: String, var skipEmpty: Boolean, var tocIndent: String, var tocNames: Collection<String>)
 
-fun parseIndices(token: String) = token.split(".").filter(String::isNotEmpty).map(String::toInt)
-
-fun getIndices(token: String) = try {
-    parseIndices(token)
+fun parseIndices(token: String) = try {
+    token.split(".").filter(String::isNotEmpty).map(String::toInt)
 } catch (e: NumberFormatException) {
-    App.error(tr("error.view.badIndex", name), e)
+    App.error(tr("err.view.badIndex", token), e)
     null
 }
 
 fun locateChapter(chapter: Chapter, indices: Collection<Int>) = try {
-    MiscUtils.locate(chapter, indices)
+    chapter.locate(indices)
 } catch (e: IndexOutOfBoundsException) {
-    App.error(tr("error.view.noChapter", name), e)
+    App.error(tr("err.view.noChapter", indices), e)
     null
 }
 
@@ -65,10 +61,10 @@ fun viewAttributes(chapter: Chapter, names: Collection<String>, config: ViewConf
     for (name in names) {
         when (name) {
             "toc" -> viewToc(chapter, config)
-            "all" -> viewAttributes(chapter, chapter.attributes.names(), config, showBracket)
+            "all" -> viewAttributes(chapter, chapter.attributes.names, config, showBracket)
             "text" -> values += tr("view.attrPattern", tr("view.chapterText"), chapter.text ?: "")
             "names" -> {
-                val keys = chapter.attributes.names().toMutableSet()
+                val keys = chapter.attributes.names.toMutableSet()
                 Collections.addAll(keys, "text", "size", "all")
                 if (chapter.isSection) {
                     keys += "toc"
@@ -79,7 +75,7 @@ fun viewAttributes(chapter: Chapter, names: Collection<String>, config: ViewConf
                 if ("size" in chapter.attributes) {
                     viewAttributes(chapter, listOf("size"), config, showBracket)
                 } else {
-                    values += tr("view.attrPattern", tr("view.chapterSize"), chapter.size())
+                    values += tr("view.attrPattern", tr("view.chapterSize"), chapter.size)
                 }
             }
             else -> {
@@ -105,13 +101,13 @@ fun viewExtensions(book: Book, names: Collection<String>, config: ViewConfig) {
     val values = LinkedList<String>()
     for (name in names) {
         when (name) {
-            "all" -> viewExtensions(book, book.extensions.names(), config)
+            "all" -> viewExtensions(book, book.extensions.names, config)
             else -> {
                 val value = book.extensions[name]
                 values += if (value == null) {
-                    tr("view.extPattern", name, null, "")
+                    tr("view.extPattern", name, "", "")
                 } else {
-                    tr("view.extPattern", name, Variants.getType(value), Variants.printable(value) ?: value.toString())
+                    tr("view.extPattern", name, Variants.getType(value) ?: "", Variants.printable(value) ?: value.toString())
                 }
             }
         }
@@ -123,7 +119,7 @@ fun viewExtensions(book: Book, names: Collection<String>, config: ViewConfig) {
 
 fun viewChapter(chapter: Chapter, name: String, config: ViewConfig) {
     val tokens = name.replaceFirst("#", "").split("$")
-    val indices: Collection<Int> = getIndices(tokens.first()) ?: return
+    val indices: Collection<Int> = parseIndices(tokens.first()) ?: return
     val names = listOf(if (tokens.size > 1) tokens[1] else "text")
     viewAttributes(locateChapter(chapter, indices) ?: return, names, config, false)
 }
@@ -134,8 +130,8 @@ fun viewToc(chapter: Chapter, config: ViewConfig) {
     config.separator = " "
     chapter.walk { level, index ->
         if (level != 0) {
-            val prefix = parent.tag ?: ""
-            val fmt = "%${parent.size().toString().length}d"
+            val prefix = parent?.tag ?: ""
+            val fmt = "%${parent?.size.toString().length}d"
             print("$prefix${fmt.format(index + 1)} ")
             viewAttributes(this, config.tocNames, config, true)
             if (isSection) {

@@ -35,11 +35,11 @@ interface CommonParser<I : Closeable> : Parser {
 
     fun parse(input: I, arguments: Settings?): Book
 
-    override fun parse(input: String, arguments: Settings?) = open(input, arguments).let {
+    override fun parse(input: String, arguments: Settings?) = open(input, arguments).let { src ->
         try {
-            parse(it, arguments).apply { this += SourceCleaner(it) }
+            parse(src, arguments).apply { this += { src.close() } }
         } catch (e: Exception) {
-            it.close()
+            src.close()
             throw e
         }
     }
@@ -51,9 +51,7 @@ interface CommonMaker<O : Closeable> : Maker {
     fun make(book: Book, output: O, arguments: Settings?)
 
     override fun make(book: Book, output: String, arguments: Settings?) {
-        open(output, arguments).use {
-            make(book, it, arguments)
-        }
+        open(output, arguments).use { make(book, it, arguments) }
     }
 }
 

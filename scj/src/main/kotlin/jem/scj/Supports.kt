@@ -18,63 +18,71 @@
 
 package jem.scj
 
-import jclp.log.Level
+import jclp.io.createRecursively
 import jclp.log.Log
-import jclp.text.ConverterManager
-import jclp.value.Lazy
-import jem.Attributes.COVER
-import jem.Attributes.TITLE
-import mala.core.App
-import mala.core.AppSettings
-import mala.core.AppVerbose
-import mala.core.map
+import jclp.log.LogLevel
+import jclp.setting.delegate
+import jclp.text.Converter
+import jclp.text.Converters
+import jem.COVER
+import jem.TITLE
+import mala.App
+import mala.AppSettings
+import mala.AppVerbose
 import java.io.File
 import java.util.*
 
 object SCISettings : AppSettings("app.cfg") {
     init {
-        ConverterManager.registerParser(Level::class.java)
-        ConverterManager.registerParser(AppVerbose::class.java)
+        Converters[LogLevel::class.java] = object : Converter<LogLevel> {
+            override fun render(obj: LogLevel) = obj.name
+
+            override fun parse(str: String) = LogLevel.valueOf(str.toUpperCase())
+        }
+        Converters[AppVerbose::class.java] = object : Converter<AppVerbose> {
+            override fun render(obj: AppVerbose) = obj.name
+
+            override fun parse(str: String) = AppVerbose.valueOf(str.toUpperCase())
+        }
     }
 
-    var logLevel: Level by map(Lazy { Log.getLevel() }, "app.logLevel")
+    var logLevel by delegate(Log.level, "app.logLevel")
 
-    var appLocale: Locale by map(Lazy { Locale.getDefault() }, "app.locale")
+    var appLocale by delegate(Locale.getDefault(), "app.locale")
 
-    var appVerbose: AppVerbose by map(Lazy { App.verbose }, "app.verbose")
+    var appVerbose by delegate(App.verbose, "app.verbose")
 
-    var enablePlugin by map(true, "app.plugin.enable")
+    var enablePlugin by delegate(true, "app.plugin.enable")
 
-    var termWidth by map(80, "app.termWidth")
+    var termWidth by delegate(80, "app.termWidth")
 
     var pluginBlacklist: Collection<String>
-        get() {
-            val file = File(App.pathOf("blacklist"))
-            return if (file.exists()) file.readLines() else emptySet()
-        }
+        get() = File(App.home, "blacklist").takeIf(File::exists)?.readLines() ?: emptyList()
         set(paths) {
-            if (App.initAppHome()) {
-                File(App.pathOf("blacklist")).writeText(paths.joinToString("\n"))
-            } else {
-                App.error("cannot create settings home: ${App.pathOf("settings")}")
+            File(App.home, "blacklist").let {
+                if (it.exists() || it.parentFile.createRecursively()) {
+                    it.writeText(paths.joinToString("\n"))
+                } else {
+                    App.error("cannot create")
+                }
             }
         }
 
-    var enableEpm by map(true, "jem.enableEpm")
+    var enableEpm by delegate(true, "jem.enableEpm")
 
-    var enableCrawler by map(true, "jem.enableCrawler")
+    var enableCrawler by delegate(true, "jem.enableCrawler")
 
-    var outputFormat by map("pmab", "jem.out.format")
+    var outputFormat by delegate("pmab", "jem.out.format")
 
-    var separator by map("\n", "sci.view.separator")
+    var separator by delegate("\n", "sci.view.separator")
 
-    var skipEmpty by map(true, "sci.view.skipEmpty")
+    var skipEmpty by delegate(true, "sci.view.skipEmpty")
 
-    var tocIndent by map("\t", "sci.view.tocIndent")
+    var tocIndent by delegate("\t", "sci.view.tocIndent")
 
     var tocNames
-        get() = (get("sci.view.tocNames") as? String)?.split(",") ?: listOf(TITLE, COVER)
-        set(value) {
+        inline get() = (get("sci.view.tocNames") as? String)?.split(",") ?: listOf(TITLE, COVER)
+        inline set(value) {
             set("sci.view.tocNames", value.joinToString(","))
         }
 

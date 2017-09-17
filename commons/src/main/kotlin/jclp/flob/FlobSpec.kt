@@ -31,7 +31,7 @@ interface Flob {
 
     fun openStream(): InputStream
 
-    fun writeTo(output: OutputStream) = openStream().copyTo(output)
+    fun writeTo(output: OutputStream) = openStream().use { it.copyTo(output) }
 
     companion object {
         fun of(url: URL, mime: String = ""): Flob = URLFlob(url, mime)

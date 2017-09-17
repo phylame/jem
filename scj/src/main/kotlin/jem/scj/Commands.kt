@@ -18,13 +18,13 @@
 
 package jem.scj
 
-import jclp.setting.MapSettings
 import jem.Book
-import jem.epm.util.ParserParam
+import jem.epm.ParserParam
+import mala.App
+import mala.App.tr
 import mala.cli.CDelegate
 import mala.cli.Command
-import mala.cli.ValuesFetcher
-import mala.core.App.tr
+import mala.cli.ListFetcher
 
 interface InputProcessor {
     fun process(input: String, format: String): Boolean
@@ -40,26 +40,20 @@ interface BookConsumer : ProcessorCommand {
     fun consume(book: Book): Boolean
 
     override fun process(input: String, format: String): Boolean {
-        val param = ParserParam.builder()
-                .input(input)
-                .format(format)
-                .arguments(MapSettings(SCI.inArguments))
-                .build()
-        val book: Book = openBook(param, attaching) ?: return false
-        val state: Boolean
-        try {
-            state = consume(book)
-        } finally {
-            book.cleanup()
-        }
-        return state
+        return openBook(ParserParam(input, format, SCI.inArguments), attaching)?.let {
+            try {
+                consume(it)
+            } finally {
+                it.cleanup()
+            }
+        } == true
     }
 }
 
-class ViewBook : ValuesFetcher("w"), BookConsumer {
+class ViewBook : ListFetcher("w"), BookConsumer {
     @Suppress("UNCHECKED_CAST")
     override fun consume(book: Book): Boolean {
-        viewBook(book, (SCI.context["w"] as? List<String>) ?: listOf("all"), SCISettings.asConfig())
+        viewBook(book, (SCI["w"] as? List<String>) ?: listOf("all"), SCISettings.asConfig())
         return true
     }
 }
@@ -78,6 +72,7 @@ class JoinBook : Command, InputProcessor {
     override fun execute(delegate: CDelegate): Int {
         var code = SCI.processInputs(this)
         if (!book.isSection) { // no input books
+            App.error("no book specified")
             return -1
         }
         attachBook(book, true)
@@ -92,22 +87,17 @@ class JoinBook : Command, InputProcessor {
     }
 
     override fun process(input: String, format: String): Boolean {
-        val param = ParserParam.builder()
-                .input(input)
-                .format(format)
-                .arguments(MapSettings(SCI.inArguments))
-                .build()
-        book.append(openBook(param, false) ?: return false)
+        book += openBook(ParserParam(input, format, SCI.inArguments), false) ?: return false
         return true
     }
 }
 
-class ExtractBook : ValuesFetcher("x"), BookConsumer {
+class ExtractBook : ListFetcher("x"), BookConsumer {
     override val attaching get() = false
 
     @Suppress("UNCHECKED_CAST")
     override fun consume(book: Book): Boolean {
-        return (SCI.context["x"] as? List<String> ?: return false).mapNotNull(::getIndices).mapNotNull {
+        return (SCI["x"] as? List<String> ?: return false).mapNotNull(::parseIndices).mapNotNull {
             locateChapter(book, it)
         }.map {
             val b = Book(it, false)

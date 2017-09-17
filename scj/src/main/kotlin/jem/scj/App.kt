@@ -18,20 +18,25 @@
 
 package jem.scj
 
+import jclp.io.extName
 import jclp.log.Log
+import jclp.log.LogLevel
+import jclp.setting.MapSettings
 import jem.Book
 import jem.Build
+import jem.epm.EpmManager
 import jem.epm.MakerParam
 import jem.epm.ParserParam
 import mala.App
+import mala.App.tr
+import mala.AppVerbose
 import mala.Plugin
-import mala.cli.CLIDelegate
-import mala.cli.PropertiesFetcher
+import mala.cli.*
 import org.apache.commons.cli.DefaultParser
 import org.apache.commons.cli.HelpFormatter
 import org.apache.commons.cli.Option
 import org.apache.commons.cli.OptionGroup
-import java.util.Calendar
+import java.time.LocalDate
 import java.util.Locale
 import kotlin.collections.HashMap
 
@@ -39,7 +44,7 @@ fun main(args: Array<String>) {
     App.run(SCI, args)
 }
 
-object SCI : CLIDelegate(DefaultParser()) {
+object SCI : CDelegate(DefaultParser()) {
     private const val TAG = "SCI"
 
     override val version = Build.VERSION
@@ -48,11 +53,11 @@ object SCI : CLIDelegate(DefaultParser()) {
 
     @Suppress("UNCHECKED_CAST")
     val inArguments
-        get() = context["p"] as? MutableMap<String, Any> ?: HashMap()
+        get() = MapSettings(context["p"] as? MutableMap<String, Any>)
 
     @Suppress("UNCHECKED_CAST")
     val outArguments
-        get() = context["m"] as? MutableMap<String, Any> ?: HashMap()
+        get() = MapSettings(context["m"] as? MutableMap<String, Any>)
 
     @Suppress("UNCHECKED_CAST")
     val outAttributes
@@ -76,14 +81,14 @@ object SCI : CLIDelegate(DefaultParser()) {
 
     fun processInputs(processor: InputProcessor): Int {
         if (inputs.isEmpty()) {
-            App.error(tr("error.input.empty"))
+            App.error(tr("err.input.empty"))
             return -1
         }
         var code = 0
-        Log.d(TAG, "app context: {0}", context)
-        Log.d(TAG, "app inputs: {0}", inputs)
+        Log.d(TAG) { "app content: $context" }
+        Log.d(TAG) { "app inputs: $inputs" }
         for (input in inputs) {
-            val format = context["f"]?.toString() ?: PathUtils.extName(input)
+            val format = context["f"]?.toString() ?: extName(input)
             code = if (checkInputFormat(format, input)) {
                 minOf(code, if (processor.process(input, format)) 0 else -1)
             } else {
@@ -93,19 +98,16 @@ object SCI : CLIDelegate(DefaultParser()) {
         return code
     }
 
-    fun nameOf(b: Boolean) = tr("values." + b)
-
     private fun initApp() {
-        Log.setLevel(SCISettings.logLevel)
+        Log.level = SCISettings.logLevel
         App.verbose = SCISettings.appVerbose
         Locale.setDefault(SCISettings.appLocale)
-        App.translator = App.resourceManager.linguistFor("i18n/app")
-
-        val pm = App.pluginManager
-        pm.isEnable = SCISettings.enablePlugin
-        if (pm.isEnable) {
-            pm.loader = javaClass.classLoader
-            pm.blacklist = SCISettings.pluginBlacklist
+        App.translator = App.assets.translatorFor("i18n/app")
+        if (SCISettings.enablePlugin) {
+            with(App.plugins) {
+                isEnable = true
+                blacklist = SCISettings.pluginBlacklist
+            }
         }
     }
 
@@ -118,21 +120,22 @@ object SCI : CLIDelegate(DefaultParser()) {
     }
 
     private fun appOptions() {
-        newOption("h", "help").action { _ ->
-            val helpFormatter = HelpFormatter()
-            helpFormatter.syntaxPrefix = ""
-            helpFormatter.descPadding = 4
-            helpFormatter.printHelp(SCISettings.termWidth,
-                    tr("opt.syntax", name),
-                    tr("opt.header"),
-                    options,
-                    tr("opt.footer", Build.AUTHOR_EMAIL))
-            App.exit(0)
+        newOption("h", "help").command {
+            with(HelpFormatter()) {
+                descPadding = 4
+                syntaxPrefix = ""
+                printHelp(SCISettings.termWidth,
+                        tr("opt.syntax", name),
+                        tr("opt.header"),
+                        options,
+                        tr("opt.footer", Build.AUTHOR_EMAIL))
+                App.exit(0)
+            }
         }
 
-        newOption("v", "version").action { _ ->
+        newOption("v", "version").command {
             println("SCI for Jem v${Build.VERSION} on ${System.getProperty("os.name")}")
-            println("(C) 2014-${Calendar.getInstance()[Calendar.YEAR]} ${Build.VENDOR}")
+            println("(C) 2014-${LocalDate.now().year} ${Build.VENDOR}")
             App.exit(0)
         }
 
@@ -140,13 +143,13 @@ object SCI : CLIDelegate(DefaultParser()) {
                 .hasArg()
                 .longOpt("log-level")
                 .argName(tr("opt.arg.level"))
-                .desc(tr("opt.L.desc", Level.values().joinToString(", "), Log.getLevel()))
-                .action { _, cmd ->
+                .desc(tr("opt.L.desc", LogLevel.values().joinToString(", "), Log.level))
+                .initializer { _, cmd ->
                     val value = cmd.getOptionValue("L")
                     try {
-                        Log.setLevel(Level.valueOf(value))
+                        Log.level = LogLevel.valueOf(value.toUpperCase())
                     } catch (e: IllegalArgumentException) {
-                        App.die(tr("error.misc.badLogLevel", value))
+                        App.die(tr("err.misc.badLogLevel", value))
                     }
                 }
 
@@ -154,24 +157,24 @@ object SCI : CLIDelegate(DefaultParser()) {
                 .hasArg()
                 .longOpt("verbose-level")
                 .argName(tr("opt.arg.level"))
-                .desc(tr("opt.V.desc", AppVerbose.values().joinToString(", "), SCISettings.appVerbose))
-                .action { _, cmd ->
+                .desc(tr("opt.V.desc", AppVerbose.values().joinToString(", "), App.verbose))
+                .initializer { _, cmd ->
                     val value = cmd.getOptionValue("V")
                     try {
-                        App.verbose = (AppVerbose.valueOf(value))
+                        App.verbose = AppVerbose.valueOf(value.toUpperCase())
                     } catch (e: IllegalArgumentException) {
-                        App.die(tr("error.misc.badVerbose", value))
+                        App.die(tr("err.misc.badVerbose", value))
                     }
                 }
     }
 
     private fun jemOptions() {
-        newOption("l", "list-formats").action { _ ->
+        newOption("l", "list-formats").command {
             println(tr("list.legend"))
-            epmManager.services.forEach {
-                println(tr("list.name", it.name, nameOf(it.hasMaker()), nameOf(it.hasParser())))
-                println(tr("list.names", it.names.joinToString(", ")))
-                println("-" * 64)
+            EpmManager.services.forEach {
+                println(tr("list.name", it.name, tr("values.${it.hasMaker}"), tr("values.${it.hasParser}")))
+                println(tr("list.names", it.keys.joinToString(", ")))
+                println("-".repeat(64))
             }
             App.exit(0)
         }
@@ -179,8 +182,20 @@ object SCI : CLIDelegate(DefaultParser()) {
         newOption("f", "input-format")
                 .hasArg()
                 .argName(tr("opt.arg.format"))
-                .action(RawFetcher("f") {
+                .action(StringFetcher("f") {
                     if (!checkInputFormat(it)) {
+                        App.exit(-1)
+                    }
+                    true
+                })
+
+        Option.builder("t")
+                .hasArg()
+                .longOpt("output-format")
+                .argName(tr("opt.arg.format"))
+                .desc(tr("opt.t.desc", SCISettings.outputFormat))
+                .action(StringFetcher("t") {
+                    if (!checkOutputFormat(it)) {
                         App.exit(-1)
                     }
                     true
@@ -193,21 +208,14 @@ object SCI : CLIDelegate(DefaultParser()) {
 
         valueOption("o", "output")
 
-        Option.builder("t")
-                .hasArg()
-                .longOpt("output-format")
-                .argName(tr("opt.arg.format"))
-                .desc(tr("opt.t.desc", SCISettings.outputFormat))
-                .action(RawFetcher("t") {
-                    if (!checkOutputFormat(it)) {
-                        App.exit(-1)
-                    }
-                    true
-                })
-
         val group = OptionGroup()
 
         newOption("j").action(JoinBook()).group(group)
+
+        Option.builder()
+                .longOpt("force")
+                .desc(tr("opt.force.desc"))
+                .action(ValueSwitcher("force"))
 
         Option.builder("c")
                 .desc(tr("opt.c.desc", "-t", "-o"))
@@ -220,29 +228,17 @@ object SCI : CLIDelegate(DefaultParser()) {
                 .action(ExtractBook())
                 .group(group)
 
-        val action = ViewBook()
-        Option.builder("w")
-                .hasArg()
-                .argName(tr("opt.w.arg"))
-                .desc(tr("opt.w.desc", "-w names"))
-                .action(action)
-                .group(group)
+        ViewBook().let {
+            defaultCommand = it
+            Option.builder("w")
+                    .hasArg()
+                    .argName(tr("opt.w.arg"))
+                    .desc(tr("opt.w.desc", "-w names"))
+                    .action(it)
+        }
 
-        defaultCommand = action
         options.addOptionGroup(group)
     }
-
-    fun valueOption(opt: String, longOpt: String? = null) {
-        newOption(opt, longOpt).hasArg().argName(tr("opt.$opt.arg")).action(RawFetcher(opt))
-    }
-
-    fun valuesOptions(opt: String) {
-        newOption(opt).numberOfArgs(2).argName(tr("opt.arg.kv")).action(PropertiesFetcher(opt))
-    }
-
-    fun newOption(opt: String, longOpt: String? = null): Option.Builder = Option.builder(opt)
-            .longOpt(longOpt)
-            .desc(tr("opt.$opt.desc"))
 }
 
 interface SCIPlugin : Plugin {
@@ -259,10 +255,10 @@ interface SCIPlugin : Plugin {
     fun onBookSaved(param: MakerParam) {}
 }
 
-fun App.sciAction(action: SCIPlugin.() -> Unit) {
+inline fun App.sciAction(action: SCIPlugin.() -> Unit) {
     try {
-        plugins.with(SCIPlugin::class.java, action)
+        plugins.with(action)
     } catch (e: Exception) {
-        error(tr("error.misc.badPlugin"), e)
+        error(tr("err.misc.badPlugin"), e)
     }
 }

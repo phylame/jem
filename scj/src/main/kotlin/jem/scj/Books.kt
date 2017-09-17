@@ -18,70 +18,65 @@
 
 package jem.scj
 
-import jclp.log.Log
-import jclp.setting.MapSettings
+import jclp.Variants
+import jclp.text.Converters
 import jem.Attributes
 import jem.Book
-import jem.epm.util.MakerParam
-import jem.epm.util.ParserParam
-import jem.kotlin.set
-import jem.util.JemException
-import jem.util.Variants
-import mala.core.App
-import mala.core.App.tr
+import jem.JemException
+import jem.epm.EpmManager
+import jem.epm.MakerParam
+import jem.epm.ParserParam
+import mala.App
+import mala.App.tr
 import java.io.FileNotFoundException
 
-private const val TAG = "Books"
+fun checkInputFormat(format: String, path: String = "") = when {
+    format.isEmpty() -> {
+        App.error(tr("err.input.unknown", path))
+        false
+    }
+    EpmManager[format]?.hasParser != true -> {
+        App.error(tr("err.input.unsupported", format))
+        false
+    }
+    else -> true
+}
 
-fun checkInputFormat(format: String, path: String = ""): Boolean = if (format.isEmpty()) {
-    App.error(tr("error.input.unknown", path))
-    false
-} else if (SCI.epmManager.getService(format)?.hasParser() != true) {
-    App.error(tr("error.input.unsupported", format))
-    false
-} else true
+fun checkOutputFormat(format: String, path: String = "") = when {
+    format.isEmpty() -> {
+        App.error(tr("err.output.unknown", path))
+        false
+    }
+    EpmManager[format]?.hasMaker != true -> {
+        App.error(tr("err.output.unsupported", format))
+        false
+    }
+    else -> true
+}
 
-fun checkOutputFormat(format: String, path: String = ""): Boolean = if (format.isEmpty()) {
-    App.error(tr("error.output.unknown", path))
-    false
-} else if (SCI.epmManager.getService(format)?.hasMaker() != true) {
-    App.error(tr("error.output.unsupported", format))
-    false
-} else true
+fun outParam(book: Book) = MakerParam(book, SCI.output, SCI.outputFormat, SCI.outArguments)
 
-fun outParam(book: Book): MakerParam = MakerParam.builder()
-        .book(book)
-        .output(SCI.output)
-        .format(SCI.outputFormat)
-        .arguments(MapSettings(SCI.outArguments))
-        .build()
-
-fun newBook(attaching: Boolean): Book {
-    val book = Book()
-    attachBook(book, attaching)
-    App.sciAction { onBookOpened(book, null) }
-    return book
+fun newBook(attaching: Boolean) = Book().also {
+    attachBook(it, attaching)
+    App.sciAction { onBookOpened(it, null) }
 }
 
 fun openBook(param: ParserParam, attaching: Boolean): Book? {
     try {
         return loadBook(param, attaching)
     } catch (e: FileNotFoundException) {
-        App.error(tr("error.misc.noFile", param.file ?: param.input))
+        App.error(tr("err.misc.noFile", param.path))
     } catch (e: Exception) {
-        App.error(tr("error.jem.openFailed", param.file ?: param.input), e)
+        App.error(tr("err.jem.openFailed", param.path), e)
     }
     return null
 }
 
 fun loadBook(param: ParserParam, attaching: Boolean): Book {
     App.sciAction { onOpenBook(param) }
-    val book: Book?
+    val book: Book
     try {
-        book = SCI.epmManager.readBook(param)
-        if (book == null) {
-            throw JemException(tr("error.input.unsupported", param.format))
-        }
+        book = EpmManager.readBook(param) ?: throw JemException(tr("err.input.unsupported", param.format))
     } catch (e: Exception) {
         App.sciAction { onOpenFailed(e, param) }
         throw e
@@ -94,51 +89,47 @@ fun loadBook(param: ParserParam, attaching: Boolean): Book {
 fun attachBook(book: Book, attaching: Boolean) {
     if (attaching) {
         attachAttributes(book)
-    }
-    if (attaching) {
         attachExtensions(book)
     }
 }
 
-fun saveBook(param: MakerParam): String? {
-    try {
-        return makeBook(param)
-    } catch (e: Exception) {
-        App.error(tr("error.jem.saveFailed", param.file ?: param.output), e)
-        return null
+fun saveBook(param: MakerParam) = try {
+    if (SCI["force"] == true) {
+        param.arguments?.set("maker.file.overwrite", true)
     }
+    makeBook(param)
+} catch (e: FileAlreadyExistsException) {
+    App.error(tr("err.output.existedFile", e.file, "--force"))
+    null
+} catch (e: Exception) {
+    App.error(tr("err.jem.saveFailed", param.path), e)
+    null
 }
 
-fun makeBook(param: MakerParam): String? {
+fun makeBook(param: MakerParam): String {
     App.sciAction { onSaveBook(param) }
+    val output: String
     try {
-        if (!SCI.epmManager.writeBook(param)) {
-            throw JemException(tr("error.output.unsupported", param.format))
-        }
+        output = EpmManager.writeBook(param) ?: throw JemException(tr("err.output.unsupported", param.format))
     } catch (e: Exception) {
         App.sciAction { onSaveFailed(e, param) }
         throw e
     }
     App.sciAction { onBookSaved(param) }
-    return param.file?.path ?: param.output
+    return output
 }
 
 private fun attachAttributes(book: Book) {
     for ((k, v) in SCI.outAttributes) {
         try {
-            val value = Variants.parse(v.toString(), Attributes.getType(k))
-            if (value == null) {
-                App.error(tr("error.misc.badString", v))
-                Log.d(TAG, "cannot convert \"{0}\" to \"{1}\"", v, k)
-                continue
-            }
-            book[k] = value
-        } catch (e: RuntimeException) {
-            App.error(tr("error.misc.badString", v), e)
+            val clazz = Variants.getClass(Attributes.getType(k) ?: continue) ?: continue
+            Converters.parse(v.toString(), clazz)?.let { book[k] = it } ?: App.error(tr("err.misc.badString", v))
+        } catch (e: Exception) {
+            App.error(tr("err.misc.badString", v), e)
         }
     }
 }
 
 private fun attachExtensions(book: Book) {
-    book.extensions.update(SCI.outExtensions)
+    book.extensions.plusAssign(SCI.outExtensions)
 }

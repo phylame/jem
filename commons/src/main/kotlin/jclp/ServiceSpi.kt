@@ -31,23 +31,23 @@ interface ServiceProvider {
 open class ServiceManager<T : ServiceProvider>(type: Class<T>, loader: ClassLoader? = null) {
     private val serviceLoader = ServiceLoader.load(type, loader ?: contextClassLoader())
     private val localRegistry = HashMap<String, T>()
-    private val serviceSpis = HashSet<T>()
+    private val serviceProviders = HashSet<T>()
 
     init {
         initServices()
     }
 
     fun reload() {
-        serviceSpis.clear()
         localRegistry.clear()
+        serviceProviders.clear()
         serviceLoader.reload()
         initServices()
     }
 
-    val services get() = serviceSpis + localRegistry.values
+    val services get() = serviceProviders + localRegistry.values
 
     operator fun get(key: String) = localRegistry.getOrPut(key) {
-        serviceSpis.firstOrNull { key in it.keys }
+        serviceProviders.firstOrNull { key in it.keys }
     }
 
     operator fun set(name: String, factory: T) {
@@ -59,7 +59,7 @@ open class ServiceManager<T : ServiceProvider>(type: Class<T>, loader: ClassLoad
         try {
             while (it.hasNext()) {
                 try {
-                    serviceSpis += it.next()
+                    serviceProviders += it.next()
                 } catch (e: ServiceConfigurationError) {
                     Log.e(javaClass.simpleName, e) { "providers.next()" }
                 }

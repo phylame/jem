@@ -22,11 +22,7 @@ import mala.App
 import mala.AppDelegate
 import org.apache.commons.cli.*
 
-internal typealias Validator<T> = (T) -> Boolean
-
-internal typealias AppContext = MutableMap<String, Any>
-
-abstract class CLIDelegate(val parser: CommandLineParser) : AppDelegate {
+abstract class CDelegate(private val parser: CommandLineParser) : AppDelegate {
     val options = Options()
 
     var inputs = emptyList<String>()
@@ -57,11 +53,21 @@ abstract class CLIDelegate(val parser: CommandLineParser) : AppDelegate {
         actions[option.opt ?: option.longOpt] = action
     }
 
-    fun addCommand(option: Option, block: (CLIDelegate) -> Int) {
+    fun addCommand(option: Option, command: (CDelegate) -> Int) {
         addAction(option, object : Command {
-            override fun execute(delegate: CLIDelegate) = block(delegate)
+            override fun execute(delegate: CDelegate) = command(delegate)
         })
     }
+
+    fun addInitializer(option: Option, initializer: (AppContext, CommandLine) -> Unit) {
+        addAction(option, object : Initializer {
+            override fun perform(context: AppContext, cmd: CommandLine) = initializer(context, cmd)
+        })
+    }
+
+    operator fun get(name: String) = context[name]
+
+    operator fun set(name: String, value: Any) = context.set(name, value)
 
     override final fun run() {
         parseOptions()
@@ -99,3 +105,35 @@ abstract class CLIDelegate(val parser: CommandLineParser) : AppDelegate {
         return code
     }
 }
+
+private typealias OB = Option.Builder
+
+fun Option.group(group: OptionGroup): Option = apply {
+    group.addOption(this)
+}
+
+fun OB.action(action: Action): Option = build().apply {
+    (App.delegate as CDelegate).addAction(this, action)
+}
+
+fun OB.command(command: (CDelegate) -> Int): Option = build().apply {
+    (App.delegate as CDelegate).addCommand(this, command)
+}
+
+fun OB.initializer(initializer: (AppContext, CommandLine) -> Unit): Option = build().apply {
+    (App.delegate as CDelegate).addInitializer(this, initializer)
+}
+
+fun CDelegate.newOption(opt: String, longOpt: String? = null): OB = Option.builder(opt)
+        .longOpt(longOpt)
+        .desc(App.tr("opt.$opt.desc"))
+
+fun CDelegate.valueOption(opt: String, longOpt: String? = null) = newOption(opt, longOpt)
+        .hasArg()
+        .argName(App.tr("opt.$opt.arg"))
+        .action(StringFetcher(opt))
+
+fun CDelegate.valuesOptions(opt: String, longOpt: String? = null) = newOption(opt, longOpt)
+        .numberOfArgs(2)
+        .argName(App.tr("opt.arg.kv"))
+        .action(PropertiesFetcher(opt))

@@ -20,7 +20,6 @@ package jclp
 
 import jclp.io.contextClassLoader
 import jclp.io.openResource
-import jclp.text.or
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.text.MessageFormat
@@ -32,15 +31,17 @@ import kotlin.collections.LinkedHashSet
 interface Translator {
     fun tr(key: String): String
 
-    fun optTr(key: String, default: String) = try {
-        tr(key) or default
+    fun optTr(key: String) = try {
+        tr(key).takeIf(String::isNotEmpty)
     } catch (e: MissingResourceException) {
-        default
+        null
     }
 
     fun tr(key: String, vararg args: Any): String = MessageFormat.format(tr(key), *args)
 
-    fun optTr(key: String, fallback: String, vararg args: Any): String = MessageFormat.format(optTr(key, fallback), *args)
+    fun optTr(key: String, fallback: String, vararg args: Any): String = (optTr(key) ?: fallback).let {
+        MessageFormat.format(it, *args)
+    }
 
     fun attach(translators: Collection<Translator>) {
         throw UnsupportedOperationException()
@@ -57,6 +58,32 @@ fun Translator.attach(vararg translators: Translator) {
 
 fun Translator.detach(vararg translators: Translator) {
     detach(translators.asList())
+}
+
+private const val ERR_NO_TRANSLATOR = "translator is not initialized"
+
+open class TranslatorWrapper : Translator {
+    var translator: Translator? = null
+
+    override fun tr(key: String) = translator?.tr(key) ?: throw IllegalStateException(ERR_NO_TRANSLATOR)
+
+    override fun optTr(key: String): String? = translator?.optTr(key)
+
+    override fun tr(key: String, vararg args: Any): String {
+        return translator?.tr(key, *args) ?: throw IllegalStateException(ERR_NO_TRANSLATOR)
+    }
+
+    override fun optTr(key: String, fallback: String, vararg args: Any): String {
+        return translator?.optTr(key, fallback, *args) ?: MessageFormat.format(fallback, *args)
+    }
+
+    override fun attach(translators: Collection<Translator>) {
+        translator?.attach(translators)
+    }
+
+    override fun detach(translators: Collection<Translator>) {
+        translator?.detach(translators)
+    }
 }
 
 abstract class AbstractTranslator : Translator {
@@ -87,32 +114,6 @@ abstract class AbstractTranslator : Translator {
     }
 }
 
-private const val ERR_NO_TRANSLATOR = "translator is not initialized"
-
-open class TranslatorWrapper : Translator {
-    protected var translator: Translator? = null
-
-    override fun tr(key: String) = translator?.tr(key) ?: throw IllegalStateException(ERR_NO_TRANSLATOR)
-
-    override fun optTr(key: String, default: String) = translator?.optTr(key, default) ?: default
-
-    override fun tr(key: String, vararg args: Any): String {
-        return translator?.tr(key, *args) ?: throw IllegalStateException(ERR_NO_TRANSLATOR)
-    }
-
-    override fun optTr(key: String, fallback: String, vararg args: Any): String {
-        return translator?.optTr(key, fallback, *args) ?: MessageFormat.format(fallback, *args)
-    }
-
-    override fun attach(translators: Collection<Translator>) {
-        translator?.attach(translators)
-    }
-
-    override fun detach(translators: Collection<Translator>) {
-        translator?.detach(translators)
-    }
-}
-
 fun ResourceBundle.toTranslator() = object : AbstractTranslator() {
     override fun handleGet(key: String) = getString(key)
 }
@@ -127,24 +128,19 @@ open class Linguist(
         private val loader: ClassLoader? = null,
         private val isDummy: Boolean = true
 ) : AbstractTranslator() {
-    override fun handleGet(key: String): String = bundle.getString(key)
+    override fun handleGet(key: String): String = getBundle().getString(key)
 
-    private val bundle: ResourceBundle by lazy {
-        try {
-            ResourceBundle.getBundle(name, locale ?: Locale.getDefault(), loader ?: contextClassLoader(), ResourceControl)
-        } catch (e: MissingResourceException) {
-            if (isDummy) DummyBundle else {
-                throw e
-            }
-        }
+    private fun getBundle(): ResourceBundle = try {
+        ResourceBundle.getBundle(name, locale ?: Locale.getDefault(), loader ?: contextClassLoader(), ResourceControl)
+    } catch (e: MissingResourceException) {
+        if (isDummy) DummyBundle else throw e
     }
 
     private object ResourceControl : ResourceBundle.Control() {
         override fun newBundle(baseName: String, locale: Locale, format: String, loader: ClassLoader, reload: Boolean): ResourceBundle {
             if (format == "java.properties") {
-                val stream = openResource(toBundleName(baseName, locale) + ".properties", loader, reload)
-                if (stream != null) {
-                    return PropertyResourceBundle(stream)
+                openResource(toBundleName(baseName, locale) + ".properties", loader, reload)?.let {
+                    return PropertyResourceBundle(it)
                 }
             }
             return super.newBundle(baseName, locale, format, loader, reload)
@@ -158,8 +154,10 @@ open class Linguist(
     }
 }
 
-class TranslatorHelper(private val path: String, private val filter: ((String) -> Boolean)? = null) : Translator {
+class TranslatorHelper(private val path: String, private val filter: ((String) -> Boolean)? = null) : AbstractTranslator() {
     private val values = LinkedHashMap<String, String>()
+
+    override fun handleGet(key: String) = if (filter?.invoke(key) != false) values.getOrPut(key) { it -> it } else null
 
     fun sync() {
         val separator = System.lineSeparator()
@@ -171,11 +169,5 @@ class TranslatorHelper(private val path: String, private val filter: ((String) -
                         .append(separator)
             }
         }
-    }
-
-    override fun tr(key: String) = if (filter?.invoke(key) == false) {
-        throw MissingResourceException(key, javaClass.name, key)
-    } else {
-        values.getOrPut(key) { it -> it }!!
     }
 }

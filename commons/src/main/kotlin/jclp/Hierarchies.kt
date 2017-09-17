@@ -18,6 +18,8 @@
 
 package jclp
 
+import java.util.*
+
 interface Hierarchical<T : Hierarchical<T>> : Iterable<T> {
     val size: Int
 
@@ -26,23 +28,45 @@ interface Hierarchical<T : Hierarchical<T>> : Iterable<T> {
     operator fun get(index: Int): T
 }
 
+fun <T : Hierarchical<T>> T.toRoot(): List<T> {
+    val list = LinkedList<T>()
+    var parent: T? = this
+    while (parent != null) {
+        list.addFirst(parent)
+        parent = parent.parent
+    }
+    return list
+}
+
+fun <T : Hierarchical<T>> T.locate(indices: Collection<Int>): T? {
+    var item: T? = null
+    for (index in indices) {
+        item = get(if (index < 0) index + size else index)
+    }
+    return item
+}
+
 open class Hierarchy<T : Hierarchy<T>> : Hierarchical<T> {
-    override var parent: T? = null
+    final override var parent: T? = null
         protected set
 
     private val children = ArrayList<T>()
 
-    fun append(item: T) = children.add(ensureSolitary(item))
+    final override val size get() = children.size
+
+    fun append(item: T) {
+        children.add(ensureSolitary(item))
+    }
 
     operator fun plusAssign(item: T) {
         append(item)
     }
 
-    fun insert(index: Int, item: T) = children.add(index, ensureSolitary(item))
+    fun insert(index: Int, item: T) {
+        children.add(index, ensureSolitary(item))
+    }
 
-    override val size get() = children.size
-
-    override fun get(index: Int) = children[index]
+    final override fun get(index: Int) = children[index]
 
     fun indexOf(item: T) = if (item.parent === this) children.indexOf(item) else -1
 
@@ -95,7 +119,7 @@ open class Hierarchy<T : Hierarchy<T>> : Hierarchical<T> {
         children.clear()
     }
 
-    override fun iterator() = children.iterator()
+    final override fun iterator() = children.iterator()
 
     private fun ensureSolitary(item: T): T {
         require(item !== this) { "Cannot add self to children list: $item" }

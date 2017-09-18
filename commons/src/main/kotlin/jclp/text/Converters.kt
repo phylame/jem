@@ -45,15 +45,15 @@ object Converters {
 
     operator fun <T : Any> set(type: Class<T>, converter: Converter<T>?) = converters.put(type.canonicalType, converter)
 
-    inline fun <reified T : Any> render(obj: T) = render(obj, T::class.java)
+    fun render(obj: Any) = (obj as? CharSequence)?.toString() ?: render(obj, obj.javaClass)
+
+    fun <T : Any> render(obj: T, type: Class<T>) = (obj as? CharSequence)?.toString() ?: get(type)?.render(obj)
 
     inline fun <reified T : Any> parse(str: String) = parse(str, T::class.java)
 
-    fun <T : Any> render(obj: T, type: Class<T>) = (obj as? CharSequence)?.toString() ?: get(type.canonicalType)?.render(obj)
-
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> parse(str: String, type: Class<T>): T? {
-        return if (CharSequence::class.java.isAssignableFrom(type)) str as T else get(type.canonicalType)?.parse(str)
+        return if (type == String::class.java) str as T else get(type)?.parse(str)
     }
 
     private fun registerDefaults() {

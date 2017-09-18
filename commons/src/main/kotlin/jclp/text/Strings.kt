@@ -18,8 +18,6 @@
 
 package jclp.text
 
-operator fun String.get(start: Int, end: Int) = substring(start, end)
-
 infix fun CharSequence?.or(default: CharSequence) = if (this != null && isNotEmpty()) toString() else default.toString()
 
 infix inline fun CharSequence?.or(default: () -> CharSequence) = if (this != null && isNotEmpty()) toString() else default().toString()

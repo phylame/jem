@@ -55,8 +55,7 @@ fun VDMReader.openStream(name: String): InputStream? {
     return getInputStream(getEntry(name) ?: return null)
 }
 
-fun VDMReader.readText(name: String, encoding: String? = null): String? {
-    val charset = if (encoding.isNullOrEmpty()) Charset.defaultCharset() else Charset.forName(encoding)
+fun VDMReader.readText(name: String, charset: Charset = Charsets.UTF_8): String? {
     return openStream(name)?.use { it.reader(charset).readText() }
 }
 
@@ -72,22 +71,26 @@ interface VDMWriter : Closeable {
     fun closeEntry(entry: VDMEntry)
 }
 
-inline fun <R> VDMWriter.useStream(name: String, block: OutputStream.() -> R): R = newEntry(name).let { entry ->
-    putEntry(entry).block().apply { closeEntry(entry) }
+inline fun <R> VDMWriter.useStream(name: String, block: (OutputStream) -> R): R = newEntry(name).let {
+    try {
+        block(putEntry(it))
+    } finally {
+        closeEntry(it)
+    }
 }
 
 fun VDMWriter.write(name: String, flob: Flob) {
     useStream(name) {
-        flob.writeTo(this)
-        flush()
+        flob.writeTo(it)
+        it.flush()
     }
 }
 
 fun VDMWriter.write(name: String, text: Text, charset: Charset = Charsets.UTF_8) {
     useStream(name) {
-        writer(charset).let {
-            text.writeTo(it)
-            it.flush()
+        it.writer(charset).let { writer ->
+            text.writeTo(writer)
+            writer.flush()
         }
     }
 }

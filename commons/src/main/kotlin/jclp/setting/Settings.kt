@@ -67,14 +67,6 @@ fun Settings.getString(key: String) = get(key, String::class.java)
 
 fun Settings.getBoolean(key: String) = get(key, Boolean::class.java)
 
-operator fun Settings.plusAssign(values: Map<String, Any>) {
-    update(values)
-}
-
-operator fun Settings.plusAssign(settings: Settings) {
-    update(settings)
-}
-
 class SettingsDelegate<T : Any>(private val type: Class<T>, private val default: T, private val key: String = "") {
     @Suppress("UNCHECKED_CAST")
     operator fun getValue(settings: Settings, property: KProperty<*>): T {
@@ -97,7 +89,7 @@ abstract class AbstractSettings : Settings {
 
     protected abstract fun handleSet(key: String, value: Any): Any?
 
-    protected abstract fun <T : Any> convertValue(value: Any, type: Class<T>): T?
+    protected abstract fun <T : Any> convertValue(value: Any, type: Class<T>): T
 
     override fun isEnable(key: String): Boolean = definitions[key]?.dependencies?.all {
         isEnable(it.key) && it.condition?.invoke(get(it.key)) != false
@@ -122,10 +114,8 @@ abstract class AbstractSettings : Settings {
 
     override fun set(key: String, value: Any): Any? {
         definitions[key]?.let {
-            it.type?.let {
-                if (!it.isInstance(value)) {
-                    throw IllegalArgumentException("'$key' require '$it'")
-                }
+            if (it.type?.isInstance(value) == false) {
+                throw IllegalArgumentException("'$key' require '$it'")
             }
             if (it.constraint?.invoke(value) == false) {
                 throw IllegalArgumentException("illegal '$value' for '$key'")
@@ -137,14 +127,14 @@ abstract class AbstractSettings : Settings {
     override fun contains(key: String) = handleGet(key) != null
 }
 
-open class MapSettings(values: Map<*, Any>? = null, definitions: Map<String, Definition>? = null) : AbstractSettings() {
+open class MapSettings(values: Map<String, Any>? = null, definitions: Map<String, Definition>? = null) : AbstractSettings() {
     private val values = HashMap<String, Any>()
 
     init {
-        values?.entries?.forEach {
-            set(it.key.toString(), it.value)
+        values?.forEach {
+            set(it.key, it.value)
         }
-        definitions?.entries?.forEach {
+        definitions?.forEach {
             setDefinition(it.key, it.value)
         }
         initValues()
@@ -152,9 +142,11 @@ open class MapSettings(values: Map<*, Any>? = null, definitions: Map<String, Def
 
     override fun handleGet(key: String) = values[key]
 
+    override fun contains(key: String) = key in values
+
     override fun handleSet(key: String, value: Any) = values.put(key, value)
 
-    override fun iterator() = values.entries.map { it.toPair() }.iterator()
+    override fun iterator() = values.map { it.toPair() }.iterator()
 
     override fun remove(key: String) = values.remove(key)
 
@@ -167,8 +159,7 @@ open class MapSettings(values: Map<*, Any>? = null, definitions: Map<String, Def
     override fun toString() = values.toString()
 
     fun load(reader: Reader) {
-        val props = Properties()
-        props.load(reader)
+        val props = Properties().apply { load(reader) }
         if (props.isNotEmpty()) {
             values.putAll(props)
             initValues()
@@ -178,7 +169,7 @@ open class MapSettings(values: Map<*, Any>? = null, definitions: Map<String, Def
     fun sync(writer: Writer, comment: String? = null) {
         val props = Properties()
         for ((key, value) in values) {
-            props[key] = value as? CharSequence ?: Converters.render(value, value.javaClass)
+            props[key] = value as? CharSequence ?: Converters.render(value)
         }
         props.store(writer, comment)
     }

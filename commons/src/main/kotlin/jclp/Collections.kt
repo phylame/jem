@@ -45,14 +45,10 @@ fun MutableMap<in String, in String>.putAll(from: Properties) {
     }
 }
 
-fun <E : Iterable<E>> E.walk(action: E.(Int, Int) -> Unit) {
-    walkInternal(0, 0, action)
-}
-
-private fun <E : Iterable<E>> E.walkInternal(level: Int, index: Int, action: E.(Int, Int) -> Unit) {
-    val l = level + 1
-    action(level, index)
-    for ((i, e) in this.withIndex()) {
-        e.walkInternal(l, i, action)
+fun <E : Iterable<E>> E.walk(level: Int = 0, index: Int = 0, block: E.(Int, Int) -> Unit) {
+    block(level, index)
+    val lv = level + 1
+    forEachIndexed { i, e ->
+        e.walk(lv, i, block)
     }
 }

@@ -53,7 +53,7 @@ interface BookConsumer : ProcessorCommand {
 class ViewBook : ListFetcher("w"), BookConsumer {
     @Suppress("UNCHECKED_CAST")
     override fun consume(book: Book): Boolean {
-        viewBook(book, (SCI["w"] as? List<String>) ?: listOf("all"), SCISettings.asConfig())
+        viewBook(book, (SCI["w"] as? List<String>) ?: listOf("all"), SCISettings.viewSettings())
         return true
     }
 }
@@ -107,8 +107,7 @@ class ExtractBook : ListFetcher("x"), BookConsumer {
             if (it != null) {
                 println(tr("save.result", it))
                 true
-            } else
-                false
+            } else false
         }
     }
 }

@@ -186,6 +186,8 @@ open class MapSettings(values: Map<String, Any>? = null, definitions: Map<String
     }
 }
 
+fun Map<String, Any>.toSettings() = MapSettings(this)
+
 data class Dependency(val key: String, val condition: Predicate? = null)
 
 data class Definition(

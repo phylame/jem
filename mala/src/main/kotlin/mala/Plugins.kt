@@ -18,6 +18,7 @@
 
 package mala
 
+import jclp.detectInstance
 import mala.App.error
 import mala.App.optTr
 import java.io.InputStream
@@ -86,11 +87,7 @@ class PluginManager(private val path: String, private val loader: ClassLoader? =
             if (!Plugin::class.java.isAssignableFrom(clazz)) {
                 error(optTr("mala.err.badPlugin", "plugin must be sub-class of ''{0}'': {1}", Plugin::class.java.name, path))
             }
-            val plugin: Plugin = try {
-                clazz.getField("INSTANCE").get(null) as Plugin // for kotlin object
-            } catch (ignored: ReflectiveOperationException) {
-                clazz.newInstance() as Plugin
-            }
+            val plugin = clazz.detectInstance() as Plugin
             if (filter?.invoke(plugin) != false) {
                 plugins += plugin
             }

@@ -26,6 +26,7 @@ import jclp.vdm.VDMReader
 import jclp.vdm.VDMWriter
 import jclp.vdm.detectReader
 import jem.Book
+import jem.M
 import java.io.Closeable
 import java.io.File
 import java.io.IOException
@@ -37,7 +38,7 @@ interface CommonParser<I : Closeable> : Parser {
 
     override fun parse(input: String, arguments: Settings?) = open(input, arguments).let { src ->
         try {
-            parse(src, arguments).apply { this += { src.close() } }
+            parse(src, arguments).apply { this.registerCleanup({ src.close() }) }
         } catch (e: Exception) {
             src.close()
             throw e
@@ -58,7 +59,7 @@ interface CommonMaker<O : Closeable> : Maker {
 interface VDMParser : CommonParser<VDMReader> {
     override fun open(input: String, arguments: Settings?) = arguments?.getString("parser.vdm.type")?.let {
         VDMManager.openReader(it, input)
-    } ?: VDMManager.detectReader(File(input))
+    } ?: detectReader(File(input))
 }
 
 interface VDMMaker : CommonMaker<VDMWriter> {

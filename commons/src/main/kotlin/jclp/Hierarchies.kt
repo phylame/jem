@@ -38,6 +38,14 @@ fun <T : Hierarchical<T>> T.toRoot(): List<T> {
     return list
 }
 
+fun <T : Hierarchical<T>> T.locate(indices: IntArray): T? {
+    var item: T? = null
+    for (index in indices) {
+        item = get(if (index < 0) index + size else index)
+    }
+    return item
+}
+
 fun <T : Hierarchical<T>> T.locate(indices: Collection<Int>): T? {
     var item: T? = null
     for (index in indices) {
@@ -113,10 +121,7 @@ open class Hierarchy<T : Hierarchy<T>> : Hierarchical<T> {
     fun swap(from: Int, to: Int) = children.swap(from, to)
 
     fun clear() {
-        for (item in children) {
-            item.parent = null
-        }
-        children.clear()
+        children.onEach { it.parent = null }.clear()
     }
 
     final override fun iterator() = children.iterator()

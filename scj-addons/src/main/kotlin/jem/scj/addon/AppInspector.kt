@@ -22,61 +22,66 @@ import jem.scj.SCI
 import jem.scj.SCISettings
 import mala.App
 import mala.App.tr
-import mala.Plugin
-import mala.cli.SingleFetcher
-import mala.cli.action
-import mala.cli.command
-import mala.cli.newOption
+import mala.Describable
+import mala.cli.*
 import org.apache.commons.cli.CommandLine
 import org.apache.commons.cli.Option
 
-class AppInspector : Plugin {
-//    override val meta = mapOf("name" to "App Inspector")
+class AppInspector : SCJAddon() {
+    override val name = "App Inspector"
+
+    override val description = tr("addon.inspector.desc")
 
     override fun init() {
         attachTranslator()
+
+        val itemIndent = SCISettings["addon.inspector.itemIndent"] ?: " "
+
         Option.builder()
                 .longOpt("view-context")
                 .desc(tr("opt.viewContext.desc"))
                 .command {
-                    val context = SCI.context
-                    if (context.isEmpty()) {
-                        App.echo(tr("viewContext.empty"))
-                    } else {
-                        for ((k, v) in context) {
-                            println("$k[${v.javaClass.name}]=$v")
+                    SCI.context.takeIf(AppContext::isNotEmpty)?.let {
+                        for ((k, v) in it) {
+                            println("$itemIndent$k[${v.javaClass.name}]=$v")
                         }
-                    }
+                    } ?: App.echo(tr("viewContext.empty"))
                     0
                 }
+
         Option.builder()
                 .longOpt("view-settings")
                 .desc(tr("opt.viewSettings.desc"))
                 .command {
                     println(tr("viewSettings.legend", SCISettings.file))
                     for ((k, v) in SCISettings) {
-                        println("  $k=$v")
+                        println("$itemIndent$k=$v")
                     }
                     0
                 }
+
         Option.builder()
                 .longOpt("list-plugins")
                 .desc(tr("opt.listPlugins.desc"))
                 .command {
                     val plugins = App.plugins.iterator().asSequence().map {
-                        //                        "  ${it.meta["name"]}\t\t${it.javaClass.name}"
-                        it.javaClass.name
+                        if (it is Describable)
+                            "$itemIndent${it.name}\tv${it.version}\t${it.javaClass.name}"
+                        else
+                            "$itemIndent${it.javaClass.name}"
                     }.toList()
                     println(tr("listPlugins.legend", plugins.size))
                     println(plugins.joinToString("\n"))
                     0
                 }
-        SCI.newOption("S")
+
+        newOption("S")
                 .numberOfArgs(2)
+                .valueSeparator()
                 .argName(tr("opt.arg.kv"))
                 .action(object : SingleFetcher() {
                     @Suppress("UNCHECKED_CAST")
-                    override fun init(context: MutableMap<String, Any>, cmd: CommandLine) {
+                    override fun init(context: AppContext, cmd: CommandLine) {
                         SCISettings.update(cmd.getOptionProperties("S") as Map<String, Any>)
                     }
                 })

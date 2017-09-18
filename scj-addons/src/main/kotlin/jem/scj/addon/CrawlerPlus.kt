@@ -18,17 +18,8 @@
 
 package jem.scj.addon
 
-import jem.Chapter
-import jem.scj.SCI
-import jem.scj.SCIPlugin
-import jem.scj.SCISettings
-import mala.App
-import mala.cli.action
-import org.apache.commons.cli.Option
-import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicInteger
 //
-//class CrawlerPlus : SCIPlugin, CrawlerListener {
+//class CrawlerPlus : SCJPlugin, CrawlerListener {
 //    private val threadPool = lazy {
 //        val threads = SCISettings.get("crawler.maxThread", Int::class.java) as? Int
 //        Executors.newFixedThreadPool(threads ?: Runtime.getRuntime().availableProcessors() * 8)

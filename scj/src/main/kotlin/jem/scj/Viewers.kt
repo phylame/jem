@@ -30,7 +30,7 @@ import mala.App
 import mala.App.tr
 import java.util.*
 
-data class ViewConfig(var separator: String, var skipEmpty: Boolean, var tocIndent: String, var tocNames: Collection<String>)
+data class ViewSettings(var separator: String, var skipEmpty: Boolean, var tocIndent: String, var tocNames: Collection<String>)
 
 fun parseIndices(token: String) = try {
     token.split(".").filter(String::isNotEmpty).map(String::toInt)
@@ -41,27 +41,27 @@ fun parseIndices(token: String) = try {
 
 fun locateChapter(chapter: Chapter, indices: Collection<Int>) = try {
     chapter.locate(indices)
-} catch (e: IndexOutOfBoundsException) {
+} catch (e: Exception) {
     App.error(tr("err.view.noChapter", indices), e)
     null
 }
 
-fun viewBook(book: Book, names: Collection<String>, config: ViewConfig) {
+fun viewBook(book: Book, names: Collection<String>, settings: ViewSettings) {
     for (name in names) {
         when {
-            name.matches("^#([\\-\\d.]+)(\\$.*)?".toRegex()) -> viewChapter(book, name, config)
-            name.matches("\\+.*".toRegex()) -> viewExtensions(book, listOf(name.replaceFirst("+", "") or { "all" }), config)
-            else -> viewAttributes(book, listOf(name), config, false)
+            name.matches("^#([\\-\\d.]+)(\\$.*)?".toRegex()) -> viewChapter(book, name.substring(1), settings)
+            name.matches("\\+.*".toRegex()) -> viewExtensions(book, listOf(name.substring(1) or { "all" }), settings)
+            else -> viewAttributes(book, listOf(name), settings, false)
         }
     }
 }
 
-fun viewAttributes(chapter: Chapter, names: Collection<String>, config: ViewConfig, showBracket: Boolean) {
+fun viewAttributes(chapter: Chapter, names: Collection<String>, settings: ViewSettings, showBracket: Boolean) {
     val values = LinkedList<String>()
     for (name in names) {
         when (name) {
-            "toc" -> viewToc(chapter, config)
-            "all" -> viewAttributes(chapter, chapter.attributes.names, config, showBracket)
+            "toc" -> viewToc(chapter, settings)
+            "all" -> viewAttributes(chapter, chapter.attributes.names, settings, showBracket)
             "text" -> values += tr("view.attrPattern", tr("view.chapterText"), chapter.text ?: "")
             "names" -> {
                 val keys = chapter.attributes.names.toMutableSet()
@@ -73,7 +73,7 @@ fun viewAttributes(chapter: Chapter, names: Collection<String>, config: ViewConf
             }
             "size" -> {
                 if ("size" in chapter.attributes) {
-                    viewAttributes(chapter, listOf("size"), config, showBracket)
+                    viewAttributes(chapter, listOf("size"), settings, showBracket)
                 } else {
                     values += tr("view.attrPattern", tr("view.chapterSize"), chapter.size)
                 }
@@ -81,7 +81,7 @@ fun viewAttributes(chapter: Chapter, names: Collection<String>, config: ViewConf
             else -> {
                 val value: Any? = chapter[name]
                 val str = if (value != null) Variants.printable(value) ?: value.toString() else ""
-                if (str.isNotEmpty() || !config.skipEmpty) {
+                if (str.isNotEmpty() || !settings.skipEmpty) {
                     values += tr("view.attrPattern", getName(name) ?: name, str)
                 }
             }
@@ -91,17 +91,18 @@ fun viewAttributes(chapter: Chapter, names: Collection<String>, config: ViewConf
         return
     }
     if (showBracket) {
-        println(values.joinToString(config.separator, "<", ">"))
+        println(values.joinToString(settings.separator, "<", ">"))
     } else {
-        println(values.joinToString(config.separator))
+        println(values.joinToString(settings.separator))
     }
 }
 
-fun viewExtensions(book: Book, names: Collection<String>, config: ViewConfig) {
+fun viewExtensions(book: Book, names: Collection<String>, settings: ViewSettings) {
     val values = LinkedList<String>()
     for (name in names) {
         when (name) {
-            "all" -> viewExtensions(book, book.extensions.names, config)
+            "all" -> viewExtensions(book, book.extensions.names, settings)
+            "names" -> println((book.extensions.names + "all").joinToString(", "))
             else -> {
                 val value = book.extensions[name]
                 values += if (value == null) {
@@ -113,31 +114,31 @@ fun viewExtensions(book: Book, names: Collection<String>, config: ViewConfig) {
         }
     }
     if (values.isNotEmpty()) {
-        println(values.joinToString(config.separator))
+        println(values.joinToString(settings.separator))
     }
 }
 
-fun viewChapter(chapter: Chapter, name: String, config: ViewConfig) {
-    val tokens = name.replaceFirst("#", "").split("$")
-    val indices: Collection<Int> = parseIndices(tokens.first()) ?: return
+fun viewChapter(chapter: Chapter, name: String, settings: ViewSettings) {
+    val tokens = name.split("$")
+    val indices = parseIndices(tokens.first()) ?: return
     val names = listOf(if (tokens.size > 1) tokens[1] else "text")
-    viewAttributes(locateChapter(chapter, indices) ?: return, names, config, false)
+    viewAttributes(locateChapter(chapter, indices) ?: return, names, settings, false)
 }
 
-fun viewToc(chapter: Chapter, config: ViewConfig) {
+fun viewToc(chapter: Chapter, settings: ViewSettings) {
     println(tr("view.tocLegend", chapter.title))
-    val separator = config.separator
-    config.separator = " "
+    val separator = settings.separator
+    settings.separator = " "
     chapter.walk { level, index ->
         if (level != 0) {
             val prefix = parent?.tag ?: ""
             val fmt = "%${parent?.size.toString().length}d"
             print("$prefix${fmt.format(index + 1)} ")
-            viewAttributes(this, config.tocNames, config, true)
+            viewAttributes(this, settings.tocNames, settings, true)
             if (isSection) {
-                tag = "$prefix${index + 1}${config.tocIndent}"
+                tag = "$prefix${index + 1}${settings.tocIndent}"
             }
         }
     }
-    config.separator = separator
+    settings.separator = separator
 }

@@ -22,6 +22,16 @@ import jclp.io.createRecursively
 import jclp.setting.MapSettings
 import java.io.File
 
+interface Describable {
+    val name: String
+
+    val version: String
+
+    val description: String
+
+    val vendor: String
+}
+
 open class AppSettings(name: String, load: Boolean = true, sync: Boolean = true) : MapSettings() {
     val file = File(App.home, name)
 
@@ -31,13 +41,13 @@ open class AppSettings(name: String, load: Boolean = true, sync: Boolean = true)
             file.reader().use(this::load)
         }
         if (sync) {
-            App += {
+            App.registerCleanup({
                 if (file.exists() || file.parentFile.createRecursively()) {
                     sync(file.writer())
                 } else {
                     App.error("cannot create directory for file: $file")
                 }
-            }
+            })
         }
     }
 }

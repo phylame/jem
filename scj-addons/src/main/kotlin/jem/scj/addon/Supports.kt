@@ -20,7 +20,10 @@ package jem.scj.addon
 
 import jclp.Linguist
 import jclp.attach
+import jem.Build
 import mala.App
+import mala.Describable
+import mala.Plugin
 
 private var isAttached = false
 
@@ -29,4 +32,16 @@ internal fun attachTranslator() {
         App.attach(Linguist("!jem/scj/addon/messages"))
         isAttached = true
     }
+}
+
+abstract class SCJAddon : Plugin, Describable {
+    companion object {
+        init {
+            attachTranslator()
+        }
+    }
+
+    override val version = Build.VERSION
+
+    override val vendor = Build.VENDOR
 }

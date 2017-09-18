@@ -144,8 +144,8 @@ class FileVDMFactory : VDMFactory {
 
     private fun getDirectory(arg: Any, reading: Boolean): File {
         val dir = when (arg) {
-            is String -> File(arg)
             is File -> arg
+            is String -> File(arg)
             is Path -> arg.toFile()
             else -> throw IllegalArgumentException(arg.toString())
         }
@@ -251,4 +251,4 @@ class ZipVDMFactory : VDMFactory {
     override fun toString() = name
 }
 
-fun VDMManager.detectReader(file: File) = if (file.isDirectory) FileVDMReader(file) else ZipVDMReader(ZipFile(file))
+fun detectReader(file: File) = if (file.isDirectory) FileVDMReader(file) else ZipVDMReader(ZipFile(file))

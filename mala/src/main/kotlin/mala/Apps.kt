@@ -19,6 +19,7 @@
 package mala
 
 import jclp.TranslatorWrapper
+import jclp.detectInstance
 import jclp.text.or
 
 private typealias Cleanup = () -> Unit
@@ -130,11 +131,11 @@ object App : TranslatorWrapper() {
 
     private val cleanups = LinkedHashSet<Cleanup>()
 
-    operator fun plusAssign(action: Cleanup) {
+    fun registerCleanup(action: Cleanup) {
         cleanups += action
     }
 
-    operator fun minusAssign(action: Cleanup) {
+    fun removeCleanup(action: Cleanup) {
         cleanups -= action
     }
 
@@ -157,5 +158,21 @@ object App : TranslatorWrapper() {
         plugins.destroy()
         delegate.onStop()
         cleanups.forEach(Cleanup::invoke)
+    }
+}
+
+object Launcher {
+    @JvmStatic
+    fun main(args: Array<String>) {
+        if (args.isEmpty()) {
+            throw RuntimeException("The first argument must the class path of delegate")
+        }
+        try {
+            Class.forName(args.first()).takeIf { AppDelegate::class.java.isInstance(it) }?.let {
+                App.run(it.detectInstance() as AppDelegate, args.copyOfRange(1, args.size + 1))
+            } ?: throw RuntimeException("No instance of AppDelegate: ${args.first()}")
+        } catch (e: Exception) {
+            throw RuntimeException("Cannot load delegate class", e)
+        }
     }
 }

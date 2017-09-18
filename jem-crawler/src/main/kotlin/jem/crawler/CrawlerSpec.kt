@@ -16,21 +16,4 @@
  * limitations under the License.
  */
 
-plugins {
-    id 'java-library'
-    id 'org.jetbrains.kotlin.jvm' version '1.1.4-3'
-}
-
-description = 'Specification for EPM'
-
-dependencies {
-    api project(':jem-core')
-}
-
-compileKotlin {
-    kotlinOptions.jvmTarget = javaVersion
-}
-
-compileTestKotlin {
-    kotlinOptions.jvmTarget = javaVersion
-}
+package jem.crawler

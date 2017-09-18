@@ -58,7 +58,7 @@ fun outParam(book: Book) = MakerParam(book, SCI.output, SCI.outputFormat, SCI.ou
 
 fun newBook(attaching: Boolean) = Book().also {
     attachBook(it, attaching)
-    App.sciAction { onBookOpened(it, null) }
+    App.scjAction { onBookOpened(it, null) }
 }
 
 fun openBook(param: ParserParam, attaching: Boolean): Book? {
@@ -73,16 +73,16 @@ fun openBook(param: ParserParam, attaching: Boolean): Book? {
 }
 
 fun loadBook(param: ParserParam, attaching: Boolean): Book {
-    App.sciAction { onOpenBook(param) }
+    App.scjAction { onOpenBook(param) }
     val book: Book
     try {
         book = EpmManager.readBook(param) ?: throw JemException(tr("err.input.unsupported", param.format))
     } catch (e: Exception) {
-        App.sciAction { onOpenFailed(e, param) }
+        App.scjAction { onOpenFailed(e, param) }
         throw e
     }
     attachBook(book, attaching)
-    App.sciAction { onBookOpened(book, param) }
+    App.scjAction { onBookOpened(book, param) }
     return book
 }
 
@@ -107,15 +107,15 @@ fun saveBook(param: MakerParam) = try {
 }
 
 fun makeBook(param: MakerParam): String {
-    App.sciAction { onSaveBook(param) }
+    App.scjAction { onSaveBook(param) }
     val output: String
     try {
         output = EpmManager.writeBook(param) ?: throw JemException(tr("err.output.unsupported", param.format))
     } catch (e: Exception) {
-        App.sciAction { onSaveFailed(e, param) }
+        App.scjAction { onSaveFailed(e, param) }
         throw e
     }
-    App.sciAction { onBookSaved(param) }
+    App.scjAction { onBookSaved(param) }
     return output
 }
 
@@ -131,5 +131,5 @@ private fun attachAttributes(book: Book) {
 }
 
 private fun attachExtensions(book: Book) {
-    book.extensions.plusAssign(SCI.outExtensions)
+    book.extensions.update(SCI.outExtensions)
 }

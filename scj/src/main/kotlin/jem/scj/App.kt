@@ -85,7 +85,7 @@ object SCI : CDelegate(DefaultParser()) {
             return -1
         }
         var code = 0
-        Log.d(TAG) { "app content: $context" }
+        Log.d(TAG) { "app context: $context" }
         Log.d(TAG) { "app inputs: $inputs" }
         for (input in inputs) {
             val format = context["f"]?.toString() ?: extName(input)
@@ -173,7 +173,7 @@ object SCI : CDelegate(DefaultParser()) {
             println(tr("list.legend"))
             EpmManager.services.forEach {
                 println(tr("list.name", it.name, tr("values.${it.hasMaker}"), tr("values.${it.hasParser}")))
-                println(tr("list.names", it.keys.joinToString(", ")))
+                println(tr("list.keys", it.keys.joinToString(", ")))
                 println("-".repeat(64))
             }
             App.exit(0)
@@ -235,13 +235,14 @@ object SCI : CDelegate(DefaultParser()) {
                     .argName(tr("opt.w.arg"))
                     .desc(tr("opt.w.desc", "-w names"))
                     .action(it)
+                    .group(group)
         }
 
         options.addOptionGroup(group)
     }
 }
 
-interface SCIPlugin : Plugin {
+interface SCJPlugin : Plugin {
     fun onOpenBook(param: ParserParam) {}
 
     fun onOpenFailed(e: Exception, param: ParserParam) {}
@@ -255,7 +256,7 @@ interface SCIPlugin : Plugin {
     fun onBookSaved(param: MakerParam) {}
 }
 
-inline fun App.sciAction(action: SCIPlugin.() -> Unit) {
+inline fun App.scjAction(action: SCJPlugin.() -> Unit) {
     try {
         plugins.with(action)
     } catch (e: Exception) {

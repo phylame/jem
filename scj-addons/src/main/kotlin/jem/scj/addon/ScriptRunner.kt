@@ -23,53 +23,64 @@ import jem.Book
 import jem.epm.EpmManager
 import jem.epm.ParserParam
 import jem.scj.SCI
-import jem.scj.SCIPlugin
+import jem.scj.SCJPlugin
 import jem.scj.SCISettings
 import mala.App
 import mala.App.tr
+import mala.Plugin
 import mala.cli.*
 import org.apache.commons.cli.Option
 import java.io.File
+import java.nio.file.Path
 import javax.script.ScriptEngine
 import javax.script.ScriptEngineManager
 import javax.script.ScriptException
 
-class ScriptRunner : ListFetcher("R"), SCIPlugin, Command {
-//    override val meta = mapOf("name" to "Script Runner")
+class ScriptRunner : SCJAddon(), SCJPlugin {
+    override val name = "Script Runner"
+
+    override val description = tr("addon.runner.desc")
 
     override fun init() {
         attachTranslator()
-        SCI.newOption("R", "run-script")
+        newOption("R", "run-script")
                 .hasArg()
                 .argName(tr("opt.R.arg"))
-                .action(this)
+                .action(object : ListFetcher("R"), Command {
+                    override fun execute(delegate: CDelegate): Int {
+                        val paths = SCI["R"] as? List<*> ?: return -1
+                        var code = 0
+                        paths.map {
+                            when (it) {
+                                is File -> it
+                                is Path -> it.toFile()
+                                else -> File(it.toString())
+                            }
+                        }.forEach {
+                            code = if (!it.exists()) {
+                                App.error(tr("err.misc.noFile", it))
+                                -1
+                            } else {
+                                minOf(code, runScript(it) {})
+                            }
+                        }
+                        return code
+                    }
+                })
+
         Option.builder()
                 .hasArg()
                 .longOpt("engine-name")
                 .argName(tr("opt.engine.arg"))
                 .desc(tr("opt.engineName.desc"))
                 .action(StringFetcher("engine-name"))
+
         Option.builder()
                 .hasArg()
                 .argName(tr("opt.R.arg"))
                 .longOpt("book-filter")
                 .desc(tr("opt.bookFilter.desc"))
                 .action(StringFetcher("book-filter"))
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    override fun execute(delegate: CDelegate): Int {
-        val paths = SCI["R"] as? List<String> ?: return -1
-        var code = 0
-        paths.map(::File).forEach {
-            code = if (!it.exists()) {
-                App.error(tr("err.misc.noFile", it))
-                -1
-            } else {
-                minOf(code, runScript(it))
-            }
-        }
-        return code
     }
 
     override fun onBookOpened(book: Book, param: ParserParam?) {
@@ -83,10 +94,10 @@ class ScriptRunner : ListFetcher("R"), SCIPlugin, Command {
         }
     }
 
-    private fun runScript(file: File, action: (ScriptEngine.() -> Unit)? = null): Int {
+    private inline fun runScript(file: File, action: ScriptEngine.() -> Unit): Int {
         val engine = getScriptEngine(file) ?: return -1
         Log.d(javaClass.simpleName) { "engine $engine detected" }
-        action?.invoke(engine)
+        action(engine)
         try {
             file.reader().use(engine::eval)
         } catch (e: ScriptException) {
@@ -117,6 +128,13 @@ class ScriptRunner : ListFetcher("R"), SCIPlugin, Command {
         engine.put("sci", SCI)
         engine.put("epm", EpmManager)
         engine.put("settings", SCISettings)
+        App.plugins.with<ScriptPlugin> {
+            initEngine(engine)
+        }
         return engine
     }
+}
+
+interface ScriptPlugin : Plugin {
+    fun initEngine(engine: ScriptEngine)
 }

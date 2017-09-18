@@ -38,10 +38,15 @@ val Any?.actualValue
         else -> this
     }
 
-val Class<*>.typeId get() = Variants.getType(this)
-
 val <T : Any> Class<T>.canonicalType
     get() = if (isPrimitive) kotlin.javaObjectType else this
+
+fun Class<*>.detectInstance(): Any = try {
+    @Suppress("UNCHECKED_CAST")
+    getField("INSTANCE").get(null) // for kotlin object
+} catch (ignored: ReflectiveOperationException) {
+    newInstance()
+}
 
 object Variants {
     // standard type ids
@@ -163,15 +168,15 @@ object Variants {
 private typealias Validator = (String, Any) -> Unit
 
 class VariantMap(private val validator: Validator? = null) : Iterable<Pair<String, Any>>, Cloneable {
-    val size get() = values.size
-
-    val names get() = values.keys
-
     private var values = HashMap<String, Any>()
+
+    fun isNotEmpty() = values.isNotEmpty()
 
     fun isEmpty() = values.isEmpty()
 
-    fun isNotEmpty() = values.isNotEmpty()
+    val names get() = values.keys
+
+    val size get() = values.size
 
     operator fun set(name: String, value: Any): Any? {
         require(name.isNotEmpty()) { "name cannot be empty" }
@@ -179,11 +184,11 @@ class VariantMap(private val validator: Validator? = null) : Iterable<Pair<Strin
         return values.put(name, value)
     }
 
-    operator fun plusAssign(others: VariantMap) {
-        plusAssign(others.values)
+    fun update(others: VariantMap) {
+        update(others.values)
     }
 
-    operator fun plusAssign(values: Map<String, Any>) {
+    fun update(values: Map<String, Any>) {
         for ((key, value) in values) {
             set(key, value)
         }

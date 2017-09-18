@@ -22,9 +22,9 @@ import jclp.text.Converters
 import mala.App
 import org.apache.commons.cli.CommandLine
 
-internal typealias Validator<T> = (T) -> Boolean
+typealias AppContext = MutableMap<String, Any>
 
-internal typealias AppContext = MutableMap<String, Any>
+internal typealias Validator<T> = (T) -> Boolean
 
 interface Action
 
@@ -33,7 +33,7 @@ interface Command : Action {
 }
 
 interface Initializer : Action {
-    fun perform(context: AppContext, cmd: CommandLine)
+    fun perform(context: AppContext, cmd: org.apache.commons.cli.CommandLine)
 }
 
 interface ValueFetcher<T : Any> : Initializer {

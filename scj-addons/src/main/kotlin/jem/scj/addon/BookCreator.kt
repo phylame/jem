@@ -18,25 +18,33 @@
 
 package jem.scj.addon
 
-import jem.scj.SCI
 import jem.scj.newBook
 import jem.scj.outParam
 import jem.scj.saveBook
-import mala.Plugin
+import jem.title
+import mala.App.echo
+import mala.App.tr
 import mala.cli.CDelegate
 import mala.cli.Command
 import mala.cli.action
 import mala.cli.newOption
 
-class BookCreator : Plugin, Command {
-//    override val meta = mapOf("name" to "Book Creator")
+class BookCreator : SCJAddon(), Command {
+    override val name = "Book Creator"
+
+    override val description = tr("addon.creator.desc")
 
     override fun init() {
-        SCI.newOption("C", "create-book").action(this)
+        newOption("C", "create-book").action(this)
     }
 
     override fun execute(delegate: CDelegate): Int {
         val book = newBook(true)
+        if (book.title.isEmpty()) {
+            val title = tr("bookCreator.untitled")
+            echo(tr("bookCreator.noTitle", title))
+            book.title = title
+        }
         val path = saveBook(outParam(book)) ?: return -1
         println(path)
         return 0

@@ -53,7 +53,7 @@ object Converters {
 
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> parse(str: String, type: Class<T>): T? {
-        return if (type == String::class.java) str as T else get(type)?.parse(str)
+        return if (CharSequence::class.java == type) str as T else get(type)?.parse(str)
     }
 
     private fun registerDefaults() {
@@ -104,7 +104,7 @@ class DefaultConverter<T>(private val type: Class<T>) : Converter<T> {
             Float::class.java -> java.lang.Float.valueOf(str) as T
             Double::class.java -> java.lang.Double.valueOf(str) as T
             Boolean::class.java -> java.lang.Boolean.valueOf(str) as T
-            Date::class.java -> str.toDate("yyyy-M-d H:m:s", "yyyy-M-d", "H:m:s") as T? ?: throw IllegalArgumentException("Illegal date string: $str")
+            Date::class.java -> detectDate(str) as T? ?: throw IllegalArgumentException("Illegal date string: $str")
             Locale::class.java -> Locale.forLanguageTag(str.replace('_', '-')) as T
             LocalDate::class.java -> LocalDate.parse(str, LOOSE_ISO_DATE) as T
             LocalTime::class.java -> LocalTime.parse(str, LOOSE_ISO_TIME) as T

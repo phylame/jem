@@ -124,16 +124,17 @@ fun OB.initializer(initializer: (AppContext, CommandLine) -> Unit): Option = bui
     (App.delegate as CDelegate).addInitializer(this, initializer)
 }
 
-fun CDelegate.newOption(opt: String, longOpt: String? = null): OB = Option.builder(opt)
+fun newOption(opt: String, longOpt: String? = null): OB = Option.builder(opt)
         .longOpt(longOpt)
         .desc(App.tr("opt.$opt.desc"))
 
-fun CDelegate.valueOption(opt: String, longOpt: String? = null) = newOption(opt, longOpt)
+fun valueOption(opt: String, longOpt: String? = null) = newOption(opt, longOpt)
         .hasArg()
         .argName(App.tr("opt.$opt.arg"))
         .action(StringFetcher(opt))
 
-fun CDelegate.valuesOptions(opt: String, longOpt: String? = null) = newOption(opt, longOpt)
+fun valuesOptions(opt: String, longOpt: String? = null) = newOption(opt, longOpt)
         .numberOfArgs(2)
+        .valueSeparator()
         .argName(App.tr("opt.arg.kv"))
         .action(PropertiesFetcher(opt))

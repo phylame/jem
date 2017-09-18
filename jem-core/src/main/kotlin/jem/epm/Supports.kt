@@ -16,23 +16,16 @@
  * limitations under the License.
  */
 
+package jem.epm
 
-plugins {
-    id 'java-library'
-    id 'org.jetbrains.kotlin.jvm' version '1.1.4-3'
+import jem.JemException
+
+class MakerException : JemException {
+    constructor(message: String) : super(message)
+    constructor(message: String, cause: Throwable) : super(message, cause)
 }
 
-version = '3.0'
-group = 'pw.phylame.mala'
-
-dependencies {
-    api project(':mala-core')
-}
-
-compileKotlin {
-    kotlinOptions.jvmTarget = javaVersion
-}
-
-compileTestKotlin {
-    kotlinOptions.jvmTarget = javaVersion
+class ParserException : JemException {
+    constructor(message: String) : super(message)
+    constructor(message: String, cause: Throwable) : super(message, cause)
 }

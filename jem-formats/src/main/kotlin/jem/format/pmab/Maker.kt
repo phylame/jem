@@ -52,7 +52,7 @@ internal object PmabMaker : VDMMaker {
 
     private fun writePMABv3(data: Local) {
         data.writer.useStream(MIME_PATH) {
-            write(MIME_PMAB.toByteArray())
+            it.write(MIME_PMAB.toByteArray())
         }
         writePBMv3(data)
         writePBCv3(data)

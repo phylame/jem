@@ -24,9 +24,10 @@ distributions {
 }
 
 dependencies {
-    compile project(':jem-epm')
+    compile project(':jem-core')
+    runtime project(':jem-crawler')
     runtime project(':jem-formats')
-    compile project(':mala-cli')
+    compile project(':mala')
 }
 
 compileKotlin {

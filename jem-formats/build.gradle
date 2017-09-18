@@ -24,7 +24,7 @@ plugins {
 description = 'Implementations for EPM'
 
 dependencies {
-    api project(':jem-epm')
+    api project(':jem-core')
     api "xpp3:xpp3:$xppVersion"
 }
 

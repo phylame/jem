@@ -19,11 +19,9 @@ rootProject.name = 'jem'
 
 include 'commons'
 include 'jem-core'
-include 'jem-epm'
 include 'jem-formats'
-include 'mala-core'
-include 'mala-cli'
-include 'mala-ixin'
+include 'jem-crawler'
+include 'mala'
 include 'scj'
 include 'scj-addons'
 

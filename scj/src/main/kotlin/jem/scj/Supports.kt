@@ -78,7 +78,7 @@ object SCISettings : AppSettings("app.cfg") {
 
     var skipEmpty by delegate(true, "sci.view.skipEmpty")
 
-    var tocIndent by delegate("\t", "sci.view.tocIndent")
+    var tocIndent by delegate("  ", "sci.view.tocIndent")
 
     var tocNames
         inline get() = (get("sci.view.tocNames") as? String)?.split(",") ?: listOf(TITLE, COVER)
@@ -86,5 +86,5 @@ object SCISettings : AppSettings("app.cfg") {
             set("sci.view.tocNames", value.joinToString(","))
         }
 
-    fun asConfig() = ViewConfig(separator, skipEmpty, tocIndent, tocNames)
+    fun viewSettings() = ViewSettings(separator, skipEmpty, tocIndent, tocNames)
 }

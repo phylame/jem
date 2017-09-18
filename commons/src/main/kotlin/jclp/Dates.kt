@@ -43,17 +43,16 @@ val LOOSE_ISO_TIME: DateTimeFormatter by lazy { DateTimeFormatter.ofPattern(LOOS
 
 val LOOSE_ISO_DATE_TIME: DateTimeFormatter by lazy { DateTimeFormatter.ofPattern(LOOSE_DATE_TIME_FORMAT) }
 
-fun Date.format(pattern: String): String = SimpleDateFormat(pattern).format(this)
-
-fun String.toDate(pattern: String) = try {
-    SimpleDateFormat(pattern).parse(this)
-} catch (e: ParseException) {
-    null
-}
-
-fun String.toDate(vararg patterns: String): Date? {
+fun parseDate(text: String, vararg patterns: String): Date? {
     for (pattern in patterns) {
-        return toDate(pattern) ?: continue
+        try {
+            SimpleDateFormat(pattern).parse(text)
+        } catch (ignored: ParseException) {
+        }
     }
     return null
 }
+
+fun detectDate(text: String) = parseDate(text, LOOSE_DATE_TIME_FORMAT, LOOSE_DATE_FORMAT, LOOSE_TIME_FORMAT)
+
+fun Date.format(pattern: String): String = SimpleDateFormat(pattern).format(this)

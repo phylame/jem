@@ -74,11 +74,11 @@ open class Chapter(
 
     private val cleanups = LinkedHashSet<Cleanup>()
 
-    operator fun plusAssign(cleanup: Cleanup) {
+    fun registerCleanup(cleanup: Cleanup) {
         cleanups += cleanup
     }
 
-    operator fun minusAssign(cleanup: Cleanup) {
+    fun removeCleanup(cleanup: Cleanup) {
         cleanups -= cleanup
     }
 

@@ -63,7 +63,7 @@ class ScriptRunner : ListFetcher("R"), SCIPlugin, Command {
         var code = 0
         paths.map(::File).forEach {
             code = if (!it.exists()) {
-                App.error(tr("error.misc.noFile", it))
+                App.error(tr("err.misc.noFile", it))
                 -1
             } else {
                 minOf(code, runScript(it))
@@ -75,7 +75,7 @@ class ScriptRunner : ListFetcher("R"), SCIPlugin, Command {
     override fun onBookOpened(book: Book, param: ParserParam?) {
         val file = File(SCI["book-filter"]?.toString() ?: return)
         if (!file.exists()) {
-            App.error(tr("error.misc.noFile", file))
+            App.error(tr("err.misc.noFile", file))
             return
         }
         runScript(file) {
@@ -90,7 +90,7 @@ class ScriptRunner : ListFetcher("R"), SCIPlugin, Command {
         try {
             file.reader().use(engine::eval)
         } catch (e: ScriptException) {
-            App.error(tr("error.scriptRunner.badScript"), e)
+            App.error(tr("err.scriptRunner.badScript"), e)
             return -1
         }
         return 0
@@ -103,13 +103,13 @@ class ScriptRunner : ListFetcher("R"), SCIPlugin, Command {
         if (name != null) {
             engine = engineManager.getEngineByName(name)
             if (engine == null) {
-                App.error(tr("error.scriptRunner.noName", name))
+                App.error(tr("err.scriptRunner.noName", name))
                 return null
             }
         } else {
             engine = engineManager.getEngineByExtension(file.extension)
             if (engine == null) {
-                App.error(tr("error.scriptRunner.noExtension", file.extension))
+                App.error(tr("err.scriptRunner.noExtension", file.extension))
                 return null
             }
         }

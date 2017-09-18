@@ -7,6 +7,22 @@ description = 'SCJ for Jem'
 
 mainClassName = 'jem.scj.AppKt'
 
+startScripts {
+    unixStartScriptGenerator.template = resources.text.fromFile('src/scripts/unixStartScript.txt')
+    windowsStartScriptGenerator.template = resources.text.fromFile('src/scripts/windowsStartScript.txt')
+}
+
+distributions {
+    main {
+        def prj = project(':scj-addons')
+        contents {
+            into 'lib/ext', {
+                from "${prj.libsDir}/${prj.name}-${prj.version}.jar"
+            }
+        }
+    }
+}
+
 dependencies {
     compile project(':jem-epm')
     runtime project(':jem-formats')

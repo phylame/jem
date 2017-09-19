@@ -17,21 +17,15 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-internal data class Item(val id: String, val href: String, val type: String)
-
-internal data class Spine(val idref: String, val linear: Boolean, val properties: String)
-
-internal data class Guide(val href: String, val type: String, val title: String)
-
 private const val NCX_PATH = "toc.ncx"
-private const val NCX_ITEM_ID = "ncx"
+private const val NCX_ID = "ncx"
 private const val BOOK_ID_NAME = "book-id"
 private const val OPF_XML_NS = "http://www.idpf.org/2007/opf"
 private val OPTIONAL_ATTRIBUTES = arrayOf("source", "relation", "format")
 
 internal object EpubMaker : VDMMaker {
     override fun make(book: Book, output: VDMWriter, arguments: Settings?) {
-        val data = EpubLocal(book, output, arguments)
+        val data = Local(book, output, arguments)
         val version = data.getConfig("version")
         when (version) {
             null, "2.0" -> writeEPUBv2(data)
@@ -39,19 +33,32 @@ internal object EpubMaker : VDMMaker {
         }
     }
 
-    private fun writeEPUBv2(data: EpubLocal) {
-        data.writer.useStream(MIME_PATH) {
-            it.write(MIME_EPUB.toByteArray())
+    private fun writeEPUBv2(data: Local) {
+        val book = data.book
+        val writer = data.writer
+        writer.useStream(MIME_PATH) { it.write(MIME_EPUB.toByteArray()) }
+
+        val opfData = OPFData()
+
+        var idType = "UUID"
+        opfData.bookId = data.getConfig("uuid") ?: (book["uuid"] ?: book[ISBN]?.apply {
+            idType = "ISBN"
+        })?.toString() ?: UUID.randomUUID().toString()
+
+        val lang = data.settings?.get("maker.xml.lang", Locale::class.java) ?: book.language ?: Locale.getDefault()
+
+        writer.useStream(opsPathOf(NCX_PATH)) {
+            renderNCX2005(data.render, book, lang.toLanguageTag(), opfData).writeTo(it)
         }
-        val result = renderNcx2005(data)
-        data.writer.useStream(data.opsPathOf(NCX_PATH)) {
-            result.buffer.writeTo(it)
+//        result.items += Item(NCX_ID, NCX_PATH, MIME_NCX)
+
+        writer.useStream(opsPathOf("content.opf")) {
+            data.render.output(it)
+//            renderOPFv2(data.render, bookId, NCX_ID, emptyList(), result.items, result.spines, result.guides)
         }
-        result.resources += Item(NCX_ITEM_ID, NCX_PATH, MIME_NCX)
-        writeOPFv2(data, result.resources, result.spines, result.guides)
     }
 
-    private fun writeOPFv2(data: EpubLocal, resources: List<Item>, spines: List<Spine>, guides: List<Guide>) {
+    private fun writeOPFv2(data: Local, resources: List<Item>, spines: List<Spine>, guides: List<Guide>) {
         data.writer.useStream(data.opsPathOf("content.opf")) {
             with(data.render) {
                 output(it)
@@ -72,7 +79,7 @@ internal object EpubMaker : VDMMaker {
                 }
                 endTag()
 
-                beginTag("spine").attribute("toc", NCX_ITEM_ID)
+                beginTag("spine").attribute("toc", NCX_ID)
                 for ((idref, linear, properties) in spines) {
                     beginTag("itemref")
                     attribute("idref", idref)
@@ -102,7 +109,7 @@ internal object EpubMaker : VDMMaker {
         }
     }
 
-    private fun writeMetadata(data: EpubLocal) {
+    private fun writeMetadata(data: Local) {
         with(data.render) {
             beginTag("metadata")
             attribute("xmlns:dc", "http://purl.org/dc/elements/1.1/")
@@ -116,7 +123,7 @@ internal object EpubMaker : VDMMaker {
         }
     }
 
-    private fun writeDcmi(data: EpubLocal) = with(data.render) {
+    private fun writeDcmi(data: Local) = with(data.render) {
         beginTag("dc:identifier")
                 .attribute("id", BOOK_ID_NAME)
                 .attribute("opf:scheme", data.uuidType)
@@ -149,7 +156,7 @@ internal object EpubMaker : VDMMaker {
     }
 
 
-    private fun writeDcmiItem(data: EpubLocal, name: String, dcName: String? = null, role: String? = null) {
+    private fun writeDcmiItem(data: Local, name: String, dcName: String? = null, role: String? = null) {
         with(data.render) {
             val text = data.book[name]?.toString()?.takeIf { it.isNotEmpty() } ?: return
             beginTag("dc:${dcName ?: name}")
@@ -162,7 +169,7 @@ internal object EpubMaker : VDMMaker {
     }
 }
 
-internal data class EpubLocal(val book: Book, val writer: VDMWriter, val settings: Settings?) {
+private data class Local(val book: Book, val writer: VDMWriter, val settings: Settings?) {
     val render = XmlRender(settings)
 
     var uuidType: String = "uuid"

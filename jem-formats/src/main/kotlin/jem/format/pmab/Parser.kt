@@ -156,7 +156,11 @@ internal object PmabParser : VDMParser {
             Variants.LOCALE -> Locale.forLanguageTag(text.replace('_', '-'))
             Variants.DATETIME -> {
                 val format = data.getConfig("datetimeFormat") ?: itemType.valueFor("format") ?: ""
-                parseDateTime(text, format) { data.xmlPosition() }
+                if ("h" in format || "H" in format) {
+                    parseDateTime(text, format) { data.xmlPosition() }
+                } else {
+                    parseDate(text, format) { data.xmlPosition() }
+                }
             }
             Variants.DATE -> {
                 val format = data.getConfig("dateFormat") ?: itemType.valueFor("format") ?: ""

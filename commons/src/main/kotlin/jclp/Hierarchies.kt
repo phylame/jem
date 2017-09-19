@@ -46,6 +46,18 @@ fun <T : Hierarchical<T>> T.locate(indices: IntArray): T? {
     return item
 }
 
+val Hierarchical<*>.depth: Int
+    get() {
+        if (size == 0) {
+            return 0
+        }
+        var depth = 0
+        for (item in this) {
+            depth = maxOf(depth, item.depth)
+        }
+        return depth + 1
+    }
+
 fun <T : Hierarchical<T>> T.locate(indices: Collection<Int>): T? {
     var item: T? = null
     for (index in indices) {

@@ -171,7 +171,7 @@ internal object PmabParser : VDMParser {
                     val encoding = data.getConfig("encoding") ?: itemType.valueFor("encoding")
                     Text.of(Flob.of(data.reader, text, type), encoding, type.substring(5))
                 }
-                type.matches("[a-z]+/[a-z]+".toRegex()) -> Flob.of(data.reader, text, type)
+                type.matches("[\\w]+/.+".toRegex()) -> Flob.of(data.reader, text, type)
                 else -> text
             }
         }

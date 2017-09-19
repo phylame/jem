@@ -17,3 +17,64 @@
  */
 
 package jem.crawler
+
+import jclp.ServiceManager
+import jclp.ServiceProvider
+import jclp.setting.Settings
+import jem.Book
+import jem.epm.EpmFactory
+import jem.epm.Parser
+import jem.epm.ParserException
+import java.io.InterruptedIOException
+import java.net.URL
+
+class CrawlerBook : Book()
+
+interface Crawler {
+    fun getBook(url: String, settings: Settings?): Book
+
+    fun getText(url: String, settings: Settings?): String {
+        TODO()
+    }
+}
+
+interface CrawlerFactory : ServiceProvider {
+    fun getCrawler(): Crawler
+}
+
+object CrawlerManager : ServiceManager<CrawlerFactory>(CrawlerFactory::class.java) {
+    fun getCrawler(host: String) = get(host)?.getCrawler()
+
+    fun fetchBook(url: String, settings: Settings?) = getCrawler(URL(url).host)?.getBook(url, settings)
+}
+
+abstract class AbstractCrawler : Crawler, CrawlerFactory {
+    override fun getCrawler(): Crawler = this
+
+    protected open fun fetchPage(page: Int, arg: Any): Int {
+        throw UnsupportedOperationException("Not Implemented")
+    }
+
+    protected fun fetchToc(arg: Any) {
+        for (i in 2 until fetchPage(1, arg)) {
+            if (Thread.interrupted()) {
+                throw InterruptedIOException()
+            }
+            fetchPage(i, arg)
+        }
+    }
+}
+
+class CrawlerParser : EpmFactory, Parser {
+    override val name = "Book Crawler"
+
+    override val keys = setOf("crawler")
+
+    override val parser = this
+
+    override fun parse(input: String, arguments: Settings?): Book {
+        return CrawlerManager.fetchBook(input, arguments)?.apply {
+            set("source", input)
+        } ?: throw ParserException(M.tr("err.crawler.unsupported", input))
+    }
+}

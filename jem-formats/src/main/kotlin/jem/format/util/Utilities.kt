@@ -105,7 +105,7 @@ class XmlRender(private val settings: Settings?) {
 
     private val tags = LinkedList<Tag>()
 
-    private val indent = settings?.getString("maker.xml.indent") ?: "\t"
+    private val indent = settings?.getString("maker.xml.indent") ?: "  "
 
     private val encoding = settings?.getString("maker.xml.encoding") ?: "UTF-8"
 

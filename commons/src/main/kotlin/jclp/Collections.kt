@@ -19,6 +19,9 @@
 package jclp
 
 import java.util.*
+import java.util.concurrent.ThreadLocalRandom
+
+fun <E> List<E>.choose() = get(ThreadLocalRandom.current().nextInt(0, size))
 
 fun MutableList<*>.swap(from: Int, to: Int) = Collections.swap(this, from, to)
 

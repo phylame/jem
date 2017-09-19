@@ -66,16 +66,16 @@ esac
 
 CLASSPATH=$classpath
 
-find_jars(){
-if [ -d "\$1" ]; then
-    for file in "\$1"/*.jar; do
-        EXT_CLASSPATH="\$EXT_CLASSPATH:\$file"
-    done
-    if [ -n "\$EXT_CLASSPATH" ]; then
-        len=`expr length "\$EXT_CLASSPATH"`
-        EXT_CLASSPATH=`expr substr "\$EXT_CLASSPATH" 2 "\$len"`
+find_jars () {
+    if [ -d "\$1" ]; then
+        for file in "\$1"/*.jar; do
+            EXT_CLASSPATH="\$EXT_CLASSPATH:\$file"
+        done
+        if [ -n "\$EXT_CLASSPATH" ]; then
+            len=`expr length "\$EXT_CLASSPATH"`
+            EXT_CLASSPATH=`expr substr "\$EXT_CLASSPATH" 2 "\$len"`
+        fi
     fi
-fi
 }
 
 EXT_CLASSPATH=""

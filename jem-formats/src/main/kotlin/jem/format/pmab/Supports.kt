@@ -39,11 +39,7 @@ class PmabFactory : EpmFactory {
 
     override val name = "PMAB for Jem"
 
-    override val hasMaker = true
-
     override val maker: Maker = PmabMaker
-
-    override val hasParser = true
 
     override val parser: Parser = PmabParser
 }

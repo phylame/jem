@@ -22,7 +22,6 @@ import jclp.VariantMap
 import jclp.Variants
 import jclp.flob.Flob
 import jclp.io.getProperties
-import jclp.io.getResource
 import jclp.log.Log
 import jclp.putAll
 import jclp.text.Text
@@ -90,17 +89,8 @@ class AttributeDelegate<T : Any?>(private val default: T) {
 
 var Chapter.title by AttributeDelegate("")
 var Chapter.author by AttributeDelegate("")
-
 var Chapter.cover by AttributeDelegate(null as Flob?)
-fun Chapter.setCover(uri: String, loader: ClassLoader? = null) {
-    this[COVER] = Flob.of(getResource(uri, loader) ?: throw IllegalArgumentException("No such resource $uri"))
-}
-
 var Chapter.intro by AttributeDelegate(null as Text?)
-fun Chapter.setIntro(intro: CharSequence) {
-    this[INTRO] = Text.of(intro)
-}
-
 var Chapter.genre by AttributeDelegate("")
 var Chapter.date by AttributeDelegate(null as LocalDate?)
 var Chapter.state by AttributeDelegate("")
@@ -108,8 +98,4 @@ var Chapter.language by AttributeDelegate(null as Locale?)
 var Chapter.publisher by AttributeDelegate("")
 var Chapter.rights by AttributeDelegate("")
 var Chapter.vendor by AttributeDelegate("")
-
 var Chapter.words by AttributeDelegate("")
-fun Chapter.setWords(words: Int) {
-    this[WORDS] = words.toString()
-}

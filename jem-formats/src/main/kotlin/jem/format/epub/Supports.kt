@@ -8,7 +8,8 @@ internal const val MIME_PATH = "mimetype"
 internal const val MIME_EPUB = "application/epub+zip"
 internal const val MIME_NCX = "application/x-dtbncx+xml"
 
-internal const val CONTAINER_PATH = "META-INF/container.xml"
+internal const val BOOK_ID = "book-id"
+internal const val COVER_ID = "cover"
 
 class EpubFactory : EpmFactory {
     override val keys = setOf("epub")

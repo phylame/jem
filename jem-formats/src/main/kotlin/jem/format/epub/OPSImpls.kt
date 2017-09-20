@@ -19,17 +19,40 @@
 package jem.format.epub
 
 import jclp.flob.Flob
-import jclp.text.Text
 import jclp.vdm.VDMWriter
 import jclp.vdm.write
-import java.nio.charset.Charset
+import jem.format.util.XmlRender
+
+const val CONTAINER_PATH = "META-INF/container.xml"
+
+fun renderContainer(render: XmlRender, files: Map<String, String>) = with(render) {
+    beginXml()
+    beginTag("container")
+    attribute("version", "1.0")
+    xmlns("urn:oasis:names:tc:opendocument:xmlns:container")
+    beginTag("rootfiles")
+    for ((path, mime) in files) {
+        beginTag("rootfile")
+        attribute("full-path", path)
+        attribute("media-type", mime)
+        endTag()
+    }
+    endTag()
+    endTag()
+    endXml()
+}
 
 fun opsPathOf(name: String) = "OEBPS/$name"
 
-fun VDMWriter.writeToOps(flob: Flob, name: String) {
-    write(opsPathOf(name), flob)
+private fun classifyPath(name: String, mime: String) = when {
+    mime.startsWith("text/") -> "Text/$name"
+    mime.startsWith("image/") -> "Images/$name"
+    mime == "Text/css" -> "styles/$name"
+    else -> "Extra/$name"
 }
 
-fun VDMWriter.writeToOps(text: Text, name: String, charset: Charset) {
-    write(opsPathOf(name), text, charset)
+fun VDMWriter.writeToOps(flob: Flob, name: String): String {
+    val path = classifyPath(name, flob.mime)
+    write(opsPathOf(path), flob)
+    return path
 }

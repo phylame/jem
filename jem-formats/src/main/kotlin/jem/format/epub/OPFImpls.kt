@@ -18,18 +18,24 @@
 
 package jem.format.epub
 
+import jclp.flob.Flob
+import jclp.io.extName
+import jclp.vdm.VDMWriter
+import jem.epm.MakerException
+import jem.format.util.M
 import jem.format.util.XmlRender
 import java.util.*
+import kotlin.collections.LinkedHashMap
 
-private const val OPF_XMLNS = "http://www.idpf.org/2007/opf"
+const val MIME_OPF = "application/oebps-package+xml"
 
 data class Dublin(
         val name: String,
         val content: String,
-        val id: String = "",
-        val role: String = "",
-        val event: String = "",
-        val schema: String = ""
+        var id: String = "",
+        var role: String = "",
+        var event: String = "",
+        var schema: String = ""
 )
 
 data class Meta(val name: String, val content: String, val property: String = "")
@@ -40,30 +46,46 @@ data class Spine(val idref: String, val linear: Boolean, val properties: String)
 
 data class Guide(val href: String, val type: String, val title: String)
 
-class OPFData {
+class OpfData {
+    var lang = ""
+
     var bookId = ""
 
     val metadata = LinkedList<Any>()
 
-    val resources = LinkedList<Item>()
+    val resources = LinkedHashMap<String, Item>()
 
     val guides = LinkedList<Guide>()
 
     val spines = LinkedList<Spine>()
+
+    fun write(flob: Flob, id: String, writer: VDMWriter) = resources.getOrPut(id) {
+        val ext = extName(flob.name)
+        val name = id + if (ext.isNotEmpty()) ".$ext" else ""
+        Item(id, writer.writeToOps(flob, name), flob.mime)
+    }.href
 }
 
-fun renderOPFv2(render: XmlRender, ncxId: String, data: OPFData) = with(render) {
-    beginXml()
+internal fun renderOPF(version: String, param: EpubParam, data: OpfData) {
+    when (version) {
+        "2.0" -> renderV2(param, data)
+        else -> throw MakerException(M.tr("err.opf.unsupported", version))
+    }
+}
 
+private const val OPF_XMLNS = "http://www.idpf.org/2007/opf"
+
+private fun renderV2(param: EpubParam, data: OpfData) = with(param.render) {
+    beginXml()
     beginTag("package")
             .attribute("version", "2.0")
-            .attribute("unique-identifier", data.bookId)
+            .attribute("unique-identifier", BOOK_ID)
             .xmlns(OPF_XMLNS)
 
-    writeMetadata(render, data.metadata)
+    writeMetadata(this, data.metadata)
 
     beginTag("manifest")
-    for ((id, href, type) in data.resources) {
+    for ((id, href, type) in data.resources.values) {
         beginTag("item")
         attribute("id", id)
         attribute("href", href)
@@ -72,7 +94,7 @@ fun renderOPFv2(render: XmlRender, ncxId: String, data: OPFData) = with(render) 
     }
     endTag()
 
-    beginTag("spine").attribute("toc", ncxId)
+    beginTag("spine").attribute("toc", param.ncxId)
     for ((idref, linear, properties) in data.spines) {
         beginTag("itemref")
         attribute("idref", idref)
@@ -121,7 +143,9 @@ private fun writeMetadata(render: XmlRender, metadata: List<Any>) = with(render)
                     if (schema.isNotEmpty()) {
                         attribute("opf:schema", schema)
                     }
-                    text(content)
+                    if (content.isNotEmpty()) {
+                        text(content)
+                    }
                     endTag()
                 }
             }

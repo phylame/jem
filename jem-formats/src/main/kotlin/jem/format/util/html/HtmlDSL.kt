@@ -93,3 +93,24 @@ fun html(init: HTML.() -> Unit): HTML {
     html.init()
     return html
 }
+
+fun main(args: Array<String>) {
+    val html = html {
+        head {
+            title {
+                +"Example"
+            }
+        }
+        body {
+            p {
+                +"This is paragraph"
+                a("x") {
+                    +"x"
+                }
+            }
+        }
+    }
+    println(StringBuilder().apply {
+        html.render(this, "")
+    })
+}

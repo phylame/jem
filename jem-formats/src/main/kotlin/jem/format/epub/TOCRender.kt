@@ -1,15 +1,23 @@
 package jem.format.epub
 
+import jclp.flob.Flob
 import jclp.setting.Settings
+import jclp.text.Text
 import jclp.vdm.VDMWriter
+import jclp.vdm.useStream
 import jem.Book
+import jem.cover
+import jem.format.util.M
 import jem.format.util.XmlRender
+import jem.intro
 import java.util.*
 
 interface NavListener {
     fun newNav(id: String, type: String, title: String, cover: String)
 
     fun endNav()
+
+    fun endToc()
 }
 
 interface TOCRender {
@@ -26,11 +34,27 @@ object DefaultTOCRender : TOCRender {
     }
 
     override fun render(book: Book, writer: VDMWriter, settings: Settings?, data: OpfData) {
+        val local = Local(book, writer, settings, data)
+        book.cover?.let { renderCover(it, local) }
+        book.intro?.let { renderIntro(it, local) }
     }
 
-    private fun renderCover(data: Local) {}
+    private fun renderCover(cover: Flob, local: Local) {
+        val href = local.data.write(cover, COVER_ID, local.writer)
+        local.writer.useStream("cover.xhtml") { stream ->
+            local.render.output(stream)
+            local.useXHTML(M.tr("epub.make.coverTitle")) {
+                beginTag("img")
+                attribute("class", "cover")
+                attribute("src", "")
+                endTag()
+            }
+        }
+    }
 
-    private fun renderIntro(data: Local) {}
+    private fun renderIntro(intro: Text, local: Local) {
+
+    }
 
     private fun renderSection(data: Local) {}
 
@@ -39,7 +63,7 @@ object DefaultTOCRender : TOCRender {
     private data class Local(val book: Book, val writer: VDMWriter, val settings: Settings?, val data: OpfData) {
         val render = XmlRender(settings)
 
-        fun useXHTML(title: String, block: XmlRender.() -> Unit) = with(render) {
+        inline fun useXHTML(title: String, block: XmlRender.() -> Unit) = with(render) {
             beginXml()
             docdecl("html", "-//W3C//DTD XHTML 1.1//EN", "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd")
             beginTag("html")

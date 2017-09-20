@@ -46,11 +46,12 @@ internal object EpubMaker : VDMMaker {
 
         val buffer = ByteArrayOutputStream()
         render.output(buffer)
-        renderNCX("2005", param, data)
-        writer.useStream(opsPathOf(NCX_PATH)) {
-            buffer.writeTo(it)
-        }
+        val navListener = renderNCX("2005", param, data)
+        writer.useStream(opsPathOf(NCX_PATH)) { buffer.writeTo(it) }
         data.resources[param.ncxId] = Item(param.ncxId, NCX_PATH, MIME_NCX)
+
+        param.tocRender.addNavListener(navListener)
+        param.tocRender.render(book, writer, param.settings, data)
 
         val opfPath = opsPathOf(OPF_PATH)
         writer.useStream(opfPath) {
@@ -112,7 +113,7 @@ internal data class EpubParam(val book: Book, val writer: VDMWriter, val setting
 
     val render = XmlRender(settings)
 
-    val htmlRender = SimpleHtmlRender
+    val tocRender = DefaultTOCRender
 
     val dateFormat: DateTimeFormatter
         inline get() = DateTimeFormatter.ofPattern(settings?.getString("dateFormat") ?: LOOSE_DATE_FORMAT)

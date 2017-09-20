@@ -4,16 +4,17 @@ import jclp.depth
 import jclp.flob.Flob
 import jclp.setting.Settings
 import jclp.setting.getInt
-import jem.*
+import jem.Book
+import jem.author
+import jem.cover
 import jem.epm.MakerException
 import jem.format.util.M
 import jem.format.util.XmlRender
+import jem.title
 
-internal fun renderNCX(version: String, param: EpubParam, data: OpfData) {
-    when (version) {
-        "2005", "2005-1" -> render2005(param, data)
-        else -> throw MakerException(M.tr("err.ncx.unsupported", version))
-    }
+internal fun renderNCX(version: String, param: EpubParam, data: OpfData) = when (version) {
+    "2005", "2005-1" -> render2005(param, data)
+    else -> throw MakerException(M.tr("err.ncx.unsupported", version))
 }
 
 private const val DTD_ID = "-//NISO//DTD ncx 2005-1//EN"
@@ -22,7 +23,7 @@ private const val NCX_XMLNS = "http://www.daisy.org/z3986/2005/ncx/"
 
 private const val NCX_META_PREFIX = "jem-ncx-meta-"
 
-private fun render2005(param: EpubParam, data: OpfData) = with(param.render) {
+private fun render2005(param: EpubParam, data: OpfData): NavListener = with(param.render) {
     val book = param.book
     val settings = param.settings
 
@@ -38,10 +39,9 @@ private fun render2005(param: EpubParam, data: OpfData) = with(param.render) {
     renderHead(book, data, settings)
     renderTitle(book, param, data)
     renderAuthors(book, param, data)
-    renderNavMap(book, param, data)
 
-    endTag()
-    endXml()
+    beginTag("navMap")
+    NCXBuilder(this)
 }
 
 private fun XmlRender.renderHead(book: Book, data: OpfData, settings: Settings?) {
@@ -96,41 +96,6 @@ private fun XmlRender.renderAuthors(book: Book, param: EpubParam, data: OpfData)
     }
 }
 
-private fun XmlRender.renderNavMap(book: Book, param: EpubParam, data: OpfData) {
-    beginTag("navMap")
-    book.forEachIndexed { i, chapter ->
-        renderNavPoint(chapter, (i + 1).toString(), param, data)
-    }
-    endTag()
-}
-
-private fun XmlRender.renderNavPoint(chapter: Chapter, suffix: String, param: EpubParam, data: OpfData) {
-    beginTag("navPoint")
-    val id: String
-    if (chapter.isSection) {
-        id = "section-$suffix"
-        attribute("id", id)
-        attribute("class", "section")
-    } else {
-        id = "chapter-$suffix"
-        attribute("id", id)
-        attribute("class", "chapter")
-    }
-    beginTag("navLabel")
-    renderText(chapter.title)
-    chapter.cover?.let { renderImg(it, "$id-cover", param, data) }
-    endTag()
-    param.htmlRender.renderChapter(chapter, param.writer, param.settings, data).takeIf(String::isNotEmpty)?.let {
-        beginTag("content")
-        attribute("src", it)
-        endTag()
-    }
-    chapter.forEachIndexed { i, stub ->
-        renderNavPoint(stub, "$suffix-${i + 1}", param, data)
-    }
-    endTag()
-}
-
 private fun XmlRender.renderMeta(name: String, content: String) {
     beginTag("meta")
     attribute("name", name)
@@ -148,4 +113,35 @@ private fun XmlRender.renderImg(flob: Flob, id: String, param: EpubParam, data: 
     beginTag("img")
     attribute("src", data.write(flob, id, param.writer))
     endTag()
+}
+
+private class NCXBuilder(val render: XmlRender) : NavListener {
+    override fun newNav(id: String, type: String, title: String, cover: String) {
+        with(render) {
+            beginTag("navPoint")
+            attribute("id", id)
+            attribute("class", type)
+
+            beginTag("navLabel")
+            renderText(title)
+            endTag()
+
+            if (cover.isNotEmpty()) {
+                beginTag("img")
+                attribute("src", cover)
+                endTag()
+            }
+        }
+    }
+
+    override fun endNav() {
+        render.endTag() // navPoint
+    }
+
+    override fun endToc() {
+        render.endTag() // navMap
+
+        render.endTag() // ncx
+        render.endXml()
+    }
 }

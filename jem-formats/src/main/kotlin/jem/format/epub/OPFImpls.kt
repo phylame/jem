@@ -19,11 +19,17 @@
 package jem.format.epub
 
 import jclp.flob.Flob
-import jclp.io.extName
+import jclp.io.baseName
+import jclp.io.extensionName
+import jclp.io.getMime
 import jclp.vdm.VDMWriter
+import jclp.vdm.useStream
 import jem.epm.MakerException
 import jem.format.util.M
 import jem.format.util.XmlRender
+import java.io.OutputStream
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.*
 import kotlin.collections.LinkedHashMap
 
@@ -51,6 +57,8 @@ class OpfData {
 
     var bookId = ""
 
+    val root = Paths.get("OEBPS")
+
     val metadata = LinkedList<Any>()
 
     val resources = LinkedHashMap<String, Item>()
@@ -59,10 +67,26 @@ class OpfData {
 
     val spines = LinkedList<Spine>()
 
-    fun write(flob: Flob, id: String, writer: VDMWriter) = resources.getOrPut(id) {
-        val ext = extName(flob.name)
-        val name = id + if (ext.isNotEmpty()) ".$ext" else ""
-        Item(id, writer.writeToOps(flob, name), flob.mime)
+    inline fun stream(
+            name: String, writer: VDMWriter, id: String? = null, mime: String? = null, block: (OutputStream, Path) -> Unit
+    ): Path {
+        val itemId = id ?: baseName(name)
+        val path = root.resolve(name).normalize()
+        resources.getOrPut(itemId) {
+            writer.useStream(path.toString()) {
+                block(it, path)
+            }
+            Item((itemId), root.relativize(path).toString(), mime ?: getMime(name))
+        }
+        return path
+    }
+
+    fun write(flob: Flob, id: String, dir: String, writer: VDMWriter) = resources.getOrPut(id) {
+        val path = root.resolve("$dir$id${extensionName(flob.name)}").normalize()
+        writer.useStream(path.toString()) {
+            flob.writeTo(it)
+        }
+        Item(id, root.relativize(path).toString(), flob.mime)
     }.href
 }
 

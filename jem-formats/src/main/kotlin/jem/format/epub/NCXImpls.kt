@@ -111,7 +111,7 @@ private fun XmlRender.renderText(text: String) {
 
 private fun XmlRender.renderImg(flob: Flob, id: String, param: EpubParam, data: OpfData) {
     beginTag("img")
-    attribute("src", data.write(flob, id, param.writer))
+    attribute("src", data.write(flob, id, "./images/",param.writer))
     endTag()
 }
 

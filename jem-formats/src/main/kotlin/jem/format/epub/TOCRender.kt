@@ -1,15 +1,18 @@
 package jem.format.epub
 
 import jclp.flob.Flob
+import jclp.io.getProperties
 import jclp.setting.Settings
 import jclp.text.Text
 import jclp.vdm.VDMWriter
-import jclp.vdm.useStream
 import jem.Book
 import jem.cover
 import jem.format.util.M
 import jem.format.util.XmlRender
 import jem.intro
+import org.apache.velocity.VelocityContext
+import org.apache.velocity.app.Velocity
+import java.nio.file.Paths
 import java.util.*
 
 interface NavListener {
@@ -29,6 +32,10 @@ interface TOCRender {
 object DefaultTOCRender : TOCRender {
     private val listeners = LinkedList<NavListener>()
 
+    init {
+        Velocity.init(getProperties("!jem/format/epub/velocity.properties"))
+    }
+
     override fun addNavListener(listener: NavListener) {
         listeners += listener
     }
@@ -40,16 +47,13 @@ object DefaultTOCRender : TOCRender {
     }
 
     private fun renderCover(cover: Flob, local: Local) {
-        val href = local.data.write(cover, COVER_ID, local.writer)
-        local.writer.useStream("cover.xhtml") { stream ->
-            local.render.output(stream)
-            local.useXHTML(M.tr("epub.make.coverTitle")) {
-                beginTag("img")
-                attribute("class", "cover")
-                attribute("src", "")
-                endTag()
-            }
-        }
+        val href = local.data.write(cover, COVER_ID, "./images/", local.writer)
+        local.context.put("coverHref", href)
+//        local.data.stream("./text/cover.xhtml", local.writer, id = "cover-page") {
+//            it.writer().use {
+//                getTemplate("cover").merge(local.context, it)
+//            }
+//        }
     }
 
     private fun renderIntro(intro: Text, local: Local) {
@@ -61,36 +65,18 @@ object DefaultTOCRender : TOCRender {
     private fun renderChapter(data: Local) {}
 
     private data class Local(val book: Book, val writer: VDMWriter, val settings: Settings?, val data: OpfData) {
+        val root = Paths.get("OEBPS")
+
         val render = XmlRender(settings)
 
-        inline fun useXHTML(title: String, block: XmlRender.() -> Unit) = with(render) {
-            beginXml()
-            docdecl("html", "-//W3C//DTD XHTML 1.1//EN", "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd")
-            beginTag("html")
-            xmlns("http://www.w3.org/1999/xhtml")
-            attribute("xmlns:xml", "http://www.w3.org/XML/1998/namespace")
-            attribute("xml:lang", data.lang)
+        val context = VelocityContext()
 
-            beginTag("head")
-
-            beginTag("title")
-                    .text(title)
-                    .endTag()
-
-            beginTag("link")
-                    .attribute("href", "")
-                    .attribute("rel", "stylesheet")
-                    .attribute("type", "text/css")
-                    .endTag()
-
-            endTag() // head
-
-            beginTag("body")
-            block()
-            endTag()
-
-            endTag()
-            endXml()
+        init {
+            context.put("M", M)
+            context.put("book", book)
         }
     }
+
+    private fun getTemplate(name: String) = Velocity.getTemplate("jem/format/epub/$name.vm")
+
 }

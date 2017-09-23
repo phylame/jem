@@ -28,9 +28,7 @@ import jclp.text.valueFor
 import jclp.vdm.VDMEntry
 import jclp.vdm.VDMReader
 import jclp.vdm.readText
-import jem.Attributes
-import jem.Book
-import jem.Chapter
+import jem.*
 import jem.epm.VDMParser
 import jem.format.util.*
 import org.xmlpull.v1.XmlPullParser
@@ -159,7 +157,9 @@ internal object PmabParser : VDMParser {
             Variants.DATETIME -> {
                 val format = data.getConfig("datetimeFormat") ?: itemType.valueFor("format") ?: ""
                 if ("h" in format || "H" in format) {
-                    parseDateTime(text, format) { data.xmlPosition() }
+                    parseDateTime(text, format) { data.xmlPosition() }.let {
+                        if (data.itemName == PUBDATE || data.itemName == DATE) it.toLocalDate() else it
+                    }
                 } else {
                     parseDate(text, format) { data.xmlPosition() }
                 }

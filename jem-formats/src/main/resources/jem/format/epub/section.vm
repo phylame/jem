@@ -1,14 +1,27 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xml="http://www.w3.org/XML/1998/namespace" xml:lang="$lang">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xml="http://www.w3.org/XML/1998/namespace" xml:lang="$lang" lang="$lang">
 <head>
     <title>$chapter.title</title>
     <link href="$cssHref" rel="stylesheet" type="text/css"/>
 </head>
+#if($coverHref)
 <body style="background-image: url($coverHref); background-size: cover;">
 <h1>$chapter.title</h1>
+#if($chapter.intro)
+<div class="brief">
 #foreach($line in $chapter.intro)
-<p class="outer">$line</p>
+<p>$line</p>
+#end
+</div>
 #end
 </body>
+#else
+<body>
+<h2>$M.tr("epub.make.chapterIntro")</h2>
+#foreach($line in $chapter.intro)
+<p class="intro">$line</p>
+#end
+</body>
+#end
 </html>

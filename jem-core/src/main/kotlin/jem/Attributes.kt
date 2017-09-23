@@ -49,6 +49,8 @@ const val VENDOR = "vendor"
 const val WORDS = "words"
 
 object Attributes {
+    const val VALUE_SEPARATOR = ";"
+
     private val types = HashMap<String, String>()
 
     init {

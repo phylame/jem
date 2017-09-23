@@ -1,147 +1,142 @@
 package jem.format.epub
 
 import jclp.depth
-import jclp.flob.Flob
 import jclp.setting.Settings
-import jclp.setting.getInt
-import jem.Book
-import jem.author
-import jem.cover
-import jem.epm.MakerException
-import jem.format.util.M
+import jclp.vdm.VDMWriter
+import jclp.vdm.useStream
+import jem.*
 import jem.format.util.XmlRender
-import jem.title
+import java.util.*
 
-internal fun renderNCX(version: String, param: EpubParam, data: OpfData) = when (version) {
-    "2005", "2005-1" -> render2005(param, data)
-    else -> throw MakerException(M.tr("err.ncx.unsupported", version))
-}
-
+private const val NCX_VERSION = "2005-1"
 private const val DTD_ID = "-//NISO//DTD ncx 2005-1//EN"
 private const val DTD_URI = "http://www.daisy.org/z3986/2005/ncx-2005-1.dtd"
 private const val NCX_XMLNS = "http://www.daisy.org/z3986/2005/ncx/"
-
 private const val NCX_META_PREFIX = "jem-ncx-meta-"
 
-private fun render2005(param: EpubParam, data: OpfData): NavListener = with(param.render) {
-    val book = param.book
-    val settings = param.settings
+internal class NCXBuilder(
+        book: Book, writer: VDMWriter, settings: Settings?, private val opf: OPFBuilder
+) : BuilderBase(book, writer, settings) {
+    var count = 0
+        private set
 
-    beginXml()
-    docdecl("ncx", DTD_ID, DTD_URI)
-    beginTag("ncx")
-    attribute("version", "2005-1")
-    xmlns(NCX_XMLNS)
-    if (data.lang.isNotEmpty()) {
-        attribute("xml:lang", data.lang)
-    }
+    private var navPoint = NavPoint("", 0, "", "")
 
-    renderHead(book, data, settings)
-    renderTitle(book, param, data)
-    renderAuthors(book, param, data)
-
-    beginTag("navMap")
-    NCXBuilder(this)
-}
-
-private fun XmlRender.renderHead(book: Book, data: OpfData, settings: Settings?) {
-    beginTag("head")
-
-    val extensions = book.extensions
-
-    renderMeta("dtb:uid", data.bookId)
-    renderMeta("dtb:depth", book.depth.toString())
-    (settings?.getInt("maker.epub.totalPageCount") ?: extensions["${NCX_META_PREFIX}totalPageCount"] as? Int ?: 0).let {
-        renderMeta("dtb:totalPageCount", it.toString())
-    }
-    (settings?.getInt("maker.epub.maxPageNumber") ?: extensions["${NCX_META_PREFIX}maxPageNumber"] as? Int ?: 0).let {
-        renderMeta("dtb:maxPageNumber", it.toString())
-    }
-
-    val meta = HashMap<String, String>()
-    for ((first, second) in extensions) {
-        if (first.startsWith(NCX_META_PREFIX)) {
-            meta[first.substring(NCX_META_PREFIX.length)] = second.toString()
+    fun make() {
+        opf.tocId = "ncx"
+        opf.newItem("ncx", "toc.ncx", MIME_NCX) {
+            writer.useStream(it.vdmPath) {
+                XmlRender(settings).apply {
+                    output(it)
+                    renderNCX()
+                }
+            }
         }
     }
-    (settings?.get("maker.epub.ncxMeta") as? Map<*, *>)?.let {
-        for ((key, value) in it) {
-            meta[key.toString()] = value.toString()
-        }
-    }
-    for ((key, value) in meta) {
-        renderMeta(key, value)
+
+    fun newNav(id: String, title: String, href: String) {
+        val nav = NavPoint(id, ++count, title, href)
+        navPoint += nav
+        navPoint = nav
     }
 
-    endTag()
-}
+    fun endNav() {
+        navPoint = navPoint.parent
+    }
 
-private fun XmlRender.renderTitle(book: Book, param: EpubParam, data: OpfData) {
-    beginTag("docTitle")
-    renderText(book.title.takeIf(String::isNotEmpty) ?: throw MakerException(M.tr("epub.make.noTitle")))
-    book.cover?.let { renderImg(it, COVER_ID, param, data) }
-    endTag()
-}
+    private fun XmlRender.renderNCX() {
+        beginXml()
+        docdecl("ncx", DTD_ID, DTD_URI)
+        beginTag("ncx")
+        attribute("version", NCX_VERSION)
+        xmlns(NCX_XMLNS)
+        attribute("xml:lang", opf.lang)
 
-private fun XmlRender.renderAuthors(book: Book, param: EpubParam, data: OpfData) {
-    book.author.split(";").takeIf { it.isNotEmpty() }?.let {
-        it.forEachIndexed { i, author ->
+        renderMetadata()
+
+        beginTag("docTitle")
+        beginTag("text")
+        text(book.title)
+        endTag()
+        endTag()
+
+        for (author in book.author.split(Attributes.VALUE_SEPARATOR)) {
             beginTag("docAuthor")
-            renderText(author)
-            (book.extensions["jem-author-image-${i + 1}"] as Flob?)?.let {
-                renderImg(it, "author-image-${i + 1}", param, data)
-            }
+            beginTag("text")
+            text(author)
+            endTag()
             endTag()
         }
-    }
-}
 
-private fun XmlRender.renderMeta(name: String, content: String) {
-    beginTag("meta")
-    attribute("name", name)
-    attribute("content", content)
-    endTag()
-}
-
-private fun XmlRender.renderText(text: String) {
-    beginTag("text")
-    text(text)
-    endTag()
-}
-
-private fun XmlRender.renderImg(flob: Flob, id: String, param: EpubParam, data: OpfData) {
-    beginTag("img")
-    attribute("src", data.write(flob, id, "./images/",param.writer))
-    endTag()
-}
-
-private class NCXBuilder(val render: XmlRender) : NavListener {
-    override fun newNav(id: String, type: String, title: String, cover: String) {
-        with(render) {
-            beginTag("navPoint")
-            attribute("id", id)
-            attribute("class", type)
-
-            beginTag("navLabel")
-            renderText(title)
-            endTag()
-
-            if (cover.isNotEmpty()) {
-                beginTag("img")
-                attribute("src", cover)
-                endTag()
-            }
+        beginTag("navMap")
+        for (nav in navPoint.children) {
+            renderNav(nav)
         }
+        endTag()
+
+        endTag()
+        endXml()
     }
 
-    override fun endNav() {
-        render.endTag() // navPoint
+    private fun XmlRender.renderMetadata() {
+        newMeta("dtb:uid", uuid)
+        newMeta("dtb:generator", "jem(${Build.VENDOR})")
+        newMeta("dtb:depth", book.depth.toString())
+        newMeta("dtb:totalPageCount", "0")
+        newMeta("dtb:maxPageNumber", "0")
+
+        book.extensions.filter { it.first.startsWith(NCX_META_PREFIX) }.forEach { (name, value) ->
+            newMeta(name.substring(NCX_META_PREFIX.length), value.toString())
+        }
+
+        beginTag("head")
+        for (meta in meta.values) {
+            renderMeta(meta.name, meta.content)
+        }
+        endTag()
     }
 
-    override fun endToc() {
-        render.endTag() // navMap
+    private fun XmlRender.renderMeta(name: String, content: String) {
+        beginTag("meta")
+        attribute("name", name)
+        attribute("content", content)
+        endTag()
+    }
 
-        render.endTag() // ncx
-        render.endXml()
+    private fun XmlRender.renderNav(nav: NavPoint) {
+        // section without html page
+        val href = nav.href.takeIf(String::isNotEmpty) ?: nav.children.firstOrNull()?.href ?: return
+
+        beginTag("navPoint")
+        attribute("id", nav.id)
+        attribute("class", if (nav.children.isEmpty()) "chapter" else "section")
+        attribute("playOrder", nav.order.toString())
+
+        beginTag("navLabel")
+        beginTag("text")
+                .text(nav.title)
+                .endTag()
+        endTag()
+
+        beginTag("content")
+        attribute("src", href)
+        endTag()
+
+        for (stub in nav.children) {
+            renderNav(stub)
+        }
+
+        endTag()
+    }
+
+    private data class NavPoint(val id: String, val order: Int, val title: String, val href: String) {
+        lateinit var parent: NavPoint
+
+        val children = LinkedList<NavPoint>()
+
+        operator fun plusAssign(nav: NavPoint) {
+            children += nav
+            nav.parent = this
+        }
     }
 }

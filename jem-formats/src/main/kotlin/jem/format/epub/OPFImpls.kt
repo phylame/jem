@@ -18,173 +18,188 @@
 
 package jem.format.epub
 
-import jclp.flob.Flob
-import jclp.io.baseName
-import jclp.io.extensionName
 import jclp.io.getMime
+import jclp.setting.Settings
 import jclp.vdm.VDMWriter
 import jclp.vdm.useStream
-import jem.epm.MakerException
+import jem.*
 import jem.format.util.M
 import jem.format.util.XmlRender
-import java.io.OutputStream
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.time.LocalDate
 import java.util.*
 import kotlin.collections.LinkedHashMap
 
-const val MIME_OPF = "application/oebps-package+xml"
-
-data class Dublin(
-        val name: String,
-        val content: String,
-        var id: String = "",
-        var role: String = "",
-        var event: String = "",
-        var schema: String = ""
-)
+private const val OPF_XMLNS = "http://www.idpf.org/2007/opf"
+private const val DC_XMLNS = "http://purl.org/dc/elements/1.1/"
+private const val OPF_META_PREFIX = "jem-opf-meta-"
 
 data class Meta(val name: String, val content: String, val property: String = "")
 
 data class Item(val id: String, val href: String, val type: String)
 
-data class Spine(val idref: String, val linear: Boolean, val properties: String)
+data class Spine(val idref: String, val linear: Boolean = true, val properties: String = "")
 
 data class Guide(val href: String, val type: String, val title: String)
 
-class OpfData {
-    var lang = ""
+internal class OPFBuilder(book: Book, writer: VDMWriter, settings: Settings?) : BuilderBase(book, writer, settings) {
+    var tocId = ""
 
-    var bookId = ""
+    val root: Path = Paths.get(getConfig("opsDir") ?: "OEBPS")
 
-    val root = Paths.get("OEBPS")
+    private val items = LinkedHashMap<String, Item>()
 
-    val metadata = LinkedList<Any>()
+    private val guides = LinkedList<Guide>()
 
-    val resources = LinkedHashMap<String, Item>()
+    private val spines = LinkedList<Spine>()
 
-    val guides = LinkedList<Guide>()
+    inline fun newItem(id: String, name: String, mime: String? = null, init: (Path) -> Unit): Pair<Item, Path> {
+        val path = root.resolve(name)
+        return items.getOrPut(id) {
+            init(path)
+            Item(id, root.relativize(path).vdmPath, mime ?: getMime(name))
+        } to path
+    }
 
-    val spines = LinkedList<Spine>()
+    fun newSpine(id: String, linear: Boolean = true, properties: String = "") {
+        spines += Spine(id, linear, properties)
+    }
 
-    inline fun stream(
-            name: String, writer: VDMWriter, id: String? = null, mime: String? = null, block: (OutputStream, Path) -> Unit
-    ): Path {
-        val itemId = id ?: baseName(name)
-        val path = root.resolve(name).normalize()
-        resources.getOrPut(itemId) {
-            writer.useStream(path.toString()) {
-                block(it, path)
+    fun newGuide(href: String, type: String, titleId: String) {
+        guides += Guide(href, type, M.tr(titleId))
+    }
+
+    fun make(): Path {
+        val path = root.resolve("content.opf")
+        writer.useStream(path.vdmPath) {
+            XmlRender(settings).apply {
+                output(it)
+                renderOPF()
             }
-            Item((itemId), root.relativize(path).toString(), mime ?: getMime(name))
         }
         return path
     }
 
-    fun write(flob: Flob, id: String, dir: String, writer: VDMWriter) = resources.getOrPut(id) {
-        val path = root.resolve("$dir$id${extensionName(flob.name)}").normalize()
-        writer.useStream(path.toString()) {
-            flob.writeTo(it)
-        }
-        Item(id, root.relativize(path).toString(), flob.mime)
-    }.href
-}
+    private fun XmlRender.renderOPF() {
+        beginXml()
+        beginTag("package")
+        attribute("version", "2.0")
+        attribute("unique-identifier", BOOK_ID)
+        xmlns(OPF_XMLNS)
 
-internal fun renderOPF(version: String, param: EpubParam, data: OpfData) {
-    when (version) {
-        "2.0" -> renderV2(param, data)
-        else -> throw MakerException(M.tr("err.opf.unsupported", version))
-    }
-}
+        renderMetadata()
 
-private const val OPF_XMLNS = "http://www.idpf.org/2007/opf"
-
-private fun renderV2(param: EpubParam, data: OpfData) = with(param.render) {
-    beginXml()
-    beginTag("package")
-            .attribute("version", "2.0")
-            .attribute("unique-identifier", BOOK_ID)
-            .xmlns(OPF_XMLNS)
-
-    writeMetadata(this, data.metadata)
-
-    beginTag("manifest")
-    for ((id, href, type) in data.resources.values) {
-        beginTag("item")
-        attribute("id", id)
-        attribute("href", href)
-        attribute("media-type", type)
-        endTag()
-    }
-    endTag()
-
-    beginTag("spine").attribute("toc", param.ncxId)
-    for ((idref, linear, properties) in data.spines) {
-        beginTag("itemref")
-        attribute("idref", idref)
-        if (!linear) {
-            attribute("linear", "no")
-        }
-        if (properties.isNotEmpty()) {
-            attribute("properties", properties)
+        beginTag("manifest")
+        for (item in items.values) {
+            beginTag("item")
+            attribute("id", item.id)
+            attribute("href", item.href)
+            attribute("media-type", item.type)
+            endTag()
         }
         endTag()
-    }
-    endTag()
 
-    beginTag("guide")
-    for ((href, type, title) in data.guides) {
-        beginTag("reference")
-        attribute("href", href)
-        attribute("type", type)
-        attribute("title", title)
-        endTag()
-    }
-    endTag()
-
-    endTag()
-    endXml()
-}
-
-private fun writeMetadata(render: XmlRender, metadata: List<Any>) = with(render) {
-    beginTag("metadata")
-    attribute("xmlns:dc", "http://purl.org/dc/elements/1.1/")
-    attribute("xmlns:opf", OPF_XMLNS)
-    for (item in metadata) {
-        when (item) {
-            is Dublin -> {
-                with(item) {
-                    beginTag("dc:$name")
-                    if (id.isNotEmpty()) {
-                        attribute("id", id)
-                    }
-                    if (role.isNotEmpty()) {
-                        attribute("opf:role", role)
-                    }
-                    if (event.isNotEmpty()) {
-                        attribute("opf:event", event)
-                    }
-                    if (schema.isNotEmpty()) {
-                        attribute("opf:schema", schema)
-                    }
-                    if (content.isNotEmpty()) {
-                        text(content)
-                    }
-                    endTag()
-                }
+        beginTag("spine")
+        attribute("toc", tocId)
+        for (spine in spines) {
+            beginTag("itemref")
+            attribute("idref", spine.idref)
+            if (!spine.linear) {
+                attribute("linear", "no")
             }
-            is Meta -> {
-                beginTag("meta")
-                if (item.property.isNotEmpty()) {
-                    attribute("property", item.property)
-                    text(item.content)
-                } else {
-                    attribute("name", item.name)
-                    attribute("content", item.content)
-                }
-                endTag()
+            if (spine.properties.isNotEmpty()) {
+                attribute("properties", spine.properties)
             }
+            endTag()
         }
+        endTag()
+
+        beginTag("guide")
+        for (guide in guides) {
+            beginTag("reference")
+            attribute("type", guide.type)
+            attribute("title", guide.title)
+            attribute("href", guide.href)
+            endTag()
+        }
+        endTag()
+
+        endTag()
+        endXml()
     }
-    endTag()
+
+    private fun XmlRender.renderMetadata() {
+        beginTag("metadata")
+        attribute("xmlns:dc", DC_XMLNS)
+        attribute("xmlns:opf", OPF_XMLNS)
+
+        newDublin("identifier", uuid, id = BOOK_ID, scheme = if ("isbn" in uuid) "ISBN" else "UUID")
+        newDublin("title")
+        for (author in book.author.split(Attributes.VALUE_SEPARATOR)) {
+            newDublin("creator", author, role = "aut")
+        }
+        newDublin("type", book.genre)
+        book[KEYWORDS]?.toString()?.split(Attributes.VALUE_SEPARATOR)?.forEach {
+            newDublin("subject", it)
+        }
+        newDublin("description", book.intro?.toString() ?: "")
+        newDublin("publisher")
+        (book[PUBDATE] as? LocalDate)?.let {
+            newDublin("date", it.toString(), event = "publication")
+        }
+        (book.date ?: LocalDate.now())?.let {
+            newDublin("date", it.toString(), event = "modification")
+        }
+        newDublin("language", lang)
+        newDublin("rights")
+        newDublin("contributor", book.vendor, role = "bkp")
+        newDublin("publisher")
+
+        newMeta("jem:version", Build.VERSION)
+        newMeta("jem:vendor", Build.VENDOR)
+
+        book.extensions.filter { it.first.startsWith(OPF_META_PREFIX) }.forEach { (name, value) ->
+            newMeta(name.substring(OPF_META_PREFIX.length), value.toString())
+        }
+
+        for (meta in meta.values) {
+            beginTag("meta")
+            if (meta.property.isNotEmpty()) {
+                attribute("property", meta.property)
+                text(meta.content)
+            } else {
+                attribute("name", meta.name)
+                attribute("content", meta.content)
+            }
+            endTag()
+        }
+
+        endTag()
+    }
+
+    private fun XmlRender.newDublin(name: String) {
+        newDublin(name, book[name]?.toString() ?: return)
+    }
+
+    private fun XmlRender.newDublin(name: String, value: String, id: String = "", role: String = "", event: String = "", scheme: String = "") {
+        if (value.isEmpty()) {
+            return
+        }
+        beginTag("dc:$name")
+        if (id.isNotEmpty()) {
+            attribute("id", id)
+        }
+        if (role.isNotEmpty()) {
+            attribute("opf:role", role)
+        }
+        if (event.isNotEmpty()) {
+            attribute("opf:event", event)
+        }
+        if (scheme.isNotEmpty()) {
+            attribute("opf:scheme", scheme)
+        }
+        text(value)
+        endTag()
+    }
 }

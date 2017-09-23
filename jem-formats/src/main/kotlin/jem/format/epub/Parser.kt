@@ -25,7 +25,6 @@ import jclp.vdm.readText
 import jem.Book
 import jem.epm.VDMParser
 import jem.format.util.fail
-import jem.format.util.useXml
 import jem.format.util.xmlAttribute
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
@@ -41,18 +40,7 @@ internal object EpubParser : VDMParser {
     }
 
     private fun parseOpf(data: Local) {
-        val xpp = data.newXpp()
-        data.openStream(CONTAINER_PATH).use {
-            xpp.setInput(it, null)
-            useXml(xpp, CONTAINER_PATH) { start, sb ->
-                if (start) {
-                    if (xpp.name == "rootfile") {
-                        println(data.getAttribute("media-type"))
-                    }
-                }
-                false
-            }
-        }
+
     }
 
     private fun parseNcx(data: Local) {

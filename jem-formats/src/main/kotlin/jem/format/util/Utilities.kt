@@ -23,7 +23,6 @@ import jclp.LOOSE_ISO_DATE_TIME
 import jclp.LOOSE_ISO_TIME
 import jclp.Linguist
 import jclp.setting.Settings
-import jclp.setting.getBoolean
 import jclp.setting.getString
 import jem.epm.Maker
 import jem.epm.MakerException
@@ -105,11 +104,11 @@ class XmlRender(private val settings: Settings?) {
 
     private val tags = LinkedList<Tag>()
 
-    private val indent = settings?.getString("maker.xml.indent") ?: "  "
+    private val indent = settings?.getString("maker.xml.indent") ?: "\t"
 
     private val encoding = settings?.getString("maker.xml.encoding") ?: "UTF-8"
 
-    private val separator = settings?.getString("maker.xml.separator") ?: System.lineSeparator()
+    private val separator = settings?.getString("maker.xml.separator") ?: "\n"
 
     private val serializer = XmlPullParserFactory.newInstance().newSerializer()
 
@@ -134,8 +133,7 @@ class XmlRender(private val settings: Settings?) {
         return this
     }
 
-    fun beginXml(): XmlRender {
-        val standalone = settings?.getBoolean("maker.xml.standalone") == true
+    fun beginXml(standalone: Boolean = true): XmlRender {
         serializer.startDocument(encoding, standalone)
         return reset()
     }

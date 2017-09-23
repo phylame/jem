@@ -19,13 +19,24 @@
 package jem.format.epub
 
 import jclp.flob.Flob
+import jclp.setting.Settings
 import jclp.vdm.VDMWriter
+import jclp.vdm.useStream
 import jclp.vdm.write
 import jem.format.util.XmlRender
 
-const val CONTAINER_PATH = "META-INF/container.xml"
+private const val CONTAINER_PATH = "META-INF/container.xml"
 
-fun renderContainer(render: XmlRender, files: Map<String, String>) = with(render) {
+fun writeContainer(writer: VDMWriter, settings: Settings?, files: Map<String, String>) {
+    writer.useStream(CONTAINER_PATH) {
+        XmlRender(settings).apply {
+            output(it)
+            renderContainer(files)
+        }
+    }
+}
+
+private fun XmlRender.renderContainer(files: Map<String, String>) {
     beginXml()
     beginTag("container")
     attribute("version", "1.0")

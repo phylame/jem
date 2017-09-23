@@ -145,7 +145,9 @@ internal object PmabParser : VDMParser {
     }
 
     private fun parseItem(text: String, data: Local): Any {
-        val itemType = data.itemType ?: Attributes.getType(data.itemName) ?: return text
+        val itemType = data.itemType?.let {
+            if (it == Variants.STRING) Attributes.getType(data.itemName) else it
+        } ?: Attributes.getType(data.itemName) ?: return text
         val parts = itemType.split(';')
         val type = parts.first()
         return when (type) {

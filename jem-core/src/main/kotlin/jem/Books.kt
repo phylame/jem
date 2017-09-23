@@ -53,7 +53,9 @@ open class Chapter(
 
     operator fun set(name: String, value: Any) = attributes.set(name, value)
 
-    operator fun set(name: String, values: Collection<Any>) = attributes.set(name, values.joinToString(";"))
+    operator fun set(name: String, values: Collection<Any>): Any? {
+        return attributes.set(name, values.joinToString(Attributes.VALUE_SEPARATOR))
+    }
 
     fun newChapter(title: String = "", text: Text? = null, cover: Flob? = null, intro: Text? = null): Chapter {
         val chapter = Chapter(title, text, cover, intro)

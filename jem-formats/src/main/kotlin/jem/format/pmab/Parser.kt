@@ -142,9 +142,19 @@ internal object PmabParser : VDMParser {
         }
     }
 
+    private fun fallbackType(name: String, type: String): String {
+        if (type == Variants.STRING) {
+            Attributes.getType(name)?.let { return it }
+        }
+        return when (name) {
+            WORDS -> Variants.STRING
+            else -> type
+        }
+    }
+
     private fun parseItem(text: String, data: Local): Any {
         val itemType = data.itemType?.let {
-            if (it == Variants.STRING) Attributes.getType(data.itemName) else it
+            fallbackType(data.itemName, data.itemType!!)
         } ?: Attributes.getType(data.itemName) ?: return text
         val parts = itemType.split(';')
         val type = parts.first()

@@ -96,7 +96,7 @@ open class Chapter(
 
     protected fun finalize() {
         if (!isCleaned) {
-            Log.w(javaClass.simpleName) { "chapter ${get(TITLE)} is not cleaned" }
+            Log.w(javaClass.simpleName) { "chapter $title is not cleaned" }
         }
     }
 

@@ -135,11 +135,6 @@
     url(res:///../../../../Windows/fonts/ht.ttf);
 }
 
-@font-face {
-    font-family: "xh";
-    src: local("细黑体"), local("xihei"), local("DK-XIHEITI");
-}
-
 body {
     padding: 0;
     margin: 0 1%;
@@ -165,14 +160,14 @@ p {
 
 /* image title */
 h1 {
-    color: #FFFFFF;
+    color: #EFF0F3;
     margin-top: 7%;
-    margin-bottom: 0.5em;
+    margin-bottom: 0.3em;
     line-height: 130%;
-    text-align: center;
+    text-align: start;
     font-weight: bold;
-    font-size: 2.4em;
-    font-family: "zw", serif;
+    font-size: 2em;
+    font-family: "DK-XIAOBIAOSONG", "zw", serif;
     text-shadow: 1px 1px 3px #000;
 }
 
@@ -183,7 +178,7 @@ h2 {
     text-align: center;
     font-weight: bold;
     font-size: x-large;
-    font-family: "zw", serif;
+    font-family: "DK-XIAOBIAOSONG", "zw", serif;
     text-shadow: 1px 1px 3px #006C6C;
 }
 
@@ -196,7 +191,7 @@ h3 {
     text-align: center;
     font-weight: bold;
     font-size: 1.3em;
-    font-family: "xh", "zw", serif;
+    font-family: "DK-XIHEITI", "DK-XIAOBIAOSONG", "zw", serif;
 }
 
 .cover {
@@ -205,125 +200,32 @@ h3 {
 }
 
 .intro {
-    font-family: "fs", serif;
+    font-family: "fs", "zw", serif;
 }
 
 .brief {
-    margin: 0;
-    padding: 0.1em;
+    padding: 0.5em 0;
     border-radius: 0.2em;
-    background: url(../images/pat.png) repeat;
-    box-shadow: 2px 2px 3px #006C6C;
 }
 
 .brief p {
-    color: #212121;
-    font-family: "xh", sans-serif;
+    color: #000;
+    font-family: "DK-XIHEITI", "ht", sans-serif;
     font-size: 0.9em;
     padding: 0 0.2em;
 }
 
-/* book intro page */
-.book_title {
-    margin-top: 0.5em;
+.darker {
+    color: #212121;
 }
 
-.book_title h1 {
-    /* book title */
-    font-family: "kt", serif;
-    font-weight: bold;
-    font-size: 2em;
-    text-align: center;
+.hint {
+    color: #0092aa;
+    font-size: 0.9em;
+    font-family: "kt", "fs", "zw", serif;
 }
 
-.intro_title {
-    margin-top: 0.5em;
-}
-
-.intro_title h3 {
-    /* intro title */
-    font-family: "ht", sans-serif;
-    font-size: 1.2em;
-    text-align: left;
-}
-
-.intro_text {
-    margin-top: 0.3em;
-}
-
-.intro_text p {
-    /* intro paragraphs */
-    font-family: "fs", serif;
-    font-size: 1em;
-    text-align: left;
-    text-indent: 2em;
-    margin-top: 0.5em;
-}
-
-.toc_title {
-    margin-top: 0.5em;
-}
-
-.toc_title h3 {
-    /* TOC title */
-    font-family: "kt", serif;
-    font-size: 1.5em;
-    text-align: center;
-    color: #CC3333;
-}
-
-.toc_item {
-    padding-top: 0.4em;
-}
-
-.toc_item p {
-    font-family: "zw", serif;
-    font-size: 1em;
-    text-align: left;
-    text-indent: 0.5em;
-    margin-top: 0.5em;
-}
-
-.toc_item p a {
-    text-decoration: none;
-}
-
-.chapter_title {
-    margin-top: 0.5em;
-}
-
-.chapter_title h3 {
-    /* chapter title */
-    font-family: "kt", serif;
-    font-size: 1.5em;
-    text-align: center;
-    color: #CC3333;
-}
-
-.chapter_intro {
-    margin-top: 0.2em;
-}
-
-.chapter_intro p {
-    /* intro paragraphs */
-    font-family: "fs", serif;
-    font-style: italic;
-    font-size: 0.8em;
-    text-align: left;
-    text-indent: 2em;
-    margin-top: 0.4em;
-    color: #0092A4;
-}
-
-.chapter_text {
-    margin-top: 0.4em;
-}
-
-.chapter_text p {
-    /* text paragraph */
-    font-family: "zw", serif;
-    font-size: 1em;
-    text-align: left;
-    text-indent: 2em;
-    margin-top: 0.5em;
+.line {
+    border: dotted #A2906A;
+    border-width: 1px 0 0 0;
 }

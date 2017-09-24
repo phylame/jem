@@ -68,31 +68,34 @@ internal class TOCBuilder(
         private val ncx: NCXBuilder,
         private val opf: OPFBuilder
 ) : BuilderBase(book, writer, settings) {
-    private val styleDir = getConfig("styleDir") ?: "styles/"
-    private val imageDir = getConfig("imageDir") ?: "images/"
-    private val extraDir = getConfig("extraDir") ?: "extras/"
-    private val textDir = getConfig("textDir") ?: "text/"
+    private val styleDir = getConfig("styleDir") ?: "Styles/"
+    private val imageDir = getConfig("imageDir") ?: "Images/"
+    private val extraDir = getConfig("extraDir") ?: "Extras/"
+    private val textDir = getConfig("textDir") ?: "Text/"
 
     private val textRoot: Path = opf.root.resolve(textDir)
 
     private lateinit var cssHref: String
+
+    private lateinit var patHref: String
 
     private fun newContext() = VelocityContext().apply {
         put("M", M)
         put("book", book)
         put("lang", lang)
         put("cssHref", cssHref)
+        put("patHref", patHref)
     }
 
     fun make() {
-        writeFlob(Flob.of("!jem/format/epub/pat.png"), "pat")
         cssHref = relativeToText(writeFlob(Flob.of("!jem/format/epub/style.css"), "style").second)
+        patHref = relativeToText(writeFlob(Flob.of("!jem/format/epub/pat.png"), "pat").second)
         book.cover?.let {
             val context = newContext()
             context.put("coverHref", relativeToText(writeFlob(it, COVER_ID).second))
             opf.newMeta("cover", COVER_ID)
             val (item, _) = renderPage("cover-page", context, "cover")
-            opf.newSpine(item.id, properties = "duokan-page-fullscreen")
+            opf.newSpine(item.id, properties = DUOKAN_FULLSCREEN)
             opf.newGuide(item.href, "cover", "epub.make.coverGuide")
         }
         book.intro?.let {
@@ -112,27 +115,39 @@ internal class TOCBuilder(
         val context = newContext()
         context.put("chapter", chapter)
         val id = "chapter-$suffix"
+
         var hasCover = false
         chapter.cover?.let {
             hasCover = true
             context.put("coverHref", relativeToText(writeFlob(it, "$id-cover").second))
         }
+
+        var hasIntro = false
+        chapter.intro?.toString()?.takeIf(String::isNotEmpty)?.let {
+            hasIntro = true
+            context.put("intro", chapter.intro)
+        }
+
         var item: Item? = null
         if (chapter.isSection) {
-            if (hasCover || chapter.intro != null) {
+            if (hasIntro) {
                 item = renderPage(id, context, "section").first
+                opf.newSpine(id)
+            } else if (hasCover) {
+                item = renderPage(id, context, "cover").first
+                opf.newSpine(id, properties = DUOKAN_FULLSCREEN)
             }
         } else {
-            if (hasCover || chapter.intro != null) {
+            if (hasCover) {
                 val pageId = "$id-cover-page"
-                renderPage(pageId, context, "section").first
-                opf.newSpine(pageId)
+                renderPage(pageId, context, "cover").first
+                opf.newSpine(pageId, properties = DUOKAN_FULLSCREEN)
             }
             item = renderPage(id, context, "chapter").first
+            opf.newSpine(id)
         }
 
         if (item != null) {
-            opf.newSpine(id)
             if (ncx.count == 1) {
                 opf.newGuide(item.href, "text", "epub.make.textTitle")
             }

@@ -2,14 +2,17 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:xml="http://www.w3.org/XML/1998/namespace" xml:lang="$lang" lang="$lang">
 <head>
-    <title>$chapter.title</title>
-    <link href="$cssHref" rel="stylesheet" type="text/css"/>
+<title>$chapter.title</title>
+<link href="$cssHref" rel="stylesheet" type="text/css"/>
 </head>
 <body>
-#if($logoHref)
-<div class="body-imagediv-title"><img alt="$!logoAlt" src="$logoHref"/></div>
-#end
 <h3>$chapter.title</h3>
+#if($intro)
+#foreach($line in $intro)
+<p class="hint">$line</p>
+#end
+<hr class="line"/>
+#end
 #foreach($line in $chapter.text)
 <p>$line</p>
 #end

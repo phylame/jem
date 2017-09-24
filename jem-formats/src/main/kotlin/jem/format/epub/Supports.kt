@@ -14,6 +14,8 @@ internal const val MIME_NCX = "application/x-dtbncx+xml"
 internal const val MIME_OPF = "application/oebps-package+xml"
 internal const val MIME_XHTML = "application/xhtml+xml"
 
+internal const val DUOKAN_FULLSCREEN = "duokan-page-fullscreen"
+
 internal const val BOOK_ID = "book-id"
 internal const val COVER_ID = "cover"
 

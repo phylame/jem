@@ -6,6 +6,8 @@ import jclp.io.getProperties
 import jclp.log.Log
 import jclp.setting.Settings
 import jclp.setting.getString
+import jclp.text.Text
+import jclp.text.TextWrapper
 import jclp.vdm.VDMWriter
 import jclp.vdm.useStream
 import jem.*
@@ -87,6 +89,17 @@ internal class TOCBuilder(
         put("patHref", patHref)
     }
 
+    private operator fun VelocityContext.set(name: String, text: Text) {
+        put(name, object : TextWrapper(text) {
+            var count = 0 // line counter
+
+            override fun iterator() = super.iterator().asSequence().map {
+                ++count
+                it.trim()
+            }.iterator()
+        })
+    }
+
     fun make() {
         cssHref = relativeToText(writeFlob(Flob.of("!jem/format/epub/style.css"), "style").second)
         patHref = relativeToText(writeFlob(Flob.of("!jem/format/epub/pat.png"), "pat").second)
@@ -98,9 +111,9 @@ internal class TOCBuilder(
             opf.newSpine(item.id, properties = DUOKAN_FULLSCREEN)
             opf.newGuide(item.href, "cover", "epub.make.coverGuide")
         }
-        book.intro?.let {
+        book.intro?.toString()?.takeIf(String::isNotEmpty)?.let {
             val context = newContext()
-            context.put("intro", it)
+            context["intro"] = book.intro!!
             val (item, _) = renderPage("intro", context)
             opf.newSpine(item.id)
             ncx.newNav(item.id, M.tr("epub.make.introTitle"), item.href)
@@ -125,7 +138,7 @@ internal class TOCBuilder(
         var hasIntro = false
         chapter.intro?.toString()?.takeIf(String::isNotEmpty)?.let {
             hasIntro = true
-            context.put("intro", chapter.intro)
+            context["intro"] = chapter.intro!!
         }
 
         var item: Item? = null
@@ -143,6 +156,7 @@ internal class TOCBuilder(
                 renderPage(pageId, context, "cover").first
                 opf.newSpine(pageId, properties = DUOKAN_FULLSCREEN)
             }
+            context["text"] = chapter.text!!
             item = renderPage(id, context, "chapter").first
             opf.newSpine(id)
         }

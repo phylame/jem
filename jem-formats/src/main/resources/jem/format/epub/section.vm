@@ -18,7 +18,7 @@
 </body>
 #else
 <body>
-<h1 class="darker">&sect;$chapter.title</h1>
+<h1 class="chapter-intro">&sect;$chapter.title</h1>
 #foreach($line in $intro)
 <p class="intro">$line</p>
 #end

@@ -215,8 +215,9 @@ h3 {
     padding: 0 0.2em;
 }
 
-.darker {
+.chapter-intro {
     color: #212121;
+    font-size: 1.5em;
 }
 
 .hint {

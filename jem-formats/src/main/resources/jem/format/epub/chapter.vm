@@ -13,8 +13,13 @@
 #end
 <hr class="line"/>
 #end
-#foreach($line in $chapter.text)
+#foreach($line in $text)
+#if($line)
 <p>$line</p>
+#end
+#end
+#if($text.count==0)
+<p>&infin;&nbsp;$M.tr("epub.make.noText")&nbsp;&infin;</p>
 #end
 </body>
 </html>

@@ -103,9 +103,17 @@ internal class NCXBuilder(
         endTag()
     }
 
+    private fun findHref(nav: NavPoint): String? {
+        return if (nav.href.isNotEmpty()) {
+            nav.href
+        } else {
+            findHref(nav.children.firstOrNull() ?: return null)
+        }
+    }
+
     private fun XmlRender.renderNav(nav: NavPoint) {
         // section without html page
-        val href = nav.href.takeIf(String::isNotEmpty) ?: nav.children.firstOrNull()?.href ?: return
+        val href = findHref(nav) ?: return
 
         beginTag("navPoint")
         attribute("id", nav.id)
@@ -114,8 +122,8 @@ internal class NCXBuilder(
 
         beginTag("navLabel")
         beginTag("text")
-                .text(nav.title)
-                .endTag()
+        text(nav.title)
+        endTag()
         endTag()
 
         beginTag("content")

@@ -1,8 +1,9 @@
 package jem.format.epub
 
 import jclp.flob.Flob
-import jclp.io.extensionName
+import jclp.flob.flobOf
 import jclp.io.getProperties
+import jclp.io.suffixName
 import jclp.log.Log
 import jclp.setting.Settings
 import jclp.setting.getString
@@ -19,7 +20,6 @@ import org.apache.velocity.VelocityContext
 import org.apache.velocity.app.Velocity
 import java.nio.file.Path
 import java.util.*
-import kotlin.collections.LinkedHashMap
 
 internal object EpubMaker : VDMMaker {
     override fun make(book: Book, output: VDMWriter, arguments: Settings?) {
@@ -31,7 +31,7 @@ internal object EpubMaker : VDMMaker {
     }
 
     private fun writeEPUBv2(book: Book, writer: VDMWriter, settings: Settings?) {
-        writer.useStream(MIME_PATH) { it.write(MIME_EPUB.toByteArray()) }
+        writer.useStream(EPUB.MIME_PATH) { it.write(EPUB.MIME_EPUB.toByteArray()) }
 
         val opf = OPFBuilder(book, writer, settings)
         val ncx = NCXBuilder(book, writer, settings, opf)
@@ -41,12 +41,12 @@ internal object EpubMaker : VDMMaker {
         ncx.make()
         val path = opf.make().vdmPath
 
-        writeContainer(writer, settings, mapOf(path to MIME_OPF))
+        writeContainer(writer, settings, mapOf(path to EPUB.MIME_OPF))
     }
 }
 
 internal open class BuilderBase(val book: Book, val writer: VDMWriter, val settings: Settings?) {
-    val meta = LinkedHashMap<String, Meta>()
+    val meta = linkedMapOf<String, Meta>()
 
     val lang: String = (book.language ?: Locale.getDefault()).toLanguageTag()
 
@@ -101,14 +101,14 @@ internal class TOCBuilder(
     }
 
     fun make() {
-        cssHref = relativeToText(writeFlob(Flob.of("!jem/format/epub/style.css"), "style").second)
-        patHref = relativeToText(writeFlob(Flob.of("!jem/format/epub/pat.png"), "pat").second)
+        cssHref = relativeToText(writeFlob(flobOf("!jem/format/epub/style.css"), "style").second)
+        patHref = relativeToText(writeFlob(flobOf("!jem/format/epub/pat.png"), "pat").second)
         book.cover?.let {
             val context = newContext()
-            context.put("coverHref", relativeToText(writeFlob(it, COVER_ID).second))
-            opf.newMeta("cover", COVER_ID)
+            context.put("coverHref", relativeToText(writeFlob(it, EPUB.COVER_ID).second))
+            opf.newMeta("cover", EPUB.COVER_ID)
             val (item, _) = renderPage("cover-page", context, "cover")
-            opf.newSpine(item.id, properties = DUOKAN_FULLSCREEN)
+            opf.newSpine(item.id, properties = EPUB.DUOKAN_FULLSCREEN)
             opf.newGuide(item.href, "cover", "epub.make.coverGuide")
         }
         book.intro?.toString()?.takeIf(String::isNotEmpty)?.let {
@@ -148,13 +148,13 @@ internal class TOCBuilder(
                 opf.newSpine(id)
             } else if (hasCover) {
                 item = renderPage(id, context, "cover").first
-                opf.newSpine(id, properties = DUOKAN_FULLSCREEN)
+                opf.newSpine(id, properties = EPUB.DUOKAN_FULLSCREEN)
             }
         } else {
             if (hasCover) {
                 val pageId = "$id-cover-page"
                 renderPage(pageId, context, "cover").first
-                opf.newSpine(pageId, properties = DUOKAN_FULLSCREEN)
+                opf.newSpine(pageId, properties = EPUB.DUOKAN_FULLSCREEN)
             }
             context["text"] = chapter.text!!
             item = renderPage(id, context, "chapter").first
@@ -174,7 +174,7 @@ internal class TOCBuilder(
     }
 
     private fun renderPage(id: String, context: VelocityContext, name: String? = null): Pair<Item, Path> {
-        return opf.newItem(id, "$textDir/$id.xhtml", MIME_XHTML) {
+        return opf.newItem(id, "$textDir/$id.xhtml", EPUB.MIME_XHTML) {
             writer.useStream(it.vdmPath) {
                 it.writer(Charsets.UTF_8).apply {
                     Templates.getTemplate(name ?: id).merge(context, this)
@@ -188,7 +188,7 @@ internal class TOCBuilder(
 
     private fun writeFlob(flob: Flob, id: String): Pair<Item, Path> {
         val mime = flob.mime
-        return opf.newItem(id, "${classifyDir(mime)}$id${extensionName(flob.name)}", mime) {
+        return opf.newItem(id, "${classifyDir(mime)}$id${suffixName(flob.name)}", mime) {
             writer.useStream(it.vdmPath) {
                 flob.writeTo(it)
             }

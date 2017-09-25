@@ -1,7 +1,7 @@
 package jem.crawler.impl
 
 import jclp.setting.Settings
-import jclp.text.Text
+import jclp.text.textOf
 import jem.*
 import jem.crawler.*
 import org.jsoup.nodes.Document
@@ -31,7 +31,7 @@ class Qidian : AbstractCrawler() {
         book.genre = stub.selectText("p.tag a", "/")
         book["brief"] = soup.selectText("p.intro")
         book.words = stub.selectText("p em:eq(0)") + stub.selectText("p cite:eq(1)")
-        book.intro = Text.of(soup.selectText("div.book-intro p", System.lineSeparator()))
+        book.intro = textOf(soup.selectText("div.book-intro p", System.lineSeparator()))
         getContents(book, soup, settings)
         return book
     }

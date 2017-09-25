@@ -33,11 +33,14 @@ internal class StringText(type: String, private val text: CharSequence) : Abstra
     override fun toString() = text.toString()
 }
 
+fun textOf(cs: CharSequence, type: String = TEXT_PLAIN): Text = StringText(type, cs)
+
+fun emptyText(type: String = TEXT_PLAIN) = textOf("", type)
+
 internal class FlobText(type: String, private val flob: Flob, encoding: String? = null) : AbstractText(type) {
     private val charset: Charset = when {
-        encoding == null -> Charset.defaultCharset()
-        encoding.isNotEmpty() -> Charset.forName(encoding)
-        else -> throw IllegalArgumentException("Unsupported encoding: $encoding")
+        encoding == null || encoding.isEmpty() -> Charset.defaultCharset()
+        else -> Charset.forName(encoding)
     }
 
     override fun toString() = openReader().use(Reader::readText)
@@ -48,3 +51,5 @@ internal class FlobText(type: String, private val flob: Flob, encoding: String? 
 
     private fun openReader() = flob.openStream().bufferedReader(charset)
 }
+
+fun textOf(flob: Flob, encoding: String? = null, type: String = TEXT_PLAIN): Text = FlobText(type, flob, encoding)

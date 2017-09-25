@@ -18,7 +18,7 @@
 
 package jclp
 
-import jclp.io.contextClassLoader
+import jclp.io.defaultLoader
 import jclp.log.Log
 import java.util.*
 
@@ -29,7 +29,7 @@ interface ServiceProvider {
 }
 
 open class ServiceManager<T : ServiceProvider>(type: Class<T>, loader: ClassLoader? = null) {
-    private val serviceLoader = ServiceLoader.load(type, loader ?: contextClassLoader())
+    private val serviceLoader = ServiceLoader.load(type, loader ?: defaultLoader())
     private val localRegistry = HashMap<String, T>()
     private val serviceProviders = HashSet<T>()
 

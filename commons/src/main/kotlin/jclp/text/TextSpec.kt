@@ -18,7 +18,6 @@
 
 package jclp.text
 
-import jclp.flob.Flob
 import java.io.Writer
 
 const val TEXT_HTML = "html"
@@ -34,14 +33,6 @@ interface Text {
     fun writeTo(output: Writer) = toString().let {
         output.write(it)
         it.length.toLong()
-    }
-
-    companion object {
-        fun empty(type: String = TEXT_PLAIN) = of("", type)
-
-        fun of(cs: CharSequence, type: String = TEXT_PLAIN): Text = StringText(type, cs)
-
-        fun of(flob: Flob, encoding: String? = null, type: String = TEXT_PLAIN): Text = FlobText(type, flob, encoding)
     }
 }
 

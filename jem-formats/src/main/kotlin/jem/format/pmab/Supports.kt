@@ -22,17 +22,19 @@ import jem.epm.EpmFactory
 import jem.epm.Maker
 import jem.epm.Parser
 
-/////** MIME type for PMAB **\\\\\
-internal const val MIME_PATH = "mimetype"
-internal const val MIME_PMAB = "application/pmab+zip"
+internal object PMAB {
+    /////** MIME type for PMAB **\\\\\
+    const val MIME_PATH = "mimetype"
+    const val MIME_PMAB = "application/pmab+zip"
 
-/////** PBM(PMAB Book Metadata) **\\\\\
-internal const val PBM_PATH = "book.xml"
-internal const val PBM_XMLNS = "http://phylame.pw/format/pmab/pbm"
+    /////** PBM(PMAB Book Metadata) **\\\\\
+    const val PBM_PATH = "book.xml"
+    const val PBM_XMLNS = "http://phylame.pw/format/pmab/pbm"
 
-/////** PBC(PMAB Book Contents) **\\\\\
-internal const val PBC_PATH = "content.xml"
-internal const val PBC_XMLNS = "http://phylame.pw/format/pmab/pbc"
+    /////** PBC(PMAB Book Contents) **\\\\\
+    const val PBC_PATH = "content.xml"
+    const val PBC_XMLNS = "http://phylame.pw/format/pmab/pbc"
+}
 
 class PmabFactory : EpmFactory {
     override val keys = setOf("pmab")

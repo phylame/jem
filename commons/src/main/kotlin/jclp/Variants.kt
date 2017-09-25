@@ -18,10 +18,10 @@
 
 package jclp
 
-import jclp.flob.Flob
+import jclp.flob.emptyFlob
 import jclp.io.getProperties
 import jclp.log.Log
-import jclp.text.Text
+import jclp.text.emptyText
 import java.io.IOException
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -41,7 +41,7 @@ val Any?.actualValue
 val <T : Any> Class<T>.canonicalType
     get() = if (isPrimitive) kotlin.javaObjectType else this
 
-fun Class<*>.detectInstance(): Any = try {
+fun Class<*>.createInstance(): Any = try {
     @Suppress("UNCHECKED_CAST")
     getField("INSTANCE").get(null) // for kotlin object
 } catch (ignored: ReflectiveOperationException) {
@@ -152,8 +152,8 @@ object Variants {
         setDefault(TIME, { LocalTime.now() })
         setDefault(DATETIME, { LocalDateTime.now() })
         setDefault(LOCALE, { Locale.getDefault() })
-        setDefault(TEXT, Text.empty())
-        setDefault(FLOB, Flob.empty())
+        setDefault(TEXT, emptyText())
+        setDefault(FLOB, emptyFlob())
     }
 
     private class Item {

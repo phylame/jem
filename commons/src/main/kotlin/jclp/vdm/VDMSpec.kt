@@ -51,9 +51,7 @@ interface VDMReader : Closeable {
     val size: Int
 }
 
-fun VDMReader.openStream(name: String): InputStream? {
-    return getInputStream(getEntry(name) ?: return null)
-}
+fun VDMReader.openStream(name: String) = getEntry(name)?.let(this::getInputStream)
 
 fun VDMReader.readText(name: String, charset: Charset = Charsets.UTF_8): String? {
     return openStream(name)?.use { it.reader(charset).readText() }

@@ -41,7 +41,7 @@ object Log {
 
     var facade = SimpleFacade
 
-    fun isEnable(level: LogLevel) = level.code <= Log.level.code
+    fun isEnable(level: LogLevel) = level.code <= this.level.code
 
     inline fun t(tag: String, msg: LazyMessage) {
         if (isEnable(LogLevel.TRACE)) {

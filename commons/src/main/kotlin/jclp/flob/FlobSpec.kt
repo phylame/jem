@@ -18,11 +18,8 @@
 
 package jclp.flob
 
-import jclp.io.getResource
-import jclp.vdm.VDMReader
-import java.io.*
-import java.net.URL
-import java.nio.file.NoSuchFileException
+import java.io.InputStream
+import java.io.OutputStream
 
 interface Flob {
     val name: String
@@ -31,28 +28,8 @@ interface Flob {
 
     fun openStream(): InputStream
 
-    fun writeTo(output: OutputStream) = openStream().use { it.copyTo(output) }
-
-    companion object {
-        fun of(url: URL, mime: String = ""): Flob = URLFlob(url, mime)
-
-        fun of(file: File, mime: String = ""): Flob = FileFlob(file, mime)
-
-        fun of(data: ByteArray, name: String, mime: String = ""): Flob = ByteFlob(name, data, mime)
-
-        fun of(file: RandomAccessFile, name: String, offset: Long, length: Long, mime: String = ""): Flob {
-            return BlockFlob(name, file, offset, length, mime)
-        }
-
-        fun of(uri: String, loader: ClassLoader? = null, mime: String = ""): Flob = getResource(uri, loader)?.let {
-            URLFlob(it, mime)
-        } ?: throw IOException("No such resource: $uri")
-
-        fun of(reader: VDMReader, name: String, mime: String = ""): Flob = reader.getEntry(name)?.let {
-            VDMFlob(reader, it, mime)
-        } ?: throw NoSuchFileException("No such file '$name' in '${reader.name}'")
-
-        fun empty(mime: String = "") = of(ByteArray(0), "_empty_", mime)
+    fun writeTo(output: OutputStream): Long {
+        return openStream().use { it.copyTo(output) }
     }
 }
 
@@ -67,7 +44,7 @@ open class FlobWrapper(private val flob: Flob) : Flob {
 
     override fun equals(other: Any?) = flob == other
 
-    override fun hashCode() = super.hashCode()
+    override fun hashCode() = flob.hashCode()
 
     override fun toString() = flob.toString()
 }

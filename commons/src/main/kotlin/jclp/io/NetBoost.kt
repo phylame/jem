@@ -7,7 +7,13 @@ import java.net.URLConnection
 import java.net.URLEncoder
 import java.util.zip.GZIPInputStream
 
-fun String.unquote() = trim().replace("\u00A0", "")
+fun String.htmlTrim() = trim().replace("\u00A0", "")
+
+fun String.quote(encoding: String = "UTF-8"): String = URLEncoder.encode(this, encoding)
+
+fun Map<String, String>.joinToQuery(encoding: String = "UTF-8"): String {
+    return entries.joinToString("&") { "${it.key.quote(encoding)}=${it.value.quote(encoding)}" }
+}
 
 fun URLConnection.openStream(): InputStream {
     return if (getHeaderField("Content-Encoding")?.contains("gzip", true) == true) {
@@ -17,7 +23,7 @@ fun URLConnection.openStream(): InputStream {
     }
 }
 
-data class HttpRequest(val url: String, val method: String = "GET") {
+data class HttpRequest(private val url: String, private val method: String = "GET") {
     var encoding = "UTF-8"
 
     var connectTimeout: Int = 0
@@ -29,17 +35,17 @@ data class HttpRequest(val url: String, val method: String = "GET") {
 
     var payload: ByteArray? = null
 
-    val parameters = HashMap<String, String>()
+    val parameters = hashMapOf<String, String>()
 
-    val properties = HashMap<String, String>()
+    val properties = hashMapOf<String, String>()
 
     fun connect(): URLConnection {
         val isHttp = url.startsWith("http")
         val path = if (isHttp && parameters.isNotEmpty()) {
             if (method.equals("post", true)) {
-                TODO()
+                TODO("generate http post form")
             } else {
-                url + "?" + parameters.entries.joinToString("&") { "${it.key}=${URLEncoder.encode(it.value, encoding)}" }
+                url + "?" + parameters.joinToQuery(encoding)
             }
         } else url
         return URL(path).openConnection().apply {

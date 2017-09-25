@@ -18,7 +18,7 @@
 
 package jclp
 
-import jclp.io.contextClassLoader
+import jclp.io.defaultLoader
 import jclp.io.openResource
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -27,6 +27,8 @@ import java.util.*
 import java.util.Locale
 import kotlin.collections.LinkedHashMap
 import kotlin.collections.LinkedHashSet
+
+fun parseLocale(tag: String): Locale = Locale.forLanguageTag(tag.replace('_', '-'))
 
 interface Translator {
     fun tr(key: String): String
@@ -131,7 +133,7 @@ open class Linguist(
     override fun handleGet(key: String): String = getBundle().getString(key)
 
     private fun getBundle(): ResourceBundle = try {
-        ResourceBundle.getBundle(name, locale ?: Locale.getDefault(), loader ?: contextClassLoader(), ResourceControl)
+        ResourceBundle.getBundle(name, locale ?: Locale.getDefault(), loader ?: defaultLoader(), ResourceControl)
     } catch (e: MissingResourceException) {
         if (isDummy) DummyBundle else throw e
     }

@@ -51,24 +51,24 @@ internal object PmabMaker : VDMMaker {
     }
 
     private fun writePMABv3(data: Local) {
-        data.writer.useStream(MIME_PATH) {
-            it.write(MIME_PMAB.toByteArray())
+        data.writer.useStream(PMAB.MIME_PATH) {
+            it.write(PMAB.MIME_PMAB.toByteArray())
         }
         writePBMv3(data)
         writePBCv3(data)
     }
 
     private fun writePBMv3(data: Local) {
-        data.beginXml("pbm", "3.0", PBM_XMLNS).let {
+        data.beginXml("pbm", "3.0", PMAB.PBM_XMLNS).let {
             writeMetadata(data)
             writeItems(data.book.attributes, "attributes", "m-", data)
             writeItems(data.book.extensions, "extensions", "x-", data)
-            data.endXml(it, PBM_PATH)
+            data.endXml(it, PMAB.PBM_PATH)
         }
     }
 
     private fun writePBCv3(data: Local) {
-        data.beginXml("pbc", "3.0", PBC_XMLNS).let {
+        data.beginXml("pbc", "3.0", PMAB.PBC_XMLNS).let {
             with(data.render) {
                 beginTag("nav")
                 data.book.forEachIndexed { i, chapter ->
@@ -76,7 +76,7 @@ internal object PmabMaker : VDMMaker {
                 }
                 endTag()
             }
-            data.endXml(it, PBC_PATH)
+            data.endXml(it, PMAB.PBC_PATH)
         }
     }
 
@@ -135,15 +135,15 @@ internal object PmabMaker : VDMMaker {
                     type = it.mime
                     writeFlob(it, prefix + name, data)
                 }
-                Variants.DATE -> (data.getConfig("dateFormat") ?: LOOSE_DATE_FORMAT).let {
+                Variants.DATE -> (data.getConfig("dateFormat") ?: DATE_FORMAT).let {
                     type += ";format=" + it
                     (value as LocalDate).format(DateTimeFormatter.ofPattern(it))
                 }
-                Variants.TIME -> (data.getConfig("timeFormat") ?: LOOSE_TIME_FORMAT).let {
+                Variants.TIME -> (data.getConfig("timeFormat") ?: TIME_FORMAT).let {
                     type += ";format=" + it
                     (value as LocalTime).format(DateTimeFormatter.ofPattern(it))
                 }
-                Variants.DATETIME -> (data.getConfig("datetimeFormat") ?: LOOSE_DATE_TIME_FORMAT).let {
+                Variants.DATETIME -> (data.getConfig("datetimeFormat") ?: DATE_TIME_FORMAT).let {
                     type += ";format=" + it
                     (value as LocalDateTime).format(DateTimeFormatter.ofPattern(it))
                 }

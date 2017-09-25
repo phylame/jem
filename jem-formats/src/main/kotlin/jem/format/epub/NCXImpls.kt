@@ -24,7 +24,7 @@ internal class NCXBuilder(
 
     fun make() {
         opf.tocId = "ncx"
-        opf.newItem("ncx", "toc.ncx", MIME_NCX) {
+        opf.newItem("ncx", "toc.ncx", EPUB.MIME_NCX) {
             writer.useStream(it.vdmPath) {
                 XmlRender(settings).apply {
                     output(it)

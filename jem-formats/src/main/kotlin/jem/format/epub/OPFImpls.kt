@@ -85,7 +85,7 @@ internal class OPFBuilder(book: Book, writer: VDMWriter, settings: Settings?) : 
         beginXml()
         beginTag("package")
         attribute("version", "2.0")
-        attribute("unique-identifier", BOOK_ID)
+        attribute("unique-identifier", EPUB.BOOK_ID)
         xmlns(OPF_XMLNS)
 
         renderMetadata()
@@ -134,7 +134,7 @@ internal class OPFBuilder(book: Book, writer: VDMWriter, settings: Settings?) : 
         attribute("xmlns:dc", DC_XMLNS)
         attribute("xmlns:opf", OPF_XMLNS)
 
-        newDublin("identifier", uuid, id = BOOK_ID, scheme = if ("isbn" in uuid) "ISBN" else "UUID")
+        newDublin("identifier", uuid, id = EPUB.BOOK_ID, scheme = if ("isbn" in uuid) "ISBN" else "UUID")
         newDublin("title")
         for (author in book.author.split(Attributes.VALUE_SEPARATOR)) {
             newDublin("creator", author, role = "aut")

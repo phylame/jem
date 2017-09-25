@@ -20,20 +20,20 @@ package jclp.io
 
 import java.io.*
 
-fun InputStream.copyLimited(output: OutputStream, size: Long = -1, bufferSize: Int = DEFAULT_BUFFER_SIZE): Long {
-    return reading().copyLimited(output.writing(), size, bufferSize)
+fun InputStream.copyRange(output: OutputStream, size: Long = -1, bufferSize: Int = DEFAULT_BUFFER_SIZE): Long {
+    return reading().copyRange(output.writing(), size, bufferSize)
 }
 
-fun InputStream.copyLimited(output: RandomAccessFile, size: Long = -1, bufferSize: Int = DEFAULT_BUFFER_SIZE): Long {
-    return reading().copyLimited(output.writing(), size, bufferSize)
+fun InputStream.copyRange(output: RandomAccessFile, size: Long = -1, bufferSize: Int = DEFAULT_BUFFER_SIZE): Long {
+    return reading().copyRange(output.writing(), size, bufferSize)
 }
 
-fun RandomAccessFile.copyLimited(output: OutputStream, size: Long = -1, bufferSize: Int = DEFAULT_BUFFER_SIZE): Long {
-    return reading().copyLimited(output.writing(), size, bufferSize)
+fun RandomAccessFile.copyRange(output: OutputStream, size: Long = -1, bufferSize: Int = DEFAULT_BUFFER_SIZE): Long {
+    return reading().copyRange(output.writing(), size, bufferSize)
 }
 
-fun RandomAccessFile.copyLimited(output: RandomAccessFile, size: Long = -1, bufferSize: Int = DEFAULT_BUFFER_SIZE): Long {
-    return reading().copyLimited(output.writing(), size, bufferSize)
+fun RandomAccessFile.copyRange(output: RandomAccessFile, size: Long = -1, bufferSize: Int = DEFAULT_BUFFER_SIZE): Long {
+    return reading().copyRange(output.writing(), size, bufferSize)
 }
 
 fun RandomAccessFile.clippedStream(offset: Long = -1, length: Long = -1): InputStream {
@@ -42,7 +42,7 @@ fun RandomAccessFile.clippedStream(offset: Long = -1, length: Long = -1): InputS
 
 fun RandomAccessFile.readBytes(estimatedSize: Int = DEFAULT_BUFFER_SIZE): ByteArray {
     val buffer = ByteArrayOutputStream(maxOf((length() - filePointer).toInt(), estimatedSize))
-    copyLimited(buffer)
+    copyRange(buffer)
     return buffer.toByteArray()
 }
 
@@ -74,8 +74,9 @@ fun RandomAccessFile.writing() = object : ByteOutput {
     }
 }
 
-fun ByteInput.copyLimited(output: ByteOutput, size: Long = -1, bufferSize: Int = DEFAULT_BUFFER_SIZE): Long {
-    require(bufferSize > 0) { "bufferSize <= 0" }
+fun ByteInput.copyRange(output: ByteOutput, size: Long = -1, bufferSize: Int = DEFAULT_BUFFER_SIZE): Long {
+    require(bufferSize > 0) { "bufferSize($bufferSize) <= 0" }
+    if (size == 0L) return 0
     var total = 0L
     val buffer = ByteArray(bufferSize)
     var bytes: Int = read(buffer, 0, bufferSize)
@@ -93,8 +94,9 @@ fun ByteInput.copyLimited(output: ByteOutput, size: Long = -1, bufferSize: Int =
     return total
 }
 
-fun Reader.copyLimited(output: Writer, size: Long = -1, bufferSize: Int = DEFAULT_BUFFER_SIZE): Long {
-    require(bufferSize > 0) { "bufferSize <= 0" }
+fun Reader.copyRange(output: Writer, size: Long = -1, bufferSize: Int = DEFAULT_BUFFER_SIZE): Long {
+    require(bufferSize > 0) { "bufferSize($bufferSize) <= 0" }
+    if (size == 0L) return 0
     var total = 0L
     val buffer = CharArray(bufferSize)
     var chars: Int = read(buffer, 0, bufferSize)
@@ -112,12 +114,12 @@ fun Reader.copyLimited(output: Writer, size: Long = -1, bufferSize: Int = DEFAUL
     return total
 }
 
-fun Writer.writeLines(lines: Collection<CharSequence>, lineSeparator: String = System.lineSeparator()) {
-    val end = lines.size
+fun Writer.writeLines(lines: Collection<CharSequence>, separator: String = System.lineSeparator()) {
+    val end = lines.size - 1
     lines.forEachIndexed { i, line ->
         write(line.toString())
-        if (i + 1 != end) {
-            write(lineSeparator)
+        if (i != end) {
+            write(separator)
         }
     }
 }
@@ -134,7 +136,6 @@ private class ClippedInputStream(private val source: RandomAccessFile, offset: L
         require(endpos <= length) { "offset + size > length of source" }
     }
 
-    @Throws(IOException::class)
     override fun read() = if (curpos < endpos) {
         ++curpos
         source.read()
@@ -142,7 +143,6 @@ private class ClippedInputStream(private val source: RandomAccessFile, offset: L
         -1
     }
 
-    @Throws(IOException::class)
     override fun read(b: ByteArray, off: Int, len: Int): Int {
         if (off < 0 || len < 0 || len > b.size - off) {
             throw IndexOutOfBoundsException()
@@ -159,16 +159,12 @@ private class ClippedInputStream(private val source: RandomAccessFile, offset: L
         return bytes
     }
 
-    @Throws(IOException::class)
     override fun skip(n: Long): Long {
-        if (n < 0) {
-            return 0
-        }
-        val bytes = source.skipBytes(Math.min(n, endpos - curpos).toInt()).toLong()
-        curpos = Math.min(curpos + bytes, endpos)
+        if (n < 0) return 0
+        val bytes = source.skipBytes(minOf(n, endpos - curpos).toInt()).toLong()
+        curpos = minOf(curpos + bytes, endpos)
         return bytes
     }
 
-    @Throws(IOException::class)
     override fun available() = (endpos - curpos).toInt()
 }

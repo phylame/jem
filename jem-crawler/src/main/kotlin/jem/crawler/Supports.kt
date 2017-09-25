@@ -3,7 +3,7 @@ package jem.crawler
 import jclp.Linguist
 import jclp.flob.AbstractFlob
 import jclp.io.openStream
-import jclp.io.unquote
+import jclp.io.htmlTrim
 import jclp.setting.Settings
 import org.json.JSONObject
 import org.jsoup.Jsoup
@@ -47,15 +47,15 @@ fun Element.subText(index: Int): String {
     var i = 0
     return childNodes()
             .filterIsInstance<TextNode>()
-            .map { it.text().unquote() }
+            .map { it.text().htmlTrim() }
             .firstOrNull { it.isNotEmpty() && index == i++ }
             ?: ""
 }
 
 fun Element.joinText(separator: String) = childNodes().map {
     when (it) {
-        is TextNode -> it.text().unquote()
-        is Element -> it.text().unquote()
+        is TextNode -> it.text().htmlTrim()
+        is Element -> it.text().htmlTrim()
         else -> ""
     }
 }.filter(String::isNotEmpty).joinToString(separator)

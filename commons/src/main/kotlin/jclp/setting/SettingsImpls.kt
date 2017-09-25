@@ -23,67 +23,25 @@ import jclp.canonicalType
 import jclp.log.Log
 import jclp.putAll
 import jclp.text.Converters
-import jclp.text.or
 import java.io.Reader
 import java.io.Writer
 import java.util.*
-import kotlin.reflect.KProperty
 
 private typealias Predicate = (Any?) -> Boolean
 
-interface Settings : Iterable<Pair<String, Any>> {
-    fun isEnable(key: String): Boolean
+data class Dependency(val key: String, val condition: Predicate? = null)
 
-    operator fun get(key: String): Any?
-
-    fun <T : Any> get(key: String, type: Class<T>): T?
-
-    operator fun set(key: String, value: Any): Any?
-
-    operator fun contains(key: String): Boolean
-
-    fun update(values: Map<String, Any>) {
-        for ((key, value) in values) {
-            set(key, value)
-        }
-    }
-
-    fun update(settings: Settings) {
-        for ((first, second) in settings) {
-            set(first, second)
-        }
-    }
-
-    fun remove(key: String): Any?
-
-    fun clear()
-}
-
-fun Settings.getInt(key: String) = get(key, Int::class.java)
-
-fun Settings.getDouble(key: String) = get(key, Double::class.java)
-
-fun Settings.getString(key: String) = get(key, String::class.java)
-
-fun Settings.getBoolean(key: String) = get(key, Boolean::class.java)
-
-class SettingsDelegate<T : Any>(private val type: Class<T>, private val default: T, private val key: String = "") {
-    @Suppress("UNCHECKED_CAST")
-    operator fun getValue(settings: Settings, property: KProperty<*>): T {
-        return settings.get(key or { property.name }, type) ?: default
-    }
-
-    operator fun setValue(settings: Settings, property: KProperty<*>, value: T) {
-        settings[key or { property.name }] = value
-    }
-}
-
-inline fun <reified T : Any> Settings.delegate(default: T, key: String = ""): SettingsDelegate<T> {
-    return SettingsDelegate(T::class.java, default, key)
-}
+data class Definition(
+        val key: String,
+        var type: Class<*>? = null,
+        var default: Any? = null,
+        var description: String = "",
+        var constraint: Predicate? = null,
+        var dependencies: List<Dependency> = emptyList()
+)
 
 abstract class AbstractSettings : Settings {
-    private val definitions = HashMap<String, Definition>()
+    private val definitions = hashMapOf<String, Definition>()
 
     protected abstract fun handleGet(key: String): Any?
 
@@ -131,12 +89,8 @@ open class MapSettings(values: Map<String, Any>? = null, definitions: Map<String
     private val values = HashMap<String, Any>()
 
     init {
-        values?.forEach {
-            set(it.key, it.value)
-        }
-        definitions?.forEach {
-            setDefinition(it.key, it.value)
-        }
+        values?.forEach { set(it.key, it.value) }
+        definitions?.forEach { setDefinition(it.key, it.value) }
         initValues()
     }
 
@@ -187,14 +141,3 @@ open class MapSettings(values: Map<String, Any>? = null, definitions: Map<String
 }
 
 fun Map<String, Any>.toSettings() = MapSettings(this)
-
-data class Dependency(val key: String, val condition: Predicate? = null)
-
-data class Definition(
-        val key: String,
-        var type: Class<*>? = null,
-        var default: Any? = null,
-        var description: String = "",
-        var constraint: Predicate? = null,
-        var dependencies: List<Dependency> = emptyList()
-)

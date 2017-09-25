@@ -46,6 +46,6 @@ fun fullName(path: String) = splitPath(path).first.let { path.substring(if (it !
 
 fun extName(path: String) = splitPath(path).second.let { if (it != path.length) path.substring(it + 1) else "" }
 
-fun extensionName(path: String) = splitPath(path).second.let { if (it != path.length) path.substring(it) else "" }
+fun suffixName(path: String) = splitPath(path).second.let { if (it != path.length) path.substring(it) else "" }
 
 fun File.createRecursively() = exists() || mkdirs()

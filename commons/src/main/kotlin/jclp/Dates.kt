@@ -23,25 +23,25 @@ import java.text.SimpleDateFormat
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-const val ISO_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss"
+const val ISO_FORMAT = "yyyy-MM-dd HH:mm:ss"
 
-const val ANSIC_DATE_FORMAT = "EEE MMM d HH:mm:ss z yyyy"
+const val ANSIC_FORMAT = "EEE MMM d HH:mm:ss z yyyy"
 
-const val RFC1123_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss z"
+const val RFC1123_FORMAT = "EEE, dd MMM yyyy HH:mm:ss z"
 
-const val RFC1036_DATE_FORMAT = "EEEEEE, dd-MMM-yy HH:mm:ss z"
+const val RFC1036_FORMAT = "EEEEEE, dd-MMM-yy HH:mm:ss z"
 
-const val LOOSE_TIME_FORMAT = "H:m:s"
+const val DATE_TIME_FORMAT = "yyyy-M-d H:m:s"
 
-const val LOOSE_DATE_FORMAT = "yyyy-M-d"
+const val DATE_FORMAT = "yyyy-M-d"
 
-const val LOOSE_DATE_TIME_FORMAT = "yyyy-M-d H:m:s"
+const val TIME_FORMAT = "H:m:s"
 
-val LOOSE_ISO_DATE: DateTimeFormatter by lazy { DateTimeFormatter.ofPattern(LOOSE_DATE_FORMAT) }
+val looseISODate: DateTimeFormatter by lazy { DateTimeFormatter.ofPattern(DATE_FORMAT) }
 
-val LOOSE_ISO_TIME: DateTimeFormatter by lazy { DateTimeFormatter.ofPattern(LOOSE_TIME_FORMAT) }
+val looseISOTime: DateTimeFormatter by lazy { DateTimeFormatter.ofPattern(TIME_FORMAT) }
 
-val LOOSE_ISO_DATE_TIME: DateTimeFormatter by lazy { DateTimeFormatter.ofPattern(LOOSE_DATE_TIME_FORMAT) }
+val looseISODateTime: DateTimeFormatter by lazy { DateTimeFormatter.ofPattern(DATE_TIME_FORMAT) }
 
 fun parseDate(text: String, vararg patterns: String): Date? {
     for (pattern in patterns) {
@@ -53,6 +53,6 @@ fun parseDate(text: String, vararg patterns: String): Date? {
     return null
 }
 
-fun detectDate(text: String) = parseDate(text, LOOSE_DATE_TIME_FORMAT, LOOSE_DATE_FORMAT, LOOSE_TIME_FORMAT)
+fun detectDate(text: String) = parseDate(text, DATE_TIME_FORMAT, DATE_FORMAT, TIME_FORMAT)
 
 fun Date.format(pattern: String): String = SimpleDateFormat(pattern).format(this)

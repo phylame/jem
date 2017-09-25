@@ -20,6 +20,7 @@ package jclp.text
 
 import jclp.*
 import jclp.flob.Flob
+import jclp.flob.flobOf
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -73,13 +74,13 @@ object Converters {
         Double::class.java.let { set(it, DefaultConverter(it)) }
 
         set(Text::class.java, object : Converter<Text> {
-            override fun parse(str: String) = Text.of(str)
+            override fun parse(str: String) = textOf(str)
 
             override fun render(obj: Text) = throw UnsupportedOperationException()
         })
 
         set(Flob::class.java, object : Converter<Flob> {
-            override fun parse(str: String) = Flob.of(str)
+            override fun parse(str: String) = flobOf(str)
 
             override fun render(obj: Flob) = throw UnsupportedOperationException()
         })
@@ -88,7 +89,7 @@ object Converters {
 
 class DefaultConverter<T>(private val type: Class<T>) : Converter<T> {
     override fun render(obj: T): String = when (obj) {
-        is Date -> obj.format(ISO_DATE_FORMAT)
+        is Date -> obj.format(ISO_FORMAT)
         is Class<*> -> (obj as Class<*>).name
         else -> obj.toString()
     }
@@ -99,16 +100,16 @@ class DefaultConverter<T>(private val type: Class<T>) : Converter<T> {
             String::class.java -> str as T
             Byte::class.java -> java.lang.Byte.decode(str) as T
             Short::class.java -> java.lang.Short.decode(str) as T
-            Int::class.java -> Integer.decode(str) as T
+            Int::class.java -> java.lang.Integer.decode(str) as T
             Long::class.java -> java.lang.Long.decode(str) as T
             Float::class.java -> java.lang.Float.valueOf(str) as T
             Double::class.java -> java.lang.Double.valueOf(str) as T
             Boolean::class.java -> java.lang.Boolean.valueOf(str) as T
             Date::class.java -> detectDate(str) as T? ?: throw IllegalArgumentException("Illegal date string: $str")
-            Locale::class.java -> Locale.forLanguageTag(str.replace('_', '-')) as T
-            LocalDate::class.java -> LocalDate.parse(str, LOOSE_ISO_DATE) as T
-            LocalTime::class.java -> LocalTime.parse(str, LOOSE_ISO_TIME) as T
-            LocalDateTime::class.java -> LocalDateTime.parse(str, LOOSE_ISO_DATE_TIME) as T
+            Locale::class.java -> parseLocale(str) as T
+            LocalDate::class.java -> LocalDate.parse(str, looseISODate) as T
+            LocalTime::class.java -> LocalTime.parse(str, looseISOTime) as T
+            LocalDateTime::class.java -> LocalDateTime.parse(str, looseISODateTime) as T
             Class::class.java -> Class.forName(str) as T
             else -> throw IllegalStateException("Unreachable code")
         }

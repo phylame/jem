@@ -20,10 +20,11 @@ package jem.format.pmab
 
 import jclp.VariantMap
 import jclp.Variants
-import jclp.flob.Flob
+import jclp.flob.flobOf
 import jclp.setting.Settings
 import jclp.setting.getString
 import jclp.text.Text
+import jclp.text.textOf
 import jclp.text.valueFor
 import jclp.vdm.VDMEntry
 import jclp.vdm.VDMReader
@@ -37,8 +38,8 @@ import java.io.InputStream
 import java.util.*
 
 internal object PmabParser : VDMParser {
-    override fun parse(input: VDMReader, arguments: Settings?) = if (input.readText(MIME_PATH) != MIME_PMAB) {
-        fail("pmab.parse.badMime", MIME_PATH, MIME_PMAB)
+    override fun parse(input: VDMReader, arguments: Settings?) = if (input.readText(PMAB.MIME_PATH) != PMAB.MIME_PMAB) {
+        fail("pmab.parse.badMime", PMAB.MIME_PATH, PMAB.MIME_PMAB)
     } else Book().apply {
         val data = Local(this, input, arguments)
         parsePBM(data)
@@ -48,9 +49,9 @@ internal object PmabParser : VDMParser {
     private fun parsePBM(data: Local) {
         var version = 0
         val xpp = data.newXpp()
-        data.openStream(PBM_PATH).use {
+        data.openStream(PMAB.PBM_PATH).use {
             xpp.setInput(it, null)
-            useXml(xpp, PBM_PATH) { begin, sb ->
+            useXml(xpp, PMAB.PBM_PATH) { begin, sb ->
                 if (begin) {
                     var hasText = false
                     when {
@@ -72,9 +73,9 @@ internal object PmabParser : VDMParser {
     private fun parsePBC(data: Local) {
         var version = 0
         val xpp = data.newXpp()
-        data.openStream(PBC_PATH).use {
+        data.openStream(PMAB.PBC_PATH).use {
             xpp.setInput(it, null)
-            useXml(xpp, PBC_PATH) { start, sb ->
+            useXml(xpp, PMAB.PBC_PATH) { start, sb ->
                 if (start) {
                     var hasText = false
                     when {
@@ -168,6 +169,7 @@ internal object PmabParser : VDMParser {
                 val format = data.getConfig("datetimeFormat") ?: itemType.valueFor("format") ?: ""
                 if ("h" in format || "H" in format) {
                     parseDateTime(text, format) { data.xmlPosition() }.let {
+                        @Suppress("IMPLICIT_CAST_TO_ANY")
                         if (data.itemName == PUBDATE || data.itemName == DATE) it.toLocalDate() else it
                     }
                 } else {
@@ -185,9 +187,9 @@ internal object PmabParser : VDMParser {
             else -> when {
                 type.startsWith("text/") -> {
                     val encoding = data.getConfig("encoding") ?: itemType.valueFor("encoding")
-                    Text.of(Flob.of(data.reader, text, type), encoding, type.substring(5))
+                    textOf(flobOf(data.reader, text, type), encoding, type.substring(5))
                 }
-                type.matches("[\\w]+/.+".toRegex()) -> Flob.of(data.reader, text, type)
+                type.matches("[\\w]+/.+".toRegex()) -> flobOf(data.reader, text, type)
                 else -> text
             }
         }

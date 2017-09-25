@@ -18,10 +18,10 @@
 
 package jem.format.util
 
-import jclp.LOOSE_ISO_DATE
-import jclp.LOOSE_ISO_DATE_TIME
-import jclp.LOOSE_ISO_TIME
 import jclp.Linguist
+import jclp.looseISODate
+import jclp.looseISODateTime
+import jclp.looseISOTime
 import jclp.setting.Settings
 import jclp.setting.getString
 import jem.epm.Maker
@@ -58,19 +58,19 @@ inline fun Parser.parseDouble(text: String, error: () -> String) = try {
 }
 
 inline fun Parser.parseDateTime(text: String, format: String, error: () -> String): LocalDateTime = try {
-    LocalDateTime.parse(text, if (format.isNotEmpty()) DateTimeFormatter.ofPattern(format) else LOOSE_ISO_DATE_TIME)
+    LocalDateTime.parse(text, if (format.isNotEmpty()) DateTimeFormatter.ofPattern(format) else looseISODateTime)
 } catch (e: Exception) {
     fail(e, "err.parser.badDate", text, error())
 }
 
 inline fun Parser.parseDate(text: String, format: String, error: () -> String): LocalDate = try {
-    LocalDate.parse(text, if (format.isNotEmpty()) DateTimeFormatter.ofPattern(format) else LOOSE_ISO_DATE)
+    LocalDate.parse(text, if (format.isNotEmpty()) DateTimeFormatter.ofPattern(format) else looseISODate)
 } catch (e: Exception) {
     fail(e, "err.parser.badDate", text, error())
 }
 
 inline fun Parser.parseTime(text: String, format: String, error: () -> String): LocalTime = try {
-    LocalTime.parse(text, if (format.isNotEmpty()) DateTimeFormatter.ofPattern(format) else LOOSE_ISO_TIME)
+    LocalTime.parse(text, if (format.isNotEmpty()) DateTimeFormatter.ofPattern(format) else looseISOTime)
 } catch (e: Exception) {
     fail(e, "err.parser.badDate", text, error())
 }
@@ -99,7 +99,7 @@ inline fun Parser.useXml(xpp: XmlPullParser, where: Any, action: (Boolean, Strin
 
 fun Maker.fail(key: String, vararg args: Any): Nothing = throw MakerException(M.tr(key, *args))
 
-class XmlRender(private val settings: Settings?) {
+class XmlRender(settings: Settings?) {
     private var depth: Int = 0
 
     private val tags = LinkedList<Tag>()

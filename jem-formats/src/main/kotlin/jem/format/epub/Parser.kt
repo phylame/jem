@@ -31,8 +31,8 @@ import org.xmlpull.v1.XmlPullParserFactory
 import java.io.InputStream
 
 internal object EpubParser : VDMParser {
-    override fun parse(input: VDMReader, arguments: Settings?) = if (input.readText(MIME_PATH) != MIME_EPUB) {
-        fail("epub.parse.badMime", MIME_PATH, MIME_EPUB)
+    override fun parse(input: VDMReader, arguments: Settings?) = if (input.readText(EPUB.MIME_PATH) != EPUB.MIME_EPUB) {
+        fail("epub.parse.badMime", EPUB.MIME_PATH, EPUB.MIME_EPUB)
     } else Book().apply {
         val data = Local(this, input, arguments)
         parseOpf(data)

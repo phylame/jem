@@ -30,8 +30,8 @@ fun mapMime(extension: String, mime: String) {
     mimeMap[extension] = mime
 }
 
-fun mapMimes(m: Map<String, String>) {
-    mimeMap.putAll(m)
+fun mapMimes(mimes: Map<String, String>) {
+    mimeMap += mimes
 }
 
 fun getMime(path: String) = if (path.isNotEmpty()) extName(path).let {

@@ -86,7 +86,7 @@ abstract class AbstractSettings : Settings {
 }
 
 open class MapSettings(values: Map<String, Any>? = null, definitions: Map<String, Definition>? = null) : AbstractSettings() {
-    private val values = HashMap<String, Any>()
+    private val values = hashMapOf<String, Any>()
 
     init {
         values?.forEach { set(it.key, it.value) }

@@ -29,7 +29,6 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.LocalDate
 import java.util.*
-import kotlin.collections.LinkedHashMap
 
 private const val OPF_XMLNS = "http://www.idpf.org/2007/opf"
 private const val DC_XMLNS = "http://purl.org/dc/elements/1.1/"
@@ -48,7 +47,7 @@ internal class OPFBuilder(book: Book, writer: VDMWriter, settings: Settings?) : 
 
     val root: Path = Paths.get(getConfig("opsDir") ?: "OEBPS")
 
-    private val items = LinkedHashMap<String, Item>()
+    private val items = linkedMapOf<String, Item>()
 
     private val guides = LinkedList<Guide>()
 

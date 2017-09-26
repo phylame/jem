@@ -23,8 +23,8 @@ import jem.Book
 import jem.epm.EpmManager
 import jem.epm.ParserParam
 import jem.scj.SCI
-import jem.scj.SCJPlugin
 import jem.scj.SCISettings
+import jem.scj.SCJPlugin
 import mala.App
 import mala.App.tr
 import mala.Plugin

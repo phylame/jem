@@ -106,7 +106,7 @@ internal object PmabParser : VDMParser {
             "attributes" -> data.values = data.book.attributes
             "extensions" -> data.values = data.book.extensions
             "meta" -> data.meta[data.getAttribute("name")] = data.getAttribute("value")
-            "head" -> data.meta = HashMap()
+            "head" -> data.meta = hashMapOf()
         }
         return hasText
     }

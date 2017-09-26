@@ -79,14 +79,14 @@ internal class TOCBuilder(
 
     private lateinit var cssHref: String
 
-    private lateinit var patHref: String
+    private lateinit var maskHref: String
 
     private fun newContext() = VelocityContext().apply {
         put("M", M)
         put("book", book)
         put("lang", lang)
         put("cssHref", cssHref)
-        put("patHref", patHref)
+        put("maskHref", maskHref)
     }
 
     private operator fun VelocityContext.set(name: String, text: Text) {
@@ -102,7 +102,7 @@ internal class TOCBuilder(
 
     fun make() {
         cssHref = relativeToText(writeFlob(flobOf("!jem/format/epub/style.css"), "style").second)
-        patHref = relativeToText(writeFlob(flobOf("!jem/format/epub/pat.png"), "pat").second)
+        maskHref = relativeToText(writeFlob(flobOf("!jem/format/epub/mask.png"), "mask").second)
         book.cover?.let {
             val context = newContext()
             context.put("coverHref", relativeToText(writeFlob(it, EPUB.COVER_ID).second))

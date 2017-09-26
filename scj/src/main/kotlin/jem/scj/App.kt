@@ -37,8 +37,7 @@ import org.apache.commons.cli.HelpFormatter
 import org.apache.commons.cli.Option
 import org.apache.commons.cli.OptionGroup
 import java.time.LocalDate
-import java.util.Locale
-import kotlin.collections.HashMap
+import java.util.*
 
 fun main(args: Array<String>) {
     App.run(SCI, args)
@@ -61,11 +60,11 @@ object SCI : CDelegate(DefaultParser()) {
 
     @Suppress("UNCHECKED_CAST")
     val outAttributes
-        get() = context["a"] as? MutableMap<String, Any> ?: HashMap()
+        get() = context["a"] as? MutableMap<String, Any> ?: hashMapOf()
 
     @Suppress("UNCHECKED_CAST")
     val outExtensions
-        get() = context["e"] as? MutableMap<String, Any> ?: HashMap()
+        get() = context["e"] as? MutableMap<String, Any> ?: hashMapOf()
 
     val outputFormat get() = context["t"]?.toString() ?: SCISettings.outputFormat
 

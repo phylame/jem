@@ -2,8 +2,8 @@ package jem.crawler
 
 import jclp.Linguist
 import jclp.flob.AbstractFlob
-import jclp.io.openStream
 import jclp.io.htmlTrim
+import jclp.io.openStream
 import jclp.setting.Settings
 import org.json.JSONObject
 import org.jsoup.Jsoup

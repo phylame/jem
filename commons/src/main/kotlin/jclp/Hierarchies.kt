@@ -70,7 +70,7 @@ open class Hierarchy<T : Hierarchy<T>> : Hierarchical<T> {
     final override var parent: T? = null
         protected set
 
-    private val children = ArrayList<T>()
+    private val children = arrayListOf<T>()
 
     final override val size get() = children.size
 

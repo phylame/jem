@@ -30,8 +30,8 @@ interface ServiceProvider {
 
 open class ServiceManager<T : ServiceProvider>(type: Class<T>, loader: ClassLoader? = null) {
     private val serviceLoader = ServiceLoader.load(type, loader ?: defaultLoader())
-    private val localRegistry = HashMap<String, T>()
-    private val serviceProviders = HashSet<T>()
+    private val localRegistry = hashMapOf<String, T>()
+    private val serviceProviders = hashSetOf<T>()
 
     init {
         initServices()

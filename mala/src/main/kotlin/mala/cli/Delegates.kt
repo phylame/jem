@@ -28,11 +28,11 @@ abstract class CDelegate(private val parser: CommandLineParser) : AppDelegate {
     var inputs = emptyList<String>()
         private set
 
-    val context = HashMap<String, Any>()
+    val context = hashMapOf<String, Any>()
 
     private val commands = LinkedHashSet<Command>()
 
-    private val actions = HashMap<String, Action>()
+    private val actions = hashMapOf<String, Action>()
 
     protected var defaultCommand: Command? = null
 

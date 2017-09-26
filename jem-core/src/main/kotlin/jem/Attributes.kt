@@ -19,6 +19,7 @@
 package jem
 
 import jclp.VariantMap
+import jclp.VariantValidator
 import jclp.Variants
 import jclp.flob.Flob
 import jclp.io.getProperties
@@ -48,10 +49,10 @@ const val TITLE = "title"
 const val VENDOR = "vendor"
 const val WORDS = "words"
 
-object Attributes {
+object Attributes : VariantValidator {
     const val VALUE_SEPARATOR = ";"
 
-    private val types = HashMap<String, String>()
+    private val types = hashMapOf<String, String>()
 
     init {
         try {
@@ -69,7 +70,9 @@ object Attributes {
 
     fun getName(name: String) = if (name.isNotEmpty()) M.optTr("attribute.$name") else null
 
-    fun newAttributes() = VariantMap { name, value ->
+    fun newAttributes() = VariantMap(this)
+
+    override fun invoke(name: String, value: Any) {
         getType(name)?.let {
             require(Variants.getClass(it)?.isInstance(value) != false) {
                 "attribute '$name' must be '$it', found '${Variants.getType(value)}'"

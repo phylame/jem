@@ -26,7 +26,6 @@ import java.text.MessageFormat
 import java.util.*
 import java.util.Locale
 import kotlin.collections.LinkedHashMap
-import kotlin.collections.LinkedHashSet
 
 fun parseLocale(tag: String): Locale = Locale.forLanguageTag(tag.replace('_', '-'))
 
@@ -105,7 +104,7 @@ abstract class AbstractTranslator : Translator {
         }
     }
 
-    private val attachments = LinkedHashSet<Translator>()
+    private val attachments = linkedSetOf<Translator>()
 
     override fun attach(translators: Collection<Translator>) {
         attachments += translators

@@ -28,7 +28,6 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.*
 import java.util.function.Supplier
-import kotlin.collections.HashSet
 
 val Any?.actualValue
     get() = when (this) {
@@ -61,8 +60,8 @@ object Variants {
     const val TEXT = "text"
     const val FLOB = "file"
 
-    private val types = HashMap<String, Item>()
-    private val cache = HashMap<String, Item>()
+    private val types = hashMapOf<String, Item>()
+    private val cache = hashMapOf<String, Item>()
     private val classes = IdentityHashMap<Class<*>, String>()
 
     init {
@@ -159,16 +158,16 @@ object Variants {
     private class Item {
         var clazz: Class<*>? = null
 
-        val aliases = HashSet<String>()
+        val aliases = hashSetOf<String>()
 
         var value: Any? = null
     }
 }
 
-private typealias Validator = (String, Any) -> Unit
+typealias VariantValidator = (String, Any) -> Unit
 
-class VariantMap(private val validator: Validator? = null) : Iterable<Pair<String, Any>>, Cloneable {
-    private var values = HashMap<String, Any>()
+class VariantMap(private val validator: VariantValidator? = null) : Iterable<Pair<String, Any>>, Cloneable {
+    private var values = hashMapOf<String, Any>()
 
     fun isNotEmpty() = values.isNotEmpty()
 

@@ -24,4 +24,5 @@ include 'jem-crawler'
 include 'mala'
 include 'scj'
 include 'scj-addons'
+include 'imabw'
 

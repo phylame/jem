@@ -20,11 +20,8 @@ package jem.imabw
 
 import javafx.application.Application
 import javafx.scene.Scene
-import javafx.scene.control.*
-import javafx.scene.layout.HBox
-import javafx.scene.layout.VBox
+import javafx.scene.layout.BorderPane
 import javafx.stage.Stage
-import jclp.io.getResource
 
 fun main(args: Array<String>) {
     Application.launch(Imabw::class.java, *args)
@@ -33,45 +30,9 @@ fun main(args: Array<String>) {
 class Imabw : Application() {
     override fun start(stage: Stage) {
         stage.title = "Imabw"
-        val root = VBox()
+        val root = BorderPane()
 
-        val menuBar = MenuBar()
-
-        menuBar.menus.addAll(Menu("File").apply {
-            items += MenuItem("New")
-            items += MenuItem("Open")
-            items += SeparatorMenuItem()
-            items += MenuItem("Save")
-        }, Menu("Edit").apply {
-            items += MenuItem("Undo")
-            items += MenuItem("Redo")
-            items += SeparatorMenuItem()
-            items += MenuItem("Cut")
-            items += MenuItem("Copy")
-            items += MenuItem("Paste")
-        }, Menu("View").apply {
-
-        })
-
-        root.children.add(menuBar)
-
-        SplitPane().apply {
-            val tree = TreeView<String>()
-            items += ScrollPane(tree)
-
-            val area = TextArea()
-            items += ScrollPane(area)
-
-            root.children += this
-        }
-
-        HBox().apply {
-            children += Label("Ready")
-            root.children += this
-        }
-
-        val scene = Scene(root, 400.0, 350.0)
-        scene.stylesheets.add(getResource("!jem/imabw/res/style.css")?.toExternalForm())
+        val scene = Scene(root)
         stage.scene = scene
         stage.show()
     }

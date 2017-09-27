@@ -16,23 +16,10 @@
  * limitations under the License.
  */
 
-plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.1.50'
-}
+package mala.ixin
 
-description = 'The Imabw ebook editor'
+import mala.AppDelegate
 
-dependencies {
-    compile project(':jem-core')
-    runtime project(':jem-crawler')
-    runtime project(':jem-formats')
-    compile project(':mala')
-}
-
-compileKotlin {
-    kotlinOptions.jvmTarget = javaVersion
-}
-
-compileTestKotlin {
-    kotlinOptions.jvmTarget = javaVersion
+abstract class IDelegate : AppDelegate {
+    val actions = hashMapOf<String, Action>()
 }

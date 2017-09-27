@@ -27,6 +27,7 @@ group = 'pw.phylame.mala'
 dependencies {
     api project(':commons')
     api "commons-cli:commons-cli:$commonsCliVersion"
+    api group: 'org.json', name: 'json', version: '20170516'
 }
 
 compileKotlin {

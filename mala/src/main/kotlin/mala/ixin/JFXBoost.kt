@@ -16,23 +16,21 @@
  * limitations under the License.
  */
 
-plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.1.50'
-}
+package mala.ixin
 
-description = 'The Imabw ebook editor'
+import javafx.beans.binding.ObjectBinding
+import javafx.beans.value.ObservableObjectValue
 
-dependencies {
-    compile project(':jem-core')
-    runtime project(':jem-crawler')
-    runtime project(':jem-formats')
-    compile project(':mala')
-}
+fun <T> ObservableObjectValue<T>.coalesce(vararg others: ObservableObjectValue<T>) = object : ObjectBinding<T?>() {
+    init {
+        super.bind(this@coalesce)
+    }
 
-compileKotlin {
-    kotlinOptions.jvmTarget = javaVersion
-}
+    override fun dispose() {
+        super.unbind(this@coalesce)
+    }
 
-compileTestKotlin {
-    kotlinOptions.jvmTarget = javaVersion
+    override fun computeValue(): T? {
+        return this@coalesce.get() ?: others.map { it.get() }.firstOrNull()
+    }
 }

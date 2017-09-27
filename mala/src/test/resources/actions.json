@@ -1,0 +1,170 @@
+{
+  "menubar": [
+    {
+      "id": "menuFile",
+      "items": [
+        {
+          "id": "menuNew",
+          "items": [
+            "newFile",
+            "newChapter"
+          ]
+        },
+        "openFile",
+        {
+          "id": "menuHistory",
+          "items": [
+            "clearHistory"
+          ]
+        },
+        null,
+        "saveFile",
+        "saveAsFile",
+        "duplicateFile",
+        null,
+        {
+          "id": "lockFile",
+          "style": "check"
+        },
+        null,
+        "fileDetails",
+        null,
+        "editSettings",
+        null,
+        "exit"
+      ]
+    },
+    {
+      "id": "menuEdit",
+      "items": [
+        "undo",
+        "redo",
+        null,
+        "cut",
+        "copy",
+        "paste",
+        "delete",
+        null,
+        {
+          "id": "menuFind",
+          "items": [
+            "find",
+            "replace",
+            "findNext",
+            "findPrevious"
+          ]
+        },
+        "selectAll",
+        null,
+        "joinLine",
+        "duplicateText",
+        "toggleCase"
+      ]
+    },
+    {
+      "id": "menuView",
+      "items": [
+        {
+          "id": "showToolbar",
+          "style": "check"
+        },
+        {
+          "id": "showStatusBar",
+          "style": "check"
+        },
+        {
+          "id": "showNavigateBar",
+          "style": "check"
+        }
+      ]
+    },
+    {
+      "id": "menuNavigate",
+      "items": [
+        "goto",
+        null,
+        "back",
+        "forward",
+        null,
+        "nextSection",
+        "previousSection"
+      ]
+    },
+    {
+      "id": "menuBook",
+      "items": [
+        "insertChapter",
+        null,
+        "importChapter",
+        "exportChapter",
+        null,
+        "renameChapter",
+        null,
+        "mergeChapter",
+        null,
+        "bookAttributes",
+        "bookExtensions"
+      ]
+    },
+    {
+      "id": "menuTools"
+    },
+    {
+      "id": "menuWindow",
+      "items": [
+        {
+          "id": "menuTabs",
+          "items": [
+            "nextTab",
+            "previousTab",
+            null,
+            "closeActiveTab",
+            "closeOtherTabs",
+            "closeAllTabs",
+            "closeUnmodifiedTabs"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "menuHelp",
+      "items": [
+        "findAction",
+        null,
+        "help",
+        "about"
+      ]
+    }
+  ],
+  "toolbar": [
+    "newFile",
+    "openFile",
+    "saveFile",
+    null,
+    "undo",
+    "redo",
+    null,
+    "cut",
+    "copy",
+    "paste",
+    null,
+    "find",
+    "replace",
+    null,
+    "back",
+    "forward",
+    null,
+    "bookAttributes",
+    "bookExtensions",
+    null,
+    "editSettings",
+    null,
+    "help"
+  ],
+  "toolbarPopup": [
+    {
+      "id": "lockToolbar",
+      "style": "check"
+    }
+  ]
+}

@@ -5,28 +5,13 @@ import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableValue
-import javafx.beans.value.WritableValue
+import javafx.event.ActionEvent
+import javafx.event.EventHandler
 import javafx.scene.Node
 import javafx.scene.control.*
-import javafx.scene.control.Separator
 import javafx.scene.input.KeyCombination
-import jclp.Translator
-import mala.AssetManager
-import kotlin.reflect.KProperty
 
-private const val COMMAND_KEY = "ixin-command-id"
-
-operator fun <T> WritableValue<T>.getValue(ref: Any, property: KProperty<*>): T? {
-    return value
-}
-
-operator fun <T> WritableValue<T>.setValue(ref: Any, property: KProperty<*>, value: T?) {
-    this.value = value
-}
-
-enum class ButtonType {
-    NORMAL, TOGGLE, RADIO, CHECK, LINK
-}
+typealias ActionMap = MutableMap<String, Action>
 
 class Action(val command: String) {
     val textProperty = SimpleStringProperty()
@@ -48,72 +33,68 @@ class Action(val command: String) {
     var isSelected by selectedProperty
 }
 
-fun loadAction(id: String, translator: Translator, assets: AssetManager): Action {
-    TODO()
+private const val COMMAND_KEY = "ixin-command-id"
+
+private class EventCommand(val handler: CommandHandler) : EventHandler<ActionEvent> {
+    override fun handle(event: ActionEvent) {
+        val source = event.source
+        when (source) {
+            is MenuItem -> handler.handle(source.properties[COMMAND_KEY]!!.toString(), source)
+            is ButtonBase -> handler.handle(source.properties[COMMAND_KEY]!!.toString(), source)
+            else -> throw IllegalStateException("Event source is not button or menu: $source")
+        }
+    }
 }
 
-fun Action.toButton(type: ButtonType = ButtonType.NORMAL): ButtonBase {
-    val button = when (type) {
-        ButtonType.NORMAL -> Button()
-        ButtonType.TOGGLE -> ToggleButton().also { it.selectedProperty().bindBidirectional(selectedProperty) }
-        ButtonType.RADIO -> RadioButton().also { it.selectedProperty().bindBidirectional(selectedProperty) }
-        ButtonType.CHECK -> CheckBox().also { it.selectedProperty().bindBidirectional(selectedProperty) }
-        ButtonType.LINK -> Hyperlink()
+private class TooltipHelper(val action: Action) : SimpleObjectProperty<Tooltip>(), ChangeListener<String> {
+    override fun get() = super.get() ?: action.toast?.takeIf { it.isNotEmpty() }?.let(::Tooltip)
+
+    override fun changed(observable: ObservableValue<out String>?, oldValue: String?, newValue: String?) {
+        if (newValue.isNullOrEmpty()) {
+            value = null // hide tooltip
+        } else if (value == null) {
+            value = Tooltip().apply { textProperty().bind(action.toastProperty) }
+        }
     }
-    button.textProperty().bind(textProperty)
+}
+
+fun Action.toButton(handler: CommandHandler, type: Style = Style.NORMAL, hideText: Boolean = false): ButtonBase {
+    val button = when (type) {
+        Style.NORMAL -> Button()
+        Style.TOGGLE -> ToggleButton().also { it.selectedProperty().bindBidirectional(selectedProperty) }
+        Style.RADIO -> RadioButton().also { it.selectedProperty().bindBidirectional(selectedProperty) }
+        Style.CHECK -> CheckBox().also { it.selectedProperty().bindBidirectional(selectedProperty) }
+        Style.LINK -> Hyperlink()
+    }
+    if (!hideText || (largeIcon == null && icon == null)) {
+        button.textProperty().bind(textProperty)
+    }
+    button.isMnemonicParsing = IxIn.isMnemonicEnable
     button.graphicProperty().bind(largeIconProperty.coalesce(iconProperty))
     button.disableProperty().bindBidirectional(disableProperty)
 
-    val tooltipProperty = object : SimpleObjectProperty<Tooltip>(), ChangeListener<String> {
-        override fun changed(observable: ObservableValue<out String>?, oldValue: String?, newValue: String?) {
-            if (oldValue != newValue) {
-                if (newValue.isNullOrEmpty()) {
-                    value = null // hide tooltip
-                } else if (value == null) {
-                    value = Tooltip().apply { textProperty().bind(toastProperty) }
-                }
-            }
-        }
-    }
+    val tooltipHelper = TooltipHelper(this)
+    toastProperty.addListener(tooltipHelper)
+    button.tooltipProperty().bind(tooltipHelper)
 
-    toastProperty.addListener(tooltipProperty)
-    button.tooltipProperty().bind(tooltipProperty)
     button.properties[COMMAND_KEY] = command
+    button.onAction = EventCommand(handler)
     return button
 }
 
-fun Action.toMenuItem(type: ButtonType = ButtonType.NORMAL): MenuItem {
+fun Action.toMenuItem(handler: CommandHandler, type: Style = Style.NORMAL): MenuItem {
     val item = when (type) {
-        ButtonType.NORMAL -> MenuItem()
-        ButtonType.RADIO -> RadioMenuItem().also { it.selectedProperty().bindBidirectional(selectedProperty) }
-        ButtonType.CHECK -> CheckMenuItem().also { it.selectedProperty().bindBidirectional(selectedProperty) }
+        Style.NORMAL -> MenuItem()
+        Style.RADIO -> RadioMenuItem().also { it.selectedProperty().bindBidirectional(selectedProperty) }
+        Style.CHECK -> CheckMenuItem().also { it.selectedProperty().bindBidirectional(selectedProperty) }
         else -> throw IllegalArgumentException("$type is not supported for menu item")
     }
     item.textProperty().bind(textProperty)
     item.graphicProperty().bind(iconProperty)
+    item.isMnemonicParsing = IxIn.isMnemonicEnable
     item.acceleratorProperty().bind(acceleratorProperty)
     item.disableProperty().bindBidirectional(disableProperty)
     item.properties[COMMAND_KEY] = command
+    item.onAction = EventCommand(handler)
     return item
-}
-
-fun Menu.init(items: Iterable<*>) {
-    for (item in items) {
-        this.items += when (item) {
-            null -> SeparatorMenuItem()
-            is Action -> item.toMenuItem()
-            else -> throw IllegalArgumentException("Unknown item $item")
-        }
-    }
-}
-
-fun ToolBar.init(items: Iterable<*>) {
-    for (item in items) {
-        this.items += when (item) {
-            null -> Separator()
-            is Action -> item.toButton()
-            is Node -> item
-            else -> throw IllegalArgumentException("Unknown item $item")
-        }
-    }
 }

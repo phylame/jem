@@ -20,20 +20,72 @@ package jem.imabw
 
 import javafx.application.Application
 import javafx.scene.Scene
+import javafx.scene.control.MenuBar
+import javafx.scene.control.ToolBar
 import javafx.scene.layout.BorderPane
+import javafx.scene.layout.VBox
 import javafx.stage.Stage
+import jclp.io.openResource
+import jem.Build
+import mala.App
+import mala.ixin.*
+import org.json.JSONObject
+import org.json.JSONTokener
+import java.util.*
 
 fun main(args: Array<String>) {
-    Application.launch(Imabw::class.java, *args)
+    App.run(Imabw, args)
 }
 
-class Imabw : Application() {
+object Imabw : IDelegate() {
+    override val name = "imabw"
+
+    override val version = Build.VERSION
+
+    override fun onStart() {
+        Locale.setDefault(Locale.ENGLISH)
+        App.translator = App.assets.translatorFor("i18n/dev/app")
+    }
+
+    override fun run() {
+        Application.launch(UI::class.java)
+    }
+}
+
+class UI : Application() {
     override fun start(stage: Stage) {
         stage.title = "Imabw"
+
+        val h = object : CommandHandler {
+            override fun handle(command: String, source: Any) {
+                println("command = [${command}], source = [${source}]")
+            }
+        }
+
+        val json = JSONObject(JSONTokener(openResource("!jem/imabw/res/ui/actions.json")))
+        val items = LinkedList<Item>()
+        parseItems(json.optJSONArray("menubar"), items)
+        val menuBar = MenuBar()
+        for (item in items) {
+            if (item is ItemGroup) {
+                menuBar.menus += item.toMenu(h, App, App.assets)
+            }
+        }
+
+        val toolBar = ToolBar()
+        items.clear()
+        parseItems(json.optJSONArray("toolbar"), items)
+        toolBar.init(items, h, App, App.assets)
+
         val root = BorderPane()
 
-        val scene = Scene(root)
-        stage.scene = scene
+        root.top = VBox().also {
+            it += menuBar
+            it += toolBar
+        }
+
+        stage.scene = Scene(root)
+
         stage.show()
     }
 }

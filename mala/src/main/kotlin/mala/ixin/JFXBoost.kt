@@ -20,6 +20,35 @@ package mala.ixin
 
 import javafx.beans.binding.ObjectBinding
 import javafx.beans.value.ObservableObjectValue
+import javafx.beans.value.WritableValue
+import javafx.scene.Group
+import javafx.scene.Node
+import javafx.scene.layout.Pane
+import kotlin.reflect.KProperty
+
+operator fun Pane.plusAssign(node: Node) {
+    children.addAll(node)
+}
+
+operator fun Pane.plusAssign(elements: Collection<Node>) {
+    children.addAll(elements)
+}
+
+operator fun Group.plusAssign(node: Node) {
+    children.addAll(node)
+}
+
+operator fun Group.plusAssign(elements: Collection<Node>) {
+    children.addAll(elements)
+}
+
+operator fun <T> WritableValue<T>.getValue(ref: Any, property: KProperty<*>): T? {
+    return value
+}
+
+operator fun <T> WritableValue<T>.setValue(ref: Any, property: KProperty<*>, value: T?) {
+    this.value = value
+}
 
 fun <T> ObservableObjectValue<T>.coalesce(vararg others: ObservableObjectValue<T>) = object : ObjectBinding<T?>() {
     init {

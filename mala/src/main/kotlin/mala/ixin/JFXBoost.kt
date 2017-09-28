@@ -27,7 +27,7 @@ import javafx.scene.layout.Pane
 import kotlin.reflect.KProperty
 
 operator fun Pane.plusAssign(node: Node) {
-    children.addAll(node)
+    children.add(node)
 }
 
 operator fun Pane.plusAssign(elements: Collection<Node>) {
@@ -35,7 +35,7 @@ operator fun Pane.plusAssign(elements: Collection<Node>) {
 }
 
 operator fun Group.plusAssign(node: Node) {
-    children.addAll(node)
+    children.add(node)
 }
 
 operator fun Group.plusAssign(elements: Collection<Node>) {

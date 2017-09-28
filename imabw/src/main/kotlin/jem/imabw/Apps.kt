@@ -19,18 +19,15 @@
 package jem.imabw
 
 import javafx.application.Application
+import javafx.geometry.Insets
 import javafx.scene.Scene
-import javafx.scene.control.MenuBar
-import javafx.scene.control.ToolBar
+import javafx.scene.control.*
 import javafx.scene.layout.BorderPane
-import javafx.scene.layout.VBox
+import javafx.scene.layout.HBox
 import javafx.stage.Stage
-import jclp.io.openResource
 import jem.Build
 import mala.App
 import mala.ixin.*
-import org.json.JSONObject
-import org.json.JSONTokener
 import java.util.*
 
 fun main(args: Array<String>) {
@@ -50,38 +47,48 @@ object Imabw : IDelegate() {
     override fun run() {
         Application.launch(UI::class.java)
     }
+
+    override fun handle(command: String, source: Any) {
+        println("command = [$command], source = [$source]")
+        if (command=="help"){
+            actions["exit"]?.isDisable=true
+        }
+    }
 }
 
 class UI : Application() {
     override fun start(stage: Stage) {
         stage.title = "Imabw"
 
-        val h = object : CommandHandler {
-            override fun handle(command: String, source: Any) {
-                println("command = [${command}], source = [${source}]")
+        val status = Label("Ready")
+        status.padding = Insets(4.0, 4.0, 4.0, 4.0)
+
+        val root = AppPane()
+
+        root.setup(App.assets.designerFor("ui/actions.json")!!)
+        root.center = SplitPane().also {
+            it.items += BorderPane().also { box ->
+                box.top = HBox().also {
+                    it += Label("Contents", App.assets.graphicFor("tree/contents"))
+                }
+                box.center = TreeView<String>().also {
+                    it.root = TreeItem("Root").also {
+                        for (i in 1..36) {
+                            it.children += TreeItem("Chapter $i")
+                        }
+                    }
+                }
+
+            }
+            it.items += TabPane().also {
+                for (i in 1..10) {
+                    it.tabs += Tab("Chapter $i", TextArea())
+                }
             }
         }
 
-        val json = JSONObject(JSONTokener(openResource("!jem/imabw/res/ui/actions.json")))
-        val items = LinkedList<Item>()
-        parseItems(json.optJSONArray("menubar"), items)
-        val menuBar = MenuBar()
-        for (item in items) {
-            if (item is ItemGroup) {
-                menuBar.menus += item.toMenu(h, App, App.assets)
-            }
-        }
-
-        val toolBar = ToolBar()
-        items.clear()
-        parseItems(json.optJSONArray("toolbar"), items)
-        toolBar.init(items, h, App, App.assets)
-
-        val root = BorderPane()
-
-        root.top = VBox().also {
-            it += menuBar
-            it += toolBar
+        root.statusBar = HBox().also {
+            it += status
         }
 
         stage.scene = Scene(root)

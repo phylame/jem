@@ -12,13 +12,13 @@ import javafx.scene.control.*
 import javafx.scene.input.KeyCombination
 
 typealias ActionMap = MutableMap<String, Action>
+private const val COMMAND_KEY = "ixin-command-id"
 
-class Action(val command: String) {
+class Action(val id: String) {
     val textProperty = SimpleStringProperty()
     val iconProperty = SimpleObjectProperty<Node>()
     val largeIconProperty = SimpleObjectProperty<Node>()
     val toastProperty = SimpleStringProperty()
-    val descriptionProperty = SimpleStringProperty()
     val acceleratorProperty = SimpleObjectProperty<KeyCombination>()
     val disableProperty = SimpleBooleanProperty()
     val selectedProperty = SimpleBooleanProperty()
@@ -27,13 +27,10 @@ class Action(val command: String) {
     var icon: Node? by iconProperty
     var largeIcon: Node? by largeIconProperty
     var toast: String? by toastProperty
-    var description: String? by descriptionProperty
     var accelerator: KeyCombination? by acceleratorProperty
     var isDisable by disableProperty
     var isSelected by selectedProperty
 }
-
-private const val COMMAND_KEY = "ixin-command-id"
 
 private class EventCommand(val handler: CommandHandler) : EventHandler<ActionEvent> {
     override fun handle(event: ActionEvent) {
@@ -69,16 +66,15 @@ fun Action.toButton(handler: CommandHandler, type: Style = Style.NORMAL, hideTex
     if (!hideText || (largeIcon == null && icon == null)) {
         button.textProperty().bind(textProperty)
     }
+    TooltipHelper(this).let {
+        toastProperty.addListener(it)
+        button.tooltipProperty().bind(it)
+    }
     button.isMnemonicParsing = IxIn.isMnemonicEnable
     button.graphicProperty().bind(largeIconProperty.coalesce(iconProperty))
     button.disableProperty().bindBidirectional(disableProperty)
-
-    val tooltipHelper = TooltipHelper(this)
-    toastProperty.addListener(tooltipHelper)
-    button.tooltipProperty().bind(tooltipHelper)
-
-    button.properties[COMMAND_KEY] = command
     button.onAction = EventCommand(handler)
+    button.properties[COMMAND_KEY] = id
     return button
 }
 
@@ -94,7 +90,7 @@ fun Action.toMenuItem(handler: CommandHandler, type: Style = Style.NORMAL): Menu
     item.isMnemonicParsing = IxIn.isMnemonicEnable
     item.acceleratorProperty().bind(acceleratorProperty)
     item.disableProperty().bindBidirectional(disableProperty)
-    item.properties[COMMAND_KEY] = command
     item.onAction = EventCommand(handler)
+    item.properties[COMMAND_KEY] = id
     return item
 }

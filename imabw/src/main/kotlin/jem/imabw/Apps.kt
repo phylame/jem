@@ -26,9 +26,11 @@ import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
 import javafx.stage.Stage
 import jem.Build
+import jem.imabw.ui.Form
 import mala.App
 import mala.ixin.*
 import java.util.*
+import java.util.concurrent.Executors
 
 fun main(args: Array<String>) {
     App.run(Imabw, args)
@@ -39,19 +41,25 @@ object Imabw : IDelegate() {
 
     override val version = Build.VERSION
 
+    val executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
+
     override fun onStart() {
         Locale.setDefault(Locale.ENGLISH)
         App.translator = App.assets.translatorFor("i18n/dev/app")
     }
 
     override fun run() {
-        Application.launch(UI::class.java)
+        Application.launch(Form::class.java)
+    }
+
+    override fun onStop() {
+        executor.shutdown()
     }
 
     override fun handle(command: String, source: Any) {
         println("command = [$command], source = [$source]")
-        if (command=="help"){
-            actions["exit"]?.isDisable=true
+        if (command == "help") {
+            actionMap["exit"]?.isDisable = true
         }
     }
 }
@@ -91,8 +99,9 @@ class UI : Application() {
             it += status
         }
 
-        stage.scene = Scene(root)
-
+        stage.scene = Scene(root).also {
+            //            it.stylesheets.add(App.assets.resourceFor("ui/main.css")?.toExternalForm())
+        }
         stage.show()
     }
 }

@@ -35,26 +35,22 @@ open class ItemGroup(id: String, val items: Collection<Item>) : Item(id) {
 
 object Separator : Item("__SEPARATOR__")
 
-fun loadAction(id: String, translator: Translator, assets: AssetManager) = Action(id).apply {
-    text = translator.optTr(id) ?: ""
-    val iconId = translator.optTr("$id.icon") or { "actions/$id" }
-    icon = assets.graphicFor(iconId)
-    largeIcon = assets.graphicFor("$iconId@x")
-    toast = translator.optTr("$id.toast")
-    translator.optTr("$id.accelerator")?.takeIf { it.isNotEmpty() }?.let {
+fun loadAction(id: String, m: Translator, r: AssetManager) = Action(id).apply {
+    text = m.optTr(id) ?: ""
+    val iconId = m.optTr("$id.icon") or { "actions/$id" }
+    icon = r.graphicFor(iconId)
+    largeIcon = r.graphicFor("$iconId@x")
+    toast = m.optTr("$id.toast")
+    m.optTr("$id.accelerator")?.takeIf { it.isNotEmpty() }?.let {
         accelerator = KeyCombination.valueOf(it)
     }
 }
 
-fun Item.toAction(translator: Translator, assets: AssetManager, actions: ActionMap?): Action {
+fun Item.toAction(m: Translator, r: AssetManager, am: ActionMap?): Action {
     require(this !is ItemGroup) { "ItemGroup cannot be created as action" }
     require(this !== Separator) { "Separator cannot be created as action" }
-    return actions?.getOrPut(id) {
-        loadAction(id, translator, assets).also {
-            it.isDisable = !isEnable
-            it.isSelected = isSelected
-        }
-    } ?: loadAction(id, translator, assets).also {
+    return am?.get(id) ?: loadAction(id, m, r).also {
+        am?.set(id, it)
         it.isDisable = !isEnable
         it.isSelected = isSelected
     }
@@ -81,30 +77,33 @@ fun MutableCollection<Item>.init(items: JSONArray) {
     }
 }
 
-fun ItemGroup.toMenu(handler: CommandHandler, translator: Translator, assets: AssetManager, actions: ActionMap?) = Menu().also {
-    it.text = translator.tr(id)
-    it.init(items, handler, translator, assets, actions)
+fun ItemGroup.toMenu(handler: CommandHandler, m: Translator, r: AssetManager, am: ActionMap?, mm: MenuMap?): Menu {
+    return mm?.get(id) ?: Menu().also {
+        mm?.set(id, it)
+        it.text = m.tr(id)
+        it.init(items, handler, m, r, am, mm)
+    }
 }
 
-fun Menu.init(items: Iterable<*>, handler: CommandHandler, translator: Translator, assets: AssetManager, actions: ActionMap?) {
+fun Menu.init(items: Iterable<*>, handler: CommandHandler, m: Translator, r: AssetManager, am: ActionMap?, mm: MenuMap?) {
     for (item in items) {
         this.items += when (item) {
             null, Separator -> SeparatorMenuItem()
             is Action -> item.toMenuItem(handler)
-            is ItemGroup -> item.toMenu(handler, translator, assets, actions)
-            is Item -> item.toAction(translator, assets, actions).toMenuItem(handler, item.style)
+            is ItemGroup -> item.toMenu(handler, m, r, am, mm)
+            is Item -> item.toAction(m, r, am).toMenuItem(handler, item.style)
             is Node -> CustomMenuItem(item)
             else -> throw IllegalArgumentException("Unknown item $item")
         }
     }
 }
 
-fun ToolBar.init(items: Iterable<*>, handler: CommandHandler, translator: Translator, assets: AssetManager, actions: ActionMap) {
+fun ToolBar.init(items: Iterable<*>, handler: CommandHandler, m: Translator, r: AssetManager, am: ActionMap?) {
     for (item in items) {
         this.items += when (item) {
             null, Separator -> Separator()
             is Action -> item.toButton(handler, hideText = true)
-            is Item -> item.toAction(translator, assets, actions).toButton(handler, item.style, true)
+            is Item -> item.toAction(m, r, am).toButton(handler, item.style, true)
             is Node -> item
             else -> throw IllegalArgumentException("Unknown item $item")
         }

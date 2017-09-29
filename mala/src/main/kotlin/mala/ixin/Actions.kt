@@ -10,6 +10,8 @@ import javafx.event.EventHandler
 import javafx.scene.Node
 import javafx.scene.control.*
 import javafx.scene.input.KeyCombination
+import jclp.Translator
+import mala.AssetManager
 
 typealias ActionMap = MutableMap<String, Action>
 private const val COMMAND_KEY = "ixin-command-id"
@@ -30,6 +32,10 @@ class Action(val id: String) {
     var accelerator: KeyCombination? by acceleratorProperty
     var isDisable by disableProperty
     var isSelected by selectedProperty
+}
+
+fun ActionMap.getOrCreate(id: String, m: Translator, r: AssetManager): Action {
+    return getOrPut(id) { loadAction(id, m, r) }
 }
 
 private class EventCommand(val handler: CommandHandler) : EventHandler<ActionEvent> {

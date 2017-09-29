@@ -19,8 +19,8 @@
 package mala.ixin
 
 import javafx.beans.property.SimpleObjectProperty
-import javafx.collections.FXCollections
 import javafx.scene.Node
+import javafx.scene.control.Menu
 import javafx.scene.control.MenuBar
 import javafx.scene.control.ToolBar
 import javafx.scene.layout.BorderPane
@@ -28,8 +28,13 @@ import javafx.scene.layout.VBox
 import mala.App
 import mala.AppDelegate
 
+typealias MenuMap = MutableMap<String, Menu>
+
 abstract class IDelegate : AppDelegate, CommandHandler {
-    val actions = FXCollections.observableHashMap<String, Action>()
+    val menuMap = hashMapOf<String, Menu>()
+    val actionMap = hashMapOf<String, Action>()
+
+    fun newAction(id: String) = actionMap.getOrCreate(id, App, App.assets)
 }
 
 class AppPane : BorderPane() {
@@ -103,20 +108,20 @@ class AppPane : BorderPane() {
 
     fun setupMenuBar(groups: Collection<Item>) {
         if (groups.isNotEmpty()) {
-            val bar = MenuBar()
-            val menus = bar.menus
-            val delegate = App.delegate as IDelegate
-            groups.filterIsInstance<ItemGroup>().forEach {
-                menus += it.toMenu(delegate, App, App.assets, delegate.actions)
+            menuBar = MenuBar().apply {
+                val menus = menus
+                val delegate = App.delegate as IDelegate
+                groups.filterIsInstance<ItemGroup>().forEach {
+                    menus += it.toMenu(delegate, App, App.assets, delegate.actionMap, delegate.menuMap)
+                }
             }
-            menuBar = bar
         }
     }
 
     fun setupToolBar(items: Collection<*>) {
         toolBar = ToolBar().apply {
             val delegate = App.delegate as IDelegate
-            init(items, delegate, App, App.assets, delegate.actions)
+            init(items, delegate, App, App.assets, delegate.actionMap)
         }
     }
 

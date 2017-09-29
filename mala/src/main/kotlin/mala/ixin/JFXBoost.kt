@@ -19,10 +19,16 @@
 package mala.ixin
 
 import javafx.beans.binding.ObjectBinding
+import javafx.beans.property.SimpleObjectProperty
+import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableObjectValue
+import javafx.beans.value.ObservableValue
 import javafx.beans.value.WritableValue
 import javafx.scene.Group
 import javafx.scene.Node
+import javafx.scene.control.Tooltip
+import javafx.scene.image.Image
+import javafx.scene.image.ImageView
 import javafx.scene.layout.Pane
 import kotlin.reflect.KProperty
 
@@ -63,3 +69,21 @@ fun <T> ObservableObjectValue<T>.coalesce(vararg others: ObservableObjectValue<T
         return this@coalesce.get() ?: others.map { it.get() }.firstOrNull()
     }
 }
+
+fun <T, R> ObservableValue<T>.lazyBind(init: (T) -> R): ObservableValue<R> {
+    val helper = object : SimpleObjectProperty<R>(value?.let(init)), ChangeListener<T> {
+        override fun changed(observable: ObservableValue<out T>?, oldValue: T?, newValue: T?) {
+            if (newValue == null) {
+                value = null
+            } else if (value == null) {
+                value = init(newValue)
+            }
+        }
+    }
+    addListener(helper)
+    return helper
+}
+
+fun ObservableValue<String?>.lazyTooltip() = lazyBind(::Tooltip)
+
+fun ObservableValue<Image?>.lazyImageView() = lazyBind(::ImageView)

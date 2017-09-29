@@ -1,0 +1,23 @@
+[
+  {
+    "id": "menuNew",
+    "items": [
+      "newChapter",
+      "importChapter"
+    ]
+  },
+  "insertChapter",
+  null,
+  "cut",
+  "paste",
+  null,
+  "exportChapter",
+  null,
+  "renameChapter",
+  null,
+  "delete",
+  null,
+  "mergeChapter",
+  null,
+  "viewAttributes"
+]

@@ -33,8 +33,6 @@ typealias MenuMap = MutableMap<String, Menu>
 abstract class IDelegate : AppDelegate, CommandHandler {
     val menuMap = hashMapOf<String, Menu>()
     val actionMap = hashMapOf<String, Action>()
-
-    fun newAction(id: String) = actionMap.getOrCreate(id, App, App.assets)
 }
 
 class AppPane : BorderPane() {

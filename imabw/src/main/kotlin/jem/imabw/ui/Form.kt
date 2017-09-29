@@ -1,7 +1,9 @@
 package jem.imabw.ui
 
 import javafx.application.Application
+import javafx.geometry.Insets
 import javafx.geometry.Orientation
+import javafx.geometry.Pos
 import javafx.scene.Node
 import javafx.scene.Scene
 import javafx.scene.control.Label
@@ -29,9 +31,13 @@ class Form : Application() {
     lateinit var statusText: Label
     lateinit var indicator: Indicator
 
+    override fun init() {
+        Imabw.form = this
+    }
+
     override fun start(stage: Stage) {
         appPane = AppPane()
-        appPane.setup(App.assets.designerFor("ui/actions.json")!!)
+        appPane.setup(App.assets.designerFor("ui/main.idj")!!)
 
         splitPane = SplitPane().also {
             it.items += NavPane
@@ -40,20 +46,26 @@ class Form : Application() {
         }
         appPane.center = splitPane
 
-        statusBar = BorderPane().also {
-            it.styleClass += "status-bar"
+        statusBar = BorderPane().also { pane ->
+            pane.styleClass += "status-bar"
+            pane.padding = Insets(2.0, 4.0, 2.0, 4.0)
 
-            statusText = Label()
-            it.left = statusText
+            statusText = Label().apply {
+                BorderPane.setAlignment(this, Pos.CENTER)
+                pane.left = this
+            }
 
-            indicator = Indicator()
-            it.right = indicator
+            indicator = Indicator().apply {
+                BorderPane.setAlignment(this, Pos.CENTER)
+                pane.right = this
+            }
 
-            appPane.statusBar = it
+            appPane.statusBar = pane
         }
 
         statusText.text = "Ready"
         stage.title = "Untitled - PW Imabw ${Imabw.version}"
+        stage.setOnCloseRequest { Imabw.handle("exit", stage) }
         stage.scene = Scene(appPane)
         stage.show()
 
@@ -71,6 +83,8 @@ class Indicator : HBox() {
     private val encoding = Label()
 
     init {
+        alignment = Pos.CENTER
+
         caret.addEventHandler(MouseEvent.MOUSE_PRESSED) {
             if (it.clickCount == 1 && it.isPrimaryButtonDown) {
                 Imabw.handle("goto", it.source)

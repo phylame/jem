@@ -19,6 +19,7 @@
 package jem.imabw
 
 import javafx.application.Application
+import javafx.application.Platform
 import javafx.geometry.Insets
 import javafx.scene.Scene
 import javafx.scene.control.*
@@ -29,7 +30,6 @@ import jem.Build
 import jem.imabw.ui.Form
 import mala.App
 import mala.ixin.*
-import java.util.*
 import java.util.concurrent.Executors
 
 fun main(args: Array<String>) {
@@ -41,10 +41,10 @@ object Imabw : IDelegate() {
 
     override val version = Build.VERSION
 
-    val executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
+    lateinit var form: Form
 
     override fun onStart() {
-        Locale.setDefault(Locale.ENGLISH)
+//        Locale.setDefault(Locale.ENGLISH)
         App.translator = App.assets.translatorFor("i18n/dev/app")
     }
 
@@ -53,14 +53,29 @@ object Imabw : IDelegate() {
     }
 
     override fun onStop() {
-        executor.shutdown()
+        Platform.exit()
+        if (executor.isInitialized()) {
+            executor.value.shutdown()
+        }
     }
 
     override fun handle(command: String, source: Any) {
         println("command = [$command], source = [$source]")
-        if (command == "help") {
-            actionMap["exit"]?.isDisable = true
+        when (command) {
+            "exit" -> App.exit()
         }
+    }
+
+    fun print(msg: String) {
+        form.statusText.text = msg
+    }
+
+    private val executor = lazy {
+        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
+    }
+
+    fun submit(r: Runnable) {
+        executor.value.submit(r)
     }
 }
 
@@ -73,7 +88,7 @@ class UI : Application() {
 
         val root = AppPane()
 
-        root.setup(App.assets.designerFor("ui/actions.json")!!)
+        root.setup(App.assets.designerFor("ui/main.idj")!!)
         root.center = SplitPane().also {
             it.items += BorderPane().also { box ->
                 box.top = HBox().also {

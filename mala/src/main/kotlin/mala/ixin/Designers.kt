@@ -38,8 +38,8 @@ object Separator : Item("__SEPARATOR__")
 fun loadAction(id: String, m: Translator, r: AssetManager) = Action(id).apply {
     text = m.optTr(id) ?: ""
     val iconId = m.optTr("$id.icon") or { "actions/$id" }
-    icon = r.graphicFor(iconId)
-    largeIcon = r.graphicFor("$iconId@x")
+    icon = r.imageFor(iconId)
+    largeIcon = r.imageFor("$iconId@x")
     toast = m.optTr("$id.toast")
     m.optTr("$id.accelerator")?.takeIf { it.isNotEmpty() }?.let {
         accelerator = KeyCombination.valueOf(it)
@@ -92,6 +92,21 @@ fun Menu.init(items: Iterable<*>, handler: CommandHandler, m: Translator, r: Ass
             is Action -> item.toMenuItem(handler)
             is ItemGroup -> item.toMenu(handler, m, r, am, mm)
             is Item -> item.toAction(m, r, am).toMenuItem(handler, item.style)
+            is String -> am.getOrCreate(item, m, r).toMenuItem(handler)
+            is Node -> CustomMenuItem(item)
+            else -> throw IllegalArgumentException("Unknown item $item")
+        }
+    }
+}
+
+fun ContextMenu.init(items: Iterable<*>, handler: CommandHandler, m: Translator, r: AssetManager, am: ActionMap?, mm: MenuMap?) {
+    for (item in items) {
+        this.items += when (item) {
+            null, Separator -> SeparatorMenuItem()
+            is Action -> item.toMenuItem(handler)
+            is ItemGroup -> item.toMenu(handler, m, r, am, mm)
+            is Item -> item.toAction(m, r, am).toMenuItem(handler, item.style)
+            is String -> am.getOrCreate(item, m, r).toMenuItem(handler)
             is Node -> CustomMenuItem(item)
             else -> throw IllegalArgumentException("Unknown item $item")
         }
@@ -104,9 +119,10 @@ fun ToolBar.init(items: Iterable<*>, handler: CommandHandler, m: Translator, r: 
             null, Separator -> Separator()
             is Action -> item.toButton(handler, hideText = true)
             is Item -> item.toAction(m, r, am).toButton(handler, item.style, true)
+            is String -> am.getOrCreate(item, m, r).toButton(handler, hideText = true)
             is Node -> item
             else -> throw IllegalArgumentException("Unknown item $item")
-        }
+        }.also { it.isFocusTraversable = false }
     }
 }
 

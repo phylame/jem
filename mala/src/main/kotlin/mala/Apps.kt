@@ -144,12 +144,12 @@ object App : TranslatorWrapper() {
         delegate.onStart()
         plugins.init()
         state = AppState.RUNNING
-        delegate.run()
         Runtime.getRuntime().addShutdownHook(Thread({
             if (state != AppState.STOPPING) {
                 onQuit(-1)
             }
         }))
+        delegate.run()
     }
 
     private fun onQuit(code: Int) {

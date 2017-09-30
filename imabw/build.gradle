@@ -17,10 +17,19 @@
  */
 
 plugins {
+    id 'application'
     id 'org.jetbrains.kotlin.jvm' version '1.1.50'
 }
 
 description = 'The Imabw ebook editor'
+
+
+mainClassName = 'jem.imabw.AppKt'
+
+startScripts {
+    unixStartScriptGenerator.template = resources.text.fromFile('src/scripts/unixStartScript.txt')
+    windowsStartScriptGenerator.template = resources.text.fromFile('src/scripts/windowsStartScript.txt')
+}
 
 dependencies {
     compile project(':jem-core')

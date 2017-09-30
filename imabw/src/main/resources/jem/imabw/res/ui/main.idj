@@ -17,6 +17,7 @@
             "clearHistory"
           ]
         },
+        "closeFile",
         null,
         "saveFile",
         "saveAsFile",
@@ -140,6 +141,7 @@
     "newFile",
     "openFile",
     "saveFile",
+    "closeFile",
     null,
     "undo",
     "redo",

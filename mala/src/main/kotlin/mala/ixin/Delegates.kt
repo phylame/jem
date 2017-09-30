@@ -33,6 +33,19 @@ typealias MenuMap = MutableMap<String, Menu>
 abstract class IDelegate : AppDelegate, CommandHandler {
     val menuMap = hashMapOf<String, Menu>()
     val actionMap = hashMapOf<String, Action>()
+    val commandDispatcher = CommandDispatcher()
+
+    fun getAction(id: String) = actionMap[id]
+
+    fun newAction(id: String) = actionMap.getOrCreate(id, App, App.assets)
+
+    override fun handle(command: String, source: Any): Boolean {
+        if (!commandDispatcher.handle(command, source)) {
+            App.error("no handler for command: $command")
+            return false
+        }
+        return true
+    }
 }
 
 class AppPane : BorderPane() {
@@ -47,6 +60,7 @@ class AppPane : BorderPane() {
     private val topBox = VBox()
 
     init {
+        styleClass += "app-pane"
         menuBarProperty.addListener { _, oldValue, newValue ->
             if (oldValue !== newValue) {
                 val items = topBox.children

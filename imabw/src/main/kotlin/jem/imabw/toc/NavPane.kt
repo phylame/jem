@@ -1,12 +1,12 @@
 package jem.imabw.toc
 
-import javafx.collections.FXCollections
+import javafx.beans.property.SimpleBooleanProperty
 import javafx.collections.ListChangeListener
-import javafx.collections.ObservableList
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.control.*
 import javafx.scene.image.ImageView
+import javafx.scene.input.MouseEvent
 import javafx.scene.layout.Background
 import javafx.scene.layout.BorderPane
 import javafx.util.Callback
@@ -15,75 +15,128 @@ import jem.Chapter
 import jem.imabw.Imabw
 import jem.imabw.Work
 import jem.imabw.Workbench
+import jem.imabw.editor.EditorPane
 import jem.intro
 import jem.title
 import mala.App
 import mala.App.tr
-import mala.ixin.Item
-import mala.ixin.graphicFor
-import mala.ixin.imageFor
-import mala.ixin.init
+import mala.ixin.*
 import org.json.JSONArray
 import org.json.JSONTokener
 
-object NavPane : BorderPane() {
-    private val root = TreeItem<Chapter>()
-    private val treeView = TreeView(root)
-    private val navFooter = Label()
+typealias ChapterNode = TreeItem<Chapter>
+
+object NavPane : BorderPane(), CommandHandler {
+    private val root = ChapterNode()
+    private val tree = TreeView(root)
+
+    val itemProperty = tree.selectionModel.selectedItemProperty()
 
     init {
+        Imabw.register(this)
+
         top = NavHeader
-        center = treeView
-        bottom = navFooter
+        center = tree
 
-        treeView.isShowRoot = false
-        treeView.cellFactory = CellFactory
-        treeView.selectionModel.selectionMode = SelectionMode.MULTIPLE
-        treeView.selectionModel.selectedItems.addListener(ListChangeListener {
-            val list = it.list
-            if (list.size < 2) {
-                val chapter = list.first().value
-                navFooter.text = "${chapter.size} sub-chapter(s)"
-            } else {
-                navFooter.text = "${list.size} selection(s)"
+        tree.isShowRoot = false
+        tree.cellFactory = CellFactory
+        tree.selectionModel.selectionMode = SelectionMode.MULTIPLE
+        tree.addEventHandler(MouseEvent.MOUSE_PRESSED) {
+            if (it.clickCount == 2 && it.isPrimaryButtonDown) {
+                itemProperty.value?.value?.takeIf { !it.isSection && it !is Book }?.let(EditorPane::openText)
             }
-        })
+        }
 
-        navFooter.padding = Insets(2.0, 4.0, 2.0, 4.0)
+        initActions()
 
         Workbench.tasks.addListener(ListChangeListener<Work> {
             while (it.next()) {
                 if (it.wasAdded()) {
-                    root.children += it.addedSubList.map { createNode(it.book) }
+                    it.addedSubList.asSequence().map { it.book.toTreeItem() }.toCollection(root.children)
+                    tree.selectionModel.clearSelection()
+                    tree.selectionModel.selectLast()
                 } else if (it.wasRemoved()) {
-                    println("removed")
+                    val books = it.removed.map { it.book }
+                    root.children.removeIf { it.value in books }
                 }
             }
         })
     }
 
-    private fun createNode(chapter: Chapter): TreeItem<Chapter> {
-        return object : TreeItem<Chapter>(chapter) {
-            private var isFirstTime = true
+    private fun initActions() {
+        val isTreeFocused = tree.focusedProperty()
+        Imabw.getAction("replace")?.disableProperty?.bind(isTreeFocused)
+        Imabw.getAction("joinLine")?.disableProperty?.bind(isTreeFocused)
+        Imabw.getAction("duplicateText")?.disableProperty?.bind(isTreeFocused)
+        Imabw.getAction("toggleCase")?.disableProperty?.bind(isTreeFocused)
 
-            override fun isLeaf() = !value.isSection
+        val isMultiSelection = SimpleBooleanProperty()
+        tree.selectionModel.selectedItems.addListener(ListChangeListener {
+            isMultiSelection.value = it.list.size > 1
+        })
+        val isBookSelected = SimpleBooleanProperty()
+        tree.selectionModel.selectedItems.addListener(ListChangeListener {
+            isBookSelected.value = it.list.find { it.parent === root } != null
+        })
 
-            override fun getChildren(): ObservableList<TreeItem<Chapter>> {
-                if (isFirstTime) {
-                    isFirstTime = false
-                    super.getChildren() += buildChildren(this)
-                }
-                return super.getChildren()
+        Imabw.getAction("newChapter")?.disableProperty?.bind(isMultiSelection)
+        Imabw.getAction("insertChapter")?.disableProperty?.bind(isMultiSelection.or(isBookSelected))
+        Imabw.getAction("importChapter")?.disableProperty?.bind(isMultiSelection)
+        Imabw.getAction("exportChapter")?.disableProperty?.bind(isBookSelected)
+        Imabw.getAction("renameChapter")?.disableProperty?.bind(isMultiSelection)
+        Imabw.getAction("mergeChapter")?.disableProperty?.bind(isMultiSelection.not().or(isBookSelected))
+        Imabw.getAction("viewAttributes")?.disableProperty?.bind(isMultiSelection)
+
+        val noBookSelected = isBookSelected.not()
+        val notSingleBook = isMultiSelection.or(noBookSelected)
+        Imabw.getAction("bookAttributes")?.disableProperty?.bind(notSingleBook)
+        Imabw.getAction("bookExtensions")?.disableProperty?.bind(notSingleBook)
+
+        Imabw.getAction("closeFile")?.disableProperty?.bind(noBookSelected)
+        Imabw.getAction("saveFile")?.disableProperty?.bind(noBookSelected)
+        Imabw.getAction("saveAsFile")?.disableProperty?.bind(noBookSelected)
+        Imabw.getAction("duplicateFile")?.disableProperty?.bind(noBookSelected)
+        Imabw.getAction("lockFile")?.disableProperty?.bind(noBookSelected)
+
+        Imabw.getAction("fileDetails")?.disableProperty?.bind(notSingleBook)
+    }
+
+    @Command
+    fun newChapter() {
+        val parent = itemProperty.value
+        val chapter = Chapter("Chapter ${parent.children.size + 1}")
+        addChapters(parent, -1, listOf(chapter))
+    }
+
+    @Command
+    fun insertChapter() {
+        val parent = itemProperty.value.parent
+        val chapter = Chapter("Chapter ${parent.children.size + 1}")
+        addChapters(parent, parent.children.indexOf(itemProperty.value), listOf(chapter))
+    }
+
+    fun addChapters(parentNode: ChapterNode, index: Int, chapters: Collection<Chapter>) {
+        val children = parentNode.children // children is lazied
+        val parentChapter = parentNode.value
+        val selectionModel = tree.selectionModel
+        selectionModel.clearSelection()
+        chapters.map { it.toTreeItem() }.forEachIndexed { i, item ->
+            if (index < 0) {
+                children += item
+                parentChapter += item.value
+            } else {
+                children.add(index + i, item)
+                parentChapter.insert(index + i, item.value)
             }
-
-            fun buildChildren(item: TreeItem<Chapter>): ObservableList<TreeItem<Chapter>> {
-                val items = FXCollections.observableArrayList<TreeItem<Chapter>>()
-                for (c in item.value) {
-                    items += createNode(c)
-                }
-                return items
-            }
+            selectionModel.select(item)
         }
+    }
+
+    override fun handle(command: String, source: Any): Boolean {
+        when (command) {
+            else -> return false
+        }
+        return true
     }
 }
 
@@ -91,16 +144,17 @@ object NavHeader : BorderPane() {
     private val actions = listOf("newChapter", "renameChapter", "viewAttributes")
 
     init {
+        styleClass += "nav-header"
         left = Label(tr("form.toc.title"), App.assets.graphicFor("tree/contents")).also {
-            BorderPane.setAlignment(it, Pos.CENTER)
             it.padding = Insets(0.0, 4.0, 0.0, 4.0)
+            BorderPane.setAlignment(it, Pos.CENTER)
         }
 
         right = ToolBar().also {
-            BorderPane.setAlignment(it, Pos.CENTER)
             it.background = Background.EMPTY
             it.padding = Insets(2.0, 4.0, 2.0, 4.0)
             it.init(actions, Imabw, App, App.assets, Imabw.actionMap)
+            BorderPane.setAlignment(it, Pos.CENTER)
         }
     }
 }
@@ -115,12 +169,15 @@ object CellFactory : Callback<TreeView<Chapter>, TreeCell<Chapter>> {
     }
 }
 
-class ChapterCell : TreeCell<Chapter>() {
+private class ChapterCell : TreeCell<Chapter>() {
     private val menu = ContextMenu()
 
     init {
-        App.assets.resourceFor("ui/toc.idj")?.openStream()?.use {
-            menu.init(arrayListOf<Item>().apply { init(JSONArray(JSONTokener(it))) }, Imabw, App, App.assets, Imabw.actionMap, null)
+        App.assets.resourceFor("ui/toc.idj")?.openStream()?.use { stream ->
+            arrayListOf<Item>().apply {
+                init(JSONArray(JSONTokener(stream)))
+                menu.init(this, Imabw, App, App.assets, Imabw.actionMap, null)
+            }
         }
     }
 
@@ -133,14 +190,12 @@ class ChapterCell : TreeCell<Chapter>() {
             chapter.isSection -> ImageView(CellFactory.section)
             else -> ImageView(CellFactory.chapter)
         }
-        tooltip = chapter?.intro?.toString()?.takeIf(String::isNotEmpty)?.let {
-            Tooltip(it).also {
+        tooltip = chapter?.intro?.toString()?.takeIf(String::isNotEmpty)?.let { intro ->
+            Tooltip(intro).also {
                 it.isWrapText = true
                 it.maxWidthProperty().bind(widthProperty())
             }
         }
-        if (chapter != null) {
-            contextMenu = menu
-        }
+        contextMenu = chapter?.let { menu }
     }
 }

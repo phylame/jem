@@ -24,12 +24,16 @@ import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableObjectValue
 import javafx.beans.value.ObservableValue
 import javafx.beans.value.WritableValue
+import javafx.collections.FXCollections
+import javafx.collections.ObservableList
 import javafx.scene.Group
 import javafx.scene.Node
 import javafx.scene.control.Tooltip
+import javafx.scene.control.TreeItem
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
 import javafx.scene.layout.Pane
+import jclp.Hierarchy
 import kotlin.reflect.KProperty
 
 operator fun Pane.plusAssign(node: Node) {
@@ -67,6 +71,26 @@ fun <T> ObservableObjectValue<T>.coalesce(vararg others: ObservableObjectValue<T
 
     override fun computeValue(): T? {
         return this@coalesce.get() ?: others.map { it.get() }.firstOrNull()
+    }
+}
+
+fun <T : Hierarchy<T>> T.toTreeItem(): TreeItem<T> = object : TreeItem<T>(this) {
+    private var isFirstTime = true
+
+    override fun isLeaf() = value.size == 0
+
+    override fun getChildren(): ObservableList<TreeItem<T>> {
+        if (isFirstTime) {
+            isFirstTime = false
+            super.getChildren() += buildChildren(this)
+        }
+        return super.getChildren()
+    }
+
+    fun buildChildren(item: TreeItem<T>): ObservableList<TreeItem<T>> {
+        return FXCollections.observableArrayList<TreeItem<T>>().apply {
+            item.value.asSequence().map { it.toTreeItem() }.toCollection(this)
+        }
     }
 }
 

@@ -27,6 +27,7 @@ dependencies {
     runtime project(':jem-crawler')
     runtime project(':jem-formats')
     compile project(':mala')
+    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.6.10'
 }
 
 compileKotlin {

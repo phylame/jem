@@ -23,7 +23,6 @@ import jem.Build
 import jem.imabw.ui.Form
 import mala.App
 import mala.ixin.IDelegate
-import java.util.*
 import java.util.concurrent.Executors
 
 fun main(args: Array<String>) {
@@ -39,7 +38,7 @@ object Imabw : IDelegate() {
         internal set
 
     override fun onStart() {
-        Locale.setDefault(Locale.ENGLISH)
+//        Locale.setDefault(Locale.ENGLISH)
         App.translator = App.assets.translatorFor("i18n/dev/app")
     }
 

@@ -2,15 +2,17 @@ package jem.imabw.editor
 
 import javafx.scene.control.Tab
 import javafx.scene.control.TabPane
-import javafx.scene.control.TextArea
 import jem.Chapter
 import jem.title
-import org.fxmisc.richtext.StyledTextArea
+import org.fxmisc.richtext.LineNumberFactory
+import org.fxmisc.richtext.StyleClassedTextArea
+import org.fxmisc.undo.UndoManager
 
 object EditorPane : TabPane() {
     val itemProperty = selectionModel.selectedItemProperty()
 
     init {
+        isFocusTraversable = false
     }
 
     fun openText(chapter: Chapter) {
@@ -22,13 +24,17 @@ object EditorPane : TabPane() {
 }
 
 class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
-    val text = StyledTextArea()
+    val textArea = StyleClassedTextArea()
+    var undoPosition: UndoManager.UndoPosition? = null
 
     init {
-        content = text.also {
-            it.isWrapText = true
-            it.text = chapter.text?.toString()
-            it.promptText = "Type to input"
-        }
+//        textProperty().bind(Bindings.format(""))
+        println(textArea.undoManager.currentPosition)
+
+        content = textArea
+        textArea.isWrapText = true
+        textArea.paragraphGraphicFactory = LineNumberFactory.get(textArea)
+        textArea.replaceText(chapter.text?.toString() ?: "")
+        textArea.moveTo(0)
     }
 }

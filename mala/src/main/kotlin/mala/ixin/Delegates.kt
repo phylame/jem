@@ -126,6 +126,7 @@ class AppPane : BorderPane() {
                 groups.filterIsInstance<ItemGroup>().forEach {
                     menus += it.toMenu(delegate, App, App.assets, delegate.actionMap, delegate.menuMap)
                 }
+                isUseSystemMenuBar = true
             }
         }
     }

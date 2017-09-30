@@ -1,6 +1,8 @@
 package jem.imabw.ui
 
 import javafx.application.Application
+import javafx.beans.binding.Bindings
+import javafx.beans.value.ChangeListener
 import javafx.geometry.Insets
 import javafx.geometry.Orientation
 import javafx.geometry.Pos
@@ -9,11 +11,13 @@ import javafx.scene.control.Control
 import javafx.scene.control.Label
 import javafx.scene.control.Separator
 import javafx.scene.control.SplitPane
+import javafx.scene.input.KeyCombination
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.Background
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
 import javafx.stage.Stage
+import jclp.text.TEXT_PLAIN
 import jclp.toRoot
 import jem.Chapter
 import jem.author
@@ -50,6 +54,10 @@ class Form : Application() {
 
         appPane = AppPane().also { pane ->
             pane.setup(App.assets.designerFor("ui/main.idj")!!)
+            val actionMap = Imabw.actionMap
+            App.assets.propertiesFor("ui/keys.properties")?.forEach { k, v ->
+                actionMap[k.toString()]?.accelerator = KeyCombination.valueOf(v.toString())
+            }
         }
 
         splitPane = SplitPane().also { pane ->
@@ -128,15 +136,8 @@ class Indicator : HBox() {
                 Imabw.handle("goto", it.source)
             }
         }
-        EditorPane.itemProperty.addListener { _, _, tab ->
-            if (tab is ChapterTab) {
 
-                updateWords(tab.text.length)
-                updateMime(tab.chapter.text?.type?:"")
-            } else {
-                reset()
-            }
-        }
+        initRuler()
 
         add(caret)
         add(words)
@@ -177,6 +178,33 @@ class Indicator : HBox() {
         this += Separator(Orientation.VERTICAL)
         this += node.also {
             it.padding = Insets(2.0, 2.0, 2.0, 2.0)
+        }
+    }
+
+    private fun initRuler() {
+        EditorPane.itemProperty.addListener { _, old, new ->
+            (old as? ChapterTab)?.textArea?.also { text ->
+                @Suppress("UNCHECKED_CAST")
+                (text.properties[this] as? ChangeListener<Int>)?.let {
+                    text.caretPositionProperty().removeListener(it)
+                }
+            }
+            if (new is ChapterTab) {
+                new.textArea.also { text ->
+                    ChangeListener<Int> { _, _, _ ->
+                        updateCaret(text.currentParagraph + 1, text.caretColumn + 1, text.selection.length)
+                    }.let {
+                        text.properties[this] = it
+                        text.caretPositionProperty().addListener(it)
+                    }
+                    words.textProperty().bind(Bindings.convert(text.lengthProperty()))
+                    updateCaret(text.currentParagraph + 1, text.caretColumn + 1, text.selection.length)
+                }
+                updateMime(new.chapter.text?.type?.toUpperCase() ?: TEXT_PLAIN.toUpperCase())
+            } else {
+                reset()
+                words.textProperty().unbind()
+            }
         }
     }
 }

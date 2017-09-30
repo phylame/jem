@@ -2,6 +2,7 @@ package jem.imabw
 
 import javafx.collections.FXCollections
 import javafx.concurrent.Task
+import javafx.stage.FileChooser
 import jem.Book
 import jem.epm.EpmManager
 import jem.epm.ParserParam
@@ -9,6 +10,7 @@ import mala.App
 import mala.App.tr
 import mala.ixin.Command
 import mala.ixin.CommandHandler
+import java.io.File
 
 object Workbench : CommandHandler {
     internal val tasks = FXCollections.observableArrayList<Work>()
@@ -38,11 +40,12 @@ object Workbench : CommandHandler {
 
     @Command
     fun openFile() {
-//        val fileChooser = FileChooser()
-//        val file = fileChooser.showOpenDialog(Imabw.form.stage)
-//        println(file)
-        val path = "d:/downloads/xz.pmab"
-        val task = OpenTask(ParserParam(path))
+        val fileChooser = FileChooser()
+//        fileChooser.title
+        fileChooser.initialDirectory= File("E:/tmp")
+        fileChooser.extensionFilters += FileChooser.ExtensionFilter("PMAB File", "*.pmab")
+        val file = fileChooser.showOpenDialog(Imabw.form.stage)?:return
+        val task = OpenTask(ParserParam(file.path))
         task.setOnSucceeded {
             submit(Work(task.value, task.param))
         }

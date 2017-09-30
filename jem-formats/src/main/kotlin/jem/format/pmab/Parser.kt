@@ -21,6 +21,7 @@ package jem.format.pmab
 import jclp.VariantMap
 import jclp.Variants
 import jclp.flob.flobOf
+import jclp.releaseSelf
 import jclp.setting.Settings
 import jclp.setting.getString
 import jclp.text.Text
@@ -42,8 +43,13 @@ internal object PmabParser : VDMParser {
         fail("pmab.parse.badMime", PMAB.MIME_PATH, PMAB.MIME_PMAB)
     } else Book().apply {
         val data = Local(this, input, arguments)
-        parsePBM(data)
-        parsePBC(data)
+        try {
+            parsePBM(data)
+            parsePBC(data)
+        } catch (e: Exception) {
+            cleanup()
+            throw e
+        }
     }
 
     private fun parsePBM(data: Local) {
@@ -113,7 +119,10 @@ internal object PmabParser : VDMParser {
 
     private fun endPBMv3(tag: String, sb: StringBuilder, data: Local) {
         if (tag == "item") {
-            data.values[data.itemName] = parseItem(sb.toString().trim(), data)
+            parseItem(sb.toString().trim(), data).also {
+                data.values[data.itemName] = it
+                it.releaseSelf()
+            }
         }
     }
 
@@ -138,8 +147,14 @@ internal object PmabParser : VDMParser {
     private fun endPBCv3(tag: String, sb: StringBuilder, data: Local) {
         when (tag) {
             "chapter" -> data.chapter = data.chapter.parent!!
-            "item" -> data.chapter[data.itemName] = parseItem(sb.toString().trim(), data)
-            "content" -> data.chapter.text = parseItem(sb.toString().trim(), data) as Text
+            "item" -> parseItem(sb.toString().trim(), data).also {
+                data.chapter[data.itemName] = it
+                it.releaseSelf()
+            }
+            "content" -> (parseItem(sb.toString().trim(), data) as Text).also {
+                data.chapter.text = it
+                it.releaseSelf()
+            }
         }
     }
 
@@ -187,7 +202,8 @@ internal object PmabParser : VDMParser {
             else -> when {
                 type.startsWith("text/") -> {
                     val encoding = data.getConfig("encoding") ?: itemType.valueFor("encoding")
-                    textOf(flobOf(data.reader, text, type), encoding, type.substring(5))
+                    val flob = flobOf(data.reader, text, type)
+                    textOf(flob, encoding, type.substring(5)).also { flob.releaseSelf() }
                 }
                 type.matches("[\\w]+/.+".toRegex()) -> flobOf(data.reader, text, type)
                 else -> text

@@ -35,8 +35,13 @@ internal object EpubParser : VDMParser {
         fail("epub.parse.badMime", EPUB.MIME_PATH, EPUB.MIME_EPUB)
     } else Book().apply {
         val data = Local(this, input, arguments)
-        parseOpf(data)
-        parseNcx(data)
+        try {
+            parseOpf(data)
+            parseNcx(data)
+        } catch (e: Exception) {
+            cleanup()
+            throw e
+        }
     }
 
     private fun parseOpf(data: Local) {

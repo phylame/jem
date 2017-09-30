@@ -18,6 +18,9 @@
 
 package jem.epm
 
+import jclp.Reusable
+import jclp.ReusableHelper
+import jclp.releaseSelf
 import jclp.setting.Settings
 import jclp.setting.getInt
 import jclp.setting.getString
@@ -36,12 +39,13 @@ interface CommonParser<I : Closeable> : Parser {
 
     fun parse(input: I, arguments: Settings?): Book
 
-    override fun parse(input: String, arguments: Settings?) = open(input, arguments).let { src ->
+    override fun parse(input: String, arguments: Settings?) = open(input, arguments).let { source ->
         try {
-            parse(src, arguments).apply { this.registerCleanup({ src.close() }) }
+            parse(source, arguments)
         } catch (e: Exception) {
-            src.close()
             throw e
+        } finally {
+            source.releaseSelf()
         }
     }
 }
@@ -57,9 +61,9 @@ interface CommonMaker<O : Closeable> : Maker {
 }
 
 interface VDMParser : CommonParser<VDMReader> {
-    override fun open(input: String, arguments: Settings?) = arguments?.getString("parser.vdm.type")?.let {
-        VDMManager.openReader(it, input)
-    } ?: detectReader(File(input))
+    override fun open(input: String, arguments: Settings?): VDMReader = arguments?.getString("parser.vdm.type")?.let {
+        VDMManager.openReader(it, input)?.let(::VDMReaderWrapper)
+    } ?: detectReader(File(input)).let(::VDMReaderWrapper)
 }
 
 interface VDMMaker : CommonMaker<VDMWriter> {
@@ -70,4 +74,14 @@ interface VDMMaker : CommonMaker<VDMWriter> {
         arguments?.getInt("maker.vdm.zipLevel")?.let { setProperty("level", it) }
         arguments?.getInt("maker.vdm.zipMethod")?.let { setProperty("method", it) }
     }
+}
+
+private class VDMReaderWrapper(val reader: VDMReader) : VDMReader by reader, Reusable {
+    override fun retain() = helper.retain()
+
+    override fun release() = helper.release()
+
+    val helper = ReusableHelper { reader.close() }
+
+    override fun toString() = reader.toString()
 }

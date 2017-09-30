@@ -18,10 +18,14 @@
 
 package jclp.flob
 
+import jclp.Reusable
+import jclp.ReusableHelper
 import jclp.io.clippedStream
 import jclp.io.copyRange
 import jclp.io.detectMime
 import jclp.io.getResource
+import jclp.releaseSelf
+import jclp.retainSelf
 import jclp.vdm.VDMReader
 import java.io.ByteArrayInputStream
 import java.io.InputStream
@@ -82,12 +86,13 @@ fun emptyFlob(mime: String = "") = flobOf("_empty_", ByteArray(0), mime)
 
 internal class BlockFlob(
         override val name: String,
-        private val file: RandomAccessFile,
+        val file: RandomAccessFile,
         private val offset: Long,
         private val length: Long,
         mime: String
-) : AbstractFlob(mime) {
+) : AbstractFlob(mime), Reusable {
     init {
+        file.retainSelf()
         require(offset + length <= file.length()) { "offset($offset) + length($length) > total(${file.length()})" }
     }
 
@@ -101,6 +106,12 @@ internal class BlockFlob(
         it.copyRange(output, length)
     }
 
+    private val helper = ReusableHelper { file.releaseSelf() }
+
+    override fun release() = helper.release()
+
+    override fun retain() = helper.retain()
+
     override fun toString() = "clip://${super.toString()}"
 }
 
@@ -108,10 +119,20 @@ fun flobOf(name: String, file: RandomAccessFile, offset: Long, length: Long, mim
     return BlockFlob(name, file, offset, length, mime)
 }
 
-internal class VDMFlob(private val reader: VDMReader, override val name: String, mime: String) : AbstractFlob(mime) {
+internal class VDMFlob(val reader: VDMReader, override val name: String, mime: String) : AbstractFlob(mime), Reusable {
+    init {
+        reader.retainSelf()
+    }
+
     private val entry = reader.getEntry(name) ?: throw IllegalArgumentException("No such entry '$name'")
 
     override fun openStream() = reader.getInputStream(entry)
+
+    private val helper = ReusableHelper { reader.releaseSelf() }
+
+    override fun release() = helper.release()
+
+    override fun retain() = helper.retain()
 
     override fun toString() = "$entry;mime=$mime"
 }

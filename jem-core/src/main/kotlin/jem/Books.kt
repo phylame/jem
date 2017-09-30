@@ -22,16 +22,29 @@ import jclp.Hierarchy
 import jclp.VariantMap
 import jclp.flob.Flob
 import jclp.log.Log
+import jclp.releaseSelf
+import jclp.retainSelf
 import jclp.text.Text
-import java.util.*
-
-private typealias Cleanup = (Chapter) -> Unit
 
 open class Chapter(
-        title: String = "", var text: Text? = null, cover: Flob? = null, intro: Text? = null, var tag: Any? = null
+        title: String = "", text: Text? = null, cover: Flob? = null, intro: Text? = null, tag: Any? = null
 ) : Hierarchy<Chapter>(), Cloneable {
     var attributes = Attributes.newAttributes()
         private set
+
+    var text = text
+        set(value) {
+            field?.releaseSelf()
+            value?.retainSelf()
+            field = value
+        }
+
+    var tag = tag
+        set(value) {
+            field?.releaseSelf()
+            value?.retainSelf()
+            field = value
+        }
 
     init {
         set(TITLE, title)
@@ -74,29 +87,17 @@ open class Chapter(
 
     private var isCleaned = false
 
-    private val cleanups = LinkedHashSet<Cleanup>()
-
-    fun registerCleanup(cleanup: Cleanup) {
-        cleanups += cleanup
-    }
-
-    fun removeCleanup(cleanup: Cleanup) {
-        cleanups -= cleanup
-    }
-
     fun cleanup() {
-        if (isCleaned) {
-            return
-        }
-        cleanups.onEach { it(this) }.clear()
+        isCleaned = true
         clear(true)
         attributes.clear()
-        isCleaned = true
+        text = null
+        tag = null
     }
 
     protected fun finalize() {
         if (!isCleaned) {
-            Log.w(javaClass.simpleName) { "chapter $title is not cleaned" }
+            Log.w(javaClass.simpleName) { "chapter '$title' is not cleaned" }
         }
     }
 

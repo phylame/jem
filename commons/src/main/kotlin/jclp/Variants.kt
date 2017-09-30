@@ -166,6 +166,38 @@ object Variants {
 
 typealias VariantValidator = (String, Any) -> Unit
 
+interface Reusable {
+    fun retain()
+
+    fun release()
+}
+
+fun Any.retainSelf() {
+    (this as? Reusable)?.retain()
+}
+
+fun Any.releaseSelf() {
+    (this as? Reusable)?.release()
+}
+
+class ReusableHelper(private val dispose: () -> Unit) : Reusable {
+    private var refCount = 1
+
+    override fun retain() {
+        require(refCount != 0) { "object is disposed" }
+        ++refCount
+    }
+
+    override fun release() {
+        require(refCount != 0) { "object is disposed" }
+        if (--refCount == 0) {
+            dispose()
+        }
+    }
+
+    override fun toString() = "ReusableHelper(refCount=$refCount)"
+}
+
 class VariantMap(private val validator: VariantValidator? = null) : Iterable<Pair<String, Any>>, Cloneable {
     private var values = hashMapOf<String, Any>()
 
@@ -180,7 +212,8 @@ class VariantMap(private val validator: VariantValidator? = null) : Iterable<Pai
     operator fun set(name: String, value: Any): Any? {
         require(name.isNotEmpty()) { "name cannot be empty" }
         validator?.invoke(name, value)
-        return values.put(name, value)
+        value.retainSelf()
+        return values.put(name, value)?.also { it.releaseSelf() }
     }
 
     fun update(others: VariantMap) {
@@ -197,16 +230,17 @@ class VariantMap(private val validator: VariantValidator? = null) : Iterable<Pai
 
     operator fun get(name: String) = if (name.isEmpty()) null else values[name]
 
-    fun remove(name: String) = if (name.isEmpty()) null else values.remove(name)
+    fun remove(name: String) = if (name.isEmpty()) null else values.remove(name)?.also { it.releaseSelf() }
 
-    override fun iterator() = values.entries.map { it.toPair() }.iterator()
+    override fun iterator() = values.entries.asSequence().map { it.toPair() }.iterator()
 
-    fun clear() = values.clear()
+    fun clear() = values.onEach { it.value.releaseSelf() }.clear()
 
     @Suppress("UNCHECKED_CAST")
     public override fun clone(): VariantMap {
         val copy = super.clone() as VariantMap
         copy.values = values.clone() as HashMap<String, Any>
+        copy.values.values.forEach { it.retainSelf() }
         return copy
     }
 

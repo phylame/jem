@@ -45,8 +45,7 @@ class BookCreator : SCJAddon(), Command {
             echo(tr("bookCreator.noTitle", title))
             book.title = title
         }
-        val path = saveBook(outParam(book)) ?: return -1
-        println(path)
+        println(saveBook(outParam(book)) ?: return -1)
         return 0
     }
 }

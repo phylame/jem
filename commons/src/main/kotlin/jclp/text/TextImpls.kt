@@ -18,7 +18,10 @@
 
 package jclp.text
 
+import jclp.Reusable
+import jclp.ReusableHelper
 import jclp.flob.Flob
+import jclp.releaseSelf
 import java.io.Reader
 import java.io.Writer
 import java.nio.charset.Charset
@@ -37,7 +40,7 @@ fun textOf(cs: CharSequence, type: String = TEXT_PLAIN): Text = StringText(type,
 
 fun emptyText(type: String = TEXT_PLAIN) = textOf("", type)
 
-internal class FlobText(type: String, private val flob: Flob, encoding: String? = null) : AbstractText(type) {
+internal open class FlobText(type: String, val flob: Flob, encoding: String? = null) : AbstractText(type) {
     private val charset: Charset = when {
         encoding == null || encoding.isEmpty() -> Charset.defaultCharset()
         else -> Charset.forName(encoding)
@@ -52,4 +55,14 @@ internal class FlobText(type: String, private val flob: Flob, encoding: String? 
     private fun openReader() = flob.openStream().bufferedReader(charset)
 }
 
-fun textOf(flob: Flob, encoding: String? = null, type: String = TEXT_PLAIN): Text = FlobText(type, flob, encoding)
+fun textOf(flob: Flob, encoding: String? = null, type: String = TEXT_PLAIN): Text {
+    if (flob is Reusable) {
+        flob.retain()
+        return object : FlobText(type, flob, encoding), Reusable {
+            val helper = ReusableHelper { this.flob.releaseSelf() }
+            override fun release() = helper.release()
+            override fun retain() = helper.retain()
+        }
+    }
+    return FlobText(type, flob, encoding)
+}

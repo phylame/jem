@@ -51,8 +51,11 @@ private class FileVDMReader(val dir: File) : VDMReader {
 
     private val streams = LinkedList<InputStream>().synchronized()
 
-    override fun getEntry(name: String) = File(dir, name).takeIf(File::exists)?.let {
-        FileVDMEntry(it, name.replace('\\', '/'), this)
+    override fun getEntry(name: String): FileVDMEntry? {
+        require(name.isNotEmpty()) { "name for entry cannot be empty" }
+        return File(dir, name).takeIf(File::isFile)?.let {
+            FileVDMEntry(it, name.replace('\\', '/'), this)
+        }
     }
 
     override fun getInputStream(entry: VDMEntry) = if (entry !is FileVDMEntry || entry.reader != this) {

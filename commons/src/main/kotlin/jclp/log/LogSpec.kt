@@ -37,9 +37,9 @@ interface LogFacade {
 }
 
 object Log {
-    var level = LogLevel.INFO
+    var level: LogLevel = LogLevel.INFO
 
-    var facade = SimpleFacade
+    var facade: LogFacade = SimpleFacade
 
     fun isEnable(level: LogLevel) = level.code <= this.level.code
 

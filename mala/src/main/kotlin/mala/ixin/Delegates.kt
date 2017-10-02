@@ -41,8 +41,7 @@ abstract class IDelegate : AppDelegate, CommandHandler {
 
     override fun handle(command: String, source: Any): Boolean {
         if (!commandDispatcher.handle(command, source)) {
-            App.error("no handler for command: $command")
-            return false
+            throw NotImplementedError("No handler for command: '$command'")
         }
         return true
     }
@@ -121,25 +120,26 @@ class AppPane : BorderPane() {
     fun setupMenuBar(groups: Collection<Item>) {
         if (groups.isNotEmpty()) {
             menuBar = MenuBar().apply {
-                val menus = menus
+                id = "main-menu-bar"
+                val menus = this.menus
                 val delegate = App.delegate as IDelegate
                 groups.filterIsInstance<ItemGroup>().forEach {
                     menus += it.toMenu(delegate, App, App.assets, delegate.actionMap, delegate.menuMap)
                 }
-                isUseSystemMenuBar = true
             }
         }
     }
 
     fun setupToolBar(items: Collection<*>) {
         toolBar = ToolBar().apply {
+            id = "main-tool-bar"
             val delegate = App.delegate as IDelegate
             init(items, delegate, App, App.assets, delegate.actionMap)
         }
     }
 
     fun setup(designer: AppDesigner) {
-        designer.menuBar?.let(this::setupMenuBar)
-        designer.toolBar?.let(this::setupToolBar)
+        designer.items["menuBar"]?.let(this::setupMenuBar)
+        designer.items["toolBar"]?.let(this::setupToolBar)
     }
 }

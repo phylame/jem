@@ -1,5 +1,5 @@
 {
-  "menubar": [
+  "menuBar": [
     {
       "id": "menuFile",
       "items": [
@@ -100,7 +100,9 @@
         "exportChapter",
         null,
         "renameChapter",
+        "editText",
         null,
+        "moveChapter",
         "mergeChapter",
         null,
         "bookAttributes",
@@ -108,7 +110,10 @@
       ]
     },
     {
-      "id": "menuTools"
+      "id": "menuTools",
+      "items": [
+        "bookCrawler"
+      ]
     },
     {
       "id": "menuWindow",
@@ -119,12 +124,18 @@
             "nextTab",
             "previousTab",
             null,
-            "closeActiveTab",
+            "closeTab",
             "closeOtherTabs",
             "closeAllTabs",
             "closeUnmodifiedTabs"
           ]
         }
+      ]
+    },
+    {
+      "id": "menuPlugins",
+      "items": [
+        "pluginManager"
       ]
     },
     {
@@ -137,7 +148,7 @@
       ]
     }
   ],
-  "toolbar": [
+  "toolBar": [
     "newFile",
     "openFile",
     "saveFile",
@@ -163,10 +174,64 @@
     null,
     "help"
   ],
-  "toolbarPopup": [
+  "navContext": [
     {
-      "id": "lockToolbar",
-      "style": "check"
-    }
+      "id": "menuNew",
+      "items": [
+        "newChapter",
+        "importChapter"
+      ]
+    },
+    "insertChapter",
+    null,
+    "closeFile",
+    null,
+    "cut",
+    "paste",
+    null,
+    "exportChapter",
+    null,
+    "renameChapter",
+    "editText",
+    null,
+    "delete",
+    null,
+    "moveChapter",
+    "mergeChapter",
+    null,
+    "viewAttributes"
+  ],
+  "navTools": [
+    "newChapter",
+    "renameChapter",
+    "viewAttributes",
+    null,
+    "collapseToc",
+    "gotoChapter"
+  ],
+  "tabContext": [
+    "closeTab",
+    "closeOtherTabs",
+    "closeAllTabs",
+    "closeUnmodifiedTabs",
+    null,
+    "nextTab",
+    "previousTab"
+  ],
+  "textContext": [
+    "goto",
+    null,
+    "importText",
+    "exportText",
+    null,
+    "undo",
+    "redo",
+    null,
+    "cut",
+    "copy",
+    "paste",
+    "delete",
+    null,
+    "selectAll"
   ]
 }

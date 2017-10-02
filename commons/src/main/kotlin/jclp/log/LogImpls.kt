@@ -43,11 +43,17 @@ object SimpleFacade : LogFacade {
 
 object JDKFacade : LogFacade {
     override fun log(tag: String, level: LogLevel, msg: String) {
-        Logger.getLogger(tag).log(mapLevel(level), msg)
+        Logger.getLogger(tag).let {
+            it.level = mapLevel(Log.level)
+            it.log(mapLevel(level), msg)
+        }
     }
 
     override fun log(tag: String, level: LogLevel, msg: String, t: Throwable) {
-        Logger.getLogger(tag).log(mapLevel(level), msg, t)
+        Logger.getLogger(tag).let {
+            it.level = mapLevel(Log.level)
+            it.log(mapLevel(level), msg, t)
+        }
     }
 
     private fun mapLevel(level: LogLevel) = when (level) {

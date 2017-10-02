@@ -25,21 +25,15 @@ import jclp.log.Log
 import jclp.releaseSelf
 import jclp.retainSelf
 import jclp.text.Text
+import jem.Attributes.VALUE_SEPARATOR
 
 open class Chapter(
-        title: String = "", text: Text? = null, cover: Flob? = null, intro: Text? = null, tag: Any? = null
+        title: String = "", text: Text? = null, cover: Flob? = null, intro: Text? = null
 ) : Hierarchy<Chapter>(), Cloneable {
     var attributes = Attributes.newAttributes()
         private set
 
     var text = text
-        set(value) {
-            field?.releaseSelf()
-            value?.retainSelf()
-            field = value
-        }
-
-    var tag = tag
         set(value) {
             field?.releaseSelf()
             value?.retainSelf()
@@ -66,34 +60,23 @@ open class Chapter(
 
     operator fun set(name: String, value: Any) = attributes.set(name, value)
 
-    operator fun set(name: String, values: Collection<Any>): Any? {
-        return attributes.set(name, values.joinToString(Attributes.VALUE_SEPARATOR))
-    }
-
-    fun newChapter(title: String = "", text: Text? = null, cover: Flob? = null, intro: Text? = null): Chapter {
-        val chapter = Chapter(title, text, cover, intro)
-        append(chapter)
-        return chapter
-    }
+    operator fun set(name: String, values: Collection<Any>) = attributes.set(name, values.joinToString(VALUE_SEPARATOR))
 
     val isSection get() = size != 0
 
     fun clear(cleanup: Boolean) {
-        if (cleanup) {
-            forEach(Chapter::cleanup)
-        }
+        if (cleanup) forEach(Chapter::cleanup)
         clear()
     }
-
-    private var isCleaned = false
 
     fun cleanup() {
         isCleaned = true
         clear(true)
         attributes.clear()
         text = null
-        tag = null
     }
+
+    private var isCleaned = false
 
     protected fun finalize() {
         if (!isCleaned) {
@@ -103,32 +86,36 @@ open class Chapter(
 
     public override fun clone() = (super.clone() as Chapter).also {
         dumpTo(it, true)
-        it.parent = null
     }
 
     protected open fun dumpTo(chapter: Chapter, deepCopy: Boolean) {
+        text?.retainSelf() // text is assigned to chapter
         chapter.attributes = attributes.clone()
         if (deepCopy) {
-            chapter.clear()
-            for (stub in this) {
-                chapter.append(stub.clone())
-            }
+            chapter.parent = null
+            chapter.children = arrayListOf()
+            this.children.map { it.clone() }.toCollection(chapter.children)
         }
     }
 
     override fun toString(): String {
-        val b = StringBuilder(javaClass.simpleName).append('@').append(attributes)
+        val b = StringBuilder(javaClass.simpleName)
+        b.append("@0x").append(hashCode().toString(16))
+        b.append("%").append(attributes)
         if (text != null) {
             b.append(", text")
         }
         if (isSection) {
             b.append(", ").append(size).append(" chapter(s)")
         }
-        if (tag != null) {
-            b.append(", [").append(tag).append(']')
-        }
         return b.toString()
     }
+}
+
+fun Chapter.newChapter(title: String = "", text: Text? = null, cover: Flob? = null, intro: Text? = null): Chapter {
+    val chapter = Chapter(title, text, cover, intro)
+    append(chapter)
+    return chapter
 }
 
 open class Book(title: String = "", author: String = "") : Chapter(title) {

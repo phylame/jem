@@ -55,14 +55,17 @@ internal open class FlobText(type: String, val flob: Flob, encoding: String? = n
     private fun openReader() = flob.openStream().bufferedReader(charset)
 }
 
-fun textOf(flob: Flob, encoding: String? = null, type: String = TEXT_PLAIN): Text {
-    if (flob is Reusable) {
-        flob.retain()
-        return object : FlobText(type, flob, encoding), Reusable {
-            val helper = ReusableHelper { this.flob.releaseSelf() }
+fun textOf(source: Flob, encoding: String? = null, type: String = TEXT_PLAIN): Text {
+    if (source is Reusable) {
+        source.retain()
+        return object : FlobText(type, source, encoding), Reusable {
+            val helper = object : ReusableHelper() {
+                override fun dispose() = flob.releaseSelf()
+            }
+
             override fun release() = helper.release()
             override fun retain() = helper.retain()
         }
     }
-    return FlobText(type, flob, encoding)
+    return FlobText(type, source, encoding)
 }

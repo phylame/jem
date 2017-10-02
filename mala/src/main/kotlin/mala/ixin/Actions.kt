@@ -30,6 +30,10 @@ class Action(val id: String) {
     var accelerator by acceleratorProperty
     var isDisable by disableProperty
     var isSelected by selectedProperty
+
+    override fun toString(): String {
+        return "Action(id='$id', text='$text', icon='$icon', toast='$toast', isDisable=$isDisable, isSelected=$isSelected)"
+    }
 }
 
 fun ActionMap?.getOrCreate(id: String, m: Translator, r: AssetManager): Action {

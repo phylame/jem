@@ -19,6 +19,8 @@
 package jem.imabw
 
 import javafx.application.Application
+import jclp.log.Log
+import jclp.log.LogLevel
 import jem.Build
 import jem.imabw.ui.Form
 import mala.App
@@ -38,6 +40,7 @@ object Imabw : IDelegate() {
         internal set
 
     override fun onStart() {
+        Log.level = LogLevel.ALL
 //        Locale.setDefault(Locale.ENGLISH)
         App.translator = App.assets.translatorFor("i18n/dev/app")
     }

@@ -25,8 +25,16 @@ import java.io.File
 
 data class ParserParam(val path: String, val format: String = "", val arguments: Settings? = null) {
     val epmName get() = format.takeIf(String::isNotEmpty) ?: extName(File(path).canonicalPath)
+
+    override fun toString(): String {
+        return "ParserParam(path='$path', format='$format', epmName='$epmName', arguments=$arguments)"
+    }
 }
 
 data class MakerParam(val book: Book, val path: String, val format: String = "", val arguments: Settings? = null) {
     val epmName get() = format.takeIf(String::isNotEmpty) ?: extName(File(path).canonicalPath)
+
+    override fun toString(): String {
+        return "MakerParam(book=$book, path='$path', format='$format', epmName='$epmName', arguments=$arguments)"
+    }
 }

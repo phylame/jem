@@ -13,7 +13,9 @@ fun AssetManager.imageFor(name: String) = resourceFor(IxIn.gfxPath(name))?.openS
 fun AssetManager.designerFor(name: String) = resourceFor(name)?.openStream()?.use(::JSONDesigner)
 
 object IxIn {
-    var iconSet = System.getProperty("ixin.icons") or { "default" }
+    var iconSet = System.getProperty("ixin.icons") or "default"
+
+    var largeIconSuffix = System.getProperty("ixin.largeIconSuffix") or "@x"
 
     var isMnemonicEnable = "mac" !in System.getProperty("os.name")
 

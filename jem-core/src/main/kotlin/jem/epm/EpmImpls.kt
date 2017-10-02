@@ -20,6 +20,7 @@ package jem.epm
 
 import jclp.Reusable
 import jclp.ReusableHelper
+import jclp.log.Log
 import jclp.releaseSelf
 import jclp.setting.Settings
 import jclp.setting.getInt
@@ -81,7 +82,12 @@ private class VDMReaderWrapper(val reader: VDMReader) : VDMReader by reader, Reu
 
     override fun release() = helper.release()
 
-    val helper = ReusableHelper { reader.close() }
+    val helper = object : ReusableHelper() {
+        override fun dispose() {
+            Log.d("VDMReaderWrapper") { "'$reader' is closing for no reference" }
+            reader.close()
+        }
+    }
 
     override fun toString() = reader.toString()
 }

@@ -164,8 +164,6 @@ object Variants {
     }
 }
 
-typealias VariantValidator = (String, Any) -> Unit
-
 interface Reusable {
     fun retain()
 
@@ -180,7 +178,7 @@ fun Any.releaseSelf() {
     (this as? Reusable)?.release()
 }
 
-class ReusableHelper(private val dispose: () -> Unit) : Reusable {
+abstract class ReusableHelper : Reusable {
     private var refCount = 1
 
     override fun retain() {
@@ -195,8 +193,10 @@ class ReusableHelper(private val dispose: () -> Unit) : Reusable {
         }
     }
 
-    override fun toString() = "ReusableHelper(refCount=$refCount)"
+    protected abstract fun dispose()
 }
+
+typealias VariantValidator = (String, Any) -> Unit
 
 class VariantMap(private val validator: VariantValidator? = null) : Iterable<Pair<String, Any>>, Cloneable {
     private var values = hashMapOf<String, Any>()

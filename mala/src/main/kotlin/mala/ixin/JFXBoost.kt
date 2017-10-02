@@ -18,13 +18,11 @@
 
 package mala.ixin
 
+import javafx.beans.Observable
 import javafx.beans.binding.ObjectBinding
-import javafx.beans.property.SimpleObjectProperty
-import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableObjectValue
 import javafx.beans.value.ObservableValue
 import javafx.beans.value.WritableValue
-import javafx.collections.FXCollections
 import javafx.collections.ObservableList
 import javafx.scene.Group
 import javafx.scene.Node
@@ -52,6 +50,20 @@ operator fun Group.plusAssign(elements: Collection<Node>) {
     children.addAll(elements)
 }
 
+fun <T : Hierarchy<T>> T.toTreeItem(): TreeItem<T> = object : TreeItem<T>(this) {
+    private var isFirstTime = true
+
+    override fun isLeaf() = value.size == 0
+
+    override fun getChildren(): ObservableList<TreeItem<T>> {
+        if (isFirstTime) {
+            isFirstTime = false
+            super.getChildren() += value.map { it.toTreeItem() }
+        }
+        return super.getChildren()
+    }
+}
+
 operator fun <T> WritableValue<T>.getValue(ref: Any, property: KProperty<*>): T? {
     return value
 }
@@ -74,40 +86,16 @@ fun <T> ObservableObjectValue<T>.coalesce(vararg others: ObservableObjectValue<T
     }
 }
 
-fun <T : Hierarchy<T>> T.toTreeItem(): TreeItem<T> = object : TreeItem<T>(this) {
-    private var isFirstTime = true
-
-    override fun isLeaf() = value.size == 0
-
-    override fun getChildren(): ObservableList<TreeItem<T>> {
-        if (isFirstTime) {
-            isFirstTime = false
-            super.getChildren() += buildChildren(this)
-        }
-        return super.getChildren()
+class CommonBinding<T : Observable, R>(private val dep: T, private val compute: (T) -> R) : ObjectBinding<R>() {
+    init {
+        super.bind(dep)
     }
 
-    fun buildChildren(item: TreeItem<T>): ObservableList<TreeItem<T>> {
-        return FXCollections.observableArrayList<TreeItem<T>>().apply {
-            item.value.asSequence().map { it.toTreeItem() }.toCollection(this)
-        }
-    }
+    override fun dispose() = super.unbind(dep)
+
+    override fun computeValue() = compute(dep)
 }
 
-fun <T, R> ObservableValue<T>.lazyBind(init: (T) -> R): ObservableValue<R> {
-    val helper = object : SimpleObjectProperty<R>(value?.let(init)), ChangeListener<T> {
-        override fun changed(observable: ObservableValue<out T>?, oldValue: T?, newValue: T?) {
-            if (newValue == null) {
-                value = null
-            } else if (value == null) {
-                value = init(newValue)
-            }
-        }
-    }
-    addListener(helper)
-    return helper
-}
+fun ObservableValue<Image?>.lazyImageView() = CommonBinding(this) { it.value?.let(::ImageView) }
 
-fun ObservableValue<String?>.lazyTooltip() = lazyBind(::Tooltip)
-
-fun ObservableValue<Image?>.lazyImageView() = lazyBind(::ImageView)
+fun ObservableValue<String?>.lazyTooltip() = CommonBinding(this) { it.value?.takeIf { it.isNotEmpty() }?.let(::Tooltip) }

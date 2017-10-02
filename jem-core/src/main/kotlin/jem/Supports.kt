@@ -30,9 +30,9 @@ object Build {
     const val SOURCE = "https://github.com/phylame/jem"
 }
 
-internal object M : Linguist("!jem/messages")
-
 open class JemException : Exception {
     constructor(message: String) : super(message)
     constructor(message: String, cause: Throwable) : super(message, cause)
 }
+
+internal object M : Linguist("!jem/messages")

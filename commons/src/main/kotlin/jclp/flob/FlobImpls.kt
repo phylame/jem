@@ -106,7 +106,9 @@ internal class BlockFlob(
         it.copyRange(output, length)
     }
 
-    private val helper = ReusableHelper { file.releaseSelf() }
+    private val helper = object : ReusableHelper() {
+        override fun dispose() = file.releaseSelf()
+    }
 
     override fun release() = helper.release()
 
@@ -128,7 +130,9 @@ internal class VDMFlob(val reader: VDMReader, override val name: String, mime: S
 
     override fun openStream() = reader.getInputStream(entry)
 
-    private val helper = ReusableHelper { reader.releaseSelf() }
+    private val helper = object : ReusableHelper() {
+        override fun dispose() = reader.releaseSelf()
+    }
 
     override fun release() = helper.release()
 

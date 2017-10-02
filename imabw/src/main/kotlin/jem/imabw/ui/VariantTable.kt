@@ -16,23 +16,15 @@
  * limitations under the License.
  */
 
-plugins {
-    id 'java-library'
-    id 'org.jetbrains.kotlin.jvm' version '1.1.51'
+package jem.imabw.ui
+
+import javafx.scene.control.TableView
+import jclp.VariantMap
+
+class VariantTable(val map: VariantMap) : TableView<VairantItem>() {
+
 }
 
-description = 'Implementations for EPM'
+class VairantItem {
 
-dependencies {
-    api project(':jem-core')
-    api "xpp3:xpp3:$xppVersion"
-    api "org.apache.velocity:velocity-engine-core:$velocityVersion"
-}
-
-compileKotlin {
-    kotlinOptions.jvmTarget = javaVersion
-}
-
-compileTestKotlin {
-    kotlinOptions.jvmTarget = javaVersion
 }

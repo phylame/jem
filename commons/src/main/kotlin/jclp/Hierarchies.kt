@@ -46,6 +46,15 @@ fun <T : Hierarchical<T>> T.locate(indices: IntArray): T? {
     return item
 }
 
+val <T : Hierarchical<T>> T.root: T
+    get() {
+        var parent: T = this
+        while (parent.parent != null) {
+            parent = parent.parent!!
+        }
+        return parent
+    }
+
 val Hierarchical<*>.depth: Int
     get() {
         if (size == 0) {
@@ -67,10 +76,10 @@ fun <T : Hierarchical<T>> T.locate(indices: Collection<Int>): T? {
 }
 
 open class Hierarchy<T : Hierarchy<T>> : Hierarchical<T> {
-    final override var parent: T? = null
+    override var parent: T? = null
         protected set
 
-    private val children = arrayListOf<T>()
+    protected var children = arrayListOf<T>()
 
     final override val size get() = children.size
 
@@ -80,6 +89,12 @@ open class Hierarchy<T : Hierarchy<T>> : Hierarchical<T> {
 
     operator fun plusAssign(item: T) {
         append(item)
+    }
+
+    operator fun plusAssign(items: Iterable<T>) {
+        for (item in items) {
+            append(item)
+        }
     }
 
     fun insert(index: Int, item: T) {

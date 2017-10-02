@@ -42,9 +42,9 @@ object Workbench : CommandHandler {
     fun openFile() {
         val fileChooser = FileChooser()
 //        fileChooser.title
-        fileChooser.initialDirectory= File("E:/tmp")
+        fileChooser.initialDirectory = File("E:/tmp")
         fileChooser.extensionFilters += FileChooser.ExtensionFilter("PMAB File", "*.pmab")
-        val file = fileChooser.showOpenDialog(Imabw.form.stage)?:return
+        val file = fileChooser.showOpenDialog(Imabw.form.stage) ?: return
         val task = OpenTask(ParserParam(file.path))
         task.setOnSucceeded {
             submit(Work(task.value, task.param))
@@ -63,6 +63,7 @@ object Workbench : CommandHandler {
     }
 
     internal fun init() {
+        // TODO: parse the app arguments
         newFile(tr("book.untitled"))
         Imabw.message(App.tr("status.ready"))
     }
@@ -73,7 +74,8 @@ object Workbench : CommandHandler {
 
     override fun handle(command: String, source: Any): Boolean {
         when (command) {
-            "newFile" -> newFile("Example ${tasks.size}")
+            "newFile" -> newFile("Book ${tasks.size}")
+            "clearHistory" -> History.items.clear()
             else -> return false
         }
         return true
@@ -92,4 +94,8 @@ class Work(val book: Book, val inParam: ParserParam? = null) {
 
 private class OpenTask(val param: ParserParam) : Task<Book>() {
     override fun call() = EpmManager.readBook(param)
+}
+
+object History {
+    val items = FXCollections.observableArrayList<String>()
 }

@@ -11,7 +11,6 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.json.JSONTokener
 import java.io.InputStream
-import java.util.*
 
 enum class Style {
     NORMAL, TOGGLE, RADIO, CHECK, LINK
@@ -36,10 +35,10 @@ open class ItemGroup(id: String, val items: Collection<Item>) : Item(id) {
 object Separator : Item("__SEPARATOR__")
 
 fun loadAction(id: String, m: Translator, r: AssetManager) = Action(id).apply {
-    text = m.optTr(id) ?: ""
+    text = m.optTr(id) ?: id
     val iconId = m.optTr("$id.icon") or { "actions/$id" }
     icon = r.imageFor(iconId)
-    largeIcon = r.imageFor("$iconId@x")
+    largeIcon = r.imageFor("$iconId${IxIn.largeIconSuffix}")
     toast = m.optTr("$id.toast")
     m.optTr("$id.accelerator")?.takeIf { it.isNotEmpty() }?.let {
         accelerator = KeyCombination.valueOf(it)
@@ -80,7 +79,7 @@ fun MutableCollection<Item>.init(items: JSONArray) {
 fun ItemGroup.toMenu(handler: CommandHandler, m: Translator, r: AssetManager, am: ActionMap?, mm: MenuMap?): Menu {
     return mm?.get(id) ?: Menu().also {
         mm?.set(id, it)
-        it.text = m.tr(id)
+        it.text = m.optTr(id) ?: id
         it.init(items, handler, m, r, am, mm)
     }
 }
@@ -127,23 +126,18 @@ fun ToolBar.init(items: Iterable<*>, handler: CommandHandler, m: Translator, r: 
 }
 
 interface AppDesigner {
-    val menuBar: Collection<Item>?
-
-    val toolBar: Collection<*>?
+    val items: Map<String, Collection<Item>>
 }
 
 class JSONDesigner(stream: InputStream) : AppDesigner {
-    override val menuBar = arrayListOf<Item>()
-
-    override val toolBar = arrayListOf<Item>()
+    override val items = hashMapOf<String, List<Item>>()
 
     init {
         val json = JSONObject(JSONTokener(stream))
-        json.optJSONArray("menubar")?.let {
-            menuBar.init(it)
-        }
-        json.optJSONArray("toolbar")?.let {
-            toolBar.init(it)
+        for (key in json.keySet()) {
+            json.optJSONArray(key)?.let {
+                items[key] = ArrayList<Item>(it.length()).apply { init(it) }
+            }
         }
     }
 }

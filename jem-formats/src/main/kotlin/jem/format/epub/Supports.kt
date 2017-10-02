@@ -29,7 +29,11 @@ class EpubFactory : EpmFactory {
 
     override val name = "Epub for Jem"
 
+    override val hasMaker = true
+
     override val maker: Maker = EpubMaker
+
+    override val hasParser = true
 
     override val parser: Parser = EpubParser
 }

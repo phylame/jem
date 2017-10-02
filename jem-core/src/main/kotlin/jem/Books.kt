@@ -28,12 +28,19 @@ import jclp.text.Text
 import jem.Attributes.VALUE_SEPARATOR
 
 open class Chapter(
-        title: String = "", text: Text? = null, cover: Flob? = null, intro: Text? = null
+        title: String = "", text: Text? = null, cover: Flob? = null, intro: Text? = null, tag: Any? = null
 ) : Hierarchy<Chapter>(), Cloneable {
     var attributes = Attributes.newAttributes()
         private set
 
-    var text = text
+    var text: Text? = text
+        set(value) {
+            field?.releaseSelf()
+            value?.retainSelf()
+            field = value
+        }
+
+    var tag: Any? = tag
         set(value) {
             field?.releaseSelf()
             value?.retainSelf()

@@ -18,8 +18,12 @@
 
 package mala.ixin
 
+import javafx.beans.property.BooleanProperty
 import javafx.beans.property.SimpleObjectProperty
+import javafx.beans.value.ChangeListener
+import javafx.geometry.Pos
 import javafx.scene.Node
+import javafx.scene.control.Label
 import javafx.scene.control.Menu
 import javafx.scene.control.MenuBar
 import javafx.scene.control.ToolBar
@@ -50,7 +54,7 @@ abstract class IDelegate : AppDelegate, CommandHandler {
 class AppPane : BorderPane() {
     val menuBarProperty = SimpleObjectProperty<MenuBar>()
     val toolBarProperty = SimpleObjectProperty<ToolBar>()
-    val statusBarProperty = SimpleObjectProperty<Node>()
+    val statusBarProperty = SimpleObjectProperty<StatusBar>()
 
     var menuBar by menuBarProperty
     var toolBar by toolBarProperty
@@ -60,22 +64,38 @@ class AppPane : BorderPane() {
 
     init {
         styleClass += "app-pane"
-        menuBarProperty.addListener { _, oldValue, newValue ->
-            if (oldValue !== newValue) {
+        val visibleListener = ChangeListener<Boolean> { observable, _, visible ->
+            val node = (observable as BooleanProperty).bean as Node
+            if (node is StatusBar) {
+                bottom = if (visible) node else null
+            } else {
+                if (visible) {
+                    topBox.children += node
+                } else {
+                    topBox.children.remove(node)
+                }
+            }
+        }
+        menuBarProperty.addListener { _, oldBar, newBar ->
+            if (oldBar !== newBar) {
                 val items = topBox.children
-                if (oldValue == null) { // add menu bar
+                if (oldBar == null) { // add menu bar
                     if (items.isEmpty()) {
-                        items += newValue
+                        items += newBar
                     } else {
-                        items.add(0, newValue)
+                        items.add(0, newBar)
                     }
-                } else if (newValue == null) { // remove menu bar
+                    newBar.visibleProperty().addListener(visibleListener)
+                } else if (newBar == null) { // remove menu bar
                     if (items.first() is MenuBar) {
-                        items.remove(oldValue)
+                        items.remove(oldBar)
+                        oldBar.visibleProperty().removeListener(visibleListener)
                     }
                 } else { // replace menu bar
                     if (items.first() is MenuBar) {
-                        items[0] = newValue
+                        items[0] = newBar
+                        newBar.visibleProperty().addListener(visibleListener)
+                        oldBar.visibleProperty().removeListener(visibleListener)
                     }
                 }
                 if (items.isEmpty()) {
@@ -85,22 +105,26 @@ class AppPane : BorderPane() {
                 }
             }
         }
-        toolBarProperty.addListener { _, oldValue, newValue ->
-            if (oldValue !== newValue) {
+        toolBarProperty.addListener { _, oldBar, newBar ->
+            if (oldBar !== newBar) {
                 val items = topBox.children
-                if (oldValue == null) { // add tool bar
+                if (oldBar == null) { // add tool bar
                     if (items.isEmpty()) {
-                        items += newValue
+                        items += newBar
                     } else {
-                        items.add(1, newValue)
+                        items.add(1, newBar)
                     }
-                } else if (newValue == null) { // remove tool bar
+                    newBar.visibleProperty().addListener(visibleListener)
+                } else if (newBar == null) { // remove tool bar
                     if (items.last() is ToolBar) {
-                        items.remove(oldValue)
+                        items.remove(oldBar)
+                        oldBar.visibleProperty().removeListener(visibleListener)
                     }
                 } else { // replace tool bar
                     if (items.last() is ToolBar) {
-                        items[items.size - 1] = newValue
+                        items[items.size - 1] = newBar
+                        newBar.visibleProperty().addListener(visibleListener)
+                        oldBar.visibleProperty().removeListener(visibleListener)
                     }
                 }
                 if (items.isEmpty()) {
@@ -110,20 +134,22 @@ class AppPane : BorderPane() {
                 }
             }
         }
-        statusBarProperty.addListener { _, oldValue, newValue ->
-            if (oldValue !== newValue) {
-                bottom = newValue
+        statusBarProperty.addListener { _, oldBar, newBar ->
+            if (oldBar !== newBar) {
+                bottom = newBar
+                newBar?.visibleProperty()?.addListener(visibleListener)
+                oldBar?.visibleProperty()?.removeListener(visibleListener)
             }
         }
     }
 
-    fun setupMenuBar(groups: Collection<Item>) {
-        if (groups.isNotEmpty()) {
+    fun setupMenuBar(items: Collection<Item>) {
+        if (items.isNotEmpty()) {
             menuBar = MenuBar().apply {
-                id = "main-menu-bar"
                 val menus = this.menus
+                styleClass += "app-menu-bar"
                 val delegate = App.delegate as IDelegate
-                groups.filterIsInstance<ItemGroup>().forEach {
+                items.filterIsInstance<ItemGroup>().forEach {
                     menus += it.toMenu(delegate, App, App.assets, delegate.actionMap, delegate.menuMap)
                 }
             }
@@ -131,15 +157,41 @@ class AppPane : BorderPane() {
     }
 
     fun setupToolBar(items: Collection<*>) {
-        toolBar = ToolBar().apply {
-            id = "main-tool-bar"
-            val delegate = App.delegate as IDelegate
-            init(items, delegate, App, App.assets, delegate.actionMap)
+        if (items.isNotEmpty()) {
+            toolBar = ToolBar().apply {
+                styleClass += "app-tool-bar"
+                val delegate = App.delegate as IDelegate
+                init(items, delegate, App, App.assets, delegate.actionMap)
+            }
         }
+    }
+
+    fun setupStatusBar() {
+        statusBar = StatusBar()
     }
 
     fun setup(designer: AppDesigner) {
         designer.items["menuBar"]?.let(this::setupMenuBar)
         designer.items["toolBar"]?.let(this::setupToolBar)
+        setupStatusBar()
+    }
+}
+
+class StatusBar : BorderPane() {
+    var text: String
+        get() = statusLabel.text
+        set(value) {
+            statusLabel.text = value
+        }
+
+    val statusLabel = Label()
+
+    init {
+        styleClass += "app-status-bar"
+
+        left = statusLabel.also {
+            styleClass += "app-status-text"
+            BorderPane.setAlignment(it, Pos.CENTER)
+        }
     }
 }

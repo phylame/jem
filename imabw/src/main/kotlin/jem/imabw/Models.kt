@@ -4,16 +4,20 @@ import javafx.collections.FXCollections
 import javafx.concurrent.Task
 import javafx.stage.FileChooser
 import jem.Book
+import jem.Chapter
 import jem.epm.EpmManager
 import jem.epm.ParserParam
+import jem.imabw.toc.NavPane
 import mala.App
 import mala.App.tr
 import mala.ixin.Command
 import mala.ixin.CommandHandler
 import java.io.File
+import java.util.concurrent.ThreadLocalRandom
 
 object Workbench : CommandHandler {
-    internal val tasks = FXCollections.observableArrayList<Work>()
+    val tasks = FXCollections.observableArrayList<Work>()
+
     val isModified get() = tasks.any(Work::isModified)
 
     init {
@@ -30,6 +34,19 @@ object Workbench : CommandHandler {
         tasks -= work
     }
 
+
+    fun isModified(chapter: Chapter): Boolean {
+        return if (chapter.parent == null) { // root book
+            println(chapter)
+            tasks.firstOrNull { it.book === chapter }?.isModified == true
+        } else
+            ThreadLocalRandom.current().nextBoolean()
+    }
+
+    fun exportBook(chapters: Collection<Chapter>) {
+        println("save chapters: $chapters")
+    }
+
     fun ensureSaved(title: String): Boolean {
         return !isModified
     }
@@ -43,7 +60,7 @@ object Workbench : CommandHandler {
         val fileChooser = FileChooser()
 //        fileChooser.title
         fileChooser.initialDirectory = File("E:/tmp")
-        fileChooser.extensionFilters += FileChooser.ExtensionFilter("PMAB File", "*.pmab")
+//        fileChooser.extensionFilters += FileChooser.ExtensionFilter("PMAB File", "*.pmab")
         val file = fileChooser.showOpenDialog(Imabw.form.stage) ?: return
         val task = OpenTask(ParserParam(file.path))
         task.setOnSucceeded {
@@ -75,6 +92,7 @@ object Workbench : CommandHandler {
     override fun handle(command: String, source: Any): Boolean {
         when (command) {
             "newFile" -> newFile("Book ${tasks.size}")
+            "saveAsFile" -> exportBook(NavPane.selectBooks)
             "clearHistory" -> History.items.clear()
             else -> return false
         }

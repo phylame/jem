@@ -1,26 +1,25 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xml="http://www.w3.org/XML/1998/namespace" xml:lang="$lang"
-      lang="$lang">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xml="http://www.w3.org/XML/1998/namespace" xml:lang="$lang" lang="$lang">
 <head>
-    <title>$chapter.title</title>
-    <link href="$cssHref" rel="stylesheet" type="text/css"/>
+<title>$chapter.title</title>
+<link href="$cssHref" rel="stylesheet" type="text/css"/>
 </head>
 <body>
 <h3>$chapter.title</h3>
-    #if($intro)
-        #foreach($line in $intro)
-        <p class="hint">$line</p>
-        #end
-    <hr class="line"/>
-    #end
-    #foreach($line in $text)
-        #if($line)
-        <p>$line</p>
-        #end
-    #end
-    #if($text.count==0)
-    <p>&infin;&nbsp;$M.tr("epub.make.noText")&nbsp;&infin;</p>
-    #end
+#if($intro)
+#foreach($line in $intro)
+<p class="hint">$line</p>
+#end
+<hr class="line"/>
+#end
+#foreach($line in $text)
+#if($line)
+<p>$line</p>
+#end
+#end
+#if($text.count==0)
+<p>&infin;&nbsp;$M.tr("epub.make.noText")&nbsp;&infin;</p>
+#end
 </body>
 </html>

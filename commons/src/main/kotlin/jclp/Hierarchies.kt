@@ -46,14 +46,13 @@ fun <T : Hierarchical<T>> T.locate(indices: IntArray): T? {
     return item
 }
 
-val <T : Hierarchical<T>> T.root: T
-    get() {
-        var parent: T = this
-        while (parent.parent != null) {
-            parent = parent.parent!!
-        }
-        return parent
+fun <T : Hierarchical<T>> T.mostBelow(top: T? = null): T {
+    var parent: T = this
+    while (parent.parent != top) {
+        parent = parent.parent!!
     }
+    return parent
+}
 
 val Hierarchical<*>.depth: Int
     get() {

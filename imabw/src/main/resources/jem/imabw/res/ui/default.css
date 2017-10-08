@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#main-menu-bar {
+.app-menu-bar {
     -fx-padding: 0 4pt;
 }
 
@@ -67,7 +67,7 @@
     -fx-font-family: serif;
 }
 
-#main-status-bar {
+.app-status-bar {
     -fx-padding: 0 4pt;
 }
 

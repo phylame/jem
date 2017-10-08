@@ -11,7 +11,6 @@ import javafx.scene.input.KeyEvent
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.BorderPane
 import javafx.util.Callback
-import jclp.root
 import jem.Book
 import jem.Chapter
 import jem.epm.parseBook
@@ -20,36 +19,38 @@ import jem.imabw.Work
 import jem.imabw.Workbench
 import jem.imabw.editor.ChapterTab
 import jem.imabw.editor.EditorPane
-import jem.imabw.ui.EditableComponent
+import jem.imabw.ui.Editable
+import jem.imabw.ui.editAttributes
+import jem.imabw.ui.editVariants
+import jem.imabw.ui.textInput
 import jem.intro
 import jem.title
 import mala.App
 import mala.App.tr
 import mala.ixin.*
-import java.util.concurrent.ThreadLocalRandom
 
 typealias ChapterNode = TreeItem<Chapter>
 
-object NavPane : BorderPane(), CommandHandler, EditableComponent {
-    private val root = ChapterNode()
-    private val tree = TreeView(root)
+object NavPane : BorderPane(), CommandHandler, Editable {
+    private val rootNode = ChapterNode()
+    private val treeView = TreeView(rootNode)
 
-    val isActive get() = tree.isFocused
+    val isActive get() = treeView.isFocused
+
+    val selectBooks get() = treeView.selectionModel.selectedItems.map { it.value as Book }
 
     // the root of selected items
-    val rootNodeBinding = CommonBinding(tree.selectionModel.selectedItems) {
+    val singleTopBook = CommonBinding(treeView.selectionModel.selectedItems) {
         var count = 0
-        var rootNode: ChapterNode? = null
-        var book: Chapter? = null
-        for (item in it) {
-            // todo why is null?
-            item?.value?.root?.also {
-                if (book !== it) ++count
-                rootNode = item
-                book = it
+        var root: ChapterNode? = null
+        it.forEach { item ->
+            // todo why item is null?
+            item?.mostBelow(rootNode)?.let {
+                if (root !== it) ++count
+                root = it
             }
         }
-        if (count == 1) rootNode else null
+        if (count == 1) root else null
     }
 
     init {
@@ -57,7 +58,7 @@ object NavPane : BorderPane(), CommandHandler, EditableComponent {
 
         id = "nav-pane"
         top = NavHeader
-        center = tree
+        center = treeView
 
         initTree()
         initActions()
@@ -65,22 +66,22 @@ object NavPane : BorderPane(), CommandHandler, EditableComponent {
         Workbench.tasks.addListener(ListChangeListener<Work> {
             while (it.next()) {
                 if (it.wasAdded()) {
-                    val start = root.children.size
+                    val start = rootNode.children.size
                     it.addedSubList.asSequence().map { createItem(it.book) }.also { items ->
-                        root.children += items
-                        tree.selectionModel.clearSelection()
-                        tree.selectionModel.selectRange(start, root.children.size)
+                        rootNode.children += items
+                        treeView.selectionModel.clearSelection()
+                        treeView.selectionModel.selectRange(start, rootNode.children.size)
                     }
                 } else if (it.wasRemoved()) {
                     val books = it.removed.map { it.book }
-                    root.children.removeIf { it.value in books }
+                    rootNode.children.removeIf { it.value in books }
                 }
             }
         })
     }
 
     private fun initTree() {
-        val tree = this.tree
+        val tree = this.treeView
         tree.id = "toc-tree"
         tree.isShowRoot = false
         tree.cellFactory = CellFactory
@@ -102,7 +103,7 @@ object NavPane : BorderPane(), CommandHandler, EditableComponent {
                         .forEach {
                             if (it.children.isNotEmpty()) {
                                 it.isExpanded = !it.isExpanded
-                            } else if (it.parent !== root) {
+                            } else if (it.parent !== rootNode) {
                                 EditorPane.openText(it.value)
                             }
                         }
@@ -111,10 +112,10 @@ object NavPane : BorderPane(), CommandHandler, EditableComponent {
     }
 
     private fun initActions() {
-        val selectedItems = tree.selectionModel.selectedItems
+        val selectedItems = treeView.selectionModel.selectedItems
 
-        val bookCount = CommonBinding(selectedItems) { it.count { it.parent === root } }
-        val chapterCount = CommonBinding(selectedItems) { it.count { it.parent !== root } }
+        val bookCount = CommonBinding(selectedItems) { it.count { it.parent === rootNode } }
+        val chapterCount = CommonBinding(selectedItems) { it.count { it.parent !== rootNode } }
 
         val hasBook = bookCount.isNotEqualTo(0)
         val hasChapter = chapterCount.isNotEqualTo(0)
@@ -145,14 +146,19 @@ object NavPane : BorderPane(), CommandHandler, EditableComponent {
         Imabw.getAction("viewAttributes")?.disableProperty?.bind(notSingleSelection)
 
         // enable when one root book is found
-        val notSingleBook = rootNodeBinding.isNull
+        val notSingleBook = singleTopBook.isNull
         Imabw.getAction("bookAttributes")?.disableProperty?.bind(notSingleBook)
         Imabw.getAction("bookExtensions")?.disableProperty?.bind(notSingleBook)
 
         // book actions, enable when only book(s) selected
         val notOnlyBook = noSelection.or(hasChapter)
         Imabw.getAction("closeFile")?.disableProperty?.bind(notOnlyBook)
-        Imabw.getAction("saveFile")?.disableProperty?.bind(notOnlyBook)
+
+        val singleBookModified = CommonBinding(selectedItems) {
+            it.size == 1 && it.first().parent === rootNode && Workbench.isModified(it.first().value)
+        }
+        Imabw.getAction("saveFile")?.disableProperty?.bind(singleBookModified.isEqualTo(false))
+
         Imabw.getAction("saveAsFile")?.disableProperty?.bind(notOnlyBook)
         Imabw.getAction("duplicateFile")?.disableProperty?.bind(notOnlyBook)
         Imabw.getAction("lockFile")?.disableProperty?.bind(notOnlyBook)
@@ -160,15 +166,10 @@ object NavPane : BorderPane(), CommandHandler, EditableComponent {
         Imabw.getAction("fileDetails")?.disableProperty?.bind(bookCount.isNotEqualTo(1).or(hasChapter))
     }
 
-    inline fun createChapter(block: (Chapter) -> Unit) {
-        val chapter = Chapter("Chapter ${ThreadLocalRandom.current().nextInt(36)}")
-        block(chapter)
-    }
-
     // chapters will be clone for multi-target
     fun insertItems(sources: Collection<ChapterNode>, targets: Collection<ChapterNode>, mode: ItemInsertMode) {
         val backups = targets.toTypedArray() // targets may be selectedItems
-        val selectionModel = tree.selectionModel.apply { clearSelection() }
+        val selectionModel = treeView.selectionModel.apply { clearSelection() }
         backups.forEachIndexed { i, target ->
             // clone chapter(s) except the first one
             val items = if (i == 0) sources else sources.map { createItem(it.value.clone()) }.toList()
@@ -197,8 +198,8 @@ object NavPane : BorderPane(), CommandHandler, EditableComponent {
             it.value.cleanup()
         }
         // todo why not clear selections
-        if (tree.selectionModel.selectedItems.firstOrNull() == null) { // removed all books
-            tree.selectionModel.clearSelection()
+        if (treeView.selectionModel.selectedItems.firstOrNull() == null) { // removed all books
+            treeView.selectionModel.clearSelection()
         }
     }
 
@@ -216,12 +217,29 @@ object NavPane : BorderPane(), CommandHandler, EditableComponent {
         })
     }
 
+    inline fun createChapter(block: (Chapter) -> Unit) {
+        textInput(tr("d.newChapter.title"), tr("d.newChapter.tip"), tr("chapter.untitled")) {
+            block(Chapter(it))
+        }
+    }
+
+    @Command
+    fun renameChapter() {
+        val treeItem = treeView.selectionModel.selectedItem
+        val chapter = treeItem!!.value
+        textInput(tr("d.renameChapter.title"), tr("d.renameChapter.tip"), chapter.title) {
+            chapter.title = it
+            treeItem.refresh()
+        }
+    }
+
     @Command
     fun gotoChapter() {
         (EditorPane.selectionModel.selectedItem as? ChapterTab)?.chapter?.let {
-            locateItem(it, root)?.let {
-                tree.selectionModel.clearSelection()
-                tree.selectionModel.select(it)
+            locateItem(it, rootNode)?.let {
+                treeView.selectionModel.clearSelection()
+                treeView.selectionModel.select(it)
+                treeView.scrollTo(treeView.selectionModel.selectedIndex)
             }
         }
     }
@@ -232,7 +250,7 @@ object NavPane : BorderPane(), CommandHandler, EditableComponent {
             override fun call() = parseBook("E:/tmp/2", "pmab")
         }
         task.setOnSucceeded {
-            insertItems(listOf(createItem(task.value)), tree.selectionModel.selectedItems, ItemInsertMode.TO_PARENT)
+            insertItems(listOf(createItem(task.value)), treeView.selectionModel.selectedItems, ItemInsertMode.TO_PARENT)
         }
         task.setOnFailed {
             task.exception.printStackTrace()
@@ -260,30 +278,36 @@ object NavPane : BorderPane(), CommandHandler, EditableComponent {
     override fun handle(command: String, source: Any): Boolean {
         when (command) {
             "collapseToc" -> {
-                val selectedBooks = tree.selectionModel.selectedItems.filter { it.parent === root }
+                val selectedBooks = treeView.selectionModel.selectedItems.filter { it.parent === rootNode }
                 if (selectedBooks.size != 1) {
-                    tree.selectionModel.clearSelection()
+                    treeView.selectionModel.clearSelection()
                 }
-                root.children.forEach(this::collapseNode)
+                rootNode.children.forEach(this::collapseNode)
                 if (selectedBooks.size != 1) {
-                    tree.selectionModel.selectFirst()
+                    treeView.selectionModel.selectFirst()
                 }
             }
-            "editText" -> tree.selectionModel.selectedItems.forEach { EditorPane.openText(it.value) }
+            "editText" -> treeView.selectionModel.selectedItems.forEach { EditorPane.openText(it.value) }
             "newChapter" -> createChapter {
-                insertItems(listOf(createItem(it)), tree.selectionModel.selectedItems, ItemInsertMode.TO_PARENT)
+                insertItems(listOf(createItem(it)), treeView.selectionModel.selectedItems, ItemInsertMode.TO_PARENT)
             }
             "insertChapter" -> createChapter {
-                insertItems(listOf(createItem(it)), tree.selectionModel.selectedItems, ItemInsertMode.BEFORE_ITEM)
+                insertItems(listOf(createItem(it)), treeView.selectionModel.selectedItems, ItemInsertMode.BEFORE_ITEM)
+            }
+            "exportChapter" -> Workbench.exportBook(treeView.selectionModel.selectedItems.map { it.value })
+            "viewAttributes" -> editAttributes(treeView.selectionModel.selectedItem.value)
+            "bookAttributes" -> editAttributes(singleTopBook.value!!.value)
+            "bookExtensions" -> singleTopBook.value!!.value.let {
+                editVariants((it as Book).extensions, tr("d.editExtension.title", it.title))
             }
             else -> return false
         }
         return true
     }
 
-    override fun editCommand(command: String) {
+    override fun onEdit(command: String) {
         when (command) {
-            "delete" -> removeItems(tree.selectionModel.selectedItems)
+            "delete" -> removeItems(treeView.selectionModel.selectedItems)
             else -> TODO()
         }
     }

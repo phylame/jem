@@ -64,6 +64,21 @@ fun <T : Hierarchy<T>> T.toTreeItem(): TreeItem<T> = object : TreeItem<T>(this) 
     }
 }
 
+fun <T> TreeItem<T>.mostBelow(top: TreeItem<T>? = null): TreeItem<T> {
+    var parent: TreeItem<T> = this
+    while (parent.parent !== top) {
+        parent = parent.parent!!
+    }
+    return parent
+}
+
+fun TreeItem<*>.refresh() {
+    value.let {
+        value = null
+        value = it
+    }
+}
+
 operator fun <T> WritableValue<T>.getValue(ref: Any, property: KProperty<*>): T? {
     return value
 }

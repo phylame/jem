@@ -7,7 +7,7 @@ import javafx.scene.control.Tab
 import javafx.scene.control.TabPane
 import jem.Chapter
 import jem.imabw.Imabw
-import jem.imabw.ui.EditableComponent
+import jem.imabw.ui.Editable
 import jem.title
 import mala.App
 import mala.ixin.CommandHandler
@@ -17,7 +17,7 @@ import org.fxmisc.richtext.StyleClassedTextArea
 import org.fxmisc.richtext.StyledTextArea
 import org.fxmisc.undo.UndoManagerFactory
 
-object EditorPane : TabPane(), CommandHandler, EditableComponent {
+object EditorPane : TabPane(), CommandHandler, Editable {
     private val tabMenu = ContextMenu()
     private val textMenu = ContextMenu()
 
@@ -95,7 +95,7 @@ object EditorPane : TabPane(), CommandHandler, EditableComponent {
         return true
     }
 
-    override fun editCommand(command: String) {
+    override fun onEdit(command: String) {
         when (command) {
             "undo" -> selectionModel.selectedItem.myArea?.undo()
             "redo" -> selectionModel.selectedItem.myArea?.redo()

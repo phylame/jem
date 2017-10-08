@@ -65,7 +65,7 @@ object Imabw : IDelegate() {
     }
 
     fun message(msg: String) {
-        form.statusText.text = msg
+        form.statusText = msg
     }
 
     // register for command handler

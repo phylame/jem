@@ -27,6 +27,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.*
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Supplier
 
 val Any?.actualValue
@@ -179,16 +180,16 @@ fun Any.releaseSelf() {
 }
 
 abstract class ReusableHelper : Reusable {
-    private var refCount = 1
+    private var refCount = AtomicInteger(1)
 
     override fun retain() {
-        require(refCount != 0) { "object is disposed" }
-        ++refCount
+        require(refCount.get() != 0) { "object is disposed" }
+        refCount.incrementAndGet()
     }
 
     override fun release() {
-        require(refCount != 0) { "object is disposed" }
-        if (--refCount == 0) {
+        require(refCount.get() != 0) { "object is disposed" }
+        if (refCount.decrementAndGet() == 0) {
             dispose()
         }
     }

@@ -6,14 +6,12 @@ import javafx.beans.value.ChangeListener
 import javafx.geometry.Orientation
 import javafx.geometry.Pos
 import javafx.scene.Scene
-import javafx.scene.control.Control
-import javafx.scene.control.Label
+import javafx.scene.control.*
 import javafx.scene.control.Separator
-import javafx.scene.control.SplitPane
-import javafx.scene.input.KeyCombination
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
+import javafx.stage.Modality
 import javafx.stage.Stage
 import jclp.text.TEXT_PLAIN
 import jclp.toRoot
@@ -36,13 +34,13 @@ class Form : Application(), CommandHandler {
     lateinit var appPane: AppPane
         private set
 
-    lateinit var splitPane: SplitPane
-        private set
-
-    lateinit var statusBar: BorderPane
-    lateinit var statusText: Label
-
     lateinit var appDesigner: AppDesigner
+
+    var statusText
+        get() = appPane.statusBar?.statusLabel?.text
+        set(value) {
+            appPane.statusBar?.statusLabel?.text = value
+        }
 
     override fun init() {
         Imabw.form = this
@@ -55,12 +53,10 @@ class Form : Application(), CommandHandler {
 
         appPane = AppPane().also { pane ->
             pane.setup(appDesigner)
-            App.assets.propertiesFor("ui/keys.properties")?.forEach { k, v ->
-                Imabw.getAction(k.toString())?.accelerator = KeyCombination.valueOf(v.toString())
-            }
+            pane.statusBar?.right = Indicator
+            Imabw.actionMap.updateAccelerators(App.assets.propertiesFor("ui/keys.properties")!!)
         }
-
-        splitPane = SplitPane().also { pane ->
+        SplitPane().also { pane ->
             pane.items += NavPane
             pane.items += EditorPane.also {
                 stage.titleProperty().bind(CommonBinding(it.selectionModel.selectedItemProperty()) {
@@ -71,23 +67,6 @@ class Form : Application(), CommandHandler {
             appPane.center = pane
         }
 
-        statusBar = BorderPane().also { pane ->
-            pane.id = "main-status-bar"
-
-            statusText = Label().also {
-                it.id = "status-text"
-                BorderPane.setAlignment(it, Pos.CENTER)
-                pane.left = it
-            }
-
-            Indicator.also {
-                BorderPane.setAlignment(it, Pos.CENTER)
-                pane.right = it
-            }
-
-            appPane.statusBar = pane
-        }
-
         initActions()
 
         stage.icons += App.assets.imageFor("icon")
@@ -95,7 +74,7 @@ class Form : Application(), CommandHandler {
             it.consume()
             Imabw.handle("exit", stage)
         }
-        stage.scene = Scene(appPane, 1366.0, 768.0).also {
+        stage.scene = Scene(appPane, 1080.0, 607.0).also {
             it.stylesheets += App.assets.resourceFor("ui/default.css")?.toExternalForm()
         }
         stage.show()
@@ -109,6 +88,8 @@ class Form : Application(), CommandHandler {
 
     private fun initActions() {
         Imabw.getAction("clearHistory")?.disableProperty?.bind(Bindings.isEmpty(History.items))
+        Imabw.getAction("showToolbar")?.selectedProperty?.bindBidirectional(appPane.toolBar!!.visibleProperty())
+        Imabw.getAction("showStatusBar")?.selectedProperty?.bindBidirectional(appPane.statusBar!!.visibleProperty())
     }
 
     private fun buildTitle(chapter: Chapter?) = StringBuilder().run {
@@ -118,7 +99,7 @@ class Form : Application(), CommandHandler {
             book.author.takeIf { it.isNotEmpty() }?.let {
                 append("[").append(it).append("] - ")
             }
-            append(it.joinToString("\\") { it.title }).append(" - ")
+            append(it.subList(1, it.size).joinToString("\\") { it.title }).append(" - ")
         }
         append("PW Imabw ")
         append(Imabw.version)
@@ -127,13 +108,26 @@ class Form : Application(), CommandHandler {
 
     override fun handle(command: String, source: Any): Boolean {
         when (command) {
+            "showToolbar", "showStatusBar" -> Unit // bound with property
             in editActions -> when {
-                NavPane.isActive -> NavPane.editCommand(command)
-                EditorPane.isActive -> EditorPane.editCommand(command)
+                NavPane.isActive -> NavPane.onEdit(command)
+                EditorPane.isActive -> EditorPane.onEdit(command)
             }
             else -> return false
         }
         return true
+    }
+}
+
+inline fun textInput(title: String, tip: String, text: String, block: (String) -> Unit) {
+    with(TextInputDialog(text)) {
+        graphic = null
+        headerText = null
+        this.title = title
+        this.contentText = tip
+        initOwner(Imabw.form.stage)
+        initModality(Modality.WINDOW_MODAL)
+        showAndWait().let { if (it.isPresent) block(it.get()) }
     }
 }
 
@@ -147,6 +141,7 @@ object Indicator : HBox() {
     init {
         id = "indicator"
         alignment = Pos.CENTER
+        BorderPane.setAlignment(this, Pos.CENTER)
 
         caret.addEventHandler(MouseEvent.MOUSE_PRESSED) {
             if (it.clickCount == 1 && it.isPrimaryButtonDown) {
@@ -227,6 +222,6 @@ private val editActions = arrayOf(
         "undo", "redo", "cut", "copy", "paste", "delete", "selectAll", "find", "findNext", "findPrevious"
 )
 
-interface EditableComponent {
-    fun editCommand(command: String)
+interface Editable {
+    fun onEdit(command: String)
 }

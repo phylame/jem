@@ -10,6 +10,7 @@ import javafx.scene.image.Image
 import javafx.scene.input.KeyCombination
 import jclp.Translator
 import mala.AssetManager
+import java.util.*
 
 typealias ActionMap = MutableMap<String, Action>
 private const val COMMAND_KEY = "ixin-command-id"
@@ -38,6 +39,18 @@ class Action(val id: String) {
 
 fun ActionMap?.getOrCreate(id: String, m: Translator, r: AssetManager): Action {
     return this?.get(id) ?: loadAction(id, m, r).also { this?.set(id, it) }
+}
+
+fun ActionMap.updateAccelerators(keys: Map<String, *>) {
+    for ((key, value) in keys) {
+        get(key)?.accelerator = value as? KeyCombination ?: KeyCombination.valueOf(value.toString())
+    }
+}
+
+fun ActionMap.updateAccelerators(keys: Properties) {
+    for ((key, value) in keys) {
+        get(key)?.accelerator = value as? KeyCombination ?: KeyCombination.valueOf(value.toString())
+    }
 }
 
 fun Action.toButton(handler: CommandHandler, type: Style = Style.NORMAL, hideText: Boolean = false): ButtonBase {

@@ -7,6 +7,7 @@ import jclp.io.suffixName
 import jclp.log.Log
 import jclp.setting.Settings
 import jclp.setting.getString
+import jclp.text.TEXT_HTML
 import jclp.text.Text
 import jclp.text.TextWrapper
 import jclp.vdm.VDMWriter
@@ -156,15 +157,19 @@ internal class TOCBuilder(
                 renderPage(pageId, context, "cover").first
                 opf.newSpine(pageId, properties = EPUB.DUOKAN_FULLSCREEN)
             }
-            context["text"] = chapter.text!!
-            item = renderPage(id, context, "chapter").first
-            opf.newSpine(id)
-        }
-
-        if (item != null) {
-            if (ncx.count == 1) {
-                opf.newGuide(item.href, "text", "epub.make.textTitle")
+            chapter.text?.let {
+                if (it.type == TEXT_HTML) {
+                    item = writeText(it, id, EPUB.MIME_XHTML).first
+                    opf.newSpine(id)
+                } else {
+                    context["text"] = it
+                    item = renderPage(id, context, "chapter").first
+                    opf.newSpine(id)
+                }
             }
+        }
+        if (item != null && ncx.count == 1) { // first chapter
+            opf.newGuide(item!!.href, "text", "epub.make.textTitle")
         }
         ncx.newNav(id, chapter.title, item?.href ?: "")
         chapter.forEachIndexed { i, stub ->
@@ -191,6 +196,18 @@ internal class TOCBuilder(
         return opf.newItem(id, "${classifyDir(mime)}$id${suffixName(flob.name)}", mime) {
             writer.useStream(it.vdmPath) {
                 flob.writeTo(it)
+            }
+        }
+    }
+
+    private fun writeText(text: Text, id: String, mime: String): Pair<Item, Path> {
+        val type = text.type
+        return opf.newItem(id, "$textDir/$id.$type", mime) {
+            writer.useStream(it.vdmPath) {
+                it.writer(Charsets.UTF_8).apply {
+                    text.writeTo(this)
+                    flush()
+                }
             }
         }
     }

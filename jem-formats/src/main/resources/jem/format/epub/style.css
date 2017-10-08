@@ -168,7 +168,7 @@ h1 {
     font-weight: bold;
     font-size: 2em;
     font-family: "DK-XIAOBIAOSONG", "zw", serif;
-    text-shadow: 1px 1px 3px #000;
+    text-shadow: 1px 1px 3px #222;
 }
 
 /* intro title */
@@ -179,12 +179,12 @@ h2 {
     font-weight: bold;
     font-size: x-large;
     font-family: "DK-XIAOBIAOSONG", "zw", serif;
-    text-shadow: 1px 1px 3px #006C6C;
+    text-shadow: 1px 1px 1px #006C6C;
 }
 
 /* plain title */
 h3 {
-    color: #212121;
+    color: #000;
     margin-top: 7%;
     margin-bottom: 1em;
     line-height: 130%;
@@ -192,7 +192,7 @@ h3 {
     font-weight: bold;
     font-size: 1.3em;
     font-family: "DK-XIHEITI", "DK-XIAOBIAOSONG", "zw", serif;
-    text-shadow: 1px 1px 1px #CCC;
+    text-shadow: 1px 1px 1px #222;
 }
 
 .cover {
@@ -214,7 +214,7 @@ h3 {
 
 /* section intro text */
 .brief p {
-    color: #212121;
+    color: #000;
     font-family: "DK-XIHEITI", "ht", sans-serif;
     font-size: 0.9em;
     padding: 0 0.2em;
@@ -222,7 +222,7 @@ h3 {
 
 /* chapter intro title */
 .title {
-    color: #212121;
+    color: #222;
     font-size: 1.5em;
 }
 

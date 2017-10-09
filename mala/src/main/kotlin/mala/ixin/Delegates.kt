@@ -45,7 +45,8 @@ abstract class IDelegate : AppDelegate, CommandHandler {
 
     override fun handle(command: String, source: Any): Boolean {
         if (!commandDispatcher.handle(command, source)) {
-            throw NotImplementedError("No handler for command: '$command'")
+            App.error("No handler for command: '$command'")
+            return false
         }
         return true
     }

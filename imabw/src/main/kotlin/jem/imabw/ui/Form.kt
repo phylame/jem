@@ -6,12 +6,13 @@ import javafx.beans.value.ChangeListener
 import javafx.geometry.Orientation
 import javafx.geometry.Pos
 import javafx.scene.Scene
-import javafx.scene.control.*
+import javafx.scene.control.Control
+import javafx.scene.control.Label
 import javafx.scene.control.Separator
+import javafx.scene.control.SplitPane
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
-import javafx.stage.Modality
 import javafx.stage.Stage
 import jclp.text.TEXT_PLAIN
 import jclp.toRoot
@@ -116,18 +117,6 @@ class Form : Application(), CommandHandler {
             else -> return false
         }
         return true
-    }
-}
-
-inline fun textInput(title: String, tip: String, text: String, block: (String) -> Unit) {
-    with(TextInputDialog(text)) {
-        graphic = null
-        headerText = null
-        this.title = title
-        this.contentText = tip
-        initOwner(Imabw.form.stage)
-        initModality(Modality.WINDOW_MODAL)
-        showAndWait().let { if (it.isPresent) block(it.get()) }
     }
 }
 

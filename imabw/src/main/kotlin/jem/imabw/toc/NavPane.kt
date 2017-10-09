@@ -22,7 +22,7 @@ import jem.imabw.editor.EditorPane
 import jem.imabw.ui.Editable
 import jem.imabw.ui.editAttributes
 import jem.imabw.ui.editVariants
-import jem.imabw.ui.textInput
+import jem.imabw.ui.inputText
 import jem.intro
 import jem.title
 import mala.App
@@ -160,8 +160,6 @@ object NavPane : BorderPane(), CommandHandler, Editable {
         Imabw.getAction("saveFile")?.disableProperty?.bind(singleBookModified.isEqualTo(false))
 
         Imabw.getAction("saveAsFile")?.disableProperty?.bind(notOnlyBook)
-        Imabw.getAction("duplicateFile")?.disableProperty?.bind(notOnlyBook)
-        Imabw.getAction("lockFile")?.disableProperty?.bind(notOnlyBook)
 
         Imabw.getAction("fileDetails")?.disableProperty?.bind(bookCount.isNotEqualTo(1).or(hasChapter))
     }
@@ -208,17 +206,23 @@ object NavPane : BorderPane(), CommandHandler, Editable {
             val parent = item.value
             while (it.next()) {
                 if (it.wasAdded()) {
-                    it.list.subList(it.from, it.to).forEach { parent.append(it.value) }
+                    it.list.subList(it.from, it.to).forEach {
+                        println("append '${it.value.title}' to '${parent.title}'")
+                        parent.append(it.value)
+                    }
                 }
                 if (it.wasRemoved()) {
-                    it.removed.forEach { parent.remove(it.value) }
+                    it.removed.forEach {
+                        println("remove '${it.value.title}' from '${parent.title}'")
+                        parent.remove(it.value)
+                    }
                 }
             }
         })
     }
 
     inline fun createChapter(block: (Chapter) -> Unit) {
-        textInput(tr("d.newChapter.title"), tr("d.newChapter.tip"), tr("chapter.untitled")) {
+        inputText(tr("d.newChapter.title"), tr("d.newChapter.tip"), tr("chapter.untitled")) {
             block(Chapter(it))
         }
     }
@@ -227,7 +231,7 @@ object NavPane : BorderPane(), CommandHandler, Editable {
     fun renameChapter() {
         val treeItem = treeView.selectionModel.selectedItem
         val chapter = treeItem!!.value
-        textInput(tr("d.renameChapter.title"), tr("d.renameChapter.tip"), chapter.title) {
+        inputText(tr("d.renameChapter.title"), tr("d.renameChapter.tip"), chapter.title) {
             chapter.title = it
             treeItem.refresh()
         }
@@ -308,6 +312,7 @@ object NavPane : BorderPane(), CommandHandler, Editable {
     override fun onEdit(command: String) {
         when (command) {
             "delete" -> removeItems(treeView.selectionModel.selectedItems)
+            "selectAll" -> treeView.selectionModel.selectAll()
             else -> TODO()
         }
     }

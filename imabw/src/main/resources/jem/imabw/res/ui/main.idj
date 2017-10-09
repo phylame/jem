@@ -21,12 +21,6 @@
         null,
         "saveFile",
         "saveAsFile",
-        "duplicateFile",
-        null,
-        {
-          "id": "lockFile",
-          "style": "check"
-        },
         null,
         "fileDetails",
         null,
@@ -116,6 +110,12 @@
       ]
     },
     {
+      "id": "menuPlugins",
+      "items": [
+        "pluginManager"
+      ]
+    },
+    {
       "id": "menuWindow",
       "items": [
         {
@@ -130,12 +130,6 @@
             "closeUnmodifiedTabs"
           ]
         }
-      ]
-    },
-    {
-      "id": "menuPlugins",
-      "items": [
-        "pluginManager"
       ]
     },
     {

@@ -18,8 +18,53 @@
 
 package jem.imabw.ui
 
+import javafx.scene.control.TextInputDialog
+import javafx.stage.FileChooser
+import javafx.stage.Modality
+import javafx.stage.Window
 import jclp.VariantMap
 import jem.Chapter
+import jem.epm.EpmManager
+import jem.imabw.Imabw
+import mala.App
+import java.io.File
+
+inline fun inputText(title: String, tip: String, text: String, block: (String) -> Unit) {
+    with(TextInputDialog(text)) {
+        graphic = null
+        headerText = null
+        this.title = title
+        this.contentText = tip
+        initOwner(Imabw.form.stage)
+        initModality(Modality.WINDOW_MODAL)
+        showAndWait().let { if (it.isPresent) block(it.get()) }
+    }
+}
+
+private val fileChooser = FileChooser()
+
+fun openBook(owner: Window, multiple: Boolean = false): List<File> {
+    val filters = fileChooser.extensionFilters.apply { clear() }
+    EpmManager.services.filter { it.hasParser && "crawler" !in it.keys }.map { factory ->
+        val name = factory.keys.first().let {
+            App.optTr("misc.ext.$it") ?: App.tr("misc.ext.common", it.toUpperCase())
+        }
+        FileChooser.ExtensionFilter(name, factory.keys.map { "*.$it" }).apply {
+            if ("pmab" in factory.keys) {
+                fileChooser.selectedExtensionFilter = this
+            }
+        }
+    }.toCollection(filters)
+    if (multiple) {
+        return fileChooser.showOpenMultipleDialog(owner)?.also {
+            fileChooser.initialDirectory = it.first().parentFile
+        } ?: emptyList()
+    }
+    return fileChooser.showOpenDialog(owner)?.let {
+        fileChooser.initialDirectory = it.parentFile
+        listOf(it)
+    } ?: emptyList()
+}
 
 fun editAttributes(chapter: Chapter) {
     println("edit attributes of $chapter")

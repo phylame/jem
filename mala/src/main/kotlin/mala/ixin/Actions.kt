@@ -32,6 +32,14 @@ class Action(val id: String) {
     var isDisable by disableProperty
     var isSelected by selectedProperty
 
+    init {
+        acceleratorProperty.addListener { _, old, new ->
+            if (old != new && old == null && !toast.isNullOrEmpty()) {
+                toast = "$toast (${new.displayText})"
+            }
+        }
+    }
+
     override fun toString(): String {
         return "Action(id='$id', text='$text', icon='$icon', toast='$toast', isDisable=$isDisable, isSelected=$isSelected)"
     }

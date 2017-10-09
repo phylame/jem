@@ -24,8 +24,8 @@ import jclp.log.LogLevel
 import jem.Build
 import jem.imabw.ui.Form
 import mala.App
+import mala.AppVerbose
 import mala.ixin.IDelegate
-import java.util.*
 import java.util.concurrent.Executors
 
 fun main(args: Array<String>) {
@@ -42,7 +42,8 @@ object Imabw : IDelegate() {
 
     override fun onStart() {
         Log.level = LogLevel.ALL
-        Locale.setDefault(Locale.ENGLISH)
+        App.verbose = AppVerbose.TRACE
+//        Locale.setDefault(Locale.ENGLISH)
         App.translator = App.assets.translatorFor("i18n/dev/app")
     }
 

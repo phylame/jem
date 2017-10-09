@@ -5,9 +5,11 @@ import javafx.concurrent.Task
 import jem.Book
 import jem.Chapter
 import jem.epm.EpmManager
+import jem.epm.MakerParam
 import jem.epm.ParserParam
 import jem.imabw.toc.NavPane
-import jem.imabw.ui.openBook
+import jem.imabw.ui.inputText
+import jem.imabw.ui.openBooks
 import jem.title
 import mala.App
 import mala.App.tr
@@ -52,23 +54,31 @@ object Workbench : CommandHandler {
     }
 
     fun newFile(title: String) {
-        submit(Work(Book(title)))
+        if (title.isEmpty()) {
+            inputText(tr("d.newBook.title"), tr("d.newBook.tip"), tr("book.untitled")) {
+                submit(Work(Book(it)))
+            }
+        } else {
+            submit(Work(Book(title)))
+        }
     }
 
     @Command
     fun openFile() {
-        openBook(Imabw.form.stage).forEach {
-            if (tasks.first())
+        for (file in openBooks(Imabw.form.stage)) {
+            if (tasks.any { it.path == file.path }) {
+                println("'$file' is already opened")
+                continue
+            }
+            val task = OpenTask(ParserParam(file.path))
+            task.setOnSucceeded {
+                submit(Work(task.value, task.param))
+            }
+            task.setOnFailed {
+                task.exception.printStackTrace()
+            }
+            Imabw.submit(task)
         }
-
-        val task = OpenTask(ParserParam(file.path))
-        task.setOnSucceeded {
-            submit(Work(task.value, task.param))
-        }
-        task.setOnFailed {
-            task.exception.printStackTrace()
-        }
-        Imabw.submit(task)
     }
 
     @Command
@@ -100,7 +110,7 @@ object Workbench : CommandHandler {
 
     override fun handle(command: String, source: Any): Boolean {
         when (command) {
-            "newFile" -> newFile("Book ${tasks.size}")
+            "newFile" -> newFile("")
             "saveAsFile" -> exportBook(NavPane.selectBooks)
             "clearHistory" -> History.items.clear()
             else -> return false
@@ -111,6 +121,10 @@ object Workbench : CommandHandler {
 
 class Work(val book: Book, val inParam: ParserParam? = null) {
     val isModified = false
+
+    var outParam: MakerParam? = null
+
+    val path get() = outParam?.path ?: inParam?.path
 
     fun dispose() {
         println("cleanup book ${book.title}")

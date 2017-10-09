@@ -43,7 +43,8 @@ inline fun inputText(title: String, tip: String, text: String, block: (String) -
 
 private val fileChooser = FileChooser()
 
-fun openBook(owner: Window, multiple: Boolean = false): List<File> {
+fun openBooks(owner: Window): List<File> {
+    fileChooser.title = App.tr("d.openBook.title")
     val filters = fileChooser.extensionFilters.apply { clear() }
     EpmManager.services.filter { it.hasParser && "crawler" !in it.keys }.map { factory ->
         val name = factory.keys.first().let {
@@ -55,14 +56,8 @@ fun openBook(owner: Window, multiple: Boolean = false): List<File> {
             }
         }
     }.toCollection(filters)
-    if (multiple) {
-        return fileChooser.showOpenMultipleDialog(owner)?.also {
-            fileChooser.initialDirectory = it.first().parentFile
-        } ?: emptyList()
-    }
-    return fileChooser.showOpenDialog(owner)?.let {
-        fileChooser.initialDirectory = it.parentFile
-        listOf(it)
+    return fileChooser.showOpenMultipleDialog(owner)?.also {
+        fileChooser.initialDirectory = it.first().parentFile
     } ?: emptyList()
 }
 

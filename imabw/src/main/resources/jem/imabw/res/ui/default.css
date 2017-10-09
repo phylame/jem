@@ -32,34 +32,21 @@
 #nav-label {
     -fx-padding: 0 2pt;
     -fx-font-weight: bold;
-    -fx-font-family: sans-serif;
-    -fx-font-size: 1.1em;
+    -fx-font-size: 1.2em;
 }
 
 #nav-tool-bar {
     -fx-background-color: transparent;
 }
 
-.tree-cell {
-    -fx-font-size: 1em;
-}
-
 .intro-tooltip {
     -fx-font-size: 1em;
-}
-
-#editor-pane {
-
 }
 
 .lineno {
     -fx-alignment: top-right;
     -fx-font-family: monospace;
     -fx-text-fill: #212121;
-}
-
-.highlight {
-    -fx-background-color: #006C6C;
 }
 
 .styled-text-area {

@@ -83,6 +83,10 @@ object Imabw : IDelegate() {
         executor.value.submit(r)
     }
 
+    fun submit(block: () -> Unit) {
+        executor.value.submit(block)
+    }
+
     private val executor = lazy {
         Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
     }

@@ -71,10 +71,15 @@ object NavPane : BorderPane(), CommandHandler, Editable {
                         rootNode.children += items
                         treeView.selectionModel.clearSelection()
                         treeView.selectionModel.selectRange(start, rootNode.children.size)
+                        treeView.scrollTo(rootNode.children.size - 1)
                     }
                 } else if (it.wasRemoved()) {
                     val books = it.removed.map { it.book }
                     rootNode.children.removeIf { it.value in books }
+                    // todo why not clear?
+                    if (rootNode.children.isEmpty()) {
+                        treeView.selectionModel.clearSelection()
+                    }
                 }
             }
         })
@@ -124,7 +129,7 @@ object NavPane : BorderPane(), CommandHandler, Editable {
         val noSelection = Bindings.isEmpty(selectedItems)
         Imabw.getAction("newChapter")?.disableProperty?.bind(noSelection)
         Imabw.getAction("importChapter")?.disableProperty?.bind(noSelection)
-
+        0
         // enable when no book(s) selected
         val notOnlyChapter = noSelection.or(hasBook)
         Imabw.getAction("insertChapter")?.disableProperty?.bind(notOnlyChapter)
@@ -196,7 +201,7 @@ object NavPane : BorderPane(), CommandHandler, Editable {
             it.value.cleanup()
         }
         // todo why not clear selections
-        if (treeView.selectionModel.selectedItems.firstOrNull() == null) { // removed all books
+        if (rootNode.children.isEmpty()) {
             treeView.selectionModel.clearSelection()
         }
     }

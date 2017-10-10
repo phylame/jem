@@ -6,10 +6,8 @@ import javafx.beans.value.ChangeListener
 import javafx.geometry.Orientation
 import javafx.geometry.Pos
 import javafx.scene.Scene
-import javafx.scene.control.Control
-import javafx.scene.control.Label
+import javafx.scene.control.*
 import javafx.scene.control.Separator
-import javafx.scene.control.SplitPane
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
@@ -81,11 +79,31 @@ class Form : Application(), CommandHandler {
         }
         stage.show()
         App.plugins.with<ImabwAddon> { ready() }
+        statusText = App.tr("status.ready")
         Workbench.init()
     }
 
     fun dispose() {
         stage.close()
+    }
+
+    private val progressLabel = Label()
+
+    fun beginProgress() {
+        appPane.statusBar?.left = HBox(4.0).apply {
+            alignment = Pos.CENTER
+            BorderPane.setAlignment(this, Pos.CENTER)
+            children += ProgressIndicator().also { it.id = "status-progress" }
+            children += progressLabel
+        }
+    }
+
+    fun updateProgress(text: String) {
+        progressLabel.text = text
+    }
+
+    fun endProgress() {
+        appPane.statusBar?.left = appPane.statusBar?.statusLabel
     }
 
     private fun initActions() {

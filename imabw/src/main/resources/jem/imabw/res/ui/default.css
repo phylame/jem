@@ -58,6 +58,11 @@
     -fx-padding: 0 4pt;
 }
 
+#status-progress {
+    -fx-pref-width: 1.1em;
+    -fx-pref-height: 1.1em;
+}
+
 #indicator .label {
     -fx-padding: 0 2pt;
 }

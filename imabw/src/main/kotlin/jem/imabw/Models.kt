@@ -4,13 +4,16 @@ import javafx.beans.binding.Bindings
 import javafx.beans.binding.BooleanBinding
 import javafx.collections.FXCollections
 import javafx.collections.ListChangeListener
+import javafx.collections.ObservableList
 import javafx.concurrent.Task
 import javafx.scene.control.MenuItem
 import javafx.scene.control.SeparatorMenuItem
+import jclp.log.Log
 import jem.Book
 import jem.Chapter
 import jem.epm.EpmManager
 import jem.epm.MakerParam
+import jem.epm.ParserException
 import jem.epm.ParserParam
 import jem.imabw.toc.NavPane
 import jem.imabw.ui.inputText
@@ -23,9 +26,11 @@ import mala.ixin.CommandHandler
 import java.util.concurrent.ThreadLocalRandom
 
 object Workbench : CommandHandler {
-    val tasks = FXCollections.observableArrayList<Work>()
+    private const val TAG = "Workbench"
 
-    val isModified get() = tasks.any(Work::isModified)
+    val tasks: ObservableList<Work> = FXCollections.observableArrayList<Work>()
+
+    private val isModified get() = tasks.any(Work::isModified)
 
     init {
         Imabw.register(this)
@@ -34,7 +39,7 @@ object Workbench : CommandHandler {
     fun submit(work: Work) {
         require(work !in tasks) { "Work $work is already submitted" }
         tasks += work.apply {
-            this.path?.let { History.remove(it) }
+            path?.let { History.remove(it) }
         }
     }
 
@@ -42,31 +47,51 @@ object Workbench : CommandHandler {
         require(work in tasks) { "Work $work is not submitted" }
         tasks -= work.apply {
             dispose()
-            this.path?.let { History.insert(it) }
+            path?.let { History.insert(it) }
         }
     }
 
     fun getTask(book: Book) = tasks.firstOrNull { it.book === book }
 
-    fun isModified(chapter: Chapter): Boolean {
-        return if (chapter.parent == null) { // root book
-            getTask(chapter as Book)?.isModified == true
-        } else {
-            ThreadLocalRandom.current().nextBoolean()
-        }
+    fun isModified(chapter: Chapter) = if (chapter.parent == null) { // root book
+        getTask(chapter as Book)?.isModified == true
+    } else {
+        ThreadLocalRandom.current().nextBoolean()
     }
 
-    fun openBook(paths: Collection<String>) {
+    fun openBooks(paths: Collection<String>) {
+        var expect = 0
+        var process = 0
+        val end = tasks.size - 1
         for (path in paths) {
             if (tasks.any { it.path == path }) {
-                println("'$path' is already opened")
+                Log.t(TAG) { "'$path' is already opened" }
                 continue
             }
-            val task = OpenTask(ParserParam(path))
-            task.setOnSucceeded {
-                submit(Work(task.value, task.param))
+            if (expect++ == 0) {
+                Imabw.form.beginProgress()
             }
-            Imabw.submit(task)
+            val param = ParserParam(path)
+            val task = object : Task<Book>() {
+                override fun call(): Book {
+                    return EpmManager.readBook(param) ?: throw ParserException(tr("err.jem.unsupported", param.epmName))
+                }
+            }
+            task.setOnRunning {
+                Imabw.form.updateProgress("loading ${param.path}")
+            }
+            task.setOnSucceeded {
+                ++process
+                submit(Work(task.value, param))
+                if (process + end == expect) {
+                    Imabw.form.endProgress()
+                    Imabw.message("Opened $process book(s)")
+                }
+            }
+            task.setOnFailed {
+                task.exception.printStackTrace()
+            }
+            task.execute()
         }
     }
 
@@ -82,24 +107,31 @@ object Workbench : CommandHandler {
         if (title.isEmpty()) {
             inputText(tr("d.newBook.title"), tr("d.newBook.tip"), tr("book.untitled")) {
                 submit(Work(Book(it)))
+                Imabw.message("Created new book '$it'")
             }
         } else {
             submit(Work(Book(title)))
+            Imabw.message("Created new book '$title'")
         }
     }
 
     @Command
     fun openFile() {
-        selectBooks(Imabw.form.stage).map { it.path }.let { openBook(it) }
+        selectBooks(Imabw.form.stage).map { it.path }.let { openBooks(it) }
     }
 
     @Command
     fun closeFile() {
+        var process = 0
         NavPane.selectBooks.map { getTask(it)!! }.forEach {
             if (it.isModified) {
                 // todo ask to save
             }
             remove(it)
+            ++process
+        }
+        if (process > 0) {
+            Imabw.message("Closed $process book(s)")
         }
     }
 
@@ -113,7 +145,6 @@ object Workbench : CommandHandler {
     internal fun init() {
         // TODO: parse the app arguments
         newFile(tr("book.untitled"))
-        Imabw.message(App.tr("status.ready"))
     }
 
     internal fun dispose() {
@@ -139,8 +170,10 @@ class Work(val book: Book, val inParam: ParserParam? = null) {
     val path get() = outParam?.path ?: inParam?.path
 
     fun dispose() {
-        println("cleanup book ${book.title}")
-        book.cleanup()
+        Imabw.submit {
+            println("cleanup book ${book.title}")
+            book.cleanup()
+        }
     }
 
     override fun toString(): String {
@@ -185,7 +218,7 @@ object History {
                             items.add(0, SeparatorMenuItem())
                         }
                         items.add(0, MenuItem(path).apply {
-                            setOnAction { Workbench.openBook(listOf(text)) }
+                            setOnAction { Workbench.openBooks(listOf(text)) }
                         })
                     }
                 }

@@ -1,5 +1,6 @@
 package jem.imabw.plugin
 
+import javafx.beans.binding.Bindings
 import javafx.scene.control.MenuItem
 import javafx.scene.control.SeparatorMenuItem
 import jem.imabw.Imabw
@@ -15,6 +16,7 @@ class BatchRename : ImabwAddon {
         val menu = Imabw.menuMap["menuTools"] ?: return
         menu.items += SeparatorMenuItem()
         menu.items += MenuItem(name).also {
+            it.disableProperty().bind(Bindings.isEmpty(NavPane.treeView.selectionModel.selectedItems))
             it.setOnAction { doRename() }
         }
     }

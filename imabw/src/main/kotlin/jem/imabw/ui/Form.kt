@@ -23,6 +23,7 @@ import jem.imabw.Imabw
 import jem.imabw.Workbench
 import jem.imabw.editor.ChapterTab
 import jem.imabw.editor.EditorPane
+import jem.imabw.plugin.ImabwAddon
 import jem.imabw.toc.NavPane
 import jem.title
 import mala.App
@@ -79,7 +80,7 @@ class Form : Application(), CommandHandler {
             it.stylesheets += App.assets.resourceFor("ui/default.css")?.toExternalForm()
         }
         stage.show()
-
+        App.plugins.with<ImabwAddon> { ready() }
         Workbench.init()
     }
 
@@ -88,7 +89,7 @@ class Form : Application(), CommandHandler {
     }
 
     private fun initActions() {
-        Imabw.getAction("clearHistory")?.disableProperty?.bind(Bindings.isEmpty(History.items))
+        Imabw.getAction("clearHistory")?.disableProperty?.bind(History.emptyBinding)
         Imabw.getAction("showToolbar")?.selectedProperty?.bindBidirectional(appPane.toolBar!!.visibleProperty())
         Imabw.getAction("showStatusBar")?.selectedProperty?.bindBidirectional(appPane.statusBar!!.visibleProperty())
     }

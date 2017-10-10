@@ -94,6 +94,7 @@
         "exportChapter",
         null,
         "renameChapter",
+        null,
         "editText",
         null,
         "moveChapter",
@@ -107,12 +108,6 @@
       "id": "menuTools",
       "items": [
         "bookCrawler"
-      ]
-    },
-    {
-      "id": "menuPlugins",
-      "items": [
-        "pluginManager"
       ]
     },
     {
@@ -136,6 +131,7 @@
       "id": "menuHelp",
       "items": [
         "findAction",
+        "pluginManager",
         null,
         "help",
         "about"
@@ -186,6 +182,7 @@
     "exportChapter",
     null,
     "renameChapter",
+    null,
     "editText",
     null,
     "delete",

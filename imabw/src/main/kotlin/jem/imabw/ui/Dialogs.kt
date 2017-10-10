@@ -25,6 +25,7 @@ import javafx.stage.Window
 import jclp.VariantMap
 import jem.Chapter
 import jem.epm.EpmManager
+import jem.imabw.History
 import jem.imabw.Imabw
 import mala.App
 import java.io.File
@@ -41,9 +42,17 @@ inline fun inputText(title: String, tip: String, text: String, block: (String) -
     }
 }
 
-private val fileChooser = FileChooser()
+private val fileChooser = FileChooser().apply {
+    History.last?.let(::File)?.let {
+        if (it.isDirectory) {
+            initialDirectory = it
+        } else if (it.exists()) {
+            initialDirectory = it.parentFile
+        }
+    }
+}
 
-fun openBooks(owner: Window): List<File> {
+fun selectBooks(owner: Window): List<File> {
     fileChooser.title = App.tr("d.openBook.title")
     val filters = fileChooser.extensionFilters.apply { clear() }
     EpmManager.services.filter { it.hasParser && "crawler" !in it.keys }.map { factory ->

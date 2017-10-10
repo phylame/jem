@@ -32,8 +32,8 @@ import mala.ixin.*
 typealias ChapterNode = TreeItem<Chapter>
 
 object NavPane : BorderPane(), CommandHandler, Editable {
-    private val rootNode = ChapterNode()
-    private val treeView = TreeView(rootNode)
+    val rootNode = ChapterNode()
+    val treeView = TreeView(rootNode)
 
     val isActive get() = treeView.isFocused
 

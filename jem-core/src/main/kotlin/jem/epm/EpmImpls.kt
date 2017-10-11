@@ -34,6 +34,11 @@ import java.io.Closeable
 import java.io.File
 import java.io.IOException
 
+const val MAKER_VDM_TYPE_KEY = "maker.vdm.type"
+const val MAKER_VDM_COMMENT_KEY = "maker.vdm.comment"
+const val MAKER_VDM_ZIPLEVEL_KEY = "maker.vdm.zipLevel"
+const val MAKER_VDM_ZIPMETHOD_KEY = "maker.vdm.zipMethod"
+
 interface CommonParser<I : Closeable> : Parser {
     fun open(input: String, arguments: Settings?): I
 
@@ -67,12 +72,12 @@ interface VDMParser : CommonParser<VDMReader> {
 }
 
 interface VDMMaker : CommonMaker<VDMWriter> {
-    override fun open(output: String, arguments: Settings?) = (arguments?.getString("maker.vdm.type") ?: "zip").let {
+    override fun open(output: String, arguments: Settings?) = (arguments?.getString(MAKER_VDM_TYPE_KEY) ?: "zip").let {
         VDMManager.openWriter(it, output) ?: throw IOException(M.tr("err.vdm.unsupported", it))
     }.apply {
-        arguments?.getString("maker.vdm.comment")?.takeIf(String::isNotEmpty)?.let { setComment(it) }
-        arguments?.getInt("maker.vdm.zipLevel")?.let { setProperty("level", it) }
-        arguments?.getInt("maker.vdm.zipMethod")?.let { setProperty("method", it) }
+        arguments?.getString(MAKER_VDM_COMMENT_KEY)?.takeIf(String::isNotEmpty)?.let { setComment(it) }
+        arguments?.getInt(MAKER_VDM_ZIPLEVEL_KEY)?.let { setProperty("level", it) }
+        arguments?.getInt(MAKER_VDM_ZIPMETHOD_KEY)?.let { setProperty("method", it) }
     }
 }
 

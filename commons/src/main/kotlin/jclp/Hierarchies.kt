@@ -28,6 +28,21 @@ interface Hierarchical<T : Hierarchical<T>> : Iterable<T> {
     operator fun get(index: Int): T
 }
 
+val Hierarchical<*>.isRoot get() = parent == null
+
+val Hierarchical<*>.isNotRoot get() = parent != null
+
+fun <T : Hierarchical<T>> T.isAncestor(item: T): Boolean {
+    var parent = item.parent
+    while (parent != null) {
+        if (parent === this) {
+            return true
+        }
+        parent = parent.parent
+    }
+    return false
+}
+
 fun <T : Hierarchical<T>> T.toRoot(): List<T> {
     val list = LinkedList<T>()
     var parent: T? = this

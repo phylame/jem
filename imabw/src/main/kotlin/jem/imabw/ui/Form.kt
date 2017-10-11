@@ -2,6 +2,7 @@ package jem.imabw.ui
 
 import javafx.application.Application
 import javafx.beans.binding.Bindings
+import javafx.beans.binding.StringBinding
 import javafx.beans.value.ChangeListener
 import javafx.geometry.Orientation
 import javafx.geometry.Pos
@@ -13,11 +14,9 @@ import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
 import javafx.stage.Stage
 import jclp.text.TEXT_PLAIN
-import jclp.toRoot
-import jem.Chapter
 import jem.author
-import jem.imabw.History
 import jem.imabw.Imabw
+import jem.imabw.Work
 import jem.imabw.Workbench
 import jem.imabw.editor.ChapterTab
 import jem.imabw.editor.EditorPane
@@ -51,24 +50,32 @@ class Form : Application(), CommandHandler {
         this.stage = stage
         appDesigner = App.assets.designerFor("ui/main.idj")!!
 
-        appPane = AppPane().also { pane ->
-            pane.setup(appDesigner)
-            pane.statusBar?.right = Indicator
+        appPane = AppPane().also {
+            it.setup(appDesigner)
+            it.statusBar?.right = Indicator
             Imabw.actionMap.updateAccelerators(App.assets.propertiesFor("ui/keys.properties")!!)
         }
-        SplitPane().also { pane ->
-            pane.items += NavPane
-            pane.items += EditorPane.also {
-                stage.titleProperty().bind(CommonBinding(it.selectionModel.selectedItemProperty()) {
-                    buildTitle((it.value as? ChapterTab)?.chapter)
-                })
-            }
-            pane.setDividerPosition(0, 0.24)
-            appPane.center = pane
+        SplitPane().also {
+            it.items += NavPane
+            it.items += EditorPane
+            it.setDividerPosition(0, 0.24)
+            appPane.center = it
         }
 
         initActions()
+        Workbench.workProperty.addListener { _, old, new ->
+            stage.titleProperty().bind(object : StringBinding() {
+                init {
+                    super.bind(new.pathProperty, new.modifiedProperty)
+                }
 
+                override fun dispose() {
+                    super.unbind(old.pathProperty, old.modifiedProperty)
+                }
+
+                override fun computeValue() = buildTitle(Workbench.work)
+            })
+        }
         stage.icons += App.assets.imageFor("icon")
         stage.setOnCloseRequest {
             it.consume()
@@ -78,9 +85,10 @@ class Form : Application(), CommandHandler {
             it.stylesheets += App.assets.resourceFor("ui/default.css")?.toExternalForm()
         }
         stage.show()
-        App.plugins.with<ImabwAddon> { ready() }
         statusText = App.tr("status.ready")
-        Workbench.init()
+        Workbench.ready()
+
+        App.plugins.with<ImabwAddon> { ready() }
     }
 
     fun dispose() {
@@ -107,19 +115,21 @@ class Form : Application(), CommandHandler {
     }
 
     private fun initActions() {
-        Imabw.getAction("clearHistory")?.disableProperty?.bind(History.emptyBinding)
         Imabw.getAction("showToolbar")?.selectedProperty?.bindBidirectional(appPane.toolBar!!.visibleProperty())
         Imabw.getAction("showStatusBar")?.selectedProperty?.bindBidirectional(appPane.statusBar!!.visibleProperty())
     }
 
-    private fun buildTitle(chapter: Chapter?) = StringBuilder().run {
-        chapter?.toRoot()?.let {
-            val book = it.first()
-            append(book.title).append(" - ")
-            book.author.takeIf { it.isNotEmpty() }?.let {
-                append("[").append(it).append("] - ")
-            }
-            append(it.subList(1, it.size).joinToString("\\") { it.title }).append(" - ")
+    private fun buildTitle(work: Work) = StringBuilder().run {
+        val book = work.book
+        if (work.isModified) {
+            append("*")
+        }
+        append(book.title).append(" - ")
+        book.author.takeIf { it.isNotEmpty() }?.let {
+            append("[").append(it).append("] - ")
+        }
+        work.path?.let {
+            append(it).append(" - ")
         }
         append("PW Imabw ")
         append(Imabw.version)

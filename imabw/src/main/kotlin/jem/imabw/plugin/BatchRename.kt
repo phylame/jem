@@ -16,12 +16,12 @@ class BatchRename : ImabwAddon {
         val menu = Imabw.menuMap["menuTools"] ?: return
         menu.items += SeparatorMenuItem()
         menu.items += MenuItem(name).also {
-            it.disableProperty().bind(Bindings.isEmpty(NavPane.treeView.selectionModel.selectedItems))
+            it.disableProperty().bind(Bindings.isEmpty(NavPane.selection))
             it.setOnAction { doRename() }
         }
     }
 
     fun doRename() {
-        println(NavPane.treeView.selectionModel.selectedItems)
+        println(NavPane.selection)
     }
 }

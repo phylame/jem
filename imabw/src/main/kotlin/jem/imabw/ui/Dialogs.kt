@@ -30,16 +30,14 @@ import jem.imabw.Imabw
 import mala.App
 import java.io.File
 
-inline fun inputText(title: String, tip: String, text: String, block: (String) -> Unit) {
-    with(TextInputDialog(text)) {
-        graphic = null
-        headerText = null
-        this.title = title
-        this.contentText = tip
-        initOwner(Imabw.form.stage)
-        initModality(Modality.WINDOW_MODAL)
-        showAndWait().let { if (it.isPresent) block(it.get()) }
-    }
+fun inputText(title: String, tip: String, text: String) = with(TextInputDialog(text)) {
+    graphic = null
+    headerText = null
+    this.title = title
+    this.contentText = tip
+    initOwner(Imabw.form.stage)
+    initModality(Modality.WINDOW_MODAL)
+    showAndWait().let { if (it.isPresent) it.get() else null }
 }
 
 private val fileChooser = FileChooser().apply {
@@ -49,6 +47,42 @@ private val fileChooser = FileChooser().apply {
         } else if (it.exists()) {
             initialDirectory = it.parentFile
         }
+    }
+}
+
+fun openBookFile(owner: Window): File? {
+    fileChooser.title = App.tr("d.openBook.title")
+    val filters = fileChooser.extensionFilters.apply { clear() }
+    EpmManager.services.filter { it.hasParser && "crawler" !in it.keys }.map {
+        val name = it.keys.first().let {
+            App.optTr("misc.ext.$it") ?: App.tr("misc.ext.common", it.toUpperCase())
+        }
+        FileChooser.ExtensionFilter(name, it.keys.map { "*.$it" }).apply {
+            if ("pmab" in it.keys) {
+                fileChooser.selectedExtensionFilter = this
+            }
+        }
+    }.toCollection(filters)
+    return fileChooser.showOpenDialog(owner)?.also {
+        fileChooser.initialDirectory = it.parentFile
+    }
+}
+
+fun saveBookFile(owner: Window): File? {
+    fileChooser.title = App.tr("d.saveBook.title")
+    val filters = fileChooser.extensionFilters.apply { clear() }
+    EpmManager.services.filter { it.hasMaker }.map {
+        val name = it.keys.first().let {
+            App.optTr("misc.ext.$it") ?: App.tr("misc.ext.common", it.toUpperCase())
+        }
+        FileChooser.ExtensionFilter(name, it.keys.map { "*.$it" }).apply {
+            if ("pmab" in it.keys) {
+                fileChooser.selectedExtensionFilter = this
+            }
+        }
+    }.toCollection(filters)
+    return fileChooser.showSaveDialog(owner)?.also {
+        fileChooser.initialDirectory = it.parentFile
     }
 }
 

@@ -24,6 +24,7 @@ import jem.Attributes
 import jem.Book
 import jem.JemException
 import jem.epm.EpmManager
+import jem.epm.MAKER_OVERWRITE_KEY
 import jem.epm.MakerParam
 import jem.epm.ParserParam
 import mala.App
@@ -95,7 +96,7 @@ fun attachBook(book: Book, attaching: Boolean) {
 
 fun saveBook(param: MakerParam) = try {
     if (SCI["force"] == true) {
-        param.arguments?.set("maker.file.overwrite", true)
+        param.arguments?.set(MAKER_OVERWRITE_KEY, true)
     }
     makeBook(param)
 } catch (e: FileAlreadyExistsException) {

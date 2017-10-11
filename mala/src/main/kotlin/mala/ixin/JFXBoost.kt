@@ -28,6 +28,7 @@ import javafx.scene.Group
 import javafx.scene.Node
 import javafx.scene.control.Tooltip
 import javafx.scene.control.TreeItem
+import javafx.scene.control.TreeView
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
 import javafx.scene.layout.Pane
@@ -64,6 +65,14 @@ fun <T : Hierarchy<T>> T.toTreeItem(): TreeItem<T> = object : TreeItem<T>(this) 
     }
 }
 
+fun <T> TreeView<T>.selectAndScrollTo(item: TreeItem<T>) {
+    with(selectionModel) {
+        clearSelection()
+        select(item)
+        scrollTo(selectedIndex)
+    }
+}
+
 fun <T> TreeItem<T>.mostBelow(top: TreeItem<T>? = null): TreeItem<T> {
     var parent: TreeItem<T> = this
     while (parent.parent !== top) {
@@ -71,6 +80,10 @@ fun <T> TreeItem<T>.mostBelow(top: TreeItem<T>? = null): TreeItem<T> {
     }
     return parent
 }
+
+val TreeItem<*>.isRoot get() = parent == null
+
+val TreeItem<*>.isNotRoot get() = parent != null
 
 fun TreeItem<*>.refresh() {
     value.let {

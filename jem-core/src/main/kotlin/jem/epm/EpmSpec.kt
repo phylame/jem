@@ -27,6 +27,8 @@ import jem.Book
 import jem.title
 import java.io.File
 
+const val MAKER_OVERWRITE_KEY = "maker.file.overwrite"
+
 interface Parser {
     fun parse(input: String, arguments: Settings?): Book
 }
@@ -59,11 +61,11 @@ object EpmManager : ServiceManager<EpmFactory>(EpmFactory::class.java) {
         val epmName = param.epmName.takeIf(String::isNotEmpty) ?: throw IllegalArgumentException("Not found epm format")
         var file = File(param.path)
         val maker = getMaker(epmName) ?: return null
-        if (file.isDirectory && (maker !is VDMMaker || param.arguments?.getString("maker.vdm.type") != "dir")) {
+        if (file.isDirectory && (maker !is VDMMaker || param.arguments?.getString(MAKER_VDM_TYPE_KEY) != "dir")) {
             file = File(file, "${param.book.title}.$epmName")
         }
         file.takeIf {
-            it.exists() && param.arguments?.getBoolean("maker.file.overwrite") != true
+            it.exists() && param.arguments?.getBoolean(MAKER_OVERWRITE_KEY) != true
         }?.let {
             throw FileAlreadyExistsException(it)
         }

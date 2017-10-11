@@ -5,6 +5,7 @@ import javafx.beans.binding.Bindings
 import javafx.scene.control.ContextMenu
 import javafx.scene.control.Tab
 import javafx.scene.control.TabPane
+import jclp.isAncestor
 import jem.Chapter
 import jem.imabw.Imabw
 import jem.imabw.ui.Editable
@@ -12,14 +13,18 @@ import jem.title
 import mala.App
 import mala.ixin.CommandHandler
 import mala.ixin.init
+import org.fxmisc.richtext.ClipboardActions
 import org.fxmisc.richtext.LineNumberFactory
 import org.fxmisc.richtext.StyleClassedTextArea
 import org.fxmisc.richtext.StyledTextArea
 import org.fxmisc.undo.UndoManagerFactory
+import java.util.concurrent.Callable
 
 object EditorPane : TabPane(), CommandHandler, Editable {
     private val tabMenu = ContextMenu()
     private val textMenu = ContextMenu()
+
+    val selectedTab get() = selectionModel.selectedItem as? ChapterTab
 
     init {
         id = "editor-pane"
@@ -39,9 +44,9 @@ object EditorPane : TabPane(), CommandHandler, Editable {
             (new as? ChapterTab)?.let {
                 it.contextMenu = tabMenu
                 it.textArea.contextMenu = textMenu
+                initEditActions(it.textArea)
                 Platform.runLater {
                     it.textArea.requestFocus()
-                    initTextActions(it.textArea)
                 }
             }
         }
@@ -51,59 +56,81 @@ object EditorPane : TabPane(), CommandHandler, Editable {
     val isActive get() = selectionModel.selectedItem?.content?.isFocused == true
 
     fun openText(chapter: Chapter) {
-        val tab = tabs.find { (it as? ChapterTab)?.chapter === chapter } ?: ChapterTab(chapter).also {
-            tabs += it
-        }
+        val tab = tabs.find { it.chapter === chapter } ?: ChapterTab(chapter).also { tabs += it }
         selectionModel.select(tab)
     }
 
+    fun closeText(chapter: Chapter) {
+        tabs.removeIf { it.chapter === chapter || chapter.isAncestor(it.chapter!!) }
+    }
+
     private fun initActions() {
-//        val isTextFocused = Bindings.createBooleanBinding(Callable {
-//            itemProperty.value?.content?.let {
-//                it.isFocused && (it is TextArea || it is HTMLEditor || it is StyledTextArea<*>)
-//            } ?: false
-//        }, itemProperty)
-//        val notTextFocused = focusedProperty().not().or(isTextFocused.not())
-//        Imabw.getAction("replace")?.disableProperty?.bind(notTextFocused)
-//        Imabw.getAction("joinLine")?.disableProperty?.bind(notTextFocused)
-//        Imabw.getAction("duplicateText")?.disableProperty?.bind(notTextFocused)
-//        Imabw.getAction("toggleCase")?.disableProperty?.bind(notTextFocused)
+        val actionMap = Imabw.actionMap
+
+        sceneProperty().addListener { _, _, scene ->
+            val notTextFocused = Bindings.createBooleanBinding(Callable {
+                scene.focusOwner !is StyledTextArea<*>
+            }, scene.focusOwnerProperty())
+            actionMap["replace"]?.disableProperty?.bind(notTextFocused)
+            actionMap["joinLine"]?.disableProperty?.bind(notTextFocused)
+            actionMap["duplicateText"]?.disableProperty?.bind(notTextFocused)
+            actionMap["toggleCase"]?.disableProperty?.bind(notTextFocused)
+        }
 
         val tabCount = Bindings.size(tabs)
         val notMultiTabs = tabCount.lessThan(2)
-        Imabw.getAction("nextTab")?.disableProperty?.bind(notMultiTabs)
-        Imabw.getAction("previousTab")?.disableProperty?.bind(notMultiTabs)
-        Imabw.getAction("closeOtherTabs")?.disableProperty?.bind(notMultiTabs)
+        actionMap["nextTab"]?.disableProperty?.bind(notMultiTabs)
+        actionMap["previousTab"]?.disableProperty?.bind(notMultiTabs)
+        actionMap["closeOtherTabs"]?.disableProperty?.bind(notMultiTabs)
 
         val noTabs = tabCount.isEqualTo(0)
-        Imabw.getAction("closeTab")?.disableProperty?.bind(noTabs)
-        Imabw.getAction("closeAllTabs")?.disableProperty?.bind(noTabs)
-        Imabw.getAction("closeUnmodifiedTabs")?.disableProperty?.bind(noTabs)
-    }
-
-    private fun initTextActions(textArea: StyledTextArea<*>) {
-        Imabw.getAction("undo")?.disableProperty?.bind(Bindings.not(textArea.undoAvailableProperty()))
-        Imabw.getAction("redo")?.disableProperty?.bind(Bindings.not(textArea.redoAvailableProperty()))
+        actionMap["closeTab"]?.disableProperty?.bind(noTabs)
+        actionMap["closeAllTabs"]?.disableProperty?.bind(noTabs)
+        actionMap["closeUnmodifiedTabs"]?.disableProperty?.bind(noTabs)
     }
 
     override fun handle(command: String, source: Any): Boolean {
         when (command) {
             "nextTab" -> selectionModel.selectNext()
             "previousTab" -> selectionModel.selectPrevious()
+            "closeTab" -> tabs.remove(selectedTab)
+            "closeAllTabs" -> tabs.clear()
+            "closeOtherTabs" -> tabs.removeIf { it !== selectedTab }
+            "closeUnmodifiedTabs" -> tabs.removeIf { it.isModified != true }
             else -> return false
         }
         return true
     }
 
+    private fun initEditActions(textArea: StyledTextArea<*>) {
+        val actionMap = Imabw.actionMap
+
+        actionMap["undo"]?.disableProperty?.bind(Bindings.not(textArea.undoAvailableProperty()))
+        actionMap["redo"]?.disableProperty?.bind(Bindings.not(textArea.redoAvailableProperty()))
+    }
+
     override fun onEdit(command: String) {
+        val editor = selectedTab?.textArea ?: return
         when (command) {
-            "undo" -> selectionModel.selectedItem.myArea?.undo()
-            "redo" -> selectionModel.selectedItem.myArea?.redo()
-            "cut" -> selectionModel.selectedItem.myArea?.cut()
-            "copy" -> selectionModel.selectedItem.myArea?.copy()
-            "paste" -> selectionModel.selectedItem.myArea?.paste()
-            "delete" -> selectionModel.selectedItem.myArea?.replaceSelection("")
-            "selectAll" -> selectionModel.selectedItem.myArea?.selectAll()
+            "undo" -> editor.undo()
+            "redo" -> editor.redo()
+            "cut" -> {
+                if (editor.selection.length > 0) {
+                    editor.cut()
+                } else {
+                    editor.cutParagraph()
+                }
+            }
+            "copy" -> {
+                if (editor.selection.length > 0) {
+                    editor.copy()
+                } else {
+                    editor.copyParagraph()
+                }
+            }
+            "paste" -> editor.paste()
+            "delete" -> editor.replaceSelection("")
+            "selectAll" -> editor.selectAll()
         }
     }
 }
@@ -111,6 +138,7 @@ object EditorPane : TabPane(), CommandHandler, Editable {
 class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
     val textArea = StyleClassedTextArea()
     var undoPosition = textArea.undoManager.currentPosition
+    var isModified = false
 
     init {
         content = textArea
@@ -122,4 +150,16 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
     }
 }
 
-private val Tab.myArea get() = (this as? ChapterTab)?.content as? StyledTextArea<*>
+private val Tab.chapter get() = (this as? ChapterTab)?.chapter
+
+private val Tab.isModified get() = (this as? ChapterTab)?.isModified
+
+private val Tab.editor get() = (this as? ChapterTab)?.content as? StyledTextArea<*>
+
+fun ClipboardActions<*>.cutParagraph() {
+
+}
+
+fun ClipboardActions<*>.copyParagraph() {
+
+}

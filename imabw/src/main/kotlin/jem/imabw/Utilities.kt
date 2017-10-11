@@ -18,8 +18,3 @@
 
 package jem.imabw
 
-import javafx.concurrent.Task
-
-fun Task<*>.execute() {
-    Imabw.submit(this)
-}

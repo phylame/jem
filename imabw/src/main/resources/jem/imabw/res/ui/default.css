@@ -16,12 +16,16 @@
  * limitations under the License.
  */
 
+.menu, .menu-item {
+    -fx-font-size: 1.2em;
+}
+
 .tool-bar {
     -fx-padding: 2pt 4pt;
 }
 
 .tool-bar .button, .tool-bar .separator {
-    -fx-padding: 1pt;
+    -fx-padding: 2pt;
     -fx-background-color: transparent;
 }
 
@@ -30,13 +34,17 @@
 }
 
 #nav-label {
-    -fx-padding: 0 2pt;
-    -fx-font-weight: bold;
-    -fx-font-size: 1.1em;
+    -fx-padding: 0 1pt;
+    -fx-font-size: 1.2em;
 }
 
 #nav-tool-bar {
     -fx-background-color: transparent;
+}
+
+.tree-cell {
+    -fx-padding: 1pt;
+    -fx-font-size: 1.2em;
 }
 
 .intro-tooltip {
@@ -50,12 +58,16 @@
 }
 
 .styled-text-area {
-    -fx-font-size: 1.2em;
-    -fx-font-family: serif;
+    -fx-font-size: 1.3em;
+    -fx-font-family: sans-serif;
 }
 
 .app-status-bar {
     -fx-padding: 0 4pt;
+}
+
+.app-status-bar .label {
+    -fx-font-size: 1.2em;
 }
 
 #status-progress {
@@ -64,10 +76,10 @@
 }
 
 #indicator .label {
-    -fx-padding: 0 2pt;
+    -fx-padding: 0 1pt;
 }
 
 #indicator .button, #indicator .toggle-button {
-    -fx-padding: 2pt 2pt;
+    -fx-padding: 1pt 2pt;
     -fx-background-color: transparent;
 }

@@ -118,7 +118,10 @@ object NavPane : BorderPane(), CommandHandler, Editable {
                 val actions = arrayOf("undo", "redo", "cut", "copy", "paste", "find", "findNext", "findPrevious")
                 if (new === treeView) {
                     for (action in actions) {
-                        actionMap[action]?.isDisable = true
+                        actionMap[action]?.let {
+                            it.disableProperty.unbind()
+                            it.isDisable = true
+                        }
                     }
                 }
             }

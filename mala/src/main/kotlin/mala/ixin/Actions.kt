@@ -1,5 +1,6 @@
 package mala.ixin
 
+import javafx.beans.binding.ObjectBinding
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
@@ -19,6 +20,7 @@ class Action(val id: String) {
     val textProperty = SimpleStringProperty()
     val iconProperty = SimpleObjectProperty<Image>()
     val largeIconProperty = SimpleObjectProperty<Image>()
+    val selectedIconProperty = SimpleObjectProperty<Image>()
     val toastProperty = SimpleStringProperty()
     val acceleratorProperty = SimpleObjectProperty<KeyCombination>()
     val disableProperty = SimpleBooleanProperty()
@@ -27,6 +29,7 @@ class Action(val id: String) {
     var text by textProperty
     var icon by iconProperty
     var largeIcon by largeIconProperty
+    var selectedIcon by selectedIconProperty
     var toast by toastProperty
     var accelerator by acceleratorProperty
     var isDisable by disableProperty
@@ -61,20 +64,38 @@ fun ActionMap.updateAccelerators(keys: Properties) {
     }
 }
 
+val Action.actualIconBinding
+    get() = object : ObjectBinding<Image>() {
+        init {
+            bind(iconProperty, selectedIconProperty, selectedProperty)
+        }
+
+        override fun computeValue() = if (!selectedProperty.value) icon else selectedIcon ?: icon
+    }
+
+val Action.largeActualIconBinding
+    get() = object : ObjectBinding<Image>() {
+        init {
+            bind(iconProperty, largeIconProperty, selectedIconProperty, selectedProperty)
+        }
+
+        override fun computeValue() = if (!selectedProperty.value) largeIcon ?: icon else selectedIcon ?: largeIcon ?: icon
+    }
+
 fun Action.toButton(handler: CommandHandler, type: Style = Style.NORMAL, hideText: Boolean = false): ButtonBase {
     val button = when (type) {
         Style.NORMAL -> Button()
-        Style.TOGGLE -> ToggleButton().also { it.selectedProperty().bindBidirectional(selectedProperty) }
-        Style.RADIO -> RadioButton().also { it.selectedProperty().bindBidirectional(selectedProperty) }
-        Style.CHECK -> CheckBox().also { it.selectedProperty().bindBidirectional(selectedProperty) }
+        Style.TOGGLE -> ToggleButton().apply { selectedProperty().bindBidirectional(selectedProperty) }
+        Style.RADIO -> RadioButton().apply { selectedProperty().bindBidirectional(selectedProperty) }
+        Style.CHECK -> CheckBox().apply { selectedProperty().bindBidirectional(selectedProperty) }
         Style.LINK -> Hyperlink()
     }
     if (!hideText || (largeIcon == null && icon == null)) {
         button.textProperty().bind(textProperty)
     }
-    button.tooltipProperty().bind(toastProperty.lazyTooltip())
     button.isMnemonicParsing = IxIn.isMnemonicEnable
-    button.graphicProperty().bind(largeIconProperty.coalesce(iconProperty).lazyImageView())
+    button.tooltipProperty().bind(toastProperty.lazyTooltip())
+    button.graphicProperty().bind(largeActualIconBinding.lazyImageView())
     button.disableProperty().bindBidirectional(disableProperty)
     button.onAction = EventCommand(handler)
     button.properties[COMMAND_KEY] = id
@@ -84,15 +105,15 @@ fun Action.toButton(handler: CommandHandler, type: Style = Style.NORMAL, hideTex
 fun Action.toMenuItem(handler: CommandHandler, type: Style = Style.NORMAL): MenuItem {
     val item = when (type) {
         Style.NORMAL -> MenuItem()
-        Style.RADIO -> RadioMenuItem().also { it.selectedProperty().bindBidirectional(selectedProperty) }
-        Style.CHECK -> CheckMenuItem().also { it.selectedProperty().bindBidirectional(selectedProperty) }
+        Style.RADIO -> RadioMenuItem().apply { selectedProperty().bindBidirectional(selectedProperty) }
+        Style.CHECK -> CheckMenuItem().apply { selectedProperty().bindBidirectional(selectedProperty) }
         else -> throw IllegalArgumentException("$type is not supported for menu item")
     }
     item.textProperty().bind(textProperty)
-    item.graphicProperty().bind(iconProperty.lazyImageView())
     item.isMnemonicParsing = IxIn.isMnemonicEnable
-    item.acceleratorProperty().bind(acceleratorProperty)
+    item.graphicProperty().bind(actualIconBinding.lazyImageView())
     item.disableProperty().bindBidirectional(disableProperty)
+    item.acceleratorProperty().bind(acceleratorProperty)
     item.onAction = EventCommand(handler)
     item.properties[COMMAND_KEY] = id
     return item

@@ -18,7 +18,6 @@ import org.fxmisc.richtext.LineNumberFactory
 import org.fxmisc.richtext.StyleClassedTextArea
 import org.fxmisc.richtext.StyledTextArea
 import org.fxmisc.undo.UndoManagerFactory
-import java.util.concurrent.Callable
 
 object EditorPane : TabPane(), CommandHandler, Editable {
     private val tabMenu = ContextMenu()
@@ -44,10 +43,7 @@ object EditorPane : TabPane(), CommandHandler, Editable {
             (new as? ChapterTab)?.let {
                 it.contextMenu = tabMenu
                 it.textArea.contextMenu = textMenu
-                initEditActions(it.textArea)
-                Platform.runLater {
-                    it.textArea.requestFocus()
-                }
+                Platform.runLater { it.textArea.requestFocus() }
             }
         }
         initActions()
@@ -67,16 +63,6 @@ object EditorPane : TabPane(), CommandHandler, Editable {
     private fun initActions() {
         val actionMap = Imabw.actionMap
 
-        sceneProperty().addListener { _, _, scene ->
-            val notTextFocused = Bindings.createBooleanBinding(Callable {
-                scene.focusOwner !is StyledTextArea<*>
-            }, scene.focusOwnerProperty())
-            actionMap["replace"]?.disableProperty?.bind(notTextFocused)
-            actionMap["joinLine"]?.disableProperty?.bind(notTextFocused)
-            actionMap["duplicateText"]?.disableProperty?.bind(notTextFocused)
-            actionMap["toggleCase"]?.disableProperty?.bind(notTextFocused)
-        }
-
         val tabCount = Bindings.size(tabs)
         val notMultiTabs = tabCount.lessThan(2)
         actionMap["nextTab"]?.disableProperty?.bind(notMultiTabs)
@@ -87,6 +73,36 @@ object EditorPane : TabPane(), CommandHandler, Editable {
         actionMap["closeTab"]?.disableProperty?.bind(noTabs)
         actionMap["closeAllTabs"]?.disableProperty?.bind(noTabs)
         actionMap["closeUnmodifiedTabs"]?.disableProperty?.bind(noTabs)
+
+        sceneProperty().addListener { _, _, scene ->
+            scene.focusOwnerProperty().addListener { _, _, new ->
+                val actions = arrayOf("replace", "joinLine", "duplicateText", "toggleCase")
+                if (new is StyledTextArea<*>) {
+                    val notEditable = new.editableProperty().not()
+                    for (action in actions) {
+                        actionMap[action]?.disableProperty?.bind(notEditable)
+                    }
+                    actionMap["cut"]?.disableProperty?.bind(notEditable)
+                    actionMap["paste"]?.disableProperty?.bind(notEditable)
+                    actionMap["delete"]?.disableProperty?.bind(notEditable)
+                    actionMap["undo"]?.disableProperty?.bind(notEditable.or(Bindings.not(new.undoAvailableProperty())))
+                    actionMap["redo"]?.disableProperty?.bind(notEditable.or(Bindings.not(new.redoAvailableProperty())))
+                    actionMap["lock"]?.let {
+                        it.isSelected = !new.isEditable
+                        it.isDisable = false
+                    }
+                } else {
+                    actions.mapNotNull { actionMap[it] }.forEach {
+                        it.disableProperty.unbind()
+                        it.isDisable = true
+                    }
+                    actionMap["lock"]?.let {
+                        it.isSelected = false
+                        it.isDisable = true
+                    }
+                }
+            }
+        }
     }
 
     override fun handle(command: String, source: Any): Boolean {
@@ -97,16 +113,10 @@ object EditorPane : TabPane(), CommandHandler, Editable {
             "closeAllTabs" -> tabs.clear()
             "closeOtherTabs" -> tabs.removeIf { it !== selectedTab }
             "closeUnmodifiedTabs" -> tabs.removeIf { it.isModified != true }
+            "lock" -> selectedTab?.textArea?.let { it.isEditable = !it.isEditable }
             else -> return false
         }
         return true
-    }
-
-    private fun initEditActions(textArea: StyledTextArea<*>) {
-        val actionMap = Imabw.actionMap
-
-        actionMap["undo"]?.disableProperty?.bind(Bindings.not(textArea.undoAvailableProperty()))
-        actionMap["redo"]?.disableProperty?.bind(Bindings.not(textArea.redoAvailableProperty()))
     }
 
     override fun onEdit(command: String) {

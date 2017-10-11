@@ -16,29 +16,13 @@
  * limitations under the License.
  */
 
-package jem.scj
+package jem.imabw
 
 import jclp.setting.delegate
-import jem.COVER
-import jem.TITLE
 import mala.BaseSettings
 
-object SCISettings : BaseSettings() {
-    var termWidth by delegate(80, "app.termWidth")
+object AppSettings : BaseSettings() {
+    var enableHistory by delegate(true, "app.history.enable")
 
-    var outputFormat by delegate("pmab", "jem.out.format")
-
-    var separator by delegate("\n", "sci.view.separator")
-
-    var skipEmpty by delegate(true, "sci.view.skipEmpty")
-
-    var tocIndent by delegate("  ", "sci.view.tocIndent")
-
-    var tocNames
-        inline get() = (get("sci.view.tocNames") as? String)?.split(",") ?: listOf(TITLE, COVER)
-        inline set(value) {
-            set("sci.view.tocNames", value.joinToString(","))
-        }
-
-    fun viewSettings() = ViewSettings(separator, skipEmpty, tocIndent, tocNames)
+    var historyLimit by delegate(100, "app.history.limit")
 }

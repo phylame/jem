@@ -39,6 +39,7 @@ fun loadAction(id: String, m: Translator, r: AssetManager) = Action(id).apply {
     val iconId = m.optTr("$id.icon") or { "actions/$id" }
     icon = r.imageFor(iconId)
     largeIcon = r.imageFor("$iconId${IxIn.largeIconSuffix}")
+    selectedIcon = r.imageFor("$iconId${IxIn.selectedIconSuffix}")
     toast = m.optTr("$id.toast")
     m.optTr("$id.accelerator")?.takeIf { it.isNotEmpty() }?.let {
         accelerator = KeyCombination.valueOf(it)

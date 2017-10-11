@@ -33,6 +33,8 @@ class Form : Application(), CommandHandler {
     lateinit var appPane: AppPane
         private set
 
+    lateinit var splitPane: SplitPane
+
     lateinit var appDesigner: AppDesigner
 
     var statusText
@@ -55,7 +57,7 @@ class Form : Application(), CommandHandler {
             it.statusBar?.right = Indicator
             Imabw.actionMap.updateAccelerators(App.assets.propertiesFor("ui/keys.properties")!!)
         }
-        SplitPane().also {
+        splitPane = SplitPane().also {
             it.items += NavPane
             it.items += EditorPane
             it.setDividerPosition(0, 0.24)
@@ -115,8 +117,9 @@ class Form : Application(), CommandHandler {
     }
 
     private fun initActions() {
-        Imabw.getAction("showToolbar")?.selectedProperty?.bindBidirectional(appPane.toolBar!!.visibleProperty())
-        Imabw.getAction("showStatusBar")?.selectedProperty?.bindBidirectional(appPane.statusBar!!.visibleProperty())
+        val actionMap = Imabw.actionMap
+        actionMap["showToolbar"]?.selectedProperty?.bindBidirectional(appPane.toolBar!!.visibleProperty())
+        actionMap["showStatusBar"]?.selectedProperty?.bindBidirectional(appPane.statusBar!!.visibleProperty())
     }
 
     private fun buildTitle(work: Work) = StringBuilder().run {
@@ -172,6 +175,10 @@ object Indicator : HBox() {
         add(caret)
         add(words)
         add(mime)
+
+        Imabw.newAction("lock").toButton(Imabw, Style.TOGGLE, hideText = true).also {
+            add(it)
+        }
 
         Imabw.newAction("gc").toButton(Imabw, hideText = true).also {
             add(it)

@@ -49,7 +49,7 @@ object Workbench : CommandHandler {
     inline fun ensureSaved(title: String, block: () -> Unit) {
         if (work.isModified) {
             println("ask save for $title")
-            saveFile()
+//            saveFile()
         }
         block()
     }
@@ -242,23 +242,36 @@ object History {
     }
 
     fun remove(path: String) {
-        paths.remove(path)
+        if (AppSettings.enableHistory) {
+            paths.remove(path)
+        }
     }
 
     fun insert(path: String) {
-        paths.remove(path)
-        paths.add(0, path)
+        if (AppSettings.enableHistory) {
+            paths.remove(path)
+            if (paths.size == AppSettings.historyLimit) {
+                paths.remove(paths.size - 1, paths.size)
+            }
+            paths.add(0, path)
+        }
     }
 
     fun clear() {
-        paths.clear()
+        if (AppSettings.enableHistory) {
+            paths.clear()
+        }
     }
 
     fun load() {
-        println("load history")
+        if (AppSettings.enableHistory) {
+            println("load history")
+        }
     }
 
     fun sync() {
-        println("sync history")
+        if (AppSettings.enableHistory) {
+            println("sync history")
+        }
     }
 }

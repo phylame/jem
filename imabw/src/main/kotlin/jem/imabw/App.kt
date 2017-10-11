@@ -20,11 +20,9 @@ package jem.imabw
 
 import javafx.application.Application
 import jclp.log.Log
-import jclp.log.LogLevel
 import jem.Build
 import jem.imabw.ui.Form
 import mala.App
-import mala.AppVerbose
 import mala.ixin.IDelegate
 import java.util.*
 import java.util.concurrent.Executors
@@ -42,11 +40,16 @@ object Imabw : IDelegate() {
         internal set
 
     override fun onStart() {
-        Log.level = LogLevel.ALL
-        App.verbose = AppVerbose.TRACE
-        Locale.setDefault(Locale.ENGLISH)
-        App.plugins.isEnable = true
+        Log.level = AppSettings.logLevel
+        App.verbose = AppSettings.appVerbose
+        Locale.setDefault(AppSettings.appLocale)
         App.translator = App.assets.translatorFor("i18n/dev/app")
+        if (AppSettings.enablePlugin) {
+            with(App.plugins) {
+                isEnable = true
+                blacklist = AppSettings.pluginBlacklist
+            }
+        }
     }
 
     override fun run() {

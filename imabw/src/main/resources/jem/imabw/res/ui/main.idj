@@ -65,10 +65,6 @@
         {
           "id": "showStatusBar",
           "style": "check"
-        },
-        {
-          "id": "showNavigateBar",
-          "style": "check"
         }
       ]
     },
@@ -129,7 +125,6 @@
     {
       "id": "menuHelp",
       "items": [
-        "findAction",
         "pluginManager",
         null,
         "help",

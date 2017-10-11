@@ -67,7 +67,7 @@
     -fx-padding: 0 2pt;
 }
 
-#indicator .button {
+#indicator .button, #indicator .toggle-button {
     -fx-padding: 2pt 2pt;
     -fx-background-color: transparent;
 }

@@ -18,9 +18,7 @@
 
 package mala.ixin
 
-import javafx.beans.Observable
 import javafx.beans.binding.ObjectBinding
-import javafx.beans.value.ObservableObjectValue
 import javafx.beans.value.ObservableValue
 import javafx.beans.value.WritableValue
 import javafx.collections.ObservableList
@@ -100,30 +98,30 @@ operator fun <T> WritableValue<T>.setValue(ref: Any, property: KProperty<*>, val
     this.value = value
 }
 
-fun <T> ObservableObjectValue<T>.coalesce(vararg others: ObservableObjectValue<T>) = object : ObjectBinding<T?>() {
+fun ObservableValue<Image?>.lazyImageView() = object : ObjectBinding<ImageView>() {
     init {
-        super.bind(this@coalesce)
+        bind(this@lazyImageView)
     }
 
     override fun dispose() {
-        super.unbind(this@coalesce)
+        unbind(this@lazyImageView)
     }
 
-    override fun computeValue(): T? {
-        return this@coalesce.get() ?: others.map { it.get() }.firstOrNull()
+    override fun computeValue(): ImageView? {
+        return this@lazyImageView.value?.let { ImageView(it) }
     }
 }
 
-class CommonBinding<T : Observable, R>(private val dep: T, private val compute: (T) -> R) : ObjectBinding<R>() {
+fun ObservableValue<String?>.lazyTooltip() = object : ObjectBinding<Tooltip>() {
     init {
-        super.bind(dep)
+        bind(this@lazyTooltip)
     }
 
-    override fun dispose() = super.unbind(dep)
+    override fun dispose() {
+        unbind(this@lazyTooltip)
+    }
 
-    override fun computeValue() = compute(dep)
+    override fun computeValue(): Tooltip? {
+        return this@lazyTooltip.value?.takeIf { it.isNotEmpty() }?.let { Tooltip(it) }
+    }
 }
-
-fun ObservableValue<Image?>.lazyImageView() = CommonBinding(this) { it.value?.let(::ImageView) }
-
-fun ObservableValue<String?>.lazyTooltip() = CommonBinding(this) { it.value?.takeIf { it.isNotEmpty() }?.let(::Tooltip) }

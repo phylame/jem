@@ -19,8 +19,14 @@
 package mala
 
 import jclp.io.createRecursively
+import jclp.log.Log
+import jclp.log.LogLevel
 import jclp.setting.MapSettings
+import jclp.setting.delegate
+import jclp.text.Converter
+import jclp.text.Converters
 import java.io.File
+import java.util.*
 
 interface Describable {
     val name: String
@@ -32,7 +38,7 @@ interface Describable {
     val vendor: String
 }
 
-open class AppSettings(name: String, load: Boolean = true, sync: Boolean = true) : MapSettings() {
+open class BaseSettings(name: String = "config/general.prop", load: Boolean = true, sync: Boolean = true) : MapSettings() {
     val file = File(App.home, name)
 
     init {
@@ -48,6 +54,41 @@ open class AppSettings(name: String, load: Boolean = true, sync: Boolean = true)
                     App.error("cannot create directory for file: $file")
                 }
             })
+        }
+    }
+
+    var logLevel by delegate(Log.level, "app.logLevel")
+
+    var appVerbose by delegate(App.verbose, "app.verbose")
+
+    var appLocale by delegate(Locale.getDefault(), "app.locale")
+
+    var enablePlugin by delegate(true, "app.plugin.enable")
+
+    var pluginBlacklist: Collection<String>
+        get() = File(App.home, "config/blacklist").takeIf(File::exists)?.readLines() ?: emptyList()
+        set(paths) {
+            File(App.home, "blacklist").let {
+                if (it.exists() || it.parentFile.createRecursively()) {
+                    it.writeText(paths.joinToString("\n"))
+                } else {
+                    App.error("cannot create file for plugin blacklist")
+                }
+            }
+        }
+
+    companion object {
+        init {
+            Converters[LogLevel::class.java] = object : Converter<LogLevel> {
+                override fun render(obj: LogLevel) = obj.name
+
+                override fun parse(str: String) = LogLevel.valueOf(str.toUpperCase())
+            }
+            Converters[AppVerbose::class.java] = object : Converter<AppVerbose> {
+                override fun render(obj: AppVerbose) = obj.name
+
+                override fun parse(str: String) = AppVerbose.valueOf(str.toUpperCase())
+            }
         }
     }
 }

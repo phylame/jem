@@ -17,6 +17,8 @@ object IxIn {
 
     var largeIconSuffix = System.getProperty("ixin.largeIconSuffix") or "@x"
 
+    var selectedIconSuffix = System.getProperty("ixin.selectedIconSuffix") or "-selected"
+
     var isMnemonicEnable = "mac" !in System.getProperty("os.name")
 
     fun gfxPath(name: String): String {

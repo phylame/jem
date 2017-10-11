@@ -1,7 +1,6 @@
 package jem.imabw.toc
 
 import javafx.beans.binding.Bindings
-import javafx.beans.binding.BooleanBinding
 import javafx.collections.ListChangeListener
 import javafx.collections.ObservableList
 import javafx.concurrent.Task
@@ -20,7 +19,6 @@ import jem.Chapter
 import jem.epm.parseBook
 import jem.imabw.Imabw
 import jem.imabw.Workbench
-import jem.imabw.editor.ChapterTab
 import jem.imabw.editor.EditorPane
 import jem.imabw.ui.Editable
 import jem.imabw.ui.editAttributes
@@ -31,6 +29,7 @@ import jem.title
 import mala.App
 import mala.App.tr
 import mala.ixin.*
+import java.util.concurrent.Callable
 
 typealias ChapterNode = TreeItem<Chapter>
 
@@ -92,13 +91,7 @@ object NavPane : BorderPane(), CommandHandler, Editable {
     }
 
     private fun initActions() {
-        val hasBook = object : BooleanBinding() {
-            init {
-                super.bind(selection)
-            }
-
-            override fun computeValue() = selection.any { it.isRoot }
-        }
+        val hasBook = Bindings.createBooleanBinding(Callable { selection.any { it?.isRoot == true } }, selection)
 
         val empty = Bindings.isEmpty(selection)
         val multiple = Bindings.size(selection).greaterThan(1)
@@ -115,6 +108,21 @@ object NavPane : BorderPane(), CommandHandler, Editable {
         actionMap["moveChapter"]?.disableProperty?.bind(emptyOrBook)
         actionMap["mergeChapter"]?.disableProperty?.bind(emptyOrBook.or(multiple.not()))
         actionMap["viewAttributes"]?.disableProperty?.bind(emptyOrMultiple)
+
+        actionMap["gotoChapter"]?.disableProperty?.bind(Bindings.createBooleanBinding(Callable {
+            EditorPane.selectedTab == null
+        }, EditorPane.selectionModel.selectedItemProperty()))
+
+        sceneProperty().addListener { _, _, scene ->
+            scene.focusOwnerProperty().addListener { _, _, new ->
+                val actions = arrayOf("undo", "redo", "cut", "copy", "paste", "find", "findNext", "findPrevious")
+                if (new === treeView) {
+                    for (action in actions) {
+                        actionMap[action]?.isDisable = true
+                    }
+                }
+            }
+        }
     }
 
     fun createChapter(): Chapter? {
@@ -150,6 +158,7 @@ object NavPane : BorderPane(), CommandHandler, Editable {
         }
         task.setOnSucceeded {
             insertNodes(listOf(createNode(task.value)), selection, ItemMode.TO_PARENT)
+            println("inserted 1 book")
         }
         task.setOnFailed {
             task.exception.printStackTrace()
@@ -170,8 +179,9 @@ object NavPane : BorderPane(), CommandHandler, Editable {
     fun insertNodes(sources: Collection<ChapterNode>, targets: Collection<ChapterNode>, mode: ItemMode) {
         if (sources.isEmpty() || targets.isEmpty()) return
         require(sources.none { it in targets }) { "Cannot insert node to self" }
+        val dump = targets.takeIf { it !== selection } ?: targets.toList()
         val model = treeView.selectionModel.apply { clearSelection() }
-        targets.forEachIndexed { index, target ->
+        dump.forEachIndexed { index, target ->
             // clone chapter(s) except the first one
             val items = if (index == 0) sources else sources.map { createNode(it.value.clone()) }
             when (mode) {
@@ -225,10 +235,10 @@ object NavPane : BorderPane(), CommandHandler, Editable {
         when (command) {
             "editText" -> selection.forEach { EditorPane.openText(it.value) }
             "newChapter" -> createChapter()?.let {
-                insertNodes(listOf(createNode(it)), selection.toList(), ItemMode.TO_PARENT)
+                insertNodes(listOf(createNode(it)), selection, ItemMode.TO_PARENT)
             }
             "insertChapter" -> createChapter()?.let {
-                insertNodes(listOf(createNode(it)), selection.toList(), ItemMode.BEFORE_ITEM)
+                insertNodes(listOf(createNode(it)), selection, ItemMode.BEFORE_ITEM)
             }
             "exportChapter" -> Workbench.exportBook(selection.map { it.value })
             "viewAttributes" -> editAttributes(selectedChapter!!)
@@ -247,7 +257,6 @@ object NavPane : BorderPane(), CommandHandler, Editable {
         when (command) {
             "delete" -> removeNodes(selection)
             "selectAll" -> treeView.selectionModel.selectAll()
-            else -> TODO()
         }
     }
 }
@@ -265,14 +274,8 @@ object NavHeader : BorderPane() {
             Imabw.form.appDesigner.items["navTools"]?.let { items ->
                 it.init(items, Imabw, App, App.assets, Imabw.actionMap)
             }
-            initActions()
             BorderPane.setAlignment(it, Pos.CENTER)
         }
-    }
-
-    private fun initActions() {
-        val notChapterTab = CommonBinding(EditorPane.selectionModel.selectedItemProperty()) { it.value !is ChapterTab }
-//        actionMap["gotoChapter"]?.disableProperty?.bind(notChapterTab)
     }
 }
 

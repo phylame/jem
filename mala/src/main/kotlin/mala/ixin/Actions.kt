@@ -13,7 +13,6 @@ import jclp.Translator
 import mala.AssetManager
 import java.util.*
 
-typealias ActionMap = MutableMap<String, Action>
 private const val COMMAND_KEY = "ixin-command-id"
 
 class Action(val id: String) {

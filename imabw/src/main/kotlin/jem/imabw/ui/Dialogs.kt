@@ -35,13 +35,13 @@ fun inputText(title: String, tip: String, text: String) = with(TextInputDialog(t
     headerText = null
     this.title = title
     this.contentText = tip
-    initOwner(Imabw.form.stage)
+    initOwner(Imabw.fxApp.stage)
     initModality(Modality.WINDOW_MODAL)
     showAndWait().let { if (it.isPresent) it.get() else null }
 }
 
 private val fileChooser = FileChooser().apply {
-    History.last?.let(::File)?.let {
+    History.latest?.let(::File)?.let {
         if (it.isDirectory) {
             initialDirectory = it
         } else if (it.exists()) {

@@ -73,24 +73,19 @@ open class MalaSettings(name: String, load: Boolean = true, sync: Boolean = true
     }
 }
 
-open class AppSettings(
-        name: String = "config/general.ini", load: Boolean = true, sync: Boolean = true
-) : MalaSettings(name, load, sync) {
-
+open class AppSettings(name: String = "config/general.ini") : MalaSettings(name) {
     private val blacklist = File(App.home, "config/blacklist.txt")
 
     init {
-        if (sync) {
-            App.registerCleanup({
-                if (blacklist.exists() || blacklist.parentFile.createRecursively()) {
-                    blacklist.bufferedWriter().use { out ->
-                        pluginBlacklist.forEach { out.append(it).append("\n") }
-                    }
-                } else {
-                    App.error("cannot create file for plugin blacklist")
+        App.registerCleanup({
+            if (blacklist.exists() || blacklist.parentFile.createRecursively()) {
+                blacklist.bufferedWriter().use { out ->
+                    pluginBlacklist.forEach { out.append(it).append("\n") }
                 }
-            })
-        }
+            } else {
+                App.error("cannot create file for plugin blacklist")
+            }
+        })
     }
 
     var logLevel by delegate(Log.level, "app.log.level")

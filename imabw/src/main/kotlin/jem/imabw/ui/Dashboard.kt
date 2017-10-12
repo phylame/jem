@@ -1,18 +1,18 @@
 package jem.imabw.ui
 
-import javafx.application.Application
 import javafx.beans.binding.Bindings
 import javafx.beans.binding.StringBinding
 import javafx.beans.value.ChangeListener
 import javafx.geometry.Orientation
 import javafx.geometry.Pos
 import javafx.scene.Scene
-import javafx.scene.control.*
+import javafx.scene.control.Control
+import javafx.scene.control.Label
 import javafx.scene.control.Separator
+import javafx.scene.control.SplitPane
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
-import javafx.stage.Stage
 import jclp.text.TEXT_PLAIN
 import jem.author
 import jem.imabw.Imabw
@@ -22,52 +22,37 @@ import jem.imabw.Workbench
 import jem.imabw.editor.ChapterTab
 import jem.imabw.editor.EditorPane
 import jem.imabw.editor.editor
-import jem.imabw.plugin.ImabwAddon
 import jem.imabw.toc.NavPane
 import jem.title
 import mala.App
 import mala.ixin.*
 
-class Form : Application(), CommandHandler {
-    lateinit var stage: Stage
-        private set
-
-    lateinit var appPane: AppPane
-        private set
-
+class Dashboard : IApplication(), CommandHandler {
     lateinit var splitPane: SplitPane
 
     lateinit var appDesigner: AppDesigner
 
-    var statusText
-        get() = appPane.statusBar?.statusLabel?.text
-        set(value) {
-            appPane.statusBar?.statusLabel?.text = value
-        }
-
     override fun init() {
-        Imabw.form = this
         Imabw.register(this)
     }
 
-    override fun start(stage: Stage) {
-        this.stage = stage
-        appDesigner = App.assets.designerFor("ui/main.json")!!
+    override fun setup(scene: Scene, appPane: AppPane) {
+        appDesigner = App.assets.designerFor("ui/designer.json")!!
+        scene.stylesheets += App.assets.resourceFor("ui/default.css")?.toExternalForm()
 
-        appPane = AppPane().also {
-            it.setup(appDesigner)
-            it.statusBar?.right = Indicator
-            Imabw.actionMap.updateAccelerators(App.assets.propertiesFor("ui/keys.properties")!!)
-        }
+        appPane.setup(appDesigner, actionMap, menuMap)
+        actionMap.updateAccelerators(App.assets.propertiesFor("ui/keys.properties")!!)
+        appPane.statusBar?.right = Indicator
+
         splitPane = SplitPane().also {
             it.items += NavPane
             it.items += EditorPane
+            it.id = "main-split-pane"
             it.setDividerPosition(0, 0.24)
             SplitPane.setResizableWithParent(NavPane, false)
             appPane.center = it
         }
 
-        initActions()
         Workbench.workProperty.addListener { _, old, new ->
             stage.titleProperty().bind(object : StringBinding() {
                 init {
@@ -81,64 +66,37 @@ class Form : Application(), CommandHandler {
                 override fun computeValue() = buildTitle(Workbench.work)
             })
         }
-        stage.icons += App.assets.imageFor("icon")
-        stage.setOnCloseRequest {
-            it.consume()
-            Imabw.handle("exit", stage)
-        }
-        stage.scene = Scene(appPane).also {
-            it.stylesheets += App.assets.resourceFor("ui/default.css")?.toExternalForm()
-        }
-        stage.x = UISettings.formX
-        stage.y = UISettings.formY
-        stage.width = UISettings.formWidth
-        stage.height = UISettings.formHeight
-        if (UISettings.formFullScreen) {
-            stage.isFullScreen = true
-        } else if (UISettings.formMaximized) {
-            stage.isMaximized = true
-        }
-        stage.show()
-        statusText = App.tr("status.ready")
-        Workbench.ready()
 
-        App.plugins.with<ImabwAddon> { ready() }
+        initActions()
+        restoreState(UISettings)
+
+        statusText = App.tr("status.ready")
     }
 
-    fun dispose() {
-        UISettings.formX = stage.x
-        UISettings.formY = stage.y
-        UISettings.formWidth = stage.width
-        UISettings.formHeight = stage.height
-        UISettings.formFullScreen = stage.isFullScreen
-        UISettings.formMaximized = stage.isMaximized
+    override fun restoreState(settings: IxInSettings) {
+        super.restoreState(settings)
+        NavPane.isVisible = UISettings.navigationBarVisible
+        if (!NavPane.isVisible) splitPane.items.remove(0, 1)
+    }
+
+    override fun saveState(settings: IxInSettings) {
+        super.saveState(settings)
+        UISettings.navigationBarVisible = NavPane.isVisible
+    }
+
+    internal fun dispose() {
+        saveState(UISettings)
         stage.close()
     }
 
-    private val progressLabel = Label()
-
-    fun beginProgress() {
-        appPane.statusBar?.left = HBox(4.0).apply {
-            alignment = Pos.CENTER
-            BorderPane.setAlignment(this, Pos.CENTER)
-            children += ProgressIndicator().also { it.id = "status-progress" }
-            children += progressLabel
-        }
-    }
-
-    fun updateProgress(text: String) {
-        progressLabel.text = text
-    }
-
-    fun endProgress() {
-        appPane.statusBar?.left = appPane.statusBar?.statusLabel
-    }
-
     private fun initActions() {
-        val actionMap = Imabw.actionMap
         actionMap["showToolbar"]?.selectedProperty?.bindBidirectional(appPane.toolBar!!.visibleProperty())
         actionMap["showStatusBar"]?.selectedProperty?.bindBidirectional(appPane.statusBar!!.visibleProperty())
         actionMap["showNavigateBar"]?.selectedProperty?.bindBidirectional(NavPane.visibleProperty())
+        actionMap["toggleFullScreen"]?.let { action ->
+            stage.fullScreenProperty().addListener { _, _, value -> action.isSelected = value }
+            action.selectedProperty.addListener { _, _, value -> stage.isFullScreen = value }
+        }
     }
 
     private fun buildTitle(work: Work) = StringBuilder().run {
@@ -160,7 +118,7 @@ class Form : Application(), CommandHandler {
 
     override fun handle(command: String, source: Any): Boolean {
         when (command) {
-            "showToolbar", "showStatusBar" -> Unit // bound with property
+            "showToolbar", "showStatusBar", "toggleFullScreen" -> Unit // bound with property
             "showNavigateBar" -> {
                 if (!NavPane.isVisible) {
                     splitPane.items.remove(0, 1)
@@ -169,10 +127,7 @@ class Form : Application(), CommandHandler {
                     splitPane.setDividerPosition(0, 0.24)
                 }
             }
-            in editActions -> when {
-                NavPane.isActive -> NavPane.onEdit(command)
-                EditorPane.isActive -> EditorPane.onEdit(command)
-            }
+            in editActions -> (stage.scene.focusOwner as? Editable)?.onEdit(command)
             else -> return false
         }
         return true
@@ -203,11 +158,11 @@ object Indicator : HBox() {
         add(words)
         add(mime)
 
-        Imabw.newAction("lock").toButton(Imabw, Style.TOGGLE, hideText = true).also {
+        IxIn.newAction("lock").toButton(Imabw, Style.TOGGLE, hideText = true).also {
             add(it)
         }
 
-        Imabw.newAction("gc").toButton(Imabw, hideText = true).also {
+        IxIn.newAction("gc").toButton(Imabw, hideText = true).also {
             add(it)
         }
 

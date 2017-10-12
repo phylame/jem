@@ -37,7 +37,6 @@ import org.apache.commons.cli.HelpFormatter
 import org.apache.commons.cli.Option
 import org.apache.commons.cli.OptionGroup
 import java.time.LocalDate
-import java.util.*
 
 fun main(args: Array<String>) {
     App.run(SCI, args)
@@ -70,12 +69,14 @@ object SCI : CDelegate(DefaultParser()) {
 
     val output get() = context["o"]?.toString() ?: "."
 
-//    val crawlerManager by lazy { CrawlerManager() }
-
     override fun onStart() {
         initApp()
         initJem()
         initOptions()
+    }
+
+    override fun onStop() {
+        saveState(SCISettings)
     }
 
     fun processInputs(processor: InputProcessor): Int {
@@ -98,16 +99,7 @@ object SCI : CDelegate(DefaultParser()) {
     }
 
     private fun initApp() {
-        Log.level = SCISettings.logLevel
-        App.verbose = SCISettings.appVerbose
-        Locale.setDefault(SCISettings.appLocale)
-        App.translator = App.assets.translatorFor("i18n/app")
-        if (SCISettings.enablePlugin) {
-            with(App.plugins) {
-                isEnable = true
-                blacklist = SCISettings.pluginBlacklist
-            }
-        }
+        restoreState(SCISettings)
     }
 
     private fun initJem() {

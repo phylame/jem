@@ -69,6 +69,11 @@
         {
           "id": "showNavigateBar",
           "style": "check"
+        },
+        null,
+        {
+          "id": "toggleFullScreen",
+          "style": "check"
         }
       ]
     },

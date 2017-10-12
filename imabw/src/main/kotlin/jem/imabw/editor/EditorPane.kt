@@ -6,9 +6,12 @@ import javafx.scene.Node
 import javafx.scene.control.ContextMenu
 import javafx.scene.control.Tab
 import javafx.scene.control.TabPane
+import javafx.scene.control.Tooltip
 import jclp.isAncestor
 import jclp.text.Text
+import jclp.toRoot
 import jem.Chapter
+import jem.imabw.EditorSettings
 import jem.imabw.Imabw
 import jem.imabw.LoadTextTask
 import jem.imabw.execute
@@ -16,6 +19,7 @@ import jem.imabw.ui.Editable
 import jem.title
 import mala.App
 import mala.ixin.CommandHandler
+import mala.ixin.IxIn
 import mala.ixin.init
 import org.fxmisc.richtext.ClipboardActions
 import org.fxmisc.richtext.LineNumberFactory
@@ -33,11 +37,12 @@ object EditorPane : TabPane(), CommandHandler, Editable {
         id = "editor-pane"
         Imabw.register(this)
 
-        Imabw.form.appDesigner.items["tabContext"]?.let {
-            tabMenu.init(it, Imabw, App, App.assets, Imabw.actionMap, null)
+        val appDesigner = Imabw.dashboard.appDesigner
+        appDesigner.items["tabContext"]?.let {
+            tabMenu.init(it, Imabw, App, App.assets, IxIn.actionMap, null)
         }
-        Imabw.form.appDesigner.items["textContext"]?.let {
-            textMenu.init(it, Imabw, App, App.assets, Imabw.actionMap, null)
+        appDesigner.items["textContext"]?.let {
+            textMenu.init(it, Imabw, App, App.assets, IxIn.actionMap, null)
         }
         selectionModel.selectedItemProperty().addListener { _, old, new ->
             (old as? ChapterTab)?.let {
@@ -47,13 +52,11 @@ object EditorPane : TabPane(), CommandHandler, Editable {
             (new as? ChapterTab)?.let {
                 it.contextMenu = tabMenu
                 it.textArea.contextMenu = textMenu
-                Platform.runLater { it.textArea.requestFocus() }
+                Platform.runLater { it.content.requestFocus() }
             }
         }
         initActions()
     }
-
-    val isActive get() = selectionModel.selectedItem?.content?.isFocused == true
 
     fun openText(chapter: Chapter, icon: Node? = null) {
         val tab = tabs.find { it.chapter === chapter } ?: ChapterTab(chapter).also { tabs += it }
@@ -66,7 +69,7 @@ object EditorPane : TabPane(), CommandHandler, Editable {
     }
 
     private fun initActions() {
-        val actionMap = Imabw.actionMap
+        val actionMap = IxIn.actionMap
 
         val tabCount = Bindings.size(tabs)
         val notMultiTabs = tabCount.lessThan(2)
@@ -149,7 +152,10 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
 
     init {
         content = textArea
-        textArea.isWrapText = true
+        val paths = chapter.toRoot().let { it.subList(1, it.size) }
+        tooltip = Tooltip(paths.joinToString(" > ") { it.title })
+
+        textArea.isWrapText = EditorSettings.wrapText
         textArea.setUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
         textArea.paragraphGraphicFactory = LineNumberFactory.get(textArea) { "%${it}d" }
         chapter.text?.let { loadText(it) }

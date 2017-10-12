@@ -16,6 +16,10 @@
  * limitations under the License.
  */
 
+.root {
+    -fx-font-size: 13px;
+}
+
 .menu-bar {
     -fx-padding: 0 4px;
     -fx-background-insets: 0 0 0 0, 0 0 1 0;
@@ -26,7 +30,7 @@
 }
 
 .menu-button {
-    -fx-padding: 0.16em 0.33em;
+    -fx-padding: 3px 4px;
 }
 
 .menu-button > .label {
@@ -51,6 +55,11 @@
     -fx-background-color: -fx-background;
 }
 
+#main-split-pane > .split-pane-divider {
+    -fx-padding: 0 3px;
+    -fx-background-color: -fx-outer-border, -fx-inner-border;
+}
+
 #nav-header {
     -fx-padding: 1px 4px;
     -fx-background-color: -fx-outer-border, -fx-inner-border;
@@ -60,6 +69,7 @@
 #nav-label {
     -fx-font-size: 1em;
     -fx-font-weight: bold;
+    -fx-padding: 0 1em 0 0;
 }
 
 #nav-tool-bar {
@@ -71,7 +81,7 @@
 }
 
 #toc-tree .tree-cell {
-    -fx-padding: 0.16em 0;
+    -fx-padding: 2px 0;
     -fx-font-size: 1em;
 }
 
@@ -89,8 +99,8 @@
 }
 
 .styled-text-area {
-    -fx-font-size: 1.3em;
-    -fx-font-family: sans-serif;
+    -fx-font-size: 1.2em;
+    -fx-font-family: serif;
 }
 
 .app-status-bar {
@@ -99,20 +109,20 @@
     -fx-background-insets: 0 0 0 0, 1 0 0 0;
 }
 
-.app-status-bar .label {
+.app-status-bar > .label {
     -fx-font-size: 1em;
 }
 
-#status-progress {
+.app-progress-indicator {
     -fx-pref-width: 1.1em;
     -fx-pref-height: 1.1em;
 }
 
-#indicator .label {
+#indicator > .label {
     -fx-padding: 0 1px;
 }
 
-#indicator .button, #indicator .toggle-button {
+#indicator > .button, #indicator > .toggle-button {
     -fx-padding: 1px 2px;
     -fx-background-color: transparent;
 }

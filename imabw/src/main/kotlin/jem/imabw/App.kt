@@ -19,12 +19,10 @@
 package jem.imabw
 
 import javafx.application.Application
-import jclp.log.Log
 import jem.Build
-import jem.imabw.ui.Form
+import jem.imabw.ui.Dashboard
 import mala.App
 import mala.ixin.IDelegate
-import java.util.*
 import java.util.concurrent.Executors
 
 fun main(args: Array<String>) {
@@ -36,29 +34,26 @@ object Imabw : IDelegate() {
 
     override val version = Build.VERSION
 
-    lateinit var form: Form // initialized by Form
-        internal set
+    val dashboard get() = fxApp as Dashboard
 
     override fun onStart() {
-        Log.level = GeneralSettings.logLevel
-        App.verbose = GeneralSettings.appVerbose
-        Locale.setDefault(GeneralSettings.appLocale)
-        App.translator = App.assets.translatorFor("i18n/dev/app")
-        if (GeneralSettings.enablePlugin) {
-            with(App.plugins) {
-                isEnable = true
-                blacklist = GeneralSettings.pluginBlacklist
-            }
-        }
+        restoreState(GeneralSettings)
     }
 
     override fun run() {
-        Application.launch(Form::class.java)
+        Application.launch(Dashboard::class.java)
+    }
+
+    override fun onReady() {
+        Workbench.start()
     }
 
     override fun onStop() {
+        saveState(GeneralSettings)
+
+        dashboard.dispose()
         Workbench.dispose()
-        Imabw.form.dispose()
+
         if (executor.isInitialized()) {
             executor.value.shutdown()
         }
@@ -73,22 +68,16 @@ object Imabw : IDelegate() {
     }
 
     fun message(msg: String) {
-        form.statusText = msg
+        fxApp.statusText = msg
     }
 
-    // register for command handler
     fun register(handler: Any) {
-        submit { commandDispatcher.register(handler) }
+        submit { commandProxy.register(handler) }
     }
 
-    // submit task in thread pool
-    fun submit(r: Runnable) {
-        executor.value.submit(r)
-    }
+    fun submit(r: Runnable) = executor.value.submit(r)
 
-    fun submit(block: () -> Unit) {
-        executor.value.submit(block)
-    }
+    fun submit(block: () -> Unit) = executor.value.submit(block)
 
     private val executor = lazy {
         Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())

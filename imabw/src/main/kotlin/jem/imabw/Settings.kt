@@ -21,6 +21,7 @@ package jem.imabw
 import jclp.setting.delegate
 import mala.AppSettings
 import mala.MalaSettings
+import mala.ixin.IxInSettings
 
 object GeneralSettings : AppSettings() {
     var enableHistory by delegate(true, "app.history.enable")
@@ -28,11 +29,14 @@ object GeneralSettings : AppSettings() {
     var historyLimit by delegate(100, "app.history.limit")
 }
 
-object UISettings : MalaSettings("config/ui.ini") {
-    var formX by delegate(251.0, "form.x")
-    var formY by delegate(93.0, "form.y")
-    var formWidth by delegate(1080.0, "form.width")
-    var formHeight by delegate(670.0, "form.height")
-    var formMaximized by delegate(false, "form.maximized")
-    var formFullScreen by delegate(false, "form.fullScreen")
+object UISettings : IxInSettings() {
+    var navigationBarVisible by delegate(true, "form.navigationBar.visible")
+}
+
+object EditorSettings : MalaSettings("config/editor.ini") {
+    var wrapText by delegate(false, "editor.wrapText")
+
+    var fontFamily by delegate("System", "editor.font.family")
+
+    var fontSize by delegate(14.0, "editor.font.size")
 }

@@ -3,7 +3,6 @@ package jem.imabw.toc
 import javafx.beans.binding.Bindings
 import javafx.collections.ListChangeListener
 import javafx.collections.ObservableList
-import javafx.concurrent.Task
 import javafx.geometry.Pos
 import javafx.scene.control.*
 import javafx.scene.image.ImageView
@@ -14,9 +13,7 @@ import javafx.scene.layout.BorderPane
 import javafx.util.Callback
 import jclp.isRoot
 import jclp.log.Log
-import jem.Book
 import jem.Chapter
-import jem.epm.parseBook
 import jem.imabw.Imabw
 import jem.imabw.LoadTextTask
 import jem.imabw.Workbench
@@ -39,8 +36,6 @@ object NavPane : BorderPane(), CommandHandler, Editable {
     private const val TAG = "Nav"
 
     val treeView = TreeView(ChapterNode())
-
-    val isActive get() = treeView.isFocused
 
     val selection: ObservableList<TreeItem<Chapter>> get() = treeView.selectionModel.selectedItems
 
@@ -71,7 +66,7 @@ object NavPane : BorderPane(), CommandHandler, Editable {
         tree.addEventHandler(MouseEvent.MOUSE_PRESSED) { event ->
             if (event.clickCount == 2 && event.isPrimaryButtonDown) {
                 treeView.selectionModel.selectedItem?.takeIf { it.isLeaf && it.isNotRoot }?.let {
-                    EditorPane.openText(it.value, it.graphic)
+                    EditorPane.openText(it.value, CellFactory.getIcon(it))
                     event.consume()
                 }
             }
@@ -84,7 +79,7 @@ object NavPane : BorderPane(), CommandHandler, Editable {
                         it.isExpanded = !it.isExpanded
                         event.consume()
                     } else if (it.isNotRoot) {
-                        EditorPane.openText(it.value, it.graphic)
+                        EditorPane.openText(it.value, CellFactory.getIcon(it))
                         event.consume()
                     }
                 }
@@ -100,7 +95,7 @@ object NavPane : BorderPane(), CommandHandler, Editable {
         val emptyOrBook = empty.or(hasBook)
         val emptyOrMultiple = empty.or(multiple)
 
-        val actionMap = Imabw.actionMap
+        val actionMap = IxIn.actionMap
         actionMap["newChapter"]?.disableProperty?.bind(empty)
         actionMap["importChapter"]?.disableProperty?.bind(empty)
         actionMap["insertChapter"]?.disableProperty?.bind(emptyOrBook)
@@ -240,7 +235,7 @@ object NavPane : BorderPane(), CommandHandler, Editable {
 
     override fun handle(command: String, source: Any): Boolean {
         when (command) {
-            "editText" -> selection.forEach { EditorPane.openText(it.value, it.graphic) }
+            "editText" -> selection.forEach { EditorPane.openText(it.value, CellFactory.getIcon(it)) }
             "newChapter" -> createChapter()?.let {
                 insertNodes(listOf(createNode(it)), selection, ItemMode.TO_PARENT)
             }
@@ -253,7 +248,10 @@ object NavPane : BorderPane(), CommandHandler, Editable {
             "bookExtensions" -> Workbench.work.book.let {
                 editVariants(it.extensions, tr("d.editExtension.title", it.title))
             }
-            "gotoChapter" -> EditorPane.selectedTab?.chapter?.let(this::locateChapter)
+            "gotoChapter" -> EditorPane.selectedTab?.chapter?.let {
+                locateChapter(it)
+                treeView.requestFocus()
+            }
             "collapseToc" -> collapseNode(treeView.root)
             else -> return false
         }
@@ -278,8 +276,8 @@ object NavHeader : BorderPane() {
 
         right = ToolBar().also {
             it.id = "nav-tool-bar"
-            Imabw.form.appDesigner.items["navTools"]?.let { items ->
-                it.init(items, Imabw, App, App.assets, Imabw.actionMap)
+            Imabw.dashboard.appDesigner.items["navTools"]?.let { items ->
+                it.init(items, Imabw, App, App.assets, IxIn.actionMap)
             }
             BorderPane.setAlignment(it, Pos.CENTER)
         }
@@ -287,9 +285,21 @@ object NavHeader : BorderPane() {
 }
 
 object CellFactory : Callback<TreeView<Chapter>, TreeCell<Chapter>> {
-    val book = App.assets.imageFor("tree/book")
-    val section = App.assets.imageFor("tree/section")
-    val chapter = App.assets.imageFor("tree/chapter")
+    val bookIcon = App.assets.imageFor("tree/book")!!
+    val sectionIcon = App.assets.imageFor("tree/section")!!
+    val chapterIcon = App.assets.imageFor("tree/chapter")!!
+
+    fun getIcon(node: ChapterNode) = ImageView(when {
+        node.isRoot -> bookIcon
+        !node.isLeaf -> sectionIcon
+        else -> chapterIcon
+    })
+
+    fun getIcon(chapter: Chapter) = ImageView(when {
+        chapter.isRoot -> bookIcon
+        chapter.isSection -> sectionIcon
+        else -> chapterIcon
+    })
 
     override fun call(param: TreeView<Chapter>): TreeCell<Chapter> {
         return ChapterCell()
@@ -300,8 +310,8 @@ private class ChapterCell : TreeCell<Chapter>() {
     private val menu = ContextMenu()
 
     init {
-        Imabw.form.appDesigner.items["navContext"]?.let {
-            menu.init(it, Imabw, App, App.assets, Imabw.actionMap, null)
+        Imabw.dashboard.appDesigner.items["navContext"]?.let {
+            menu.init(it, Imabw, App, App.assets, IxIn.actionMap, null)
         }
     }
 
@@ -310,9 +320,9 @@ private class ChapterCell : TreeCell<Chapter>() {
         text = chapter?.title
         graphic = when {
             empty || chapter == null -> null
-            chapter.isRoot -> ImageView(CellFactory.book)
-            chapter.isSection -> ImageView(CellFactory.section)
-            else -> ImageView(CellFactory.chapter)
+            chapter.isRoot -> ImageView(CellFactory.bookIcon)
+            chapter.isSection -> ImageView(CellFactory.sectionIcon)
+            else -> ImageView(CellFactory.chapterIcon)
         }
         chapter?.intro?.let {
             val task = LoadTextTask(it)

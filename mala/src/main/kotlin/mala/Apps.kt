@@ -20,7 +20,9 @@ package mala
 
 import jclp.TranslatorWrapper
 import jclp.createInstance
+import jclp.log.Log
 import jclp.text.or
+import java.util.*
 
 private typealias Cleanup = () -> Unit
 
@@ -45,6 +47,26 @@ interface AppDelegate : Runnable {
     fun onStart() {}
 
     fun onStop() {}
+
+    fun restoreState(settings: AppSettings) {
+        Log.level = settings.logLevel
+        App.verbose = settings.appVerbose
+        Locale.setDefault(settings.appLocale)
+        App.translator = App.assets.translatorFor("i18n/$name")
+        if (settings.enablePlugin) {
+            with(App.plugins) {
+                isEnable = true
+                blacklist = settings.pluginBlacklist
+            }
+        }
+    }
+
+    fun saveState(settings: AppSettings) {
+        settings.logLevel = Log.level
+        settings.appVerbose = App.verbose
+        settings.appLocale = Locale.getDefault()
+        settings.enablePlugin = App.plugins.isEnable
+    }
 }
 
 object App : TranslatorWrapper() {

@@ -18,181 +18,129 @@
 
 package mala.ixin
 
-import javafx.beans.property.BooleanProperty
-import javafx.beans.property.SimpleObjectProperty
-import javafx.beans.value.ChangeListener
+import javafx.application.Application
 import javafx.geometry.Pos
-import javafx.scene.Node
+import javafx.scene.Scene
 import javafx.scene.control.Label
 import javafx.scene.control.Menu
-import javafx.scene.control.MenuBar
-import javafx.scene.control.ToolBar
+import javafx.scene.control.ProgressIndicator
 import javafx.scene.layout.BorderPane
-import javafx.scene.layout.VBox
+import javafx.scene.layout.HBox
+import javafx.stage.Screen
+import javafx.stage.Stage
 import mala.App
 import mala.AppDelegate
+import mala.Plugin
 
-typealias MenuMap = MutableMap<String, Menu>
+interface IPlugin : Plugin {
+    fun ready() {}
+}
 
 abstract class IDelegate : AppDelegate, CommandHandler {
-    val menuMap = hashMapOf<String, Menu>()
-    val actionMap = hashMapOf<String, Action>()
-    val commandDispatcher = CommandDispatcher()
+    val commandProxy = CommandDispatcher()
 
-    fun getAction(id: String) = actionMap[id]
-
-    fun newAction(id: String) = actionMap.getOrCreate(id, App, App.assets)
+    lateinit var fxApp: IApplication
+        internal set
 
     override fun handle(command: String, source: Any): Boolean {
-        if (!commandDispatcher.handle(command, source)) {
+        if (!commandProxy.handle(command, source)) {
             App.error("No handler for command: '$command'")
             return false
         }
         return true
     }
+
+    open fun onReady() {}
 }
 
-class AppPane : BorderPane() {
-    val menuBarProperty = SimpleObjectProperty<MenuBar>()
-    val toolBarProperty = SimpleObjectProperty<ToolBar>()
-    val statusBarProperty = SimpleObjectProperty<StatusBar>()
+typealias MenuMap = MutableMap<String, Menu>
+typealias ActionMap = MutableMap<String, Action>
 
-    var menuBar by menuBarProperty
-    var toolBar by toolBarProperty
-    var statusBar by statusBarProperty
+abstract class IApplication : Application() {
+    lateinit var stage: Stage
 
-    private val topBox = VBox()
+    lateinit var appPane: AppPane
 
-    init {
-        styleClass += "app-pane"
-        val visibleListener = ChangeListener<Boolean> { observable, _, visible ->
-            val node = (observable as BooleanProperty).bean as Node
-            if (node is StatusBar) {
-                bottom = if (visible) node else null
-            } else {
-                if (visible) {
-                    topBox.children += node
-                } else {
-                    topBox.children.remove(node)
-                }
-            }
-        }
-        menuBarProperty.addListener { _, oldBar, newBar ->
-            if (oldBar !== newBar) {
-                val items = topBox.children
-                if (oldBar == null) { // add menu bar
-                    if (items.isEmpty()) {
-                        items += newBar
-                    } else {
-                        items.add(0, newBar)
-                    }
-                    newBar.visibleProperty().addListener(visibleListener)
-                } else if (newBar == null) { // remove menu bar
-                    if (items.first() is MenuBar) {
-                        items.remove(oldBar)
-                        oldBar.visibleProperty().removeListener(visibleListener)
-                    }
-                } else { // replace menu bar
-                    if (items.first() is MenuBar) {
-                        items[0] = newBar
-                        newBar.visibleProperty().addListener(visibleListener)
-                        oldBar.visibleProperty().removeListener(visibleListener)
-                    }
-                }
-                if (items.isEmpty()) {
-                    top = null
-                } else if (top == null) {
-                    top = topBox
-                }
-            }
-        }
-        toolBarProperty.addListener { _, oldBar, newBar ->
-            if (oldBar !== newBar) {
-                val items = topBox.children
-                if (oldBar == null) { // add tool bar
-                    if (items.isEmpty()) {
-                        items += newBar
-                    } else {
-                        items.add(1, newBar)
-                    }
-                    newBar.visibleProperty().addListener(visibleListener)
-                } else if (newBar == null) { // remove tool bar
-                    if (items.last() is ToolBar) {
-                        items.remove(oldBar)
-                        oldBar.visibleProperty().removeListener(visibleListener)
-                    }
-                } else { // replace tool bar
-                    if (items.last() is ToolBar) {
-                        items[items.size - 1] = newBar
-                        newBar.visibleProperty().addListener(visibleListener)
-                        oldBar.visibleProperty().removeListener(visibleListener)
-                    }
-                }
-                if (items.isEmpty()) {
-                    top = null
-                } else if (top == null) {
-                    top = topBox
-                }
-            }
-        }
-        statusBarProperty.addListener { _, oldBar, newBar ->
-            if (oldBar !== newBar) {
-                bottom = newBar
-                newBar?.visibleProperty()?.addListener(visibleListener)
-                oldBar?.visibleProperty()?.removeListener(visibleListener)
-            }
-        }
-    }
+    val menuMap = hashMapOf<String, Menu>()
 
-    fun setupMenuBar(items: Collection<Item>) {
-        if (items.isNotEmpty()) {
-            menuBar = MenuBar().apply {
-                val menus = this.menus
-                styleClass += "app-menu-bar"
-                val delegate = App.delegate as IDelegate
-                items.filterIsInstance<ItemGroup>().forEach {
-                    menus += it.toMenu(delegate, App, App.assets, delegate.actionMap, delegate.menuMap)
-                }
-            }
-        }
-    }
+    val actionMap = hashMapOf<String, Action>()
 
-    fun setupToolBar(items: Collection<*>) {
-        if (items.isNotEmpty()) {
-            toolBar = ToolBar().apply {
-                styleClass += "app-tool-bar"
-                val delegate = App.delegate as IDelegate
-                init(items, delegate, App, App.assets, delegate.actionMap)
-            }
-        }
-    }
-
-    fun setupStatusBar() {
-        statusBar = StatusBar()
-    }
-
-    fun setup(designer: AppDesigner) {
-        designer.items["menuBar"]?.let(this::setupMenuBar)
-        designer.items["toolBar"]?.let(this::setupToolBar)
-        setupStatusBar()
-    }
-}
-
-class StatusBar : BorderPane() {
-    var text: String
-        get() = statusLabel.text
+    var statusText
+        get() = appPane.statusBar?.statusLabel?.text
         set(value) {
-            statusLabel.text = value
+            appPane.statusBar?.statusLabel?.text = value
         }
 
-    val statusLabel = Label()
+    override fun start(primaryStage: Stage) {
+        IxIn.delegate.fxApp = this
+        stage = primaryStage
 
-    init {
-        styleClass += "app-status-bar"
-
-        left = statusLabel.also {
-            styleClass += "app-status-text"
-            BorderPane.setAlignment(it, Pos.CENTER)
+        primaryStage.icons += App.assets.imageFor("icon")
+        primaryStage.setOnCloseRequest {
+            IxIn.delegate.handle("exit", stage)
+            it.consume()
         }
+
+        appPane = AppPane()
+        primaryStage.scene = Scene(appPane).apply {
+            setup(this, appPane)
+        }
+
+        App.plugins.with<IPlugin> { ready() }
+        IxIn.delegate.onReady()
+
+        primaryStage.show()
+    }
+
+    open fun setup(scene: Scene, appPane: AppPane) {}
+
+    open fun restoreState(settings: IxInSettings) {
+        val stage = stage
+
+        val bounds = Screen.getPrimary().visualBounds
+        stage.width = settings.stageWidth.takeUnless { it < 0 } ?: bounds.width * 0.6
+        stage.height = settings.stageHeight.takeUnless { it < 0 } ?: bounds.height * 0.6
+        if (settings.stageX >= 0 && settings.stageY >= 0) {
+            stage.x = settings.stageX
+            stage.y = settings.stageY
+        }
+
+        stage.isResizable = settings.stageResizable
+        stage.isAlwaysOnTop = settings.stageAlwaysOnTop
+
+        appPane.toolBar?.isVisible = settings.toolBarVisible
+        appPane.statusBar?.isVisible = settings.statusBarVisible
+    }
+
+    open fun saveState(settings: IxInSettings) {
+        settings.stageX = stage.x
+        settings.stageY = stage.y
+        settings.stageWidth = stage.width
+        settings.stageHeight = stage.height
+
+        settings.stageResizable = stage.isResizable
+        settings.stageAlwaysOnTop = stage.isAlwaysOnTop
+
+        settings.toolBarVisible = appPane.toolBar!!.isVisible
+        settings.statusBarVisible = appPane.statusBar!!.isVisible
+    }
+
+    private val progressLabel = Label().apply { styleClass += "app-progress-label" }
+
+    fun showProgress() {
+        appPane.statusBar?.left = HBox(4.0).apply {
+            alignment = Pos.CENTER
+            BorderPane.setAlignment(this, Pos.CENTER)
+            children += ProgressIndicator().also { it.styleClass += "app-progress-indicator" }
+            children += progressLabel
+        }
+    }
+
+    fun updateProgress(text: String) {
+        progressLabel.text = text
+    }
+
+    fun hideProgress() {
+        appPane.statusBar?.left = appPane.statusBar?.statusLabel
     }
 }

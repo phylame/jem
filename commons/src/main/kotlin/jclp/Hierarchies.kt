@@ -43,15 +43,17 @@ fun <T : Hierarchical<T>> T.isAncestor(item: T): Boolean {
     return false
 }
 
-fun <T : Hierarchical<T>> T.toRoot(): List<T> {
+fun <T : Hierarchical<T>> T.getPath(top: T?): List<T> {
     val list = LinkedList<T>()
     var parent: T? = this
-    while (parent != null) {
+    while (parent !== top) {
         list.addFirst(parent)
-        parent = parent.parent
+        parent = parent!!.parent
     }
     return list
 }
+
+fun <T : Hierarchical<T>> T.toRoot() = getPath(null)
 
 fun <T : Hierarchical<T>> T.locate(indices: IntArray): T? {
     var item: T? = null

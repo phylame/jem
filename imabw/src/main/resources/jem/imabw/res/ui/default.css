@@ -16,16 +16,29 @@
  * limitations under the License.
  */
 
+.menu-bar {
+    -fx-padding: 0 4px;
+    -fx-background-insets: 0 0 0 0, 0 0 1 0;
+}
+
 .menu, .menu-item {
-    -fx-font-size: 1.2em;
+    -fx-font-size: 1em;
+}
+
+.menu-button {
+    -fx-padding: 0.16em 0.33em;
+}
+
+.menu-button > .label {
+    -fx-alignment: center;
 }
 
 .tool-bar {
-    -fx-padding: 2pt 4pt;
+    -fx-padding: 2px 4px;
 }
 
 .tool-bar .button, .tool-bar .separator {
-    -fx-padding: 2pt;
+    -fx-padding: 2px;
     -fx-background-color: transparent;
 }
 
@@ -33,18 +46,37 @@
     -fx-background-color: -fx-shadow-highlight-color, -fx-outer-border, -fx-inner-border, -fx-body-color;
 }
 
+.split-pane, .tree-view {
+    -fx-padding: 0;
+    -fx-background-color: -fx-background;
+}
+
+#nav-header {
+    -fx-padding: 1px 4px;
+    -fx-background-color: -fx-outer-border, -fx-inner-border;
+    -fx-background-insets: 0 0 0 0, 0 0 1 0;
+}
+
 #nav-label {
-    -fx-padding: 0 1pt;
-    -fx-font-size: 1.2em;
+    -fx-font-size: 1em;
+    -fx-font-weight: bold;
 }
 
 #nav-tool-bar {
     -fx-background-color: transparent;
 }
 
-.tree-cell {
-    -fx-padding: 1pt;
-    -fx-font-size: 1.2em;
+#toc-tree:focused {
+    -fx-background-color: transparent;
+}
+
+#toc-tree .tree-cell {
+    -fx-padding: 0.16em 0;
+    -fx-font-size: 1em;
+}
+
+#toc-tree:focused .tree-cell:filled:selected {
+    -fx-background-color: -fx-selection-bar;
 }
 
 .intro-tooltip {
@@ -54,7 +86,6 @@
 .lineno {
     -fx-alignment: top-right;
     -fx-font-family: monospace;
-    -fx-text-fill: #212121;
 }
 
 .styled-text-area {
@@ -63,11 +94,13 @@
 }
 
 .app-status-bar {
-    -fx-padding: 0 4pt;
+    -fx-padding: 2px 4px;
+    -fx-background-color: -fx-outer-border, -fx-inner-border;
+    -fx-background-insets: 0 0 0 0, 1 0 0 0;
 }
 
 .app-status-bar .label {
-    -fx-font-size: 1.2em;
+    -fx-font-size: 1em;
 }
 
 #status-progress {
@@ -76,10 +109,10 @@
 }
 
 #indicator .label {
-    -fx-padding: 0 1pt;
+    -fx-padding: 0 1px;
 }
 
 #indicator .button, #indicator .toggle-button {
-    -fx-padding: 1pt 2pt;
+    -fx-padding: 1px 2px;
     -fx-background-color: transparent;
 }

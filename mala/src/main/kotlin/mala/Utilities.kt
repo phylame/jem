@@ -38,7 +38,7 @@ interface Describable {
     val vendor: String
 }
 
-open class BaseSettings(name: String = "config/general.prop", load: Boolean = true, sync: Boolean = true) : MapSettings() {
+open class MalaSettings(name: String, load: Boolean = true, sync: Boolean = true) : MapSettings() {
     val file = File(App.home, name)
 
     init {
@@ -51,31 +51,11 @@ open class BaseSettings(name: String = "config/general.prop", load: Boolean = tr
                 if (file.exists() || file.parentFile.createRecursively()) {
                     sync(file.writer())
                 } else {
-                    App.error("cannot create directory for file: $file")
+                    App.error("cannot create directory for settings file: $file")
                 }
             })
         }
     }
-
-    var logLevel by delegate(Log.level, "app.logLevel")
-
-    var appVerbose by delegate(App.verbose, "app.verbose")
-
-    var appLocale by delegate(Locale.getDefault(), "app.locale")
-
-    var enablePlugin by delegate(true, "app.plugin.enable")
-
-    var pluginBlacklist: Collection<String>
-        get() = File(App.home, "config/blacklist").takeIf(File::exists)?.readLines() ?: emptyList()
-        set(paths) {
-            File(App.home, "blacklist").let {
-                if (it.exists() || it.parentFile.createRecursively()) {
-                    it.writeText(paths.joinToString("\n"))
-                } else {
-                    App.error("cannot create file for plugin blacklist")
-                }
-            }
-        }
 
     companion object {
         init {
@@ -89,6 +69,41 @@ open class BaseSettings(name: String = "config/general.prop", load: Boolean = tr
 
                 override fun parse(str: String) = AppVerbose.valueOf(str.toUpperCase())
             }
+        }
+    }
+}
+
+open class AppSettings(
+        name: String = "config/general.ini", load: Boolean = true, sync: Boolean = true
+) : MalaSettings(name, load, sync) {
+
+    private val blacklist = File(App.home, "config/blacklist.txt")
+
+    init {
+        if (sync) {
+            App.registerCleanup({
+                if (blacklist.exists() || blacklist.parentFile.createRecursively()) {
+                    blacklist.bufferedWriter().use { out ->
+                        pluginBlacklist.forEach { out.append(it).append("\n") }
+                    }
+                } else {
+                    App.error("cannot create file for plugin blacklist")
+                }
+            })
+        }
+    }
+
+    var logLevel by delegate(Log.level, "app.log.level")
+
+    var appVerbose by delegate(App.verbose, "app.verbose")
+
+    var appLocale by delegate(Locale.getDefault(), "app.locale")
+
+    var enablePlugin by delegate(true, "app.plugin.enable")
+
+    val pluginBlacklist by lazy {
+        hashSetOf<String>().apply {
+            blacklist.takeIf(File::exists)?.useLines { this += it }
         }
     }
 }

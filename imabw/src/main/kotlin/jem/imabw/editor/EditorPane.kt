@@ -2,12 +2,16 @@ package jem.imabw.editor
 
 import javafx.application.Platform
 import javafx.beans.binding.Bindings
+import javafx.scene.Node
 import javafx.scene.control.ContextMenu
 import javafx.scene.control.Tab
 import javafx.scene.control.TabPane
 import jclp.isAncestor
+import jclp.text.Text
 import jem.Chapter
 import jem.imabw.Imabw
+import jem.imabw.LoadTextTask
+import jem.imabw.execute
 import jem.imabw.ui.Editable
 import jem.title
 import mala.App
@@ -51,8 +55,9 @@ object EditorPane : TabPane(), CommandHandler, Editable {
 
     val isActive get() = selectionModel.selectedItem?.content?.isFocused == true
 
-    fun openText(chapter: Chapter) {
+    fun openText(chapter: Chapter, icon: Node? = null) {
         val tab = tabs.find { it.chapter === chapter } ?: ChapterTab(chapter).also { tabs += it }
+        tab.graphic = icon
         selectionModel.select(tab)
     }
 
@@ -83,6 +88,10 @@ object EditorPane : TabPane(), CommandHandler, Editable {
                         actionMap[action]?.disableProperty?.bind(notEditable)
                     }
                     actionMap["cut"]?.disableProperty?.bind(notEditable)
+                    actionMap["copy"]?.let {
+                        it.disableProperty.unbind()
+                        it.isDisable = false
+                    }
                     actionMap["paste"]?.disableProperty?.bind(notEditable)
                     actionMap["delete"]?.disableProperty?.bind(notEditable)
                     actionMap["undo"]?.disableProperty?.bind(notEditable.or(Bindings.not(new.undoAvailableProperty())))
@@ -124,20 +133,8 @@ object EditorPane : TabPane(), CommandHandler, Editable {
         when (command) {
             "undo" -> editor.undo()
             "redo" -> editor.redo()
-            "cut" -> {
-                if (editor.selection.length > 0) {
-                    editor.cut()
-                } else {
-                    editor.cutParagraph()
-                }
-            }
-            "copy" -> {
-                if (editor.selection.length > 0) {
-                    editor.copy()
-                } else {
-                    editor.copyParagraph()
-                }
-            }
+            "cut" -> editor.cutParagraph()
+            "copy" -> editor.copyParagraph()
             "paste" -> editor.paste()
             "delete" -> editor.replaceSelection("")
             "selectAll" -> editor.selectAll()
@@ -155,21 +152,38 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
         textArea.isWrapText = true
         textArea.setUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
         textArea.paragraphGraphicFactory = LineNumberFactory.get(textArea) { "%${it}d" }
-        textArea.replaceText(chapter.text?.toString() ?: "")
-        textArea.moveTo(0)
+        chapter.text?.let { loadText(it) }
+    }
+
+    private fun loadText(text: Text) {
+        val task = LoadTextTask(text)
+        task.setOnSucceeded {
+            textArea.replaceText(task.value)
+            textArea.undoManager.forgetHistory()
+            textArea.moveTo(0)
+        }
+        task.execute()
     }
 }
 
-private val Tab.chapter get() = (this as? ChapterTab)?.chapter
+internal val Tab.chapter get() = (this as? ChapterTab)?.chapter
 
-private val Tab.isModified get() = (this as? ChapterTab)?.isModified
+internal val Tab.isModified get() = (this as? ChapterTab)?.isModified
 
-private val Tab.editor get() = (this as? ChapterTab)?.content as? StyledTextArea<*>
+internal val Tab.editor get() = (this as? ChapterTab)?.content as? StyledTextArea<*>
 
 fun ClipboardActions<*>.cutParagraph() {
-
+    if (selection.length > 0) {
+        cut()
+    } else {
+        println("cut paragraph")
+    }
 }
 
 fun ClipboardActions<*>.copyParagraph() {
-
+    if (selection.length > 0) {
+        copy()
+    } else {
+        println("copy paragraph")
+    }
 }

@@ -12,14 +12,16 @@ import javafx.scene.input.KeyEvent
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.BorderPane
 import javafx.util.Callback
-import jclp.isNotRoot
+import jclp.isRoot
 import jclp.log.Log
 import jem.Book
 import jem.Chapter
 import jem.epm.parseBook
 import jem.imabw.Imabw
+import jem.imabw.LoadTextTask
 import jem.imabw.Workbench
 import jem.imabw.editor.EditorPane
+import jem.imabw.execute
 import jem.imabw.ui.Editable
 import jem.imabw.ui.editAttributes
 import jem.imabw.ui.editVariants
@@ -68,8 +70,8 @@ object NavPane : BorderPane(), CommandHandler, Editable {
         tree.selectionModel.selectionMode = SelectionMode.MULTIPLE
         tree.addEventHandler(MouseEvent.MOUSE_PRESSED) { event ->
             if (event.clickCount == 2 && event.isPrimaryButtonDown) {
-                selectedChapter?.takeIf { !it.isSection && it.isNotRoot }?.let {
-                    EditorPane.openText(it)
+                treeView.selectionModel.selectedItem?.takeIf { it.isLeaf && it.isNotRoot }?.let {
+                    EditorPane.openText(it.value, it.graphic)
                     event.consume()
                 }
             }
@@ -82,7 +84,7 @@ object NavPane : BorderPane(), CommandHandler, Editable {
                         it.isExpanded = !it.isExpanded
                         event.consume()
                     } else if (it.isNotRoot) {
-                        EditorPane.openText(it.value)
+                        EditorPane.openText(it.value, it.graphic)
                         event.consume()
                     }
                 }
@@ -114,7 +116,8 @@ object NavPane : BorderPane(), CommandHandler, Editable {
         }, EditorPane.selectionModel.selectedItemProperty()))
 
         sceneProperty().addListener { _, _, scene ->
-            scene.focusOwnerProperty().addListener { _, _, new ->
+            // todo why scene is null?
+            scene?.focusOwnerProperty()?.addListener { _, _, new ->
                 val actions = arrayOf("undo", "redo", "cut", "copy", "paste", "find", "findNext", "findPrevious")
                 if (new === treeView) {
                     for (action in actions) {
@@ -123,6 +126,7 @@ object NavPane : BorderPane(), CommandHandler, Editable {
                             it.isDisable = true
                         }
                     }
+                    actionMap["delete"]?.disableProperty?.bind(hasBook)
                 }
             }
         }
@@ -156,17 +160,17 @@ object NavPane : BorderPane(), CommandHandler, Editable {
 
     @Command
     fun importChapter() {
-        val task = object : Task<Book>() {
-            override fun call() = parseBook("E:/tmp/2", "pmab")
-        }
-        task.setOnSucceeded {
-            insertNodes(listOf(createNode(task.value)), selection, ItemMode.TO_PARENT)
-            println("inserted 1 book")
-        }
-        task.setOnFailed {
-            task.exception.printStackTrace()
-        }
-        Imabw.submit(task)
+//        val task = object : Task<Book>() {
+//            override fun call() = parseBook("E:/tmp/2", "pmab")
+//        }
+//        task.setOnSucceeded {
+//            insertNodes(listOf(createNode(task.value)), selection, ItemMode.TO_PARENT)
+//            println("inserted 1 book")
+//        }
+//        task.setOnFailed {
+//            task.exception.printStackTrace()
+//        }
+//        task.execute()
     }
 
     fun createNode(chapter: Chapter) = chapter.toTreeItem().apply {
@@ -236,7 +240,7 @@ object NavPane : BorderPane(), CommandHandler, Editable {
 
     override fun handle(command: String, source: Any): Boolean {
         when (command) {
-            "editText" -> selection.forEach { EditorPane.openText(it.value) }
+            "editText" -> selection.forEach { EditorPane.openText(it.value, it.graphic) }
             "newChapter" -> createChapter()?.let {
                 insertNodes(listOf(createNode(it)), selection, ItemMode.TO_PARENT)
             }
@@ -306,16 +310,22 @@ private class ChapterCell : TreeCell<Chapter>() {
         text = chapter?.title
         graphic = when {
             empty || chapter == null -> null
-            chapter is Book && chapter.parent == null -> ImageView(CellFactory.book)
+            chapter.isRoot -> ImageView(CellFactory.book)
             chapter.isSection -> ImageView(CellFactory.section)
             else -> ImageView(CellFactory.chapter)
         }
-        tooltip = chapter?.intro?.toString()?.takeIf(String::isNotEmpty)?.let { intro ->
-            Tooltip(intro).also {
-                it.isWrapText = true
-                it.styleClass += "intro-tooltip"
-                it.maxWidthProperty().bind(widthProperty())
+        chapter?.intro?.let {
+            val task = LoadTextTask(it)
+            task.setOnSucceeded {
+                task.value.takeIf { it.isNotEmpty() }?.let {
+                    tooltip = Tooltip(it).also {
+                        it.isWrapText = true
+                        it.styleClass += "intro-tooltip"
+                        it.maxWidthProperty().bind(widthProperty())
+                    }
+                }
             }
+            task.execute()
         }
         contextMenu = chapter?.let { menu }
     }

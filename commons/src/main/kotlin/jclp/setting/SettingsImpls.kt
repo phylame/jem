@@ -108,7 +108,7 @@ open class MapSettings(values: Map<String, Any>? = null, definitions: Map<String
 
     override fun <T : Any> convertValue(value: Any, type: Class<T>) = (value as? String)?.let {
         Converters.parse(it, type)
-    } ?: throw IllegalStateException("value is not string $value")
+    } ?: throw IllegalStateException("value is not a string: $value")
 
     override fun toString() = values.toString()
 

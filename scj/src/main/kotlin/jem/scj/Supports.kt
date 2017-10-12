@@ -21,9 +21,9 @@ package jem.scj
 import jclp.setting.delegate
 import jem.COVER
 import jem.TITLE
-import mala.BaseSettings
+import mala.AppSettings
 
-object SCISettings : BaseSettings() {
+object SCISettings : AppSettings() {
     var termWidth by delegate(80, "app.termWidth")
 
     var outputFormat by delegate("pmab", "jem.out.format")

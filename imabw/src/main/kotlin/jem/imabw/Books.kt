@@ -18,3 +18,28 @@
 
 package jem.imabw
 
+import javafx.concurrent.Task
+import jclp.text.Text
+import jem.Book
+import jem.JemException
+import jem.epm.EpmManager
+import jem.epm.MakerParam
+import jem.epm.ParserParam
+
+class UnknownEpmException() : JemException("")
+
+class LoadBookTask(val param: ParserParam) : Task<Book>() {
+    override fun call() = EpmManager.readBook(param) ?: throw UnknownEpmException()
+}
+
+class SaveBookTask(val param: MakerParam) : Task<String>() {
+    override fun call() = EpmManager.writeBook(param) ?: throw UnknownEpmException()
+}
+
+class LoadTextTask(private val text: Text) : Task<String>() {
+    init {
+        setOnFailed { exception.printStackTrace() }
+    }
+
+    override fun call() = text.toString()
+}

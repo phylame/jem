@@ -74,7 +74,7 @@ object App : TranslatorWrapper() {
     }
 
     val plugins by lazy {
-        PluginManager("META-INF/mala/plugin.prop", javaClass.classLoader)
+        PluginManager("META-INF/mala/plugin.ini", javaClass.classLoader)
     }
 
     fun run(delegate: AppDelegate, args: Array<String>) {

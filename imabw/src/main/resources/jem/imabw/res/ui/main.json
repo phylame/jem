@@ -65,6 +65,10 @@
         {
           "id": "showStatusBar",
           "style": "check"
+        },
+        {
+          "id": "showNavigateBar",
+          "style": "check"
         }
       ]
     },

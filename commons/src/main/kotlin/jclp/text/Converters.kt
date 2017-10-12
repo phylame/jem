@@ -54,13 +54,14 @@ object Converters {
 
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> parse(str: String, type: Class<T>): T? {
-        return if (CharSequence::class.java == type) str as T else get(type)?.parse(str)
+        return if (CharSequence::class.java == type || String::class.java == type) str as T else get(type)?.parse(str)
     }
 
     private fun registerDefaults() {
         Class::class.java.let { set(it, DefaultConverter(it)) }
         Locale::class.java.let { set(it, DefaultConverter(it)) }
         String::class.java.let { set(it, DefaultConverter(it)) }
+        Boolean::class.java.let { set(it, DefaultConverter(it)) }
         Date::class.java.let { set(it, DefaultConverter(it)) }
         LocalTime::class.java.let { set(it, DefaultConverter(it)) }
         LocalDate::class.java.let { set(it, DefaultConverter(it)) }

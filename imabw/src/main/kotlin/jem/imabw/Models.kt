@@ -7,9 +7,9 @@ import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.collections.FXCollections
 import javafx.collections.ListChangeListener
-import javafx.concurrent.Task
 import javafx.scene.control.MenuItem
 import javafx.scene.control.SeparatorMenuItem
+import jclp.io.createRecursively
 import jclp.log.Log
 import jclp.setting.MapSettings
 import jem.Book
@@ -23,6 +23,7 @@ import mala.App
 import mala.App.tr
 import mala.ixin.Command
 import mala.ixin.CommandHandler
+import java.io.File
 
 object Workbench : CommandHandler {
     private const val TAG = "Workbench"
@@ -64,9 +65,11 @@ object Workbench : CommandHandler {
             Log.t(TAG) { "'${param.path}' is already opened" }
             return
         }
-        val task = object : Task<Book>() {
-            override fun call() = EpmManager.readBook(param)
+        if (EpmManager[param.epmName]?.hasParser != true) {
+            Log.e(TAG) { "'${param.path}' is unknown for '${param.epmName}'" }
+            return
         }
+        val task = LoadBookTask(param)
         task.setOnRunning {
             Imabw.form.beginProgress()
             Imabw.form.updateProgress("Loading '${param.path}' with '${param.epmName}'")
@@ -81,13 +84,15 @@ object Workbench : CommandHandler {
             println("show exception dialog")
             task.exception.printStackTrace()
         }
-        Imabw.submit(task)
+        task.execute()
     }
 
     fun saveBook(param: MakerParam) {
-        val task = object : Task<String>() {
-            override fun call() = EpmManager.writeBook(param)
+        if (EpmManager[param.epmName]?.hasMaker != true) {
+            Log.e(TAG) { "'${param.path}' is unknown for '${param.epmName}'" }
+            return
         }
+        val task = SaveBookTask(param)
         task.setOnRunning {
             Imabw.form.beginProgress()
             Imabw.form.updateProgress("Writing '${param.path}' with '${param.epmName}'")
@@ -104,7 +109,7 @@ object Workbench : CommandHandler {
             println("show exception dialog")
             task.exception.printStackTrace()
         }
-        Imabw.submit(task)
+        task.execute()
     }
 
     fun exportBook(chapters: Collection<Chapter>) {
@@ -208,6 +213,8 @@ private class Modification {
 }
 
 object History {
+    private val file = File(App.home, "config/history.txt")
+
     internal val paths = FXCollections.observableArrayList<String>()
 
     val last get() = paths.firstOrNull()
@@ -242,15 +249,15 @@ object History {
     }
 
     fun remove(path: String) {
-        if (AppSettings.enableHistory) {
+        if (GeneralSettings.enableHistory) {
             paths.remove(path)
         }
     }
 
     fun insert(path: String) {
-        if (AppSettings.enableHistory) {
+        if (GeneralSettings.enableHistory) {
             paths.remove(path)
-            if (paths.size == AppSettings.historyLimit) {
+            if (paths.size == GeneralSettings.historyLimit) {
                 paths.remove(paths.size - 1, paths.size)
             }
             paths.add(0, path)
@@ -258,20 +265,26 @@ object History {
     }
 
     fun clear() {
-        if (AppSettings.enableHistory) {
+        if (GeneralSettings.enableHistory) {
             paths.clear()
         }
     }
 
     fun load() {
-        if (AppSettings.enableHistory) {
-            println("load history")
+        if (GeneralSettings.enableHistory) {
+            if (file.exists()) {
+                file.bufferedReader().useLines { paths += it.toList().asReversed() }
+            }
         }
     }
 
     fun sync() {
-        if (AppSettings.enableHistory) {
-            println("sync history")
+        if (GeneralSettings.enableHistory && paths.isNotEmpty()) {
+            if (file.exists() || file.parentFile.createRecursively()) {
+                file.bufferedWriter().use { out ->
+                    paths.forEach { out.append(it).append("\n") }
+                }
+            }
         }
     }
 }

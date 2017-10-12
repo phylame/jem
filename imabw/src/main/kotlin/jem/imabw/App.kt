@@ -40,14 +40,14 @@ object Imabw : IDelegate() {
         internal set
 
     override fun onStart() {
-        Log.level = AppSettings.logLevel
-        App.verbose = AppSettings.appVerbose
-        Locale.setDefault(AppSettings.appLocale)
+        Log.level = GeneralSettings.logLevel
+        App.verbose = GeneralSettings.appVerbose
+        Locale.setDefault(GeneralSettings.appLocale)
         App.translator = App.assets.translatorFor("i18n/dev/app")
-        if (AppSettings.enablePlugin) {
+        if (GeneralSettings.enablePlugin) {
             with(App.plugins) {
                 isEnable = true
-                blacklist = AppSettings.pluginBlacklist
+                blacklist = GeneralSettings.pluginBlacklist
             }
         }
     }
@@ -78,7 +78,7 @@ object Imabw : IDelegate() {
 
     // register for command handler
     fun register(handler: Any) {
-        submit(Runnable { commandDispatcher.register(handler) })
+        submit { commandDispatcher.register(handler) }
     }
 
     // submit task in thread pool

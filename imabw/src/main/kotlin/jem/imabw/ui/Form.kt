@@ -16,10 +16,12 @@ import javafx.stage.Stage
 import jclp.text.TEXT_PLAIN
 import jem.author
 import jem.imabw.Imabw
+import jem.imabw.UISettings
 import jem.imabw.Work
 import jem.imabw.Workbench
 import jem.imabw.editor.ChapterTab
 import jem.imabw.editor.EditorPane
+import jem.imabw.editor.editor
 import jem.imabw.plugin.ImabwAddon
 import jem.imabw.toc.NavPane
 import jem.title
@@ -50,7 +52,7 @@ class Form : Application(), CommandHandler {
 
     override fun start(stage: Stage) {
         this.stage = stage
-        appDesigner = App.assets.designerFor("ui/main.idj")!!
+        appDesigner = App.assets.designerFor("ui/main.json")!!
 
         appPane = AppPane().also {
             it.setup(appDesigner)
@@ -61,6 +63,7 @@ class Form : Application(), CommandHandler {
             it.items += NavPane
             it.items += EditorPane
             it.setDividerPosition(0, 0.24)
+            SplitPane.setResizableWithParent(NavPane, false)
             appPane.center = it
         }
 
@@ -83,8 +86,17 @@ class Form : Application(), CommandHandler {
             it.consume()
             Imabw.handle("exit", stage)
         }
-        stage.scene = Scene(appPane, 1080.0, 607.0).also {
+        stage.scene = Scene(appPane).also {
             it.stylesheets += App.assets.resourceFor("ui/default.css")?.toExternalForm()
+        }
+        stage.x = UISettings.formX
+        stage.y = UISettings.formY
+        stage.width = UISettings.formWidth
+        stage.height = UISettings.formHeight
+        if (UISettings.formFullScreen) {
+            stage.isFullScreen = true
+        } else if (UISettings.formMaximized) {
+            stage.isMaximized = true
         }
         stage.show()
         statusText = App.tr("status.ready")
@@ -94,6 +106,12 @@ class Form : Application(), CommandHandler {
     }
 
     fun dispose() {
+        UISettings.formX = stage.x
+        UISettings.formY = stage.y
+        UISettings.formWidth = stage.width
+        UISettings.formHeight = stage.height
+        UISettings.formFullScreen = stage.isFullScreen
+        UISettings.formMaximized = stage.isMaximized
         stage.close()
     }
 
@@ -120,6 +138,7 @@ class Form : Application(), CommandHandler {
         val actionMap = Imabw.actionMap
         actionMap["showToolbar"]?.selectedProperty?.bindBidirectional(appPane.toolBar!!.visibleProperty())
         actionMap["showStatusBar"]?.selectedProperty?.bindBidirectional(appPane.statusBar!!.visibleProperty())
+        actionMap["showNavigateBar"]?.selectedProperty?.bindBidirectional(NavPane.visibleProperty())
     }
 
     private fun buildTitle(work: Work) = StringBuilder().run {
@@ -142,6 +161,14 @@ class Form : Application(), CommandHandler {
     override fun handle(command: String, source: Any): Boolean {
         when (command) {
             "showToolbar", "showStatusBar" -> Unit // bound with property
+            "showNavigateBar" -> {
+                if (!NavPane.isVisible) {
+                    splitPane.items.remove(0, 1)
+                } else {
+                    splitPane.items.add(0, NavPane)
+                    splitPane.setDividerPosition(0, 0.24)
+                }
+            }
             in editActions -> when {
                 NavPane.isActive -> NavPane.onEdit(command)
                 EditorPane.isActive -> EditorPane.onEdit(command)
@@ -216,12 +243,11 @@ object Indicator : HBox() {
 
     private fun initRuler() {
         EditorPane.selectionModel.selectedItemProperty().addListener { _, old, new ->
-            (old as? ChapterTab)?.textArea?.let { text ->
+            old?.editor?.let { text ->
                 @Suppress("UNCHECKED_CAST")
                 (text.properties[this] as? ChangeListener<Int>)?.let { listener ->
                     text.caretPositionProperty().removeListener(listener)
                 }
-                words.textProperty().unbind()
             }
             if (new is ChapterTab) {
                 new.textArea.also { text ->
@@ -236,8 +262,8 @@ object Indicator : HBox() {
                 }
                 updateMime(new.chapter.text?.type?.toUpperCase() ?: TEXT_PLAIN.toUpperCase())
             } else {
-                reset()
                 words.textProperty().unbind()
+                reset()
             }
         }
     }

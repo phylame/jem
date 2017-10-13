@@ -7,22 +7,16 @@ import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.collections.FXCollections
 import javafx.collections.ListChangeListener
-import javafx.concurrent.Task
+import javafx.scene.control.ButtonType
 import javafx.scene.control.MenuItem
 import javafx.scene.control.SeparatorMenuItem
 import jclp.io.createRecursively
 import jclp.log.Log
-import jem.Book
-import jem.Chapter
-import jem.asBook
+import jem.*
 import jem.epm.EpmManager
 import jem.epm.MakerParam
 import jem.epm.ParserParam
-import jem.imabw.ui.inputText
-import jem.imabw.ui.openBookFile
-import jem.imabw.ui.saveBookFile
-import jem.imabw.ui.selectDirectory
-import jem.title
+import jem.imabw.ui.*
 import mala.App
 import mala.App.tr
 import mala.ixin.Command
@@ -38,12 +32,12 @@ object Workbench : CommandHandler {
     var work: Work
         get() = workProperty.value
         set(value) {
-            workProperty.value?.let {
-                it.path?.let { History.insert(it) }
-                it.cleanup()
+            workProperty.value?.let { old ->
+                old.path?.let { History.insert(it) }
+                old.cleanup()
             }
-            workProperty.value = value.also {
-                it.path?.let { History.remove(it) }
+            workProperty.value = value.also { new ->
+                new.path?.let { History.remove(it) }
             }
             initActions()
         }
@@ -52,17 +46,21 @@ object Workbench : CommandHandler {
         Imabw.register(this)
     }
 
-    inline fun ensureSaved(title: String, block: () -> Unit) {
+    fun ensureSaved(title: String, block: () -> Unit) {
         if (work.isModified) {
-            println("ask save for $title")
-//            saveFile()
+            val alert = confirm(title, tr("d.askSave.hint", work.book.title))
+            alert.buttonTypes.setAll(ButtonType.CANCEL, ButtonType.YES, ButtonType.NO)
+            when (alert.showAndWait().get()) {
+                ButtonType.YES -> if (!saveFile()) return
+                ButtonType.CANCEL -> return
+            }
         }
         block()
     }
 
     fun newBook(title: String) {
         work = Work(Book(title))
-        Imabw.message("Created new book '$title'")
+        Imabw.message(tr("jem.newBook.success", title))
     }
 
     fun openBook(param: ParserParam) {
@@ -74,17 +72,19 @@ object Workbench : CommandHandler {
             Log.e(TAG) { "'${param.path}' is unknown for '${param.epmName}'" }
             return
         }
-        val task = LoadBookTask(param)
-        task.setOnSucceeded {
-            work = Work(task.value, param)
-            Imabw.message("Opened book '${param.path}'")
+        with(LoadBookTask(param)) {
+            setOnSucceeded {
+                work = Work(value, param)
+                hideProgress()
+                Imabw.message(App.tr("jem.openBook.success", param.path))
+            }
+            setOnFailed {
+                hideProgress()
+                App.error("failed to load '${param.path}'", exception)
+                History.remove(param.path)
+            }
+            Imabw.submit(this)
         }
-        task.setOnFailed {
-            println("show exception dialog")
-            task.exception.printStackTrace()
-            History.remove(param.path)
-        }
-        task.execute()
     }
 
     fun saveBook(param: MakerParam) {
@@ -92,16 +92,19 @@ object Workbench : CommandHandler {
             Log.e(TAG) { "'${param.path}' is unknown for '${param.epmName}'" }
             return
         }
-        with(SaveBookTask(param)) {
+        if (param.path == work.inParam?.path) {
+            Log.e(TAG) { "'${param.path}' is currently opened" }
+            return
+        }
+        with(MakeBookTask(param)) {
             setOnSucceeded {
-                work.path = value
                 work.outParam = param
                 work.isModified = false
+                work.path = value.replace(SWAP_SUFFIX, "")
+                Imabw.message(tr("jem.saveBook.success", param.book.title, work.path))
+                hideProgress()
             }
-            setOnFailed {
-                exception.printStackTrace()
-            }
-            execute()
+            Imabw.submit(this)
         }
     }
 
@@ -125,31 +128,29 @@ object Workbench : CommandHandler {
     }
 
     @Command
-    fun saveFile() {
+    fun saveFile(): Boolean {
         if (!work.isModified && work.path != null) {
-            Log.d(TAG) { "Book is not modified" }
-            return
+            Log.d(TAG) { "book is not modified" }
+            return false
         }
         var param = work.outParam
         if (param == null) {
-            val file = saveBookFile(Imabw.fxApp.stage, work.book.title) ?: return
-            param = MakerParam(work.book, file.path, "pmab", defaultMakerSettings())
+            val inParam = work.inParam
+            val settings = defaultMakerSettings()
+            param = if (inParam?.epmName == "pmab") { // save pmab to temp file
+                MakerParam(work.book, inParam.path + SWAP_SUFFIX, "pmab", settings)
+            } else {
+                MakerParam(work.book, saveBookFile(work.book.title)?.path ?: return false, "pmab", settings)
+            }
         }
         saveBook(param)
+        return true
     }
 
     fun exportFile(chapter: Chapter) {
-        val file = saveBookFile(Imabw.fxApp.stage, chapter.title) ?: return
+        val file = saveBookFile(chapter.title) ?: return
         val param = MakerParam(chapter.asBook(), file.path, arguments = defaultMakerSettings())
-        with(SaveBookTask(param)) {
-            setOnSucceeded {
-
-            }
-            setOnFailed {
-                exception.printStackTrace()
-            }
-            execute()
-        }
+        Imabw.submit(MakeBookTask(param))
     }
 
     fun exportFiles(chapters: Collection<Chapter>) {
@@ -157,7 +158,7 @@ object Workbench : CommandHandler {
         if (chapters.size == 1) {
             exportFile(chapters.first())
         } else {
-            val dir = selectDirectory(Imabw.fxApp.stage, tr("d.exportBook.title")) ?: return
+            val dir = selectDirectory(tr("d.exportBook.title"), Imabw.fxApp.stage) ?: return
             val params = chapters.map { MakerParam(it.asBook(), dir.path, "pmab", defaultMakerSettings()) }
 //            ExportBookTask(params) { Imabw.message("Saved '${params.size}' book(s)") }.execute()
         }
@@ -174,7 +175,7 @@ object Workbench : CommandHandler {
                 }
             }
             "openFile" -> ensureSaved(tr("d.openBook.title")) {
-                openBookFile(Imabw.fxApp.stage)?.let { openBook(ParserParam(it.path)) }
+                openBookFile()?.let { openBook(ParserParam(it.path)) }
             }
             "saveAsFile" -> exportFile(work.book)
             "clearHistory" -> History.clear()
@@ -185,7 +186,13 @@ object Workbench : CommandHandler {
 }
 
 class Work(val book: Book, val inParam: ParserParam? = null) {
+    private val TAG = "Work"
+
     val modifiedProperty = SimpleBooleanProperty()
+
+    val titleProperty = SimpleStringProperty(book.title)
+
+    val authorProperty = SimpleStringProperty(book.author)
 
     val pathProperty = SimpleStringProperty(inParam?.path)
 
@@ -205,8 +212,18 @@ class Work(val book: Book, val inParam: ParserParam? = null) {
 
     fun cleanup() {
         Imabw.submit {
-            println("cleanup book ${book.title}")
             book.cleanup()
+            outParam?.path?.takeIf { it.endsWith(SWAP_SUFFIX) }?.let {
+                File(it.substring(0, it.length - 4)).apply {
+                    if (delete()) {
+                        if (!File(it).renameTo(this)) {
+                            Log.e(TAG) { "cannot rename '$it' to '$this'" }
+                        }
+                    } else {
+                        Log.e(TAG) { "cannot delete temp file '$this'" }
+                    }
+                }
+            }
         }
     }
 }
@@ -229,6 +246,8 @@ object History {
     internal val paths = FXCollections.observableArrayList<String>()
 
     val latest get() = paths.firstOrNull()
+
+    private var isModified = false
 
     init {
         paths.addListener(ListChangeListener {
@@ -262,6 +281,7 @@ object History {
     fun remove(path: String) {
         if (GeneralSettings.enableHistory) {
             paths.remove(path)
+            isModified = true
         }
     }
 
@@ -272,34 +292,33 @@ object History {
                 paths.remove(paths.size - 1, paths.size)
             }
             paths.add(0, path)
+            isModified = true
         }
     }
 
     fun clear() {
         if (GeneralSettings.enableHistory) {
             paths.clear()
+            isModified = true
         }
     }
 
     fun load() {
         if (GeneralSettings.enableHistory) {
             if (file.exists()) {
-                val task = object : Task<List<String>>() {
-                    override fun call() = file.reader().readLines()
+                with(ReadLineTask(file)) {
+                    setOnSucceeded {
+                        paths += value
+                        hideProgress()
+                    }
+                    Imabw.submit(this)
                 }
-                task.setOnSucceeded {
-                    paths += task.value
-                }
-                task.setOnFailed {
-                    task.exception.printStackTrace()
-                }
-                task.execute()
             }
         }
     }
 
     fun sync() {
-        if (GeneralSettings.enableHistory && paths.isNotEmpty()) {
+        if (GeneralSettings.enableHistory && isModified) {
             if (file.exists() || file.parentFile.createRecursively()) {
                 file.bufferedWriter().use { out ->
                     paths.forEach { out.append(it).append("\n") }

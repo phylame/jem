@@ -38,9 +38,9 @@ interface Translator {
         null
     }
 
-    fun tr(key: String, vararg args: Any): String = MessageFormat.format(tr(key), *args)
+    fun tr(key: String, vararg args: Any?): String = MessageFormat.format(tr(key), *args)
 
-    fun optTr(key: String, fallback: String, vararg args: Any): String = (optTr(key) ?: fallback).let {
+    fun optTr(key: String, fallback: String, vararg args: Any?): String = (optTr(key) ?: fallback).let {
         MessageFormat.format(it, *args)
     }
 
@@ -70,11 +70,11 @@ open class TranslatorWrapper : Translator {
 
     override fun optTr(key: String): String? = translator?.optTr(key)
 
-    override fun tr(key: String, vararg args: Any): String {
+    override fun tr(key: String, vararg args: Any?): String {
         return translator?.tr(key, *args) ?: throw IllegalStateException(ERR_NO_TRANSLATOR)
     }
 
-    override fun optTr(key: String, fallback: String, vararg args: Any): String {
+    override fun optTr(key: String, fallback: String, vararg args: Any?): String {
         return translator?.optTr(key, fallback, *args) ?: MessageFormat.format(fallback, *args)
     }
 

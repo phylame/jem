@@ -19,14 +19,14 @@
 package jem.imabw
 
 import javafx.application.Application
-import jclp.log.Log
-import jclp.log.SLF4JFacade
 import jem.Build
 import jem.imabw.ui.Dashboard
 import mala.App
 import mala.ixin.IDelegate
+import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 fun main(args: Array<String>) {
     App.run(Imabw, args)
@@ -40,7 +40,7 @@ object Imabw : IDelegate() {
     val dashboard get() = fxApp as Dashboard
 
     override fun onStart() {
-        Log.facade = SLF4JFacade
+//        Log.facade = SLF4JFacade
         submitAndWait({ GeneralSettings }, { EditorSettings }, { UISettings })
         restoreState(GeneralSettings)
     }
@@ -80,9 +80,23 @@ object Imabw : IDelegate() {
         submit { commandProxy.register(handler) }
     }
 
-    fun submit(r: Runnable) = executor.value.submit(r)
+    fun submit(r: Runnable): Future<*> = executor.value.submit(r)
 
-    fun submit(block: () -> Unit) = executor.value.submit(block)
+    fun <V> submit(r: Callable<V>): Future<V> = executor.value.submit(r)
+
+    fun <V> submit(block: () -> V): Future<V> = executor.value.submit(block)
+
+    fun submitAndWait(tasks: Collection<Runnable>) {
+        if (tasks.isEmpty()) return
+        val latch = CountDownLatch(tasks.size)
+        for (task in tasks) {
+            submit {
+                task.run()
+                latch.countDown()
+            }
+        }
+        latch.await()
+    }
 
     fun submitAndWait(vararg tasks: () -> Unit) {
         if (tasks.isEmpty()) return

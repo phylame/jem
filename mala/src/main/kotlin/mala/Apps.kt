@@ -85,6 +85,9 @@ object App : TranslatorWrapper() {
     lateinit var arguments: Array<String>
         private set
 
+    lateinit var mainThread: Thread
+        private set
+
     val home by lazy {
         System.getProperty("mala.home") or { "${System.getProperty("user.home")}/.${delegate.name}" }
     }
@@ -100,6 +103,7 @@ object App : TranslatorWrapper() {
     }
 
     fun run(delegate: AppDelegate, args: Array<String>) {
+        mainThread = Thread.currentThread()
         this.delegate = delegate
         arguments = args
         onStart()

@@ -7,6 +7,7 @@ import javafx.geometry.Pos
 import javafx.scene.Scene
 import javafx.scene.control.Label
 import javafx.scene.control.SplitPane
+import javafx.scene.control.Tooltip
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
@@ -55,11 +56,11 @@ class Dashboard : IApplication(), CommandHandler {
         Workbench.workProperty.addListener { _, old, new ->
             stage.titleProperty().bind(object : StringBinding() {
                 init {
-                    super.bind(new.pathProperty, new.modifiedProperty)
+                    super.bind(new.pathProperty, new.modifiedProperty, new.titleProperty, new.authorProperty)
                 }
 
                 override fun dispose() {
-                    super.unbind(old.pathProperty, old.modifiedProperty)
+                    super.unbind(old.pathProperty, old.modifiedProperty, new.titleProperty, new.authorProperty)
                 }
 
                 override fun computeValue() = buildTitle(Workbench.work)
@@ -139,11 +140,11 @@ class Dashboard : IApplication(), CommandHandler {
 }
 
 object Indicator : HBox() {
-    private val caret = Label()
+    private val caret = Label().apply { tooltip = Tooltip(App.tr("status.caret.toast")) }
 
-    private val words = Label()
+    private val words = Label().apply { tooltip = Tooltip(App.tr("status.words.toast")) }
 
-    private val mime = Label()
+    private val mime = Label().apply { tooltip = Tooltip(App.tr("status.mime.toast")) }
 
     init {
         id = "indicator"

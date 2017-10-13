@@ -8,13 +8,12 @@ import javafx.scene.control.Tab
 import javafx.scene.control.TabPane
 import javafx.scene.control.Tooltip
 import jclp.isAncestor
-import jclp.text.Text
 import jclp.toRoot
 import jem.Chapter
 import jem.imabw.EditorSettings
 import jem.imabw.Imabw
 import jem.imabw.LoadTextTask
-import jem.imabw.execute
+import jem.imabw.Workbench
 import jem.imabw.ui.Editable
 import jem.title
 import mala.App
@@ -55,6 +54,12 @@ object EditorPane : TabPane(), CommandHandler {
                 Platform.runLater { it.content.requestFocus() }
             }
         }
+        Workbench.workProperty.addListener { _, work, _ ->
+            work?.book?.let { book ->
+                // todo don't cache tabs
+                tabs.removeIf { it.chapter?.let { book.isAncestor(it) } == true }
+            }
+        }
         initActions()
     }
 
@@ -83,7 +88,7 @@ object EditorPane : TabPane(), CommandHandler {
         actionMap["closeUnmodifiedTabs"]?.disableProperty?.bind(noTabs)
 
         sceneProperty().addListener { _, _, scene ->
-            scene.focusOwnerProperty().addListener { _, _, new ->
+            scene?.focusOwnerProperty()?.addListener { _, _, new ->
                 val actions = arrayOf("replace", "joinLine", "duplicateText", "toggleCase")
                 if (new is StyledTextArea<*>) {
                     val notEditable = new.editableProperty().not()
@@ -145,17 +150,17 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
         textArea.isWrapText = EditorSettings.wrapText
         textArea.setUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
         textArea.paragraphGraphicFactory = LineNumberFactory.get(textArea) { "%${it}d" }
-        chapter.text?.let { loadText(it) }
-    }
-
-    private fun loadText(text: Text) {
-        val task = LoadTextTask(text)
-        task.setOnSucceeded {
-            textArea.replaceText(task.value)
-            textArea.undoManager.forgetHistory()
-            textArea.moveTo(0)
+        chapter.text?.let {
+            with(LoadTextTask(it)) {
+                setOnSucceeded {
+                    textArea.replaceText(value)
+                    textArea.undoManager.forgetHistory()
+                    textArea.moveTo(0)
+                    hideProgress()
+                }
+                Imabw.submit(this)
+            }
         }
-        task.execute()
     }
 }
 

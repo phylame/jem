@@ -18,22 +18,40 @@
 
 package jem.imabw
 
-import javafx.beans.value.WeakChangeListener
 import javafx.concurrent.Task
-import javafx.concurrent.Worker
+import mala.App
+import java.io.File
+import java.nio.charset.Charset
 
 abstract class ProgressTask<V> : Task<V>() {
     init {
-        stateProperty().addListener(WeakChangeListener { _, _, state ->
-            when (state) {
-                Worker.State.SCHEDULED -> Imabw.fxApp.showProgress()
-                Worker.State.SUCCEEDED, Worker.State.CANCELLED, Worker.State.FAILED -> Imabw.fxApp.hideProgress()
-                else -> Unit
-            }
-        })
+        messageProperty().addListener { _, _, text -> updateProgress(text) }
+        setOnScheduled { showProgress() }
+        setOnCancelled { hideProgress() }
+        setOnSucceeded { hideProgress() }
+        setOnFailed { hideProgress() }
+    }
+
+    open fun showProgress() {
+        Imabw.fxApp.showProgress()
+    }
+
+    open fun updateProgress(text: String) {
+        Imabw.fxApp.updateProgress(text)
+    }
+
+    open fun hideProgress() {
+        Imabw.fxApp.hideProgress()
     }
 }
 
-fun Task<*>.execute() {
-    Imabw.submit(this)
+class ReadLineTask(val file: File, val charset: Charset = Charsets.UTF_8) : ProgressTask<List<String>>() {
+    init {
+        setOnFailed {
+            hideProgress()
+            App.error("failed to read lines from $file", exception)
+        }
+    }
+
+    override fun call() = file.readLines(charset)
 }

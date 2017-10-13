@@ -128,7 +128,7 @@ abstract class IApplication : Application() {
     private val progressLabel = Label().apply { styleClass += "app-progress-label" }
 
     fun showProgress() {
-        appPane.statusBar?.left = HBox(4.0).apply {
+        appPane.statusBar!!.left = HBox(4.0).apply {
             alignment = Pos.CENTER
             BorderPane.setAlignment(this, Pos.CENTER)
             children += ProgressIndicator().also { it.styleClass += "app-progress-indicator" }
@@ -141,6 +141,6 @@ abstract class IApplication : Application() {
     }
 
     fun hideProgress() {
-        appPane.statusBar?.left = appPane.statusBar?.statusLabel
+        appPane.statusBar!!.left = appPane.statusBar!!.statusLabel
     }
 }

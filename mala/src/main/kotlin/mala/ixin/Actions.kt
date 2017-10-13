@@ -36,7 +36,7 @@ class Action(val id: String) {
 
     init {
         acceleratorProperty.addListener { _, old, new ->
-            if (old != new && old == null && !toast.isNullOrEmpty()) {
+            if (old == null && !toast.isNullOrEmpty()) {
                 toast = "$toast (${new.displayText})"
             }
         }

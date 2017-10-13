@@ -2,7 +2,7 @@ package jem.imabw.toc
 
 import javafx.beans.binding.Bindings
 import javafx.collections.ObservableList
-import javafx.collections.WeakListChangeListener
+import javafx.concurrent.Task
 import javafx.geometry.Pos
 import javafx.scene.control.*
 import javafx.scene.image.ImageView
@@ -13,10 +13,14 @@ import javafx.scene.layout.BorderPane
 import javafx.util.Callback
 import jclp.isRoot
 import jclp.log.Log
+import jem.Book
 import jem.Chapter
 import jem.epm.ParserParam
-import jem.imabw.*
+import jem.imabw.Imabw
+import jem.imabw.LoadTextTask
+import jem.imabw.Workbench
 import jem.imabw.editor.EditorPane
+import jem.imabw.loadBook
 import jem.imabw.ui.*
 import jem.intro
 import jem.title
@@ -151,40 +155,55 @@ object NavPane : BorderPane(), CommandHandler {
         inputText(tr("d.renameChapter.title"), tr("d.renameChapter.tip"), chapter.title)?.let {
             chapter.title = it
             treeItem.refresh()
+            if (chapter.isRoot) {
+                Workbench.work.titleProperty.value = it
+            }
             Workbench.work.isModified = true
         }
     }
 
     @Command
     fun importChapter() {
-        val files = openBookFiles(Imabw.fxApp.stage) ?: return
+        val files = openBookFiles() ?: return
         val targets = selection.toList()
-        files.map {
-            LoadBookTask(ParserParam(it.path)).apply {
-                setOnSucceeded {
-
-                }
-                setOnFailed {
-                    App.error()
+        val fxApp = Imabw.fxApp
+        fxApp.showProgress()
+        Log.t(TAG) { "show progress" }
+        val tasks = files.map {
+            val param = ParserParam(it.path)
+            val task = object : Task<Book>() {
+                override fun call(): Book {
+                    Log.t(TAG) { "open book" }
+                    Thread.sleep(4000)
+                    return loadBook(param)
                 }
             }
+            task.setOnRunning {
+                Log.t(TAG) { "on running" }
+            }
+            task.setOnScheduled {
+                Log.t(TAG) { "on scheduled" }
+                fxApp.updateProgress(tr("jem.loadBook.hint", param.path))
+            }
+            task.setOnSucceeded {
+                Log.t(TAG) { "on succeeded" }
+                insertNodes(listOf(createNode(task.value)), targets, InsertMode.TO_PARENT)
+            }
+            task.setOnFailed {
+                Log.t(TAG) { "on failed" }
+                App.error("failed to load book: ${param.path}", task.exception)
+            }
+            task
         }
-//        ImportBookTask(files.map { ParserParam(it.path) }) { _, book ->
-//            insertNodes(listOf(createNode(book)), targets, ItemMode.TO_PARENT)
-//        }.execute()
+        Log.t(TAG) { "wait for done" }
+        Imabw.submitAndWait(tasks)
+        Log.t(TAG) { "hide progress" }
+        fxApp.hideProgress()
     }
 
-    fun createNode(chapter: Chapter) = chapter.toTreeItem().apply {
-        val parent = value
-        children.addListener(WeakListChangeListener {
-            while (it.next()) {
-                it.addedSubList.forEach { parent.append(it.value) }
-                it.removed.forEach { parent.remove(it.value) }
-            }
-        })
-    }
+    fun createNode(chapter: Chapter) = chapter.toTreeItem()
 
-    fun insertNodes(sources: Collection<ChapterNode>, targets: Collection<ChapterNode>, mode: ItemMode) {
+    fun insertNodes(sources: Collection<ChapterNode>, targets: Collection<ChapterNode>, mode: InsertMode) {
         if (sources.isEmpty() || targets.isEmpty()) return
         require(sources.none { it in targets }) { "Cannot insert node to self" }
         val dump = targets.takeIf { it !== selection } ?: targets.toList()
@@ -193,31 +212,33 @@ object NavPane : BorderPane(), CommandHandler {
             // clone chapter(s) except the first one
             val items = if (index == 0) sources else sources.map { createNode(it.value.clone()) }
             when (mode) {
-                ItemMode.BEFORE_ITEM -> target.parent.let { insertNodes(items, it, it.children.indexOf(target)) }
-                ItemMode.AFTER_ITEM -> target.parent.let { insertNodes(items, it, it.children.indexOf(target) + 1) }
-                ItemMode.TO_PARENT -> insertNodes(items, target, -1)
+                InsertMode.BEFORE_ITEM -> target.parent.let { insertNodes(items, it, it.children.indexOf(target)) }
+                InsertMode.AFTER_ITEM -> target.parent.let { insertNodes(items, it, it.children.indexOf(target) + 1) }
+                InsertMode.TO_PARENT -> insertNodes(items, target, -1)
             }
             items.forEach { model.select(it) }
         }
+        treeView.scrollTo(model.selectedIndices.last())
         Workbench.work.isModified = true
     }
 
     fun insertNodes(sources: Collection<ChapterNode>, target: ChapterNode, index: Int) {
         if (sources.isEmpty()) return
+        val parent = target.value
         if (index < 0) {
-            target.children += sources
+            target.children += sources.onEach { parent += it.value }
         } else {
-            target.children.addAll(index, sources)
+            target.children.addAll(index, sources.onEach { parent += it.value })
         }
     }
 
     fun removeNodes(nodes: Collection<ChapterNode>) {
-        nodes.reversed().forEach {
-            it.parent.children.remove(it)
-            it.value.let {
-                EditorPane.closeText(it)
-                Imabw.submit { it.cleanup() }
-            }
+        nodes.reversed().forEach { node ->
+            val chapter = node.value
+            val parentNode = node.parent
+            parentNode.children.remove(node.apply { parentNode.value.remove(chapter) })
+            EditorPane.closeText(chapter)
+            Imabw.submit { chapter.cleanup() }
         }
         Workbench.work.isModified = true
     }
@@ -245,10 +266,10 @@ object NavPane : BorderPane(), CommandHandler {
             "selectAll" -> treeView.selectionModel.selectAll()
             "editText" -> selection.forEach { EditorPane.openText(it.value, CellFactory.getIcon(it)) }
             "newChapter" -> createChapter()?.let {
-                insertNodes(listOf(createNode(it)), selection, ItemMode.TO_PARENT)
+                insertNodes(listOf(createNode(it)), selection, InsertMode.TO_PARENT)
             }
             "insertChapter" -> createChapter()?.let {
-                insertNodes(listOf(createNode(it)), selection, ItemMode.BEFORE_ITEM)
+                insertNodes(listOf(createNode(it)), selection, InsertMode.BEFORE_ITEM)
             }
             "exportChapter" -> Workbench.exportFiles(selection.map { it.value })
             "viewAttributes" -> editAttributes(selectedChapter!!)
@@ -318,22 +339,24 @@ private class ChapterCell : TreeCell<Chapter>() {
             else -> ImageView(CellFactory.chapterIcon)
         }
         chapter?.intro?.let {
-            val task = LoadTextTask(it)
-            task.setOnSucceeded {
-                task.value.takeIf { it.isNotEmpty() }?.let {
-                    tooltip = Tooltip(it).also {
-                        it.isWrapText = true
-                        it.styleClass += "intro-tooltip"
-                        it.maxWidthProperty().bind(widthProperty())
+            with(LoadTextTask(it)) {
+                setOnSucceeded {
+                    value.takeIf { it.isNotEmpty() }?.let {
+                        tooltip = Tooltip(it).also {
+                            it.isWrapText = true
+                            it.styleClass += "intro-tooltip"
+                            it.maxWidthProperty().bind(widthProperty())
+                        }
                     }
+                    hideProgress()
                 }
+                Imabw.submit(this)
             }
-            task.execute()
         }
     }
 }
 
-enum class ItemMode {
+enum class InsertMode {
     BEFORE_ITEM,
     AFTER_ITEM,
     TO_PARENT

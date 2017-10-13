@@ -19,6 +19,7 @@
 package jclp.log
 
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 import java.util.logging.Level
 import java.util.logging.Logger
 
@@ -33,7 +34,7 @@ object SimpleFacade : LogFacade {
     }
 
     private fun print(tag: String, level: LogLevel, msg: String) {
-        val text = "[${Thread.currentThread().name}] ${level.name[0]}/$tag: $msg"
+        val text = "[${LocalDateTime.now()}] [${Thread.currentThread().name}] ${level.name[0]}/$tag: $msg"
         if (level.code > LogLevel.WARN.code) {
             println(text)
         } else {

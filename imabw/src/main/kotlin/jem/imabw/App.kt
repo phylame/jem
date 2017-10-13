@@ -19,10 +19,13 @@
 package jem.imabw
 
 import javafx.application.Application
+import jclp.log.Log
+import jclp.log.SLF4JFacade
 import jem.Build
 import jem.imabw.ui.Dashboard
 import mala.App
 import mala.ixin.IDelegate
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 
 fun main(args: Array<String>) {
@@ -37,6 +40,8 @@ object Imabw : IDelegate() {
     val dashboard get() = fxApp as Dashboard
 
     override fun onStart() {
+        Log.facade = SLF4JFacade
+        submitAndWait({ GeneralSettings }, { EditorSettings }, { UISettings })
         restoreState(GeneralSettings)
     }
 
@@ -78,6 +83,18 @@ object Imabw : IDelegate() {
     fun submit(r: Runnable) = executor.value.submit(r)
 
     fun submit(block: () -> Unit) = executor.value.submit(block)
+
+    fun submitAndWait(vararg tasks: () -> Unit) {
+        if (tasks.isEmpty()) return
+        val latch = CountDownLatch(tasks.size)
+        for (task in tasks) {
+            submit {
+                task()
+                latch.countDown()
+            }
+        }
+        latch.await()
+    }
 
     private val executor = lazy {
         Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())

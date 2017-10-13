@@ -119,10 +119,12 @@
 }
 
 #indicator > .label {
-    -fx-padding: 0 1px;
+    -fx-padding: 0 0 0 6px;
+    -fx-focus-traversable: false;
 }
 
 #indicator > .button, #indicator > .toggle-button {
-    -fx-padding: 1px 2px;
+    -fx-padding: 1px 0 1px 6px;
     -fx-background-color: transparent;
+    -fx-focus-traversable: false;
 }

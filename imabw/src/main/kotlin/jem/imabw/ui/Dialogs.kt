@@ -19,6 +19,7 @@
 package jem.imabw.ui
 
 import javafx.scene.control.TextInputDialog
+import javafx.stage.DirectoryChooser
 import javafx.stage.FileChooser
 import javafx.stage.Modality
 import javafx.stage.Window
@@ -50,58 +51,54 @@ private val fileChooser = FileChooser().apply {
     }
 }
 
+private val directoryChooser = DirectoryChooser()
+
+private fun getExtensionName(ext: String): String {
+    return App.optTr("misc.ext.$ext") ?: App.tr("misc.ext.common", ext.toUpperCase())
+}
+
+private fun setExtensionFilters(chooser: FileChooser, extensions: Collection<Collection<String>>, selected: String) {
+    val filters = chooser.extensionFilters.apply { clear() }
+    for (extension in extensions) {
+        FileChooser.ExtensionFilter(getExtensionName(extension.first()), extension.map { "*.$it" }).apply {
+            filters += this
+            if (selected in extension) {
+                chooser.selectedExtensionFilter = this
+            }
+        }
+    }
+}
+
+fun selectDirectory(owner: Window, title: String): File? {
+    directoryChooser.title = title
+    return directoryChooser.showDialog(owner)
+}
+
+private fun parserExtensions(): List<Set<String>> {
+    return EpmManager.services.filter { it.hasParser && "crawler" !in it.keys }.map { it.keys }
+}
+
+private fun makerExtensions(): List<Set<String>> {
+    return EpmManager.services.filter { it.hasMaker }.map { it.keys }
+}
+
 fun openBookFile(owner: Window): File? {
     fileChooser.title = App.tr("d.openBook.title")
-    val filters = fileChooser.extensionFilters.apply { clear() }
-    EpmManager.services.filter { it.hasParser && "crawler" !in it.keys }.map {
-        val name = it.keys.first().let {
-            App.optTr("misc.ext.$it") ?: App.tr("misc.ext.common", it.toUpperCase())
-        }
-        FileChooser.ExtensionFilter(name, it.keys.map { "*.$it" }).apply {
-            if ("pmab" in it.keys) {
-                fileChooser.selectedExtensionFilter = this
-            }
-        }
-    }.toCollection(filters)
-    return fileChooser.showOpenDialog(owner)?.also {
-        fileChooser.initialDirectory = it.parentFile
-    }
+    setExtensionFilters(fileChooser, parserExtensions(), "pmab")
+    return fileChooser.showOpenDialog(owner)?.also { fileChooser.initialDirectory = it.parentFile }
 }
 
-fun saveBookFile(owner: Window): File? {
+fun saveBookFile(owner: Window, name: String = ""): File? {
+    fileChooser.initialFileName = name
     fileChooser.title = App.tr("d.saveBook.title")
-    val filters = fileChooser.extensionFilters.apply { clear() }
-    EpmManager.services.filter { it.hasMaker }.map {
-        val name = it.keys.first().let {
-            App.optTr("misc.ext.$it") ?: App.tr("misc.ext.common", it.toUpperCase())
-        }
-        FileChooser.ExtensionFilter(name, it.keys.map { "*.$it" }).apply {
-            if ("pmab" in it.keys) {
-                fileChooser.selectedExtensionFilter = this
-            }
-        }
-    }.toCollection(filters)
-    return fileChooser.showSaveDialog(owner)?.also {
-        fileChooser.initialDirectory = it.parentFile
-    }
+    setExtensionFilters(fileChooser, makerExtensions(), "pmab")
+    return fileChooser.showSaveDialog(owner)?.also { fileChooser.initialDirectory = it.parentFile }
 }
 
-fun selectBooks(owner: Window): List<File> {
+fun openBookFiles(owner: Window): List<File>? {
     fileChooser.title = App.tr("d.openBook.title")
-    val filters = fileChooser.extensionFilters.apply { clear() }
-    EpmManager.services.filter { it.hasParser && "crawler" !in it.keys }.map { factory ->
-        val name = factory.keys.first().let {
-            App.optTr("misc.ext.$it") ?: App.tr("misc.ext.common", it.toUpperCase())
-        }
-        FileChooser.ExtensionFilter(name, factory.keys.map { "*.$it" }).apply {
-            if ("pmab" in factory.keys) {
-                fileChooser.selectedExtensionFilter = this
-            }
-        }
-    }.toCollection(filters)
-    return fileChooser.showOpenMultipleDialog(owner)?.also {
-        fileChooser.initialDirectory = it.first().parentFile
-    } ?: emptyList()
+    setExtensionFilters(fileChooser, parserExtensions(), "pmab")
+    return fileChooser.showOpenMultipleDialog(owner)?.also { fileChooser.initialDirectory = it.first().parentFile }
 }
 
 fun editAttributes(chapter: Chapter) {

@@ -16,7 +16,7 @@ fun AssetManager.imageFor(name: String) = resourceFor(IxIn.gfxPath(name))?.openS
 fun AssetManager.designerFor(name: String) = resourceFor(name)?.openStream()?.use(::JSONDesigner)
 
 object IxIn {
-    val delegate get() = App.delegate as IDelegate
+    val delegate = App.delegate as IDelegate
 
     val menuMap get() = delegate.fxApp.menuMap
 

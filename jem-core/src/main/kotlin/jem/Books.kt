@@ -58,7 +58,7 @@ open class Chapter(
     }
 
     constructor(chapter: Chapter, deepCopy: Boolean) : this() {
-        dumpTo(chapter, deepCopy)
+        chapter.dumpTo(this, deepCopy)
     }
 
     operator fun get(name: String) = attributes[name]
@@ -96,12 +96,18 @@ open class Chapter(
     }
 
     protected open fun dumpTo(chapter: Chapter, deepCopy: Boolean) {
-        text?.retainSelf() // text is assigned to chapter
-        chapter.attributes = attributes.clone()
+        chapter.tag = tag
+        chapter.text = text
+        chapter.parent = null
+        chapter.children = children
+        chapter.attributes = attributes
         if (deepCopy) {
-            chapter.parent = null
-            chapter.children = arrayListOf()
-            this.children.map { it.clone() }.toCollection(chapter.children)
+            chapter.attributes = attributes.clone()
+            val list = ArrayList<Chapter>(children.size)
+            children.forEach { list.add(it.clone()) }
+            chapter.children = list
+            text?.retainSelf()
+            tag?.retainSelf()
         }
     }
 
@@ -125,22 +131,20 @@ fun Chapter.newChapter(title: String = "", text: Text? = null, cover: Flob? = nu
     return chapter
 }
 
-open class Book(title: String = "", author: String = "") : Chapter(title) {
+open class Book : Chapter {
     var extensions = VariantMap()
         private set
 
-    init {
-        set(AUTHOR, author)
+    constructor(title: String = "", author: String = "") : super(title) {
+        attributes[AUTHOR] = author
     }
 
-    constructor(chapter: Chapter, deepCopy: Boolean) : this() {
-        dumpTo(chapter, deepCopy)
-    }
+    constructor(chapter: Chapter, deepCopy: Boolean) : super(chapter, deepCopy)
 
     override fun dumpTo(chapter: Chapter, deepCopy: Boolean) {
         super.dumpTo(chapter, deepCopy)
         if (chapter is Book) {
-            chapter.extensions = extensions.clone()
+            chapter.extensions = if (deepCopy) extensions.clone() else extensions
         }
     }
 
@@ -152,3 +156,5 @@ open class Book(title: String = "", author: String = "") : Chapter(title) {
         return b.toString()
     }
 }
+
+fun Chapter.asBook() = this as? Book ?: Book(this, false)

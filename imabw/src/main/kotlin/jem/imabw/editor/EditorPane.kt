@@ -27,7 +27,7 @@ import org.fxmisc.richtext.StyleClassedTextArea
 import org.fxmisc.richtext.StyledTextArea
 import org.fxmisc.undo.UndoManagerFactory
 
-object EditorPane : TabPane(), CommandHandler, Editable {
+object EditorPane : TabPane(), CommandHandler {
     private val tabMenu = ContextMenu()
     private val textMenu = ContextMenu()
 
@@ -130,23 +130,10 @@ object EditorPane : TabPane(), CommandHandler, Editable {
         }
         return true
     }
-
-    override fun onEdit(command: String) {
-        val editor = selectedTab?.textArea ?: return
-        when (command) {
-            "undo" -> editor.undo()
-            "redo" -> editor.redo()
-            "cut" -> editor.cutParagraph()
-            "copy" -> editor.copyParagraph()
-            "paste" -> editor.paste()
-            "delete" -> editor.replaceSelection("")
-            "selectAll" -> editor.selectAll()
-        }
-    }
 }
 
 class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
-    val textArea = StyleClassedTextArea()
+    val textArea = TextEditor()
     var undoPosition = textArea.undoManager.currentPosition
     var isModified = false
 
@@ -177,6 +164,20 @@ internal val Tab.chapter get() = (this as? ChapterTab)?.chapter
 internal val Tab.isModified get() = (this as? ChapterTab)?.isModified
 
 internal val Tab.editor get() = (this as? ChapterTab)?.content as? StyledTextArea<*>
+
+class TextEditor : StyleClassedTextArea(), Editable {
+    override fun onEdit(command: String) {
+        when (command) {
+            "undo" -> undo()
+            "redo" -> redo()
+            "cut" -> cutParagraph()
+            "copy" -> copyParagraph()
+            "paste" -> paste()
+            "delete" -> replaceSelection("")
+            "selectAll" -> selectAll()
+        }
+    }
+}
 
 fun ClipboardActions<*>.cutParagraph() {
     if (selection.length > 0) {

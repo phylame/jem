@@ -1,18 +1,16 @@
 package jem.imabw.ui
 
+import javafx.beans.InvalidationListener
 import javafx.beans.binding.Bindings
 import javafx.beans.binding.StringBinding
-import javafx.beans.value.ChangeListener
-import javafx.geometry.Orientation
 import javafx.geometry.Pos
 import javafx.scene.Scene
-import javafx.scene.control.Control
 import javafx.scene.control.Label
-import javafx.scene.control.Separator
 import javafx.scene.control.SplitPane
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
+import jclp.log.Log
 import jclp.text.TEXT_PLAIN
 import jem.author
 import jem.imabw.Imabw
@@ -28,6 +26,8 @@ import mala.App
 import mala.ixin.*
 
 class Dashboard : IApplication(), CommandHandler {
+    private val TAG = "Dashboard"
+
     lateinit var splitPane: SplitPane
 
     lateinit var appDesigner: AppDesigner
@@ -38,16 +38,15 @@ class Dashboard : IApplication(), CommandHandler {
 
     override fun setup(scene: Scene, appPane: AppPane) {
         appDesigner = App.assets.designerFor("ui/designer.json")!!
-        scene.stylesheets += App.assets.resourceFor("ui/default.css")?.toExternalForm()
+        scene.stylesheets += App.assets.resourceFor("ui/default.css")!!.toExternalForm()
 
         appPane.setup(appDesigner, actionMap, menuMap)
         actionMap.updateAccelerators(App.assets.propertiesFor("ui/keys.properties")!!)
         appPane.statusBar?.right = Indicator
 
         splitPane = SplitPane().also {
-            it.items += NavPane
-            it.items += EditorPane
             it.id = "main-split-pane"
+            it.items.addAll(NavPane, EditorPane)
             it.setDividerPosition(0, 0.24)
             SplitPane.setResizableWithParent(NavPane, false)
             appPane.center = it
@@ -69,7 +68,6 @@ class Dashboard : IApplication(), CommandHandler {
 
         initActions()
         restoreState(UISettings)
-
         statusText = App.tr("status.ready")
     }
 
@@ -127,7 +125,13 @@ class Dashboard : IApplication(), CommandHandler {
                     splitPane.setDividerPosition(0, 0.24)
                 }
             }
-            in editActions -> (stage.scene.focusOwner as? Editable)?.onEdit(command)
+            in editActions -> stage.scene.focusOwner.let {
+                if (it is Editable) {
+                    it.onEdit(command)
+                } else {
+                    Log.d(TAG) { "focused object is not editable: $it" }
+                }
+            }
             else -> return false
         }
         return true
@@ -152,21 +156,12 @@ object Indicator : HBox() {
             }
         }
 
-        initRuler()
-
-        add(caret)
-        add(words)
-        add(mime)
-
-        IxIn.newAction("lock").toButton(Imabw, Style.TOGGLE, hideText = true).also {
-            add(it)
-        }
-
-        IxIn.newAction("gc").toButton(Imabw, hideText = true).also {
-            add(it)
-        }
+        children.addAll(caret, words, mime)
+        IxIn.newAction("lock").toButton(Imabw, Style.TOGGLE, hideText = true).also { children += it }
+        IxIn.newAction("gc").toButton(Imabw, hideText = true).also { children += it }
 
         reset()
+        initRuler()
     }
 
     fun reset() {
@@ -176,42 +171,55 @@ object Indicator : HBox() {
     }
 
     fun updateCaret(row: Int, column: Int, selection: Int) {
-        caret.text = when {
-            row < 0 -> "n/a"
-            selection > 0 -> "$row:$column/$selection"
-            else -> "$row:$column"
+        if (row < 0) {
+            caret.isVisible = false
+        } else {
+            caret.isVisible = true
+            caret.text = when {
+                selection > 0 -> "$row:$column/$selection"
+                else -> "$row:$column"
+            }
         }
     }
 
     fun updateWords(count: Int) {
-        words.text = if (count < 0) "n/a" else count.toString()
+        if (count < 0) {
+            words.isVisible = false
+        } else {
+            println(count)
+            words.isVisible = true
+            words.text = count.toString()
+        }
     }
 
     fun updateMime(type: String) {
-        mime.text = if (type.isEmpty()) "n/a" else type
-    }
-
-    private fun add(node: Control) {
-        this += Separator(Orientation.VERTICAL)
-        this += node.also { it.isFocusTraversable = false }
+        if (type.isEmpty()) {
+            mime.isVisible = false
+        } else {
+            mime.isVisible = true
+            mime.text = type
+        }
     }
 
     private fun initRuler() {
         EditorPane.selectionModel.selectedItemProperty().addListener { _, old, new ->
             old?.editor?.let { text ->
                 @Suppress("UNCHECKED_CAST")
-                (text.properties[this] as? ChangeListener<Int>)?.let { listener ->
+                (text.properties[this] as? InvalidationListener)?.let { listener ->
                     text.caretPositionProperty().removeListener(listener)
+                    text.selectionProperty().removeListener(listener)
                 }
             }
             if (new is ChapterTab) {
                 new.textArea.also { text ->
-                    ChangeListener<Int> { _, _, _ ->
+                    InvalidationListener {
                         updateCaret(text.currentParagraph + 1, text.caretColumn + 1, text.selection.length)
                     }.let { listener ->
                         text.properties[this] = listener
                         text.caretPositionProperty().addListener(listener)
+                        text.selectionProperty().addListener(listener)
                     }
+                    words.isVisible = true
                     words.textProperty().bind(Bindings.convert(text.lengthProperty()))
                     updateCaret(text.currentParagraph + 1, text.caretColumn + 1, text.selection.length)
                 }

@@ -7,7 +7,8 @@
           "id": "menuNew",
           "items": [
             "newFile",
-            "newChapter"
+            "newChapter",
+            "bookCrawler"
           ]
         },
         "openFile",
@@ -110,9 +111,7 @@
     },
     {
       "id": "menuTools",
-      "items": [
-        "bookCrawler"
-      ]
+      "items": []
     },
     {
       "id": "menuWindow",

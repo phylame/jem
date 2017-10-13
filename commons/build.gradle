@@ -27,6 +27,7 @@ description = 'Commons & Utilities for Java'
 
 dependencies {
     api 'org.jetbrains.kotlin:kotlin-stdlib'
+    compileOnly "org.slf4j:slf4j-api:$slf4jVersion"
 }
 
 compileKotlin {

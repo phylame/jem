@@ -18,7 +18,21 @@
 
 package jem.imabw
 
+import javafx.beans.value.WeakChangeListener
 import javafx.concurrent.Task
+import javafx.concurrent.Worker
+
+abstract class ProgressTask<V> : Task<V>() {
+    init {
+        stateProperty().addListener(WeakChangeListener { _, _, state ->
+            when (state) {
+                Worker.State.SCHEDULED -> Imabw.fxApp.showProgress()
+                Worker.State.SUCCEEDED, Worker.State.CANCELLED, Worker.State.FAILED -> Imabw.fxApp.hideProgress()
+                else -> Unit
+            }
+        })
+    }
+}
 
 fun Task<*>.execute() {
     Imabw.submit(this)

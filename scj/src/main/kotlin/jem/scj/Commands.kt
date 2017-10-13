@@ -19,6 +19,7 @@
 package jem.scj
 
 import jem.Book
+import jem.asBook
 import jem.epm.ParserParam
 import mala.App
 import mala.App.tr
@@ -100,7 +101,7 @@ class ExtractBook : ListFetcher("x"), BookConsumer {
         return (SCI["x"] as? List<String> ?: return false).mapNotNull(::parseIndices).mapNotNull {
             locateChapter(book, it)
         }.map {
-            val b = Book(it, false)
+            val b = it.asBook()
             attachBook(b, true)
             saveBook(outParam(b))
         }.all {

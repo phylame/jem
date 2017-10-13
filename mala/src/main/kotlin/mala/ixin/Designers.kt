@@ -85,6 +85,10 @@ fun ItemGroup.toMenu(handler: CommandHandler, m: Translator, r: AssetManager, am
     }
 }
 
+fun Iterable<*>.toContextMenu(handler: CommandHandler, m: Translator, r: AssetManager, am: ActionMap?, mm: MenuMap?): ContextMenu {
+    return ContextMenu().also { it.init(this, handler, m, r, am, mm) }
+}
+
 fun Menu.init(items: Iterable<*>, handler: CommandHandler, m: Translator, r: AssetManager, am: ActionMap?, mm: MenuMap?) {
     for (item in items) {
         this.items += when (item) {

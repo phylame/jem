@@ -18,6 +18,7 @@
 
 package jclp.log
 
+import org.slf4j.LoggerFactory
 import java.util.logging.Level
 import java.util.logging.Logger
 
@@ -64,5 +65,31 @@ object JDKFacade : LogFacade {
         LogLevel.WARN -> Level.WARNING
         LogLevel.ERROR -> Level.SEVERE
         LogLevel.OFF -> Level.OFF
+    }
+}
+
+object SLF4JFacade : LogFacade {
+    override fun log(tag: String, level: LogLevel, msg: String) {
+        val logger = LoggerFactory.getLogger(tag)
+        when (level) {
+            LogLevel.DEBUG -> logger.debug(msg)
+            LogLevel.TRACE -> logger.trace(msg)
+            LogLevel.ERROR -> logger.error(msg)
+            LogLevel.INFO -> logger.info(msg)
+            LogLevel.WARN -> logger.warn(msg)
+            else -> Unit
+        }
+    }
+
+    override fun log(tag: String, level: LogLevel, msg: String, t: Throwable) {
+        val logger = LoggerFactory.getLogger(tag)
+        when (level) {
+            LogLevel.DEBUG -> logger.debug(msg, t)
+            LogLevel.TRACE -> logger.trace(msg, t)
+            LogLevel.ERROR -> logger.error(msg, t)
+            LogLevel.INFO -> logger.info(msg, t)
+            LogLevel.WARN -> logger.warn(msg, t)
+            else -> Unit
+        }
     }
 }

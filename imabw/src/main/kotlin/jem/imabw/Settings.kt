@@ -26,7 +26,7 @@ import mala.ixin.IxInSettings
 object GeneralSettings : AppSettings() {
     var enableHistory by delegate(true, "app.history.enable")
 
-    var historyLimit by delegate(100, "app.history.limit")
+    var historyLimit by delegate(24, "app.history.limit")
 }
 
 object UISettings : IxInSettings() {

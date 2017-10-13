@@ -1,8 +1,8 @@
 package jem.imabw.toc
 
 import javafx.beans.binding.Bindings
-import javafx.collections.ListChangeListener
 import javafx.collections.ObservableList
+import javafx.collections.WeakListChangeListener
 import javafx.geometry.Pos
 import javafx.scene.control.*
 import javafx.scene.image.ImageView
@@ -14,15 +14,10 @@ import javafx.util.Callback
 import jclp.isRoot
 import jclp.log.Log
 import jem.Chapter
-import jem.imabw.Imabw
-import jem.imabw.LoadTextTask
-import jem.imabw.Workbench
+import jem.epm.ParserParam
+import jem.imabw.*
 import jem.imabw.editor.EditorPane
-import jem.imabw.execute
-import jem.imabw.ui.Editable
-import jem.imabw.ui.editAttributes
-import jem.imabw.ui.editVariants
-import jem.imabw.ui.inputText
+import jem.imabw.ui.*
 import jem.intro
 import jem.title
 import mala.App
@@ -32,10 +27,14 @@ import java.util.concurrent.Callable
 
 typealias ChapterNode = TreeItem<Chapter>
 
-object NavPane : BorderPane(), CommandHandler, Editable {
+object NavPane : BorderPane(), CommandHandler {
     private const val TAG = "Nav"
 
-    val treeView = TreeView(ChapterNode())
+    val treeView: TreeView<Chapter> = object : TreeView<Chapter>(ChapterNode()), Editable {
+        override fun onEdit(command: String) {
+            handle(command, this)
+        }
+    }
 
     val selection: ObservableList<TreeItem<Chapter>> get() = treeView.selectionModel.selectedItems
 
@@ -63,6 +62,9 @@ object NavPane : BorderPane(), CommandHandler, Editable {
         tree.id = "toc-tree"
         tree.cellFactory = CellFactory
         tree.selectionModel.selectionMode = SelectionMode.MULTIPLE
+        Imabw.dashboard.appDesigner.items["navContext"]?.let {
+            tree.contextMenu = it.toContextMenu(Imabw, App, App.assets, IxIn.actionMap, null)
+        }
         tree.addEventHandler(MouseEvent.MOUSE_PRESSED) { event ->
             if (event.clickCount == 2 && event.isPrimaryButtonDown) {
                 treeView.selectionModel.selectedItem?.takeIf { it.isLeaf && it.isNotRoot }?.let {
@@ -155,22 +157,26 @@ object NavPane : BorderPane(), CommandHandler, Editable {
 
     @Command
     fun importChapter() {
-//        val task = object : Task<Book>() {
-//            override fun call() = parseBook("E:/tmp/2", "pmab")
-//        }
-//        task.setOnSucceeded {
-//            insertNodes(listOf(createNode(task.value)), selection, ItemMode.TO_PARENT)
-//            println("inserted 1 book")
-//        }
-//        task.setOnFailed {
-//            task.exception.printStackTrace()
-//        }
-//        task.execute()
+        val files = openBookFiles(Imabw.fxApp.stage) ?: return
+        val targets = selection.toList()
+        files.map {
+            LoadBookTask(ParserParam(it.path)).apply {
+                setOnSucceeded {
+
+                }
+                setOnFailed {
+                    App.error()
+                }
+            }
+        }
+//        ImportBookTask(files.map { ParserParam(it.path) }) { _, book ->
+//            insertNodes(listOf(createNode(book)), targets, ItemMode.TO_PARENT)
+//        }.execute()
     }
 
     fun createNode(chapter: Chapter) = chapter.toTreeItem().apply {
         val parent = value
-        children.addListener(ListChangeListener {
+        children.addListener(WeakListChangeListener {
             while (it.next()) {
                 it.addedSubList.forEach { parent.append(it.value) }
                 it.removed.forEach { parent.remove(it.value) }
@@ -235,6 +241,8 @@ object NavPane : BorderPane(), CommandHandler, Editable {
 
     override fun handle(command: String, source: Any): Boolean {
         when (command) {
+            "delete" -> removeNodes(selection)
+            "selectAll" -> treeView.selectionModel.selectAll()
             "editText" -> selection.forEach { EditorPane.openText(it.value, CellFactory.getIcon(it)) }
             "newChapter" -> createChapter()?.let {
                 insertNodes(listOf(createNode(it)), selection, ItemMode.TO_PARENT)
@@ -242,7 +250,7 @@ object NavPane : BorderPane(), CommandHandler, Editable {
             "insertChapter" -> createChapter()?.let {
                 insertNodes(listOf(createNode(it)), selection, ItemMode.BEFORE_ITEM)
             }
-            "exportChapter" -> Workbench.exportBook(selection.map { it.value })
+            "exportChapter" -> Workbench.exportFiles(selection.map { it.value })
             "viewAttributes" -> editAttributes(selectedChapter!!)
             "bookAttributes" -> editAttributes(Workbench.work.book)
             "bookExtensions" -> Workbench.work.book.let {
@@ -256,13 +264,6 @@ object NavPane : BorderPane(), CommandHandler, Editable {
             else -> return false
         }
         return true
-    }
-
-    override fun onEdit(command: String) {
-        when (command) {
-            "delete" -> removeNodes(selection)
-            "selectAll" -> treeView.selectionModel.selectAll()
-        }
     }
 }
 
@@ -307,14 +308,6 @@ object CellFactory : Callback<TreeView<Chapter>, TreeCell<Chapter>> {
 }
 
 private class ChapterCell : TreeCell<Chapter>() {
-    private val menu = ContextMenu()
-
-    init {
-        Imabw.dashboard.appDesigner.items["navContext"]?.let {
-            menu.init(it, Imabw, App, App.assets, IxIn.actionMap, null)
-        }
-    }
-
     override fun updateItem(chapter: Chapter?, empty: Boolean) {
         super.updateItem(chapter, empty)
         text = chapter?.title
@@ -337,10 +330,8 @@ private class ChapterCell : TreeCell<Chapter>() {
             }
             task.execute()
         }
-        contextMenu = chapter?.let { menu }
     }
 }
-
 
 enum class ItemMode {
     BEFORE_ITEM,

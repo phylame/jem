@@ -23,9 +23,11 @@ import jclp.ServiceProvider
 import jclp.setting.Settings
 import jclp.setting.getBoolean
 import jclp.setting.getString
+import jclp.vdm.VDM_DIRECTORY
 import jem.Book
 import jem.title
 import java.io.File
+import java.nio.file.FileAlreadyExistsException
 
 const val MAKER_OVERWRITE_KEY = "maker.file.overwrite"
 
@@ -59,25 +61,17 @@ object EpmManager : ServiceManager<EpmFactory>(EpmFactory::class.java) {
 
     fun writeBook(param: MakerParam): String? {
         val epmName = param.epmName.takeIf(String::isNotEmpty) ?: throw IllegalArgumentException("Not found epm format")
-        var file = File(param.path)
         val maker = getMaker(epmName) ?: return null
-        if (file.isDirectory && (maker !is VDMMaker || param.arguments?.getString(MAKER_VDM_TYPE_KEY) != "dir")) {
+        var file = File(param.path)
+        if (file.isDirectory && (maker !is VDMMaker || param.arguments?.getString(MAKER_VDM_TYPE_KEY) != VDM_DIRECTORY)) {
             file = File(file, "${param.book.title}.$epmName")
         }
-        file.takeIf {
-            it.exists() && param.arguments?.getBoolean(MAKER_OVERWRITE_KEY) != true
-        }?.let {
-            throw FileAlreadyExistsException(it)
+        val output = file.path
+        if (file.exists() && param.arguments?.getBoolean(MAKER_OVERWRITE_KEY) != true) {
+            throw FileAlreadyExistsException(output)
         }
-        maker.make(param.book, file.path, param.arguments)
-        return file.path
+        param.actualPath = output
+        maker.make(param.book, output, param.arguments)
+        return output
     }
-}
-
-fun parseBook(path: String, format: String = "", arguments: Settings? = null): Book? {
-    return ParserParam(path, format, arguments).let(EpmManager::readBook)
-}
-
-fun Book.write(path: String, format: String = "", arguments: Settings? = null): String? {
-    return MakerParam(this, path, format, arguments).let(EpmManager::writeBook)
 }

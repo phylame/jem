@@ -32,7 +32,7 @@ abstract class AbstractText(final override val type: String) : Text {
     }
 }
 
-internal class StringText(type: String, private val text: CharSequence) : AbstractText(type) {
+private class StringText(type: String, private val text: CharSequence) : AbstractText(type) {
     override fun toString() = text.toString()
 }
 
@@ -40,7 +40,7 @@ fun textOf(cs: CharSequence, type: String = TEXT_PLAIN): Text = StringText(type,
 
 fun emptyText(type: String = TEXT_PLAIN) = textOf("", type)
 
-internal open class FlobText(type: String, val flob: Flob, encoding: String? = null) : AbstractText(type) {
+private open class FlobText(type: String, val flob: Flob, encoding: String? = null) : AbstractText(type) {
     private val charset: Charset = when {
         encoding == null || encoding.isEmpty() -> Charset.defaultCharset()
         else -> Charset.forName(encoding)

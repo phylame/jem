@@ -7,22 +7,34 @@ import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.collections.FXCollections
 import javafx.collections.ListChangeListener
+import javafx.concurrent.Task
 import javafx.scene.control.ButtonType
+import javafx.scene.control.Label
 import javafx.scene.control.MenuItem
 import javafx.scene.control.SeparatorMenuItem
+import javafx.scene.layout.GridPane
+import jclp.EventBus
 import jclp.io.createRecursively
 import jclp.log.Log
+import jclp.text.or
 import jem.*
-import jem.epm.EpmManager
-import jem.epm.MakerParam
-import jem.epm.ParserParam
+import jem.epm.*
 import jem.imabw.ui.*
 import mala.App
 import mala.App.tr
 import mala.ixin.Command
 import mala.ixin.CommandHandler
 import mala.ixin.IxIn
+import mala.ixin.init
 import java.io.File
+import java.util.*
+import java.util.concurrent.atomic.AtomicInteger
+
+private const val SWAP_SUFFIX = ".swp"
+
+enum class BookEvent {
+    CREATED, OPENED, SAVED
+}
 
 object Workbench : CommandHandler {
     private const val TAG = "Workbench"
@@ -32,12 +44,13 @@ object Workbench : CommandHandler {
     var work: Work
         get() = workProperty.value
         set(value) {
-            workProperty.value?.let { old ->
-                old.path?.let { History.insert(it) }
-                old.cleanup()
-            }
+            val old = workProperty.value
             workProperty.value = value.also { new ->
                 new.path?.let { History.remove(it) }
+            }
+            old?.apply {
+                path?.let { History.insert(it) }
+                cleanup()
             }
             initActions()
         }
@@ -48,11 +61,12 @@ object Workbench : CommandHandler {
 
     fun ensureSaved(title: String, block: () -> Unit) {
         if (work.isModified) {
-            val alert = confirm(title, tr("d.askSave.hint", work.book.title))
-            alert.buttonTypes.setAll(ButtonType.CANCEL, ButtonType.YES, ButtonType.NO)
-            when (alert.showAndWait().get()) {
-                ButtonType.YES -> if (!saveFile()) return
-                ButtonType.CANCEL -> return
+            with(confirm(title, tr("d.askSave.hint", work.book.title))) {
+                buttonTypes.setAll(ButtonType.CANCEL, ButtonType.YES, ButtonType.NO)
+                when (showAndWait().get()) {
+                    ButtonType.YES -> if (!saveFile()) return
+                    ButtonType.CANCEL -> return
+                }
             }
         }
         block()
@@ -60,7 +74,8 @@ object Workbench : CommandHandler {
 
     fun newBook(title: String) {
         work = Work(Book(title))
-        Imabw.message(tr("jem.newBook.success", title))
+        EventBus.post(BookEvent.CREATED)
+        Imabw.message(tr("d.newBook.success", title))
     }
 
     fun openBook(param: ParserParam) {
@@ -68,20 +83,23 @@ object Workbench : CommandHandler {
             Log.t(TAG) { "'${param.path}' is already opened" }
             return
         }
-        if (EpmManager[param.epmName]?.hasParser != true) {
-            Log.e(TAG) { "'${param.path}' is unknown for '${param.epmName}'" }
+        val parser = EpmManager[param.epmName]?.parser
+        if (parser != null) {
+            if (parser is FileParser && !File(param.path).exists()) {
+                error(tr("d.openBook.title"), tr("err.file.notFound", param.path))
+                History.remove(param.path)
+                return
+            }
+        } else {
+            error(tr("d.openBook.title"), tr("err.jem.unsupported", param.epmName))
             return
         }
         with(LoadBookTask(param)) {
             setOnSucceeded {
                 work = Work(value, param)
-                hideProgress()
                 Imabw.message(App.tr("jem.openBook.success", param.path))
-            }
-            setOnFailed {
+                EventBus.post(BookEvent.OPENED)
                 hideProgress()
-                App.error("failed to load '${param.path}'", exception)
-                History.remove(param.path)
             }
             Imabw.submit(this)
         }
@@ -89,19 +107,25 @@ object Workbench : CommandHandler {
 
     fun saveBook(param: MakerParam) {
         if (EpmManager[param.epmName]?.hasMaker != true) {
-            Log.e(TAG) { "'${param.path}' is unknown for '${param.epmName}'" }
+            error(tr("d.saveBook.title"), tr("err.jem.unsupported", param.epmName))
             return
         }
-        if (param.path == work.inParam?.path) {
-            Log.e(TAG) { "'${param.path}' is currently opened" }
-            return
+        work.inParam?.path?.let { path ->
+            if (File(path) == File(param.actualPath)) {
+                error(tr("d.saveBook.title"), tr("err.file.opened", param.actualPath))
+                return
+            }
         }
         with(MakeBookTask(param)) {
+            setOnRunning {
+                updateProgress(App.tr("jem.makeBook.hint", param.book.title, param.actualPath.replace(SWAP_SUFFIX, "")))
+            }
             setOnSucceeded {
                 work.outParam = param
                 work.isModified = false
                 work.path = value.replace(SWAP_SUFFIX, "")
                 Imabw.message(tr("jem.saveBook.success", param.book.title, work.path))
+                EventBus.post(BookEvent.SAVED)
                 hideProgress()
             }
             Imabw.submit(this)
@@ -136,31 +160,101 @@ object Workbench : CommandHandler {
         var param = work.outParam
         if (param == null) {
             val inParam = work.inParam
-            val settings = defaultMakerSettings()
-            param = if (inParam?.epmName == "pmab") { // save pmab to temp file
-                MakerParam(work.book, inParam.path + SWAP_SUFFIX, "pmab", settings)
-            } else {
-                MakerParam(work.book, saveBookFile(work.book.title)?.path ?: return false, "pmab", settings)
+            val output = if (inParam?.epmName != PMAB_NAME) {
+                saveBookFile(work.book.title, PMAB_NAME)?.first?.path ?: return false
+            } else { // save pmab to temp file
+                inParam.path + SWAP_SUFFIX
             }
+            param = MakerParam(work.book, output, PMAB_NAME, defaultMakerSettings())
         }
         saveBook(param)
         return true
     }
 
     fun exportFile(chapter: Chapter) {
-        val file = saveBookFile(chapter.title) ?: return
-        val param = MakerParam(chapter.asBook(), file.path, arguments = defaultMakerSettings())
-        Imabw.submit(MakeBookTask(param))
+        val (file, format) = saveBookFile(chapter.title) ?: return
+        work.path?.let { path ->
+            if (File(path) == file) {
+                error(tr("d.saveBook.title"), tr("err.file.opened", file))
+                return
+            }
+        }
+        with(MakeBookTask(MakerParam(chapter.asBook(), file.path, format, defaultMakerSettings()))) {
+            Imabw.submit(this)
+        }
     }
 
     fun exportFiles(chapters: Collection<Chapter>) {
         if (chapters.isEmpty()) return
         if (chapters.size == 1) {
             exportFile(chapters.first())
-        } else {
-            val dir = selectDirectory(tr("d.exportBook.title"), Imabw.fxApp.stage) ?: return
-            val params = chapters.map { MakerParam(it.asBook(), dir.path, "pmab", defaultMakerSettings()) }
-//            ExportBookTask(params) { Imabw.message("Saved '${params.size}' book(s)") }.execute()
+            return
+        }
+        val dir = selectDirectory(tr("d.exportBook.title")) ?: return
+        val ignored = ArrayList<String>(4)
+        val succeed = Vector<String>(chapters.size)
+        val failed = Vector<String>(0)
+        val file = work.path?.let(::File)
+        val counter = AtomicInteger()
+        val fxApp = Imabw.fxApp
+        fxApp.showProgress()
+        for (chapter in chapters) {
+            val path = "${dir.path}/${chapter.title}.$PMAB_NAME"
+            if (file != null && file == File(path)) {
+                counter.incrementAndGet()
+                ignored += path
+                continue
+            }
+            val param = MakerParam(chapter.asBook(), path, PMAB_NAME, defaultMakerSettings())
+            val task = object : Task<String>() {
+                override fun call() = makeBook(param)
+            }
+            task.setOnRunning {
+                fxApp.updateProgress(tr("jem.makeBook.hint", param.book.title, param.actualPath))
+            }
+            task.setOnSucceeded {
+                succeed += param.actualPath
+                if (counter.incrementAndGet() == chapters.size) {
+                    fxApp.hideProgress()
+                    showExportResult(succeed, ignored, failed)
+                }
+            }
+            task.setOnFailed {
+                failed += param.actualPath
+                Log.d("exportBook", task.exception) { "failed to make book: ${param.path}" }
+                if (counter.incrementAndGet() == chapters.size) {
+                    fxApp.hideProgress()
+                    showExportResult(succeed, ignored, failed)
+                }
+            }
+            Imabw.submit(task)
+        }
+        if (ignored.size == chapters.size) { // all ignored
+            fxApp.hideProgress()
+            showExportResult(succeed, ignored, failed)
+        }
+    }
+
+    private fun showExportResult(succeed: List<String>, ignored: List<String>, failed: List<String>) {
+        with(info(tr("d.exportBook.title"), "")) {
+            width = owner.width * 0.5
+            dialogPane.content = GridPane().apply {
+                hgap = 4.0
+                vgap = 4.0
+                styleClass += "dialog-content"
+                val legend = Label(tr("d.exportBook.result")).apply { styleClass += "form-legend" }
+                add(legend, 0, 0, 2, 1)
+                init(listOf(
+                        Label(tr("d.exportBook.succeed")),
+                        Label(tr("d.exportBook.ignored")),
+                        Label(tr("d.exportBook.failed"))
+                ), listOf(
+                        Label(succeed.joinToString("\n") or { tr("misc.empty") }),
+                        Label(ignored.joinToString("\n") or { tr("misc.empty") }),
+                        Label(failed.joinToString("\n") or { tr("misc.empty") })
+                ), 1)
+            }
+            showAndWait()
         }
     }
 
@@ -213,7 +307,7 @@ class Work(val book: Book, val inParam: ParserParam? = null) {
     fun cleanup() {
         Imabw.submit {
             book.cleanup()
-            outParam?.path?.takeIf { it.endsWith(SWAP_SUFFIX) }?.let {
+            outParam?.actualPath?.takeIf { it.endsWith(SWAP_SUFFIX) }?.let {
                 File(it.substring(0, it.length - 4)).apply {
                     if (delete()) {
                         if (!File(it).renameTo(this)) {

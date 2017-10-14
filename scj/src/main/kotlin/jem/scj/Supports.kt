@@ -21,12 +21,13 @@ package jem.scj
 import jclp.setting.delegate
 import jem.COVER
 import jem.TITLE
+import jem.epm.PMAB_NAME
 import mala.AppSettings
 
 object SCISettings : AppSettings() {
     var termWidth by delegate(80, "app.termWidth")
 
-    var outputFormat by delegate("pmab", "jem.out.format")
+    var outputFormat by delegate(PMAB_NAME, "jem.out.format")
 
     var separator by delegate("\n", "sci.view.separator")
 

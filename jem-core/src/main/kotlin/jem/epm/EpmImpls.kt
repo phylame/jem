@@ -19,25 +19,27 @@
 package jem.epm
 
 import jclp.Reusable
-import jclp.ReusableHelper
+import jclp.log.Log
 import jclp.releaseSelf
 import jclp.setting.Settings
 import jclp.setting.getInt
 import jclp.setting.getString
-import jclp.vdm.VDMManager
-import jclp.vdm.VDMReader
-import jclp.vdm.VDMWriter
-import jclp.vdm.detectReader
+import jclp.vdm.*
 import jem.Book
 import jem.M
 import java.io.Closeable
 import java.io.File
 import java.io.IOException
 
+const val PMAB_NAME = "pmab"
+const val PARSER_VDM_TYPE_KEY = "maker.vdm.type"
+
 const val MAKER_VDM_TYPE_KEY = "maker.vdm.type"
 const val MAKER_VDM_COMMENT_KEY = "maker.vdm.comment"
-const val MAKER_VDM_ZIPLEVEL_KEY = "maker.vdm.zipLevel"
-const val MAKER_VDM_ZIPMETHOD_KEY = "maker.vdm.zipMethod"
+const val MAKER_VDM_ZIP_LEVEL_KEY = "maker.vdm.zipLevel"
+const val MAKER_VDM_ZIP_METHOD_KEY = "maker.vdm.zipMethod"
+
+interface FileParser
 
 interface CommonParser<I : Closeable> : Parser {
     fun open(input: String, arguments: Settings?): I
@@ -45,6 +47,9 @@ interface CommonParser<I : Closeable> : Parser {
     fun parse(input: I, arguments: Settings?): Book
 
     override fun parse(input: String, arguments: Settings?) = open(input, arguments).let { source ->
+        if (source !is Reusable) {
+            Log.w("EpmImpl") { "open(input, arguments) not returned '${Reusable::class.java.name}'" }
+        }
         try {
             parse(source, arguments)
         } catch (e: Exception) {
@@ -65,30 +70,18 @@ interface CommonMaker<O : Closeable> : Maker {
     }
 }
 
-interface VDMParser : CommonParser<VDMReader> {
-    override fun open(input: String, arguments: Settings?): VDMReader = arguments?.getString("parser.vdm.type")?.let {
-        VDMManager.openReader(it, input)?.let(::VDMReaderWrapper)
-    } ?: detectReader(File(input)).let(::VDMReaderWrapper)
+interface VDMParser : CommonParser<VDMReader>, FileParser {
+    override fun open(input: String, arguments: Settings?): VDMReader = arguments?.getString(PARSER_VDM_TYPE_KEY)?.let {
+        VDMManager.openReader(it, input) ?: throw IOException(M.tr("err.vdm.unsupported", it))
+    } ?: detectReader(File(input))
 }
 
 interface VDMMaker : CommonMaker<VDMWriter> {
-    override fun open(output: String, arguments: Settings?) = (arguments?.getString(MAKER_VDM_TYPE_KEY) ?: "zip").let {
+    override fun open(output: String, arguments: Settings?) = (arguments?.getString(MAKER_VDM_TYPE_KEY) ?: VDM_ZIP).let {
         VDMManager.openWriter(it, output) ?: throw IOException(M.tr("err.vdm.unsupported", it))
     }.apply {
         arguments?.getString(MAKER_VDM_COMMENT_KEY)?.takeIf(String::isNotEmpty)?.let { setComment(it) }
-        arguments?.getInt(MAKER_VDM_ZIPLEVEL_KEY)?.let { setProperty("level", it) }
-        arguments?.getInt(MAKER_VDM_ZIPMETHOD_KEY)?.let { setProperty("method", it) }
+        arguments?.getInt(MAKER_VDM_ZIP_LEVEL_KEY)?.let { setProperty("level", it) }
+        arguments?.getInt(MAKER_VDM_ZIP_METHOD_KEY)?.let { setProperty("method", it) }
     }
-}
-
-private class VDMReaderWrapper(val reader: VDMReader) : VDMReader by reader, Reusable {
-    override fun retain() = helper.retain()
-
-    override fun release() = helper.release()
-
-    val helper = object : ReusableHelper() {
-        override fun dispose() = reader.close()
-    }
-
-    override fun toString() = reader.toString()
 }

@@ -20,6 +20,7 @@ package mala.ixin
 
 import javafx.application.Application
 import javafx.geometry.Pos
+import javafx.scene.Cursor
 import javafx.scene.Scene
 import javafx.scene.control.Label
 import javafx.scene.control.Menu
@@ -128,11 +129,12 @@ abstract class IApplication : Application() {
     private val progressLabel = Label().apply { styleClass += "app-progress-label" }
 
     fun showProgress() {
+        stage.scene.cursor = Cursor.WAIT
         appPane.statusBar!!.left = HBox(4.0).apply {
             alignment = Pos.CENTER
             BorderPane.setAlignment(this, Pos.CENTER)
             children += ProgressIndicator().also { it.styleClass += "app-progress-indicator" }
-            children += progressLabel
+            children += progressLabel.apply { text = "" }
         }
     }
 
@@ -142,5 +144,6 @@ abstract class IApplication : Application() {
 
     fun hideProgress() {
         appPane.statusBar!!.left = appPane.statusBar!!.statusLabel
+        stage.scene.cursor = Cursor.DEFAULT
     }
 }

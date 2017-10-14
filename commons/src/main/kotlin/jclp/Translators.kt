@@ -20,8 +20,7 @@ package jclp
 
 import jclp.io.defaultLoader
 import jclp.io.openResource
-import java.nio.file.Files
-import java.nio.file.Paths
+import java.io.File
 import java.text.MessageFormat
 import java.util.*
 import java.util.Locale
@@ -162,12 +161,9 @@ class TranslatorHelper(private val path: String, private val filter: ((String) -
 
     fun sync() {
         val separator = System.lineSeparator()
-        Files.newBufferedWriter(Paths.get(path)).use {
+        File(path).bufferedWriter().use {
             for ((key, value) in values) {
-                it.append(key)
-                        .append("=")
-                        .append(value)
-                        .append(separator)
+                it.append(key).append("=").append(value).append(separator)
             }
         }
     }

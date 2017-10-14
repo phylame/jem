@@ -57,20 +57,20 @@ object EditorPane : TabPane(), CommandHandler {
         Workbench.workProperty.addListener { _, work, _ ->
             work?.book?.let { book ->
                 // todo don't cache tabs
-                tabs.removeIf { it.chapter?.let { book.isAncestor(it) } == true }
+                tabs.removeIf { (it as? ChapterTab)?.chapter?.let { book === it || book.isAncestor(it) } == true }
             }
         }
         initActions()
     }
 
     fun openText(chapter: Chapter, icon: Node? = null) {
-        val tab = tabs.find { it.chapter === chapter } ?: ChapterTab(chapter).also { tabs += it }
+        val tab = tabs.find { (it as? ChapterTab)?.chapter === chapter } ?: ChapterTab(chapter).also { tabs += it }
         tab.graphic = icon
         selectionModel.select(tab)
     }
 
     fun closeText(chapter: Chapter) {
-        tabs.removeIf { it.chapter === chapter || chapter.isAncestor(it.chapter!!) }
+        tabs.removeIf { (it as? ChapterTab)?.let { it.chapter === chapter || chapter.isAncestor(it.chapter) } == true }
     }
 
     private fun initActions() {
@@ -129,7 +129,7 @@ object EditorPane : TabPane(), CommandHandler {
             "closeTab" -> tabs.remove(selectedTab)
             "closeAllTabs" -> tabs.clear()
             "closeOtherTabs" -> tabs.removeIf { it !== selectedTab }
-            "closeUnmodifiedTabs" -> tabs.removeIf { it.isModified != true }
+            "closeUnmodifiedTabs" -> tabs.removeIf { (it as? ChapterTab)?.isModified != true }
             "lock" -> selectedTab?.textArea?.let { it.isEditable = !it.isEditable }
             else -> return false
         }
@@ -139,13 +139,25 @@ object EditorPane : TabPane(), CommandHandler {
 
 class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
     val textArea = TextEditor()
-    var undoPosition = textArea.undoManager.currentPosition
-    var isModified = false
+    var initialUndoPosition = textArea.undoManager.currentPosition
+
+    var isModified
+        get() = initialUndoPosition !== textArea.undoManager.currentPosition
+        set(value) {
+            println(initialUndoPosition)
+            if (!value) {
+                initialUndoPosition = textArea.undoManager.currentPosition
+                println(initialUndoPosition)
+            }
+        }
 
     init {
         content = textArea
+
         val paths = chapter.toRoot().let { it.subList(1, it.size) }
-        tooltip = Tooltip(paths.joinToString(" > ") { it.title })
+        if (paths.isNotEmpty()) {
+            tooltip = Tooltip(paths.joinToString(" > ") { it.title })
+        }
 
         textArea.isWrapText = EditorSettings.wrapText
         textArea.setUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
@@ -163,12 +175,6 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
         }
     }
 }
-
-internal val Tab.chapter get() = (this as? ChapterTab)?.chapter
-
-internal val Tab.isModified get() = (this as? ChapterTab)?.isModified
-
-internal val Tab.editor get() = (this as? ChapterTab)?.content as? StyledTextArea<*>
 
 class TextEditor : StyleClassedTextArea(), Editable {
     override fun onEdit(command: String) {

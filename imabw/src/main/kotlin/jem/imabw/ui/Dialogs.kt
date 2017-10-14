@@ -19,25 +19,58 @@
 package jem.imabw.ui
 
 import javafx.scene.control.Alert
+import javafx.scene.control.ButtonType
+import javafx.scene.control.TextArea
 import javafx.scene.control.TextInputDialog
 import javafx.stage.DirectoryChooser
 import javafx.stage.FileChooser
 import javafx.stage.Modality
 import javafx.stage.Window
 import jclp.VariantMap
+import jclp.traceText
 import jem.Chapter
 import jem.epm.EpmManager
+import jem.epm.PMAB_NAME
 import jem.imabw.History
 import jem.imabw.Imabw
 import mala.App
+import mala.ixin.graphicFor
 import java.io.File
 
-fun confirm(title: String, content: String, owner: Window = Imabw.fxApp.stage): Alert {
-    return Alert(Alert.AlertType.CONFIRMATION, content).apply {
+fun alert(type: Alert.AlertType, title: String, content: String, owner: Window = Imabw.fxApp.stage): Alert {
+    return Alert(type, content).apply {
         this.title = title
         headerText = null
         initOwner(owner)
         initModality(Modality.WINDOW_MODAL)
+    }
+}
+
+fun info(title: String, content: String, owner: Window = Imabw.fxApp.stage): Alert {
+    return alert(Alert.AlertType.INFORMATION, title, content, owner)
+}
+
+fun error(title: String, content: String, owner: Window = Imabw.fxApp.stage) {
+    alert(Alert.AlertType.ERROR, content, title, owner).showAndWait()
+}
+
+fun confirm(title: String, content: String, owner: Window = Imabw.fxApp.stage): Alert {
+    return alert(Alert.AlertType.CONFIRMATION, title, content, owner)
+}
+
+fun traceback(title: String, content: String, throwable: Throwable, owner: Window = Imabw.fxApp.stage) {
+    with(alert(Alert.AlertType.NONE, title, content, owner)) {
+        dialogPane.expandableContent = TextArea().apply {
+            isEditable = false
+            isFocusTraversable = false
+            styleClass += "dialog-content"
+        }
+        dialogPane.buttonTypes += ButtonType.CLOSE
+        graphic = App.assets.graphicFor("dialog/bug")
+        dialogPane.expandedProperty().addListener { _ ->
+            (dialogPane.expandableContent as TextArea).let { if (it.text.isEmpty()) it.text = throwable.traceText }
+        }
+        showAndWait()
     }
 }
 
@@ -81,7 +114,7 @@ private fun setExtensionFilters(chooser: FileChooser, extensions: Collection<Col
     }
 }
 
-fun selectDirectory(title: String, owner: Window): File? {
+fun selectDirectory(title: String, owner: Window = Imabw.fxApp.stage): File? {
     directoryChooser.title = title
     return directoryChooser.showDialog(owner)
 }
@@ -94,22 +127,44 @@ private fun makerExtensions(): List<Set<String>> {
     return EpmManager.services.filter { it.hasMaker }.map { it.keys }
 }
 
+private fun makeSaveResult(file: File, chooser: FileChooser): Pair<File, String> {
+    var extension = file.extension
+    val extensions = chooser.selectedExtensionFilter.extensions
+    if (extensions.find { extension in it } == null) {
+        extension = extensions.first().substring(2) // trim '*.'
+    }
+    return file to extension
+}
+
 fun openBookFile(owner: Window = Imabw.fxApp.stage): File? {
     fileChooser.title = App.tr("d.openBook.title")
-    setExtensionFilters(fileChooser, parserExtensions(), "pmab")
+    setExtensionFilters(fileChooser, parserExtensions(), PMAB_NAME)
     return fileChooser.showOpenDialog(owner)?.also { fileChooser.initialDirectory = it.parentFile }
 }
 
-fun saveBookFile(name: String = "", owner: Window = Imabw.fxApp.stage): File? {
+fun saveBookFile(name: String, format: String, owner: Window = Imabw.fxApp.stage): Pair<File, String>? {
     fileChooser.initialFileName = name
     fileChooser.title = App.tr("d.saveBook.title")
-    setExtensionFilters(fileChooser, makerExtensions(), "pmab")
-    return fileChooser.showSaveDialog(owner)?.also { fileChooser.initialDirectory = it.parentFile }
+    fileChooser.extensionFilters.setAll(FileChooser.ExtensionFilter(getExtensionName(format), "*.$format"))
+    return fileChooser.showSaveDialog(owner)?.let {
+        fileChooser.initialDirectory = it.parentFile
+        makeSaveResult(it, fileChooser)
+    }
+}
+
+fun saveBookFile(name: String, owner: Window = Imabw.fxApp.stage): Pair<File, String>? {
+    fileChooser.initialFileName = name
+    fileChooser.title = App.tr("d.saveBook.title")
+    setExtensionFilters(fileChooser, makerExtensions(), PMAB_NAME)
+    return fileChooser.showSaveDialog(owner)?.let {
+        fileChooser.initialDirectory = it.parentFile
+        makeSaveResult(it, fileChooser)
+    }
 }
 
 fun openBookFiles(owner: Window = Imabw.fxApp.stage): List<File>? {
     fileChooser.title = App.tr("d.openBook.title")
-    setExtensionFilters(fileChooser, parserExtensions(), "pmab")
+    setExtensionFilters(fileChooser, parserExtensions(), PMAB_NAME)
     return fileChooser.showOpenMultipleDialog(owner)?.also { fileChooser.initialDirectory = it.first().parentFile }
 }
 

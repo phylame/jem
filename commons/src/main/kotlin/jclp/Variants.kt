@@ -197,6 +197,10 @@ abstract class ReusableHelper : Reusable {
     protected abstract fun dispose()
 }
 
+abstract class ReusableSource : ReusableHelper(), AutoCloseable {
+    override fun dispose() = close()
+}
+
 typealias VariantValidator = (String, Any) -> Unit
 
 class VariantMap(private val validator: VariantValidator? = null) : Iterable<Pair<String, Any>>, Cloneable {

@@ -20,7 +20,6 @@ import jem.imabw.Work
 import jem.imabw.Workbench
 import jem.imabw.editor.ChapterTab
 import jem.imabw.editor.EditorPane
-import jem.imabw.editor.editor
 import jem.imabw.toc.NavPane
 import jem.title
 import mala.App
@@ -204,7 +203,7 @@ object Indicator : HBox() {
 
     private fun initRuler() {
         EditorPane.selectionModel.selectedItemProperty().addListener { _, old, new ->
-            old?.editor?.let { text ->
+            (old as? ChapterTab)?.textArea?.let { text ->
                 @Suppress("UNCHECKED_CAST")
                 (text.properties[this] as? InvalidationListener)?.let { listener ->
                     text.caretPositionProperty().removeListener(listener)

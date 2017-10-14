@@ -50,9 +50,10 @@
     -fx-background-color: -fx-shadow-highlight-color, -fx-outer-border, -fx-inner-border, -fx-body-color;
 }
 
-.split-pane, .tree-view {
+.split-pane, .tree-view, .styled-text-area {
     -fx-padding: 0;
-    -fx-background-color: -fx-background;
+    -fx-background-color: -fx-control-inner-background;
+    -fx-text-fill: -fx-text-background-color;
 }
 
 #main-split-pane > .split-pane-divider {
@@ -63,7 +64,7 @@
 #nav-header {
     -fx-padding: 1px 4px;
     -fx-background-color: -fx-outer-border, -fx-inner-border;
-    -fx-background-insets: 0 0 0 0, 0 0 1 0;
+    -fx-background-insets: 0, 0 0 1 0;
 }
 
 #nav-label {
@@ -96,17 +97,20 @@
 .lineno {
     -fx-alignment: top-right;
     -fx-font-family: monospace;
+    -fx-background-color: -fx-text-box-border;
+    -fx-text-fill: -fx-text-background-color;
 }
 
 .styled-text-area {
     -fx-font-size: 1.2em;
     -fx-font-family: serif;
+    -fx-text-fill: red;
 }
 
 .app-status-bar {
-    -fx-padding: 2px 4px;
+    -fx-padding: 1px 4px;
     -fx-background-color: -fx-outer-border, -fx-inner-border;
-    -fx-background-insets: 0 0 0 0, 1 0 0 0;
+    -fx-background-insets: 0, 1 0 0 0;
 }
 
 .app-status-bar > .label {
@@ -127,4 +131,16 @@
     -fx-padding: 1px 0 1px 6px;
     -fx-background-color: transparent;
     -fx-focus-traversable: false;
+}
+
+.dialog-content {
+    -fx-padding: 0;
+    -fx-border-style: solid;
+    -fx-border-width: 0.666em;
+    -fx-border-color: -fx-background;
+    -fx-background-color: transparent;
+}
+
+.form-legend {
+    -fx-font-weight: bold;
 }

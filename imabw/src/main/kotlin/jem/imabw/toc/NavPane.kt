@@ -28,6 +28,7 @@ import mala.App
 import mala.App.tr
 import mala.ixin.*
 import java.util.concurrent.Callable
+import java.util.concurrent.atomic.AtomicInteger
 
 typealias ChapterNode = TreeItem<Chapter>
 
@@ -58,6 +59,7 @@ object NavPane : BorderPane(), CommandHandler {
             treeView.root = createNode(work.book)
             treeView.selectionModel.select(0)
             treeView.root.isExpanded = true
+            treeView.requestFocus()
         }
     }
 
@@ -117,7 +119,6 @@ object NavPane : BorderPane(), CommandHandler {
         }, EditorPane.selectionModel.selectedItemProperty()))
 
         sceneProperty().addListener { _, _, scene ->
-            // todo why scene is null?
             scene?.focusOwnerProperty()?.addListener { _, _, new ->
                 val actions = arrayOf("undo", "redo", "cut", "copy", "paste", "find", "findNext", "findPrevious")
                 if (new === treeView) {
@@ -166,39 +167,35 @@ object NavPane : BorderPane(), CommandHandler {
     fun importChapter() {
         val files = openBookFiles() ?: return
         val targets = selection.toList()
+        val counter = AtomicInteger()
+        val succeed = AtomicInteger()
         val fxApp = Imabw.fxApp
         fxApp.showProgress()
-        Log.t(TAG) { "show progress" }
-        val tasks = files.map {
-            val param = ParserParam(it.path)
+        for (file in files) {
+            val param = ParserParam(file.path)
             val task = object : Task<Book>() {
-                override fun call(): Book {
-                    Log.t(TAG) { "open book" }
-                    Thread.sleep(4000)
-                    return loadBook(param)
-                }
+                override fun call() = loadBook(param)
             }
             task.setOnRunning {
-                Log.t(TAG) { "on running" }
-            }
-            task.setOnScheduled {
-                Log.t(TAG) { "on scheduled" }
                 fxApp.updateProgress(tr("jem.loadBook.hint", param.path))
             }
             task.setOnSucceeded {
-                Log.t(TAG) { "on succeeded" }
+                succeed.incrementAndGet()
                 insertNodes(listOf(createNode(task.value)), targets, InsertMode.TO_PARENT)
+                if (counter.incrementAndGet() == files.size) {
+                    fxApp.hideProgress()
+                    Imabw.message(tr("d.importChapter.result", succeed))
+                }
             }
             task.setOnFailed {
-                Log.t(TAG) { "on failed" }
-                App.error("failed to load book: ${param.path}", task.exception)
+                Log.d("importChapter", task.exception) { "failed to load book: ${param.path}" }
+                if (counter.incrementAndGet() == files.size) {
+                    fxApp.hideProgress()
+                    Imabw.message(tr("d.importChapter.result", succeed))
+                }
             }
-            task
+            Imabw.submit(task)
         }
-        Log.t(TAG) { "wait for done" }
-        Imabw.submitAndWait(tasks)
-        Log.t(TAG) { "hide progress" }
-        fxApp.hideProgress()
     }
 
     fun createNode(chapter: Chapter) = chapter.toTreeItem()
@@ -338,21 +335,31 @@ private class ChapterCell : TreeCell<Chapter>() {
             chapter.isSection -> ImageView(CellFactory.sectionIcon)
             else -> ImageView(CellFactory.chapterIcon)
         }
+        tooltip = null
         chapter?.intro?.let {
-            with(LoadTextTask(it)) {
-                setOnSucceeded {
-                    value.takeIf { it.isNotEmpty() }?.let {
-                        tooltip = Tooltip(it).also {
-                            it.isWrapText = true
-                            it.styleClass += "intro-tooltip"
-                            it.maxWidthProperty().bind(widthProperty())
+            val intro = chapter.tag as? String
+            if (intro != null) {
+                tooltip = createTooltip(intro)
+            } else if (chapter.tag == null) {
+                chapter.tag = this
+                with(LoadTextTask(it)) {
+                    setOnSucceeded {
+                        value.takeIf { it.isNotEmpty() }?.let { text ->
+                            tooltip = createTooltip(text)
+                            chapter.tag = text
                         }
+                        hideProgress()
                     }
-                    hideProgress()
+                    Imabw.submit(this)
                 }
-                Imabw.submit(this)
             }
         }
+    }
+
+    private fun createTooltip(text: String) = Tooltip(text).also {
+        it.isWrapText = true
+        it.styleClass += "intro-tooltip"
+        it.maxWidthProperty().bind(widthProperty().multiply(1.2))
     }
 }
 

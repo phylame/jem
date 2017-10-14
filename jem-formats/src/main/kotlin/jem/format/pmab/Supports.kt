@@ -20,6 +20,7 @@ package jem.format.pmab
 
 import jem.epm.EpmFactory
 import jem.epm.Maker
+import jem.epm.PMAB_NAME
 import jem.epm.Parser
 
 internal object PMAB {
@@ -37,7 +38,7 @@ internal object PMAB {
 }
 
 class PmabFactory : EpmFactory {
-    override val keys = setOf("pmab")
+    override val keys = setOf(PMAB_NAME)
 
     override val name = "PMAB for Jem"
 

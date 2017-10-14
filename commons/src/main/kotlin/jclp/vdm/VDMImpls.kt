@@ -18,6 +18,7 @@
 
 package jclp.vdm
 
+import jclp.ReusableSource
 import jclp.io.createRecursively
 import jclp.synchronized
 import java.io.*
@@ -44,7 +45,7 @@ private class FileVDMEntry(
     var stream: OutputStream? = null
 }
 
-private class FileVDMReader(val dir: File) : VDMReader {
+private class FileVDMReader(val dir: File) : ReusableSource(), VDMReader {
     override val comment = null
 
     override val name: String = dir.path
@@ -137,7 +138,7 @@ private class FileVDMWriter(val dir: File) : VDMWriter {
 }
 
 class FileVDMFactory : VDMFactory {
-    override val keys = setOf("dir")
+    override val keys = setOf(VDM_DIRECTORY)
 
     override val name = "Factory for FileVDM"
 
@@ -176,7 +177,7 @@ private class ZipVDMEntry(val entry: ZipEntry, val reader: ZipVDMReader? = null,
     } ?: entry.toString()
 }
 
-private class ZipVDMReader(val zip: ZipFile) : VDMReader {
+private class ZipVDMReader(val zip: ZipFile) : ReusableSource(), VDMReader {
     override val name: String = zip.name
 
     override val comment: String? = zip.comment
@@ -230,7 +231,7 @@ private class ZipVDMWriter(val zip: ZipOutputStream) : VDMWriter {
 }
 
 class ZipVDMFactory : VDMFactory {
-    override val keys = setOf("zip")
+    override val keys = setOf(VDM_ZIP)
 
     override val name = "Factory for ZipVDM"
 
@@ -243,10 +244,10 @@ class ZipVDMFactory : VDMFactory {
     })
 
     override fun getWriter(output: Any): VDMWriter = ZipVDMWriter(when (output) {
-        is String -> ZipOutputStream(FileOutputStream(output))
-        is File -> ZipOutputStream(output.outputStream())
         is ZipOutputStream -> output
         is OutputStream -> ZipOutputStream(output)
+        is String -> ZipOutputStream(FileOutputStream(output))
+        is File -> ZipOutputStream(output.outputStream())
         is Path -> ZipOutputStream(output.toFile().outputStream())
         else -> throw IllegalArgumentException(output.toString())
     })
@@ -254,4 +255,7 @@ class ZipVDMFactory : VDMFactory {
     override fun toString() = name
 }
 
-fun detectReader(file: File) = if (file.isDirectory) FileVDMReader(file) else ZipVDMReader(ZipFile(file))
+const val VDM_ZIP = "zip"
+const val VDM_DIRECTORY = "dir"
+
+fun detectReader(file: File): VDMReader = if (file.isDirectory) FileVDMReader(file) else ZipVDMReader(ZipFile(file))

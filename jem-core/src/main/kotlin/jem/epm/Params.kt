@@ -32,6 +32,9 @@ data class ParserParam(val path: String, val format: String = "", val arguments:
 }
 
 data class MakerParam(val book: Book, val path: String, val format: String = "", val arguments: Settings? = null) {
+    var actualPath: String = path
+        internal set
+
     val epmName get() = format.takeIf(String::isNotEmpty) ?: extName(File(path).canonicalPath)
 
     override fun toString(): String {

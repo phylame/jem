@@ -41,7 +41,7 @@ abstract class AbstractFlob(private val type: String) : Flob {
     override fun toString() = "$name;mime=$mime"
 }
 
-internal class URLFlob(private val url: URL, mime: String) : AbstractFlob(mime) {
+private class URLFlob(private val url: URL, mime: String) : AbstractFlob(mime) {
     override val name: String = url.path
 
     override fun openStream(): InputStream = url.openStream()
@@ -55,7 +55,7 @@ fun flobOf(uri: String, loader: ClassLoader? = null, mime: String = ""): Flob {
     return flobOf(getResource(uri, loader) ?: throw IllegalArgumentException("No such resource: '$uri'"), mime)
 }
 
-internal class PathFlob(private val path: Path, mime: String) : AbstractFlob(mime) {
+private class PathFlob(private val path: Path, mime: String) : AbstractFlob(mime) {
     init {
         require(Files.isRegularFile(path)) { "$path is not file" }
     }
@@ -69,7 +69,7 @@ internal class PathFlob(private val path: Path, mime: String) : AbstractFlob(mim
 
 fun flobOf(path: Path, mime: String = ""): Flob = PathFlob(path, mime)
 
-internal class ByteFlob(override val name: String, private val data: ByteArray, mime: String) : AbstractFlob(mime) {
+private class ByteFlob(override val name: String, private val data: ByteArray, mime: String) : AbstractFlob(mime) {
     override fun openStream() = ByteArrayInputStream(data)
 
     override fun writeTo(output: OutputStream) = data.let {
@@ -84,7 +84,7 @@ fun flobOf(name: String, data: ByteArray, mime: String): Flob = ByteFlob(name, d
 
 fun emptyFlob(mime: String = "") = flobOf("_empty_", ByteArray(0), mime)
 
-internal class BlockFlob(
+private class BlockFlob(
         override val name: String,
         val file: RandomAccessFile,
         private val offset: Long,
@@ -121,7 +121,7 @@ fun flobOf(name: String, file: RandomAccessFile, offset: Long, length: Long, mim
     return BlockFlob(name, file, offset, length, mime)
 }
 
-internal class VDMFlob(val reader: VDMReader, override val name: String, mime: String) : AbstractFlob(mime), Reusable {
+private class VDMFlob(val reader: VDMReader, override val name: String, mime: String) : AbstractFlob(mime), Reusable {
     init {
         reader.retainSelf()
     }

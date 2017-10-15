@@ -4,12 +4,12 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/crawler-addons/crawler-addons.iml" filepath="$PROJECT_DIR$/crawler-addons/crawler-addons.iml" />
       <module fileurl="file://$PROJECT_DIR$/imabw/imabw.iml" filepath="$PROJECT_DIR$/imabw/imabw.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/jem.iml" filepath="$PROJECT_DIR$/.idea/modules/jem.iml" />
       <module fileurl="file://$PROJECT_DIR$/jem-core/jem-core.iml" filepath="$PROJECT_DIR$/jem-core/jem-core.iml" />
       <module fileurl="file://$PROJECT_DIR$/jem-crawler/jem-crawler.iml" filepath="$PROJECT_DIR$/jem-crawler/jem-crawler.iml" />
       <module fileurl="file://$PROJECT_DIR$/jem-epm/jem-epm.iml" filepath="$PROJECT_DIR$/jem-epm/jem-epm.iml" />
       <module fileurl="file://$PROJECT_DIR$/jem-formats/jem-formats.iml" filepath="$PROJECT_DIR$/jem-formats/jem-formats.iml" />
       <module fileurl="file://$PROJECT_DIR$/jem-kotlin/jem-kotlin.iml" filepath="$PROJECT_DIR$/jem-kotlin/jem-kotlin.iml" />
-      <module fileurl="file://$PROJECT_DIR$/jem-project.iml" filepath="$PROJECT_DIR$/jem-project.iml" />
       <module fileurl="file://$PROJECT_DIR$/scj/scj.iml" filepath="$PROJECT_DIR$/scj/scj.iml" />
       <module fileurl="file://$PROJECT_DIR$/scj-addons/scj-addons.iml" filepath="$PROJECT_DIR$/scj-addons/scj-addons.iml" />
     </modules>

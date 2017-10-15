@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Peng Wan <phylame@163.com>
+ * Copyright 2015-2017 Peng Wan <phylame@163.com>
  *
  * This file is part of Jem.
  *
@@ -18,10 +18,7 @@
 
 package jem.imabw.ui
 
-import javafx.scene.control.Alert
-import javafx.scene.control.ButtonType
-import javafx.scene.control.TextArea
-import javafx.scene.control.TextInputDialog
+import javafx.scene.control.*
 import javafx.stage.DirectoryChooser
 import javafx.stage.FileChooser
 import javafx.stage.Modality
@@ -37,13 +34,15 @@ import mala.App
 import mala.ixin.graphicFor
 import java.io.File
 
+private fun Dialog<*>.init(title: String, owner: Window) {
+    headerText = null
+    this.title = title
+    initModality(Modality.WINDOW_MODAL)
+    initOwner(owner)
+}
+
 fun alert(type: Alert.AlertType, title: String, content: String, owner: Window = Imabw.fxApp.stage): Alert {
-    return Alert(type, content).apply {
-        this.title = title
-        headerText = null
-        initOwner(owner)
-        initModality(Modality.WINDOW_MODAL)
-    }
+    return Alert(type, content).apply { init(title, owner) }
 }
 
 fun info(title: String, content: String, owner: Window = Imabw.fxApp.stage): Alert {
@@ -51,7 +50,7 @@ fun info(title: String, content: String, owner: Window = Imabw.fxApp.stage): Ale
 }
 
 fun error(title: String, content: String, owner: Window = Imabw.fxApp.stage) {
-    alert(Alert.AlertType.ERROR, content, title, owner).showAndWait()
+    alert(Alert.AlertType.ERROR, title, content, owner).showAndWait()
 }
 
 fun confirm(title: String, content: String, owner: Window = Imabw.fxApp.stage): Alert {
@@ -77,11 +76,8 @@ fun traceback(title: String, content: String, throwable: Throwable, owner: Windo
 fun inputText(title: String, content: String, text: String, owner: Window = Imabw.fxApp.stage): String? {
     return TextInputDialog(text).run {
         graphic = null
-        headerText = null
-        this.title = title
+        init(title, owner)
         this.contentText = content
-        initOwner(owner)
-        initModality(Modality.WINDOW_MODAL)
         showAndWait().let { if (it.isPresent) it.get() else null }
     }
 }

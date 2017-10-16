@@ -20,6 +20,7 @@ package jem.imabw.editor
 
 import javafx.application.Platform
 import javafx.beans.binding.Bindings
+import javafx.collections.ListChangeListener
 import javafx.scene.Node
 import javafx.scene.control.ContextMenu
 import javafx.scene.control.Tab
@@ -72,6 +73,13 @@ object EditorPane : TabPane(), CommandHandler {
                 Platform.runLater { it.content.requestFocus() }
             }
         }
+        tabs.addListener(ListChangeListener {
+            while (it.next()) {
+                for (tab in it.removed) {
+                    (tab as? ChapterTab)?.cacheIfNeed()
+                }
+            }
+        })
         Workbench.workProperty.addListener { _, work, _ ->
             work?.book?.let { book ->
                 // todo don't cache tabs
@@ -169,6 +177,9 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
             }
         }
 
+    // ignore modified text when close tab
+    var isIgnored = false
+
     init {
         content = textArea
 
@@ -182,6 +193,9 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
         textArea.paragraphGraphicFactory = LineNumberFactory.get(textArea) { "%${it}d" }
         chapter.text?.let {
             with(LoadTextTask(it)) {
+                setOnRunning {
+                    updateProgress(App.tr("jem.loadText.hint", chapter.title))
+                }
                 setOnSucceeded {
                     textArea.replaceText(value)
                     textArea.undoManager.forgetHistory()
@@ -190,6 +204,16 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
                 }
                 Imabw.submit(this)
             }
+        }
+    }
+
+    fun cache() {
+        println("cache the text for ${chapter.title}")
+    }
+
+    fun cacheIfNeed() {
+        if (isModified && !isIgnored) {
+            cache()
         }
     }
 }

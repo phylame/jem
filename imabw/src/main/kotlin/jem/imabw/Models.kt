@@ -54,6 +54,8 @@ enum class BookEvent {
     CREATED, OPENED, SAVED
 }
 
+class WorkEvent(source: Chapter)
+
 object Workbench : CommandHandler {
     private const val TAG = "Workbench"
 

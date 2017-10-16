@@ -62,3 +62,15 @@ object EventBus {
         }
     }
 }
+
+class Recyclable<T : Recyclable<T>> {
+    companion object {
+        fun <T : Recyclable<T>> obtain(head: T) {
+
+        }
+    }
+
+    fun recycle() {
+
+    }
+}

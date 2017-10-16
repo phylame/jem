@@ -20,7 +20,6 @@ package jem.imabw.ui
 
 import javafx.beans.InvalidationListener
 import javafx.beans.binding.Bindings
-import javafx.beans.binding.StringBinding
 import javafx.geometry.Pos
 import javafx.scene.Scene
 import javafx.scene.control.Label
@@ -29,12 +28,13 @@ import javafx.scene.control.Tooltip
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
+import jclp.EventBus
 import jclp.log.Log
 import jclp.text.TEXT_PLAIN
 import jem.author
+import jem.imabw.BookEvent
 import jem.imabw.Imabw
 import jem.imabw.UISettings
-import jem.imabw.Work
 import jem.imabw.Workbench
 import jem.imabw.editor.ChapterTab
 import jem.imabw.editor.EditorPane
@@ -69,23 +69,9 @@ class Dashboard : IApplication(), CommandHandler {
             SplitPane.setResizableWithParent(NavPane, false)
             appPane.center = it
         }
-
-        Workbench.workProperty.addListener { _, old, new ->
-            stage.titleProperty().bind(object : StringBinding() {
-                init {
-                    super.bind(new.pathProperty, new.modifiedProperty, new.titleProperty, new.authorProperty)
-                }
-
-                override fun dispose() {
-                    super.unbind(old.pathProperty, old.modifiedProperty, new.titleProperty, new.authorProperty)
-                }
-
-                override fun computeValue() = buildTitle(Workbench.work)
-            })
-        }
-
         initActions()
         restoreState(UISettings)
+        EventBus.register<BookEvent> { refreshTitle() }
         statusText = App.tr("status.ready")
     }
 
@@ -115,21 +101,29 @@ class Dashboard : IApplication(), CommandHandler {
         }
     }
 
-    private fun buildTitle(work: Work) = StringBuilder().run {
+    private fun refreshTitle() {
+        println("refresh title")
+        val work = Workbench.work!!
         val book = work.book
-        if (work.isModified) {
-            append("*")
+        with(StringBuilder()) {
+            if (work.isModified) {
+                append("*")
+            }
+            append(book.title)
+            append(" - ")
+            book.author.takeIf { it.isNotEmpty() }?.let {
+                append("[")
+                append(it)
+                append("] - ")
+            }
+            work.path?.let {
+                append(it)
+                append(" - ")
+            }
+            append("PW Imabw ")
+            append(Imabw.version)
+            stage.title = toString()
         }
-        append(book.title).append(" - ")
-        book.author.takeIf { it.isNotEmpty() }?.let {
-            append("[").append(it).append("] - ")
-        }
-        work.path?.let {
-            append(it).append(" - ")
-        }
-        append("PW Imabw ")
-        append(Imabw.version)
-        toString()
     }
 
     override fun handle(command: String, source: Any): Boolean {

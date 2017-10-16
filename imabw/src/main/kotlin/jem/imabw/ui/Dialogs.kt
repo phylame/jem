@@ -73,7 +73,7 @@ fun traceback(title: String, content: String, throwable: Throwable, owner: Windo
     }
 }
 
-fun inputText(title: String, content: String, text: String, owner: Window = Imabw.fxApp.stage): String? {
+fun input(title: String, content: String, text: String, owner: Window = Imabw.fxApp.stage): String? {
     return TextInputDialog(text).run {
         graphic = null
         init(title, owner)

@@ -32,6 +32,10 @@ val Throwable.traceText: String
 
 typealias EventAction<T> = (T) -> Unit
 
+interface Consumable {
+    val isConsumed: Boolean
+}
+
 object EventBus {
     private val observers = IdentityHashMap<Class<*>, MutableList<EventAction<*>>>()
 
@@ -51,6 +55,10 @@ object EventBus {
         }
     }
 
+    inline fun <reified T : Any> unregistere(noinline action: EventAction<T>) {
+        unregistere(T::class.java, action)
+    }
+
     fun post(event: Any) {
         post(event, event.javaClass)
     }
@@ -58,19 +66,11 @@ object EventBus {
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> post(event: T, type: Class<T>) {
         synchronized(this) {
-            observers[type.canonicalType]?.forEach { (it as EventAction<T>)(event) }
+            for (observer in observers[type.canonicalType] ?: return) {
+                if ((event as? Consumable)?.isConsumed != true) {
+                    (observer as EventAction<T>)(event)
+                }
+            }
         }
-    }
-}
-
-class Recyclable<T : Recyclable<T>> {
-    companion object {
-        fun <T : Recyclable<T>> obtain(head: T) {
-
-        }
-    }
-
-    fun recycle() {
-
     }
 }

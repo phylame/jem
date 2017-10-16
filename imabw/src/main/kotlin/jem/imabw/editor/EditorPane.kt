@@ -26,13 +26,12 @@ import javafx.scene.control.ContextMenu
 import javafx.scene.control.Tab
 import javafx.scene.control.TabPane
 import javafx.scene.control.Tooltip
+import jclp.EventBus
 import jclp.isAncestor
 import jclp.toRoot
+import jem.Book
 import jem.Chapter
-import jem.imabw.EditorSettings
-import jem.imabw.Imabw
-import jem.imabw.LoadTextTask
-import jem.imabw.Workbench
+import jem.imabw.*
 import jem.imabw.ui.Editable
 import jem.title
 import mala.App
@@ -80,8 +79,9 @@ object EditorPane : TabPane(), CommandHandler {
                 }
             }
         })
-        Workbench.workProperty.addListener { _, work, _ ->
-            work?.book?.let { book ->
+        EventBus.register<ChapterEvent> {
+            if (it.what == BOOK_CLOSED) {
+                val book = it.source as Book
                 // todo don't cache tabs
                 tabs.removeIf { (it as? ChapterTab)?.chapter?.let { book === it || book.isAncestor(it) } == true }
             }

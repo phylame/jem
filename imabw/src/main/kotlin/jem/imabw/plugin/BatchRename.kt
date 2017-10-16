@@ -41,12 +41,12 @@ class BatchRename : IPlugin, Describable {
         val menu = IxIn.menuMap["menuTools"] ?: return
         menu.items += SeparatorMenuItem()
         menu.items += MenuItem(name).also {
-            it.disableProperty().bind(Bindings.isEmpty(NavPane.selection))
+            it.disableProperty().bind(Bindings.isEmpty(NavPane.selectedItems))
             it.setOnAction { doRename() }
         }
     }
 
     fun doRename() {
-        println(NavPane.selection)
+        println(NavPane.selectedItems)
     }
 }

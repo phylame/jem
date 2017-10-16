@@ -18,183 +18,151 @@
 
 package jem.imabw
 
-import javafx.beans.binding.Bindings
-import javafx.beans.property.SimpleBooleanProperty
-import javafx.beans.property.SimpleIntegerProperty
-import javafx.beans.property.SimpleObjectProperty
-import javafx.beans.property.SimpleStringProperty
-import javafx.collections.FXCollections
-import javafx.collections.ListChangeListener
 import javafx.concurrent.Task
 import javafx.scene.control.ButtonType
 import javafx.scene.control.Label
-import javafx.scene.control.MenuItem
-import javafx.scene.control.SeparatorMenuItem
 import javafx.scene.layout.GridPane
+import jclp.EventAction
 import jclp.EventBus
-import jclp.io.createRecursively
 import jclp.log.Log
 import jclp.text.or
-import jem.*
+import jclp.text.remove
+import jem.Book
+import jem.Chapter
+import jem.asBook
 import jem.epm.*
 import jem.imabw.ui.*
+import jem.title
 import mala.App
 import mala.App.tr
-import mala.ixin.Command
 import mala.ixin.CommandHandler
 import mala.ixin.IxIn
 import mala.ixin.init
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
 private const val SWAP_SUFFIX = ".swp"
 
-enum class BookEvent {
-    CREATED, OPENED, SAVED
-}
+const val TITLE_MODIFIED = 1
+const val AUTHOR_MODIFIED = 2
+const val ATTRIBUTE_MODIFIED = 3
+const val EXTENSIONS_MODIFIED = 4
+const val CONTENTS_MODIFIED = 5
+const val TEXT_MODIFIED = 6
 
-class WorkEvent(source: Chapter)
+data class ChapterEvent(val what: Int, val source: Chapter)
+
+const val BOOK_OPENED = 1
+const val BOOK_CREATED = 2
+const val BOOK_MODIFIED = 3
+const val BOOK_CLOSED = 4
+const val BOOK_SAVED = 5
+
+data class BookEvent(val what: Int, val source: Book)
 
 object Workbench : CommandHandler {
-    private const val TAG = "Workbench"
-
-    val workProperty = SimpleObjectProperty<Work>()
-
-    var work: Work
-        get() = workProperty.value
-        set(value) {
-            val old = workProperty.value
-            workProperty.value = value.also { new ->
-                new.path?.let { History.remove(it) }
-            }
-            old?.apply {
-                path?.let { History.insert(it) }
-                cleanup()
-            }
-            initActions()
-        }
+    var work: Work? = null
+        private set
 
     init {
         Imabw.register(this)
     }
 
+    fun activateWork(work: Work) {
+        val last = this.work
+        require(work !== last) { "work is already activated" }
+        this.work = work.apply {
+            path?.let { History.remove(it) }
+        }
+        last?.apply {
+            EventBus.post(BookEvent(BOOK_CLOSED, book))
+            path?.let { History.insert(it) }
+            cleanup()
+        }
+        IxIn.actionMap.apply {
+            this["saveFile"]?.isDisable = work.path != null
+            this["fileDetails"]?.isDisable = work.path == null
+        }
+    }
+
     fun ensureSaved(title: String, block: () -> Unit) {
-        if (work.isModified) {
-            with(confirm(title, tr("d.askSave.hint", work.book.title))) {
-                buttonTypes.setAll(ButtonType.CANCEL, ButtonType.YES, ButtonType.NO)
-                when (showAndWait().get()) {
-                    ButtonType.YES -> if (!saveFile()) return
-                    ButtonType.CANCEL -> return
-                }
+        val work = work!!
+        if (!work.isModified) {
+            block()
+        } else with(confirm(title, tr("d.askSave.hint", work.book.title))) {
+            buttonTypes.setAll(ButtonType.CANCEL, ButtonType.YES, ButtonType.NO)
+            when (showAndWait().get()) {
+                ButtonType.YES -> saveFile { block() }
+                ButtonType.NO -> block()
             }
         }
-        block()
     }
 
     fun newBook(title: String) {
-        work = Work(Book(title))
-        EventBus.post(BookEvent.CREATED)
+        activateWork(Work(Book(title)))
+        EventBus.post(BookEvent(BOOK_CREATED, work!!.book))
         Imabw.message(tr("d.newBook.success", title))
     }
 
     fun openBook(param: ParserParam) {
-        if (work.path == param.path) {
-            Log.t(TAG) { "'${param.path}' is already opened" }
-            return
+        work?.path?.let {
+            require(File(it) != File(param.path)) { "'${param.path} is already opened'" }
         }
         val parser = EpmManager[param.epmName]?.parser
-        if (parser != null) {
-            if (parser is FileParser && !File(param.path).exists()) {
-                error(tr("d.openBook.title"), tr("err.file.notFound", param.path))
-                History.remove(param.path)
-                return
-            }
-        } else {
+        if (parser == null) {
             error(tr("d.openBook.title"), tr("err.jem.unsupported", param.epmName))
+            return
+        } else if (parser is FileParser && !File(param.path).exists()) {
+            error(tr("d.openBook.title"), tr("err.file.notFound", param.path))
+            History.remove(param.path)
             return
         }
         with(LoadBookTask(param)) {
             setOnSucceeded {
-                work = Work(value, param)
-                Imabw.message(App.tr("jem.openBook.success", param.path))
-                EventBus.post(BookEvent.OPENED)
+                activateWork(Work(value, param))
+                EventBus.post(BookEvent(BOOK_OPENED, work!!.book))
+                Imabw.message(tr("jem.openBook.success", param.path))
                 hideProgress()
             }
             Imabw.submit(this)
         }
     }
 
-    fun saveBook(param: MakerParam) {
-        if (EpmManager[param.epmName]?.hasMaker != true) {
-            error(tr("d.saveBook.title"), tr("err.jem.unsupported", param.epmName))
-            return
-        }
-        work.inParam?.path?.let { path ->
-            if (File(path) == File(param.actualPath)) {
+    fun saveBook(param: MakerParam, done: (() -> Unit)? = null) {
+        val work = work!!
+        require(param.book === work.book) { "book to save is not current book" }
+        work.inParam?.path?.let {
+            if (File(it) == File(param.actualPath)) {
                 error(tr("d.saveBook.title"), tr("err.file.opened", param.actualPath))
                 return
             }
         }
+        if (EpmManager[param.epmName]?.hasMaker != true) {
+            error(tr("d.saveBook.title"), tr("err.jem.unsupported", param.epmName))
+            return
+        }
         with(MakeBookTask(param)) {
             setOnRunning {
-                updateProgress(App.tr("jem.makeBook.hint", param.book.title, param.actualPath.replace(SWAP_SUFFIX, "")))
+                updateProgress(tr("jem.makeBook.hint", param.book.title, param.actualPath.remove(SWAP_SUFFIX)))
             }
             setOnSucceeded {
                 work.outParam = param
-                work.isModified = false
-                work.path = value.replace(SWAP_SUFFIX, "")
+                EventBus.post(BookEvent(BOOK_SAVED, work.book))
                 Imabw.message(tr("jem.saveBook.success", param.book.title, work.path))
-                EventBus.post(BookEvent.SAVED)
                 hideProgress()
+                done?.invoke()
             }
             Imabw.submit(this)
         }
     }
 
-    internal fun start() {
-        // TODO: parse the app arguments
-        newBook(tr("book.untitled"))
-    }
-
-    internal fun dispose() {
-        work.cleanup()
-        work.path?.let { History.insert(it) }
-        History.sync()
-    }
-
-    private fun initActions() {
-        val work = work
-        val actionMap = IxIn.actionMap
-        actionMap["clearHistory"]?.disableProperty?.bind(Bindings.isEmpty(History.paths))
-        actionMap["saveFile"]?.disableProperty?.bind(work.modifiedProperty.not().and(work.pathProperty.isNotNull))
-        actionMap["fileDetails"]?.disableProperty?.bind(work.pathProperty.isNull)
-    }
-
-    @Command
-    fun saveFile(): Boolean {
-        if (!work.isModified && work.path != null) {
-            Log.d(TAG) { "book is not modified" }
-            return false
-        }
-        var param = work.outParam
-        if (param == null) {
-            val inParam = work.inParam
-            val output = if (inParam?.epmName != PMAB_NAME) {
-                saveBookFile(work.book.title, PMAB_NAME)?.first?.path ?: return false
-            } else { // save pmab to temp file
-                inParam.path + SWAP_SUFFIX
-            }
-            param = MakerParam(work.book, output, PMAB_NAME, defaultMakerSettings())
-        }
-        saveBook(param)
-        return true
-    }
-
-    fun exportFile(chapter: Chapter) {
+    fun exportBook(chapter: Chapter) {
         val (file, format) = saveBookFile(chapter.title) ?: return
-        work.path?.let { path ->
-            if (File(path) == file) {
+        work?.path?.let {
+            if (File(it) == file) {
                 error(tr("d.saveBook.title"), tr("err.file.opened", file))
                 return
             }
@@ -204,23 +172,22 @@ object Workbench : CommandHandler {
         }
     }
 
-    fun exportFiles(chapters: Collection<Chapter>) {
+    fun exportBooks(chapters: Collection<Chapter>) {
         if (chapters.isEmpty()) return
         if (chapters.size == 1) {
-            exportFile(chapters.first())
+            exportBook(chapters.first())
             return
         }
         val dir = selectDirectory(tr("d.exportBook.title")) ?: return
+        val fxApp = Imabw.fxApp.apply { showProgress() }
         val ignored = ArrayList<String>(4)
         val succeed = Vector<String>(chapters.size)
         val failed = Vector<String>(0)
-        val file = work.path?.let(::File)
+        val opened = work!!.path?.let(::File)
         val counter = AtomicInteger()
-        val fxApp = Imabw.fxApp
-        fxApp.showProgress()
         for (chapter in chapters) {
             val path = "${dir.path}/${chapter.title}.$PMAB_NAME"
-            if (file != null && file == File(path)) {
+            if (opened != null && opened == File(path)) {
                 counter.incrementAndGet()
                 ignored += path
                 continue
@@ -255,6 +222,37 @@ object Workbench : CommandHandler {
         }
     }
 
+    internal fun start() {
+        println("TODO: parse app arguments: ${App.arguments}")
+        newBook(tr("jem.book.untitled"))
+    }
+
+    internal fun dispose() {
+        work?.apply {
+            cleanup()
+            path?.let { History.insert(it) }
+        }
+        History.sync()
+    }
+
+    private fun saveFile(done: (() -> Unit)? = null) {
+        val work = work!!
+        check(work.isModified || work.path == null) { "book is not modified" }
+        var outParam = work.outParam
+        if (outParam == null) {
+            val inParam = work.inParam
+            val output = if (inParam?.epmName != PMAB_NAME) {
+                saveBookFile(work.book.title, PMAB_NAME)?.first?.path ?: return
+            } else { // save pmab to temp file
+                (inParam.path + SWAP_SUFFIX).also {
+                    Files.setAttribute(Paths.get(it), "dos:hidden", true)
+                }
+            }
+            outParam = MakerParam(work.book, output, PMAB_NAME, defaultMakerSettings())
+        }
+        saveBook(outParam, done)
+    }
+
     private fun showExportResult(succeed: List<String>, ignored: List<String>, failed: List<String>) {
         with(info(tr("d.exportBook.title"), "")) {
             width = owner.width * 0.5
@@ -280,18 +278,17 @@ object Workbench : CommandHandler {
 
     override fun handle(command: String, source: Any): Boolean {
         when (command) {
-            "exit" -> ensureSaved(tr("d.exit.title")) {
-                App.exit()
-            }
+            "exit" -> ensureSaved(tr("d.exit.title")) { App.exit() }
             "newFile" -> ensureSaved(tr("d.newBook.title")) {
-                inputText(tr("d.newBook.title"), tr("d.newBook.tip"), tr("book.untitled"))?.let {
+                input(tr("d.newBook.title"), tr("d.newBook.label"), tr("jem.book.untitled"))?.let {
                     newBook(it)
                 }
             }
             "openFile" -> ensureSaved(tr("d.openBook.title")) {
                 openBookFile()?.let { openBook(ParserParam(it.path)) }
             }
-            "saveAsFile" -> exportFile(work.book)
+            "saveFile" -> saveFile()
+            "saveAsFile" -> exportBook(work!!.book)
             "clearHistory" -> History.clear()
             else -> return false
         }
@@ -299,145 +296,105 @@ object Workbench : CommandHandler {
     }
 }
 
-class Work(val book: Book, val inParam: ParserParam? = null) {
-    private val TAG = "Work"
-
-    val modifiedProperty = SimpleBooleanProperty()
-
-    val titleProperty = SimpleStringProperty(book.title)
-
-    val authorProperty = SimpleStringProperty(book.author)
-
-    val pathProperty = SimpleStringProperty(inParam?.path)
-
-    var isModified: Boolean
-        get() = modifiedProperty.value
-        set(value) {
-            modifiedProperty.value = value
+class Work(val book: Book, val inParam: ParserParam? = null) : EventAction<ChapterEvent> {
+    var isModified = false
+        internal set(value) {
+            field = value
+            if (!value) {
+                modifications.values.forEach { it.reset() }
+                IxIn.actionMap["saveFile"]?.isDisable = true
+            } else {
+                IxIn.actionMap["saveFile"]?.isDisable = false
+            }
         }
 
-    var path: String?
-        get() = pathProperty.value
-        set(value) {
-            pathProperty.value = value
-        }
+    var path = inParam?.path
+        private set
 
     var outParam: MakerParam? = null
-
-    fun cleanup() {
-        Imabw.submit {
-            book.cleanup()
-            outParam?.actualPath?.takeIf { it.endsWith(SWAP_SUFFIX) }?.let {
-                File(it.substring(0, it.length - 4)).apply {
-                    if (delete()) {
-                        if (!File(it).renameTo(this)) {
-                            Log.e(TAG) { "cannot rename '$it' to '$this'" }
-                        }
-                    } else {
-                        Log.e(TAG) { "cannot delete temp file '$this'" }
-                    }
-                }
-            }
+        set(value) {
+            path = value?.actualPath?.remove(SWAP_SUFFIX)
+            field = value
         }
-    }
-}
 
-private class Modification {
-    val attributes = SimpleIntegerProperty()
-    val extensions = SimpleIntegerProperty()
-    val contents = SimpleIntegerProperty()
-    val text = SimpleIntegerProperty()
-
-    val modified = attributes.greaterThan(0)
-            .or(extensions.greaterThan(0))
-            .or(contents.greaterThan(0))
-            .or(text.greaterThan(0))
-}
-
-object History {
-    private val file = File(App.home, "config/history.txt")
-
-    internal val paths = FXCollections.observableArrayList<String>()
-
-    val latest get() = paths.firstOrNull()
-
-    private var isModified = false
+    private val modifications = IdentityHashMap<Chapter, Modification>()
 
     init {
-        paths.addListener(ListChangeListener {
-            val items = IxIn.menuMap["menuHistory"]!!.items
-            val isEmpty = items.size == 1
-            while (it.next()) {
-                if (it.wasRemoved()) {
-                    for (path in it.removed) {
-                        items.removeIf { it.text == path }
-                    }
-                    if (items.size == 2) { // remove separator
-                        items.remove(0, 1)
-                    }
-                }
-                if (it.wasAdded()) {
-                    val paths = items.map { it.text }
-                    it.addedSubList.filter { it !in paths }.asReversed().mapIndexed { i, path ->
-                        if (i == 0 && isEmpty) { // insert separator
-                            items.add(0, SeparatorMenuItem())
-                        }
-                        items.add(0, MenuItem(path).apply {
-                            setOnAction { Workbench.openBook(ParserParam(text)) }
-                        })
-                    }
-                }
-            }
-        })
-        load()
+        EventBus.register(this)
     }
 
-    fun remove(path: String) {
-        if (GeneralSettings.enableHistory) {
-            paths.remove(path)
-            isModified = true
+    internal fun cleanup() {
+        EventBus.unregistere(this)
+        Imabw.submit {
+            book.cleanup()
+            adjustOutput()
         }
     }
 
-    fun insert(path: String) {
-        if (GeneralSettings.enableHistory) {
-            paths.remove(path)
-            if (paths.size == GeneralSettings.historyLimit) {
-                paths.remove(paths.size - 1, paths.size)
-            }
-            paths.add(0, path)
-            isModified = true
-        }
-    }
-
-    fun clear() {
-        if (GeneralSettings.enableHistory) {
-            paths.clear()
-            isModified = true
-        }
-    }
-
-    fun load() {
-        if (GeneralSettings.enableHistory) {
-            if (file.exists()) {
-                with(ReadLineTask(file)) {
-                    setOnSucceeded {
-                        paths += value
-                        hideProgress()
-                    }
-                    Imabw.submit(this)
+    // rename *.pmab.swp to *.pmab
+    private fun adjustOutput() {
+        outParam?.actualPath?.takeIf { it.endsWith(SWAP_SUFFIX) }?.let { tmp ->
+            Paths.get(tmp.substring(0, tmp.length - SWAP_SUFFIX.length)).apply {
+                try {
+                    Files.delete(this)
+                } catch (e: Exception) {
+                    Log.e("Work", e) { "cannot delete temp file '$this'" }
+                    return
                 }
+                try {
+                    Files.move(Paths.get(tmp), this)
+                } catch (e: Exception) {
+                    Log.e("Work", e) { "cannot rename '$tmp' to '$this'" }
+                    return
+                }
+                Files.setAttribute(this, "dos:hidden", false)
             }
         }
     }
 
-    fun sync() {
-        if (GeneralSettings.enableHistory && isModified) {
-            if (file.exists() || file.parentFile.createRecursively()) {
-                file.bufferedWriter().use { out ->
-                    paths.forEach { out.append(it).append("\n") }
-                }
+    override fun invoke(e: ChapterEvent) {
+        val m = modifications.getOrPut(e.source) { Modification() }
+        when (e.what) {
+            TITLE_MODIFIED -> m.attributes++
+            AUTHOR_MODIFIED -> m.attributes++
+            ATTRIBUTE_MODIFIED -> m.attributes++
+            EXTENSIONS_MODIFIED -> m.extensions++
+            CONTENTS_MODIFIED -> m.contents++
+            TEXT_MODIFIED -> m.text++
+            else -> return
+        }
+        isModified = true
+    }
+
+    private class Modification {
+        var text = 0
+            set(value) {
+                if (value != 0) println("text modified")
+                field = value
             }
+        var contents = 0
+            set(value) {
+                if (value != 0) println("contents modified")
+                field = value
+            }
+        var attributes = 0
+            set(value) {
+                if (value != 0) println("attributes modified")
+                field = value
+            }
+        var extensions = 0
+            set(value) {
+                if (value != 0) println("extensions modified")
+                field = value
+            }
+
+        val isModified get() = attributes > 0 || extensions > 0 || contents > 0 || text > 0
+
+        fun reset() {
+            text = 0
+            contents = 0
+            attributes = 0
+            extensions = 0
         }
     }
 }

@@ -116,7 +116,9 @@ internal object PmabMaker : VDMMaker {
         with(data.render) {
             beginTag(tag)
             for ((name, value) in map) {
-                writeItem(name, value, prefix, data)
+                if (!name.startsWith("!--")) {
+                    writeItem(name, value, prefix, data)
+                }
             }
             endTag()
         }

@@ -61,11 +61,11 @@ object EditorPane : TabPane(), CommandHandler {
         Imabw.register(this)
         App.registerCleanup { dispose() }
 
-        val appDesigner = Imabw.dashboard.appDesigner
-        appDesigner.items["tabContext"]?.let {
+        val designer = Imabw.dashboard.appDesigner
+        designer.items["tabContext"]?.let {
             tabMenu.init(it, Imabw, App, App.assets, IxIn.actionMap, null)
         }
-        appDesigner.items["textContext"]?.let {
+        designer.items["textContext"]?.let {
             textMenu.init(it, Imabw, App, App.assets, IxIn.actionMap, null)
         }
         selectionModel.selectedItemProperty().addListener { _, old, new ->
@@ -85,7 +85,9 @@ object EditorPane : TabPane(), CommandHandler {
             }
         })
         EventBus.register<WorkflowEvent> {
-            if (it.what == WorkflowType.BOOK_CLOSED) {
+            if (it.what == WorkflowType.BOOK_SAVED) {
+                chapterTabs.forEach { it.resetModified() }
+            } else if (it.what == WorkflowType.BOOK_CLOSED) {
                 removeTab(it.source)
             }
         }
@@ -95,8 +97,8 @@ object EditorPane : TabPane(), CommandHandler {
     fun openTab(chapter: Chapter, icon: Node?) {
         require(Workbench.work!!.book.isAncestor(chapter)) { "not child of current book" }
         val tab = tabs.find { (it as? ChapterTab)?.chapter === chapter } ?: ChapterTab(chapter).also { tabs += it }
-        tab.graphic = icon
         selectionModel.select(tab)
+        tab.graphic = icon
     }
 
     fun removeTab(chapter: Chapter) {
@@ -191,6 +193,8 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
 
     val textEditor = TextEditor()
 
+    private var isReady = false
+
     var isDisposed = false
         private set
 
@@ -202,11 +206,19 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
             tooltip = Tooltip(paths.joinToString(" > ") { it.title })
         }
 
+        textEditor.plainTextChanges().addObserver {
+            if (isReady && isModified) {
+                EventBus.post(ModificationEvent(chapter, ModificationType.TEXT_MODIFIED))
+            }
+        }
         textEditor.isWrapText = EditorSettings.wrapText
         textEditor.paragraphGraphicFactory = LineNumberFactory.get(textEditor) { "%${it}d" }
-        textEditor.undoManager.mark()
-        chapter.text?.let {
-            with(LoadTextTask(it)) {
+        val text = chapter.text
+        if (text == null) {
+            textEditor.undoManager.mark()
+            isReady = true
+        } else {
+            with(LoadTextTask(text)) {
                 setOnRunning {
                     updateProgress(App.tr("jem.loadText.hint", chapter.title))
                 }
@@ -215,10 +227,15 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
                     textEditor.undoManager.forgetHistory()
                     textEditor.undoManager.mark()
                     hideProgress()
+                    isReady = true
                 }
                 Imabw.submit(this)
             }
         }
+    }
+
+    internal fun resetModified() {
+        textEditor.undoManager.mark()
     }
 
     private var cacheFile: File? = null

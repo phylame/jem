@@ -112,9 +112,7 @@ object NavPane : BorderPane(), CommandHandler {
 
     private fun initActions() {
         val selection = selectedItems
-        val hasBook = Bindings.createBooleanBinding(Callable {
-            selection.any { it?.isRoot == true }
-        }, selection)
+        val hasBook = Bindings.createBooleanBinding(Callable { selection.any { it?.isRoot == true } }, selection)
         val empty = Bindings.isEmpty(selection)
         val multiple = Bindings.size(selection).greaterThan(1)
         val emptyOrBook = empty.or(hasBook)
@@ -160,7 +158,7 @@ object NavPane : BorderPane(), CommandHandler {
     val selectedItems: ObservableList<ChapterNode> get() = tree.selectionModel.selectedItems
 
     fun createChapter(): Chapter? {
-        return input(tr("d.newChapter.title"), tr("d.newChapter.tip"), tr("chapter.untitled"))?.let {
+        return input(tr("d.newChapter.title"), tr("d.newChapter.tip"), tr("jem.chapter.untitled"))?.let {
             Chapter(it)
         }
     }

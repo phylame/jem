@@ -91,6 +91,7 @@
 }
 
 .intro-tooltip {
+    -fx-indent: 2em;
     -fx-font-size: 1em;
 }
 

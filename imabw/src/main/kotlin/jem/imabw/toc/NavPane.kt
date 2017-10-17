@@ -18,6 +18,7 @@
 
 package jem.imabw.toc
 
+import javafx.application.Platform
 import javafx.beans.binding.Bindings
 import javafx.collections.ObservableList
 import javafx.concurrent.Task
@@ -67,8 +68,8 @@ object NavPane : BorderPane(), CommandHandler {
         initTree()
         initActions()
 
-        EventBus.register<BookEvent> {
-            if (it.what == BOOK_CREATED || it.what == BOOK_OPENED) {
+        EventBus.register<WorkflowEvent> {
+            if (it.what == WorkflowType.BOOK_CREATED || it.what == WorkflowType.BOOK_OPENED) {
                 tree.root = it.source.toTreeItem()
                 tree.selectionModel.select(0)
                 tree.root.isExpanded = true
@@ -88,7 +89,7 @@ object NavPane : BorderPane(), CommandHandler {
         tree.addEventHandler(MouseEvent.MOUSE_PRESSED) { event ->
             if (event.clickCount == 2 && event.isPrimaryButtonDown) {
                 tree.selectionModel.selectedItem?.takeIf { it.isLeaf && it.isNotRoot }?.let {
-                    EditorPane.openText(it.value, CellFactory.getIcon(it))
+                    EditorPane.openTab(it.value, CellFactory.getIcon(it))
                     event.consume()
                 }
             }
@@ -101,7 +102,7 @@ object NavPane : BorderPane(), CommandHandler {
                         it.isExpanded = !it.isExpanded
                         event.consume()
                     } else if (it.isNotRoot) {
-                        EditorPane.openText(it.value, CellFactory.getIcon(it))
+                        EditorPane.openTab(it.value, CellFactory.getIcon(it))
                         event.consume()
                     }
                 }
@@ -125,7 +126,7 @@ object NavPane : BorderPane(), CommandHandler {
         actionMap["insertChapter"]?.disableProperty?.bind(emptyOrBook)
         actionMap["exportChapter"]?.disableProperty?.bind(emptyOrBook)
         actionMap["renameChapter"]?.disableProperty?.bind(emptyOrMultiple)
-        actionMap["editText"]?.disableProperty?.bind(empty)
+        actionMap["editText"]?.disableProperty?.bind(emptyOrBook)
         actionMap["moveChapter"]?.disableProperty?.bind(emptyOrBook)
         actionMap["mergeChapter"]?.disableProperty?.bind(emptyOrBook.or(multiple.not()))
         actionMap["viewAttributes"]?.disableProperty?.bind(emptyOrMultiple)
@@ -180,7 +181,7 @@ object NavPane : BorderPane(), CommandHandler {
         input(tr("d.renameChapter.title"), tr("d.renameChapter.tip"), chapter.title)?.let {
             chapter.title = it
             treeItem.refresh()
-            EventBus.post(ChapterEvent(TITLE_MODIFIED, chapter))
+            EventBus.post(ModificationEvent(chapter, ModificationType.ATTRIBUTE_MODIFIED))
         }
     }
 
@@ -243,11 +244,12 @@ object NavPane : BorderPane(), CommandHandler {
         if (index < 0) {
             target.children += sources.onEach { parent += it.value }
         } else {
-            target.children.addAll(index, sources.onEach { parent += it.value })
+            target.children.addAll(index, sources)
+            sources.reversed().forEach { parent.insert(index, it.value) }
         }
         sources.forEach { model.select(it) }
-        tree.scrollTo(model.selectedIndices.last())
-        EventBus.post(ChapterEvent(CONTENTS_MODIFIED, target.value))
+        Platform.runLater { tree.scrollTo(model.selectedIndices.last()) }
+        EventBus.post(ModificationEvent(target.value, ModificationType.CONTENTS_MODIFIED))
     }
 
     fun removeNodes(nodes: Collection<ChapterNode>) {
@@ -256,10 +258,9 @@ object NavPane : BorderPane(), CommandHandler {
             val parentNode = node.parent
             val parentChapter = parentNode.value
             parentNode.children.remove(node.apply { parentChapter.remove(chapter) })
-            // todo don's cache text
-            EditorPane.closeText(chapter)
+            EditorPane.removeTab(chapter)
             Imabw.submit { chapter.cleanup() }
-            EventBus.post(ChapterEvent(CONTENTS_MODIFIED, parentChapter))
+            EventBus.post(ModificationEvent(parentChapter, ModificationType.CONTENTS_MODIFIED))
         }
     }
 
@@ -284,7 +285,7 @@ object NavPane : BorderPane(), CommandHandler {
         when (command) {
             "delete" -> removeNodes(selectedItems)
             "selectAll" -> tree.selectionModel.selectAll()
-            "editText" -> selectedItems.forEach { EditorPane.openText(it.value, CellFactory.getIcon(it)) }
+            "editText" -> selectedItems.forEach { EditorPane.openTab(it.value, CellFactory.getIcon(it)) }
             "newChapter" -> createChapter()?.let {
                 insertNodes(listOf(it.toTreeItem()), currentItems, InsertMode.TO_PARENT)
             }

@@ -27,9 +27,13 @@ import javafx.scene.control.Tab
 import javafx.scene.control.TabPane
 import javafx.scene.control.Tooltip
 import jclp.EventBus
+import jclp.flob.flobOf
+import jclp.io.writeLines
 import jclp.isAncestor
+import jclp.isSelfOrAncestor
+import jclp.log.Log
+import jclp.text.textOf
 import jclp.toRoot
-import jem.Book
 import jem.Chapter
 import jem.imabw.*
 import jem.imabw.ui.Editable
@@ -42,7 +46,7 @@ import org.fxmisc.richtext.ClipboardActions
 import org.fxmisc.richtext.LineNumberFactory
 import org.fxmisc.richtext.StyleClassedTextArea
 import org.fxmisc.richtext.StyledTextArea
-import org.fxmisc.undo.UndoManagerFactory
+import java.io.File
 
 object EditorPane : TabPane(), CommandHandler {
     private val tabMenu = ContextMenu()
@@ -50,9 +54,12 @@ object EditorPane : TabPane(), CommandHandler {
 
     val selectedTab get() = selectionModel.selectedItem as? ChapterTab
 
+    val chapterTabs get() = tabs.asSequence().filterIsInstance<ChapterTab>()
+
     init {
         id = "editor-pane"
         Imabw.register(this)
+        App.registerCleanup { dispose() }
 
         val appDesigner = Imabw.dashboard.appDesigner
         appDesigner.items["tabContext"]?.let {
@@ -64,39 +71,53 @@ object EditorPane : TabPane(), CommandHandler {
         selectionModel.selectedItemProperty().addListener { _, old, new ->
             (old as? ChapterTab)?.let {
                 it.contextMenu = null
-                it.textArea.contextMenu = null
+                it.textEditor.contextMenu = null
             }
             (new as? ChapterTab)?.let {
                 it.contextMenu = tabMenu
-                it.textArea.contextMenu = textMenu
+                it.textEditor.contextMenu = textMenu
                 Platform.runLater { it.content.requestFocus() }
             }
         }
         tabs.addListener(ListChangeListener {
             while (it.next()) {
-                for (tab in it.removed) {
-                    (tab as? ChapterTab)?.cacheIfNeed()
-                }
+                it.removed.forEach { (it as? ChapterTab)?.cacheIfNeed() }
             }
         })
-        EventBus.register<ChapterEvent> {
-            if (it.what == BOOK_CLOSED) {
-                val book = it.source as Book
-                // todo don't cache tabs
-                tabs.removeIf { (it as? ChapterTab)?.chapter?.let { book === it || book.isAncestor(it) } == true }
+        EventBus.register<WorkflowEvent> {
+            if (it.what == WorkflowType.BOOK_CLOSED) {
+                removeTab(it.source)
             }
         }
         initActions()
     }
 
-    fun openText(chapter: Chapter, icon: Node? = null) {
+    fun openTab(chapter: Chapter, icon: Node?) {
+        require(Workbench.work!!.book.isAncestor(chapter)) { "not child of current book" }
         val tab = tabs.find { (it as? ChapterTab)?.chapter === chapter } ?: ChapterTab(chapter).also { tabs += it }
         tab.graphic = icon
         selectionModel.select(tab)
     }
 
-    fun closeText(chapter: Chapter) {
-        tabs.removeIf { (it as? ChapterTab)?.let { it.chapter === chapter || chapter.isAncestor(it.chapter) } == true }
+    fun removeTab(chapter: Chapter) {
+        tabs.iterator().apply {
+            while (hasNext()) {
+                (next() as? ChapterTab)?.let {
+                    if (chapter.isSelfOrAncestor(it.chapter)) {
+                        it.dispose()
+                        remove()
+                    }
+                }
+            }
+        }
+    }
+
+    fun cacheTexts() {
+        chapterTabs.filter { it.isModified }.forEach { it.cache() }
+    }
+
+    internal fun dispose() {
+        chapterTabs.forEach { it.dispose() }
     }
 
     private fun initActions() {
@@ -156,7 +177,7 @@ object EditorPane : TabPane(), CommandHandler {
             "closeAllTabs" -> tabs.clear()
             "closeOtherTabs" -> tabs.removeIf { it !== selectedTab }
             "closeUnmodifiedTabs" -> tabs.removeIf { (it as? ChapterTab)?.isModified != true }
-            "lock" -> selectedTab?.textArea?.let { it.isEditable = !it.isEditable }
+            "lock" -> selectedTab?.textEditor?.let { it.isEditable = !it.isEditable }
             else -> return false
         }
         return true
@@ -164,42 +185,35 @@ object EditorPane : TabPane(), CommandHandler {
 }
 
 class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
-    val textArea = TextEditor()
-    var initialUndoPosition = textArea.undoManager.currentPosition
+    private val tagId = javaClass.simpleName
 
-    var isModified
-        get() = initialUndoPosition !== textArea.undoManager.currentPosition
-        set(value) {
-            println(initialUndoPosition)
-            if (!value) {
-                initialUndoPosition = textArea.undoManager.currentPosition
-                println(initialUndoPosition)
-            }
-        }
+    val isModified get() = !textEditor.undoManager.isAtMarkedPosition
 
-    // ignore modified text when close tab
-    var isIgnored = false
+    val textEditor = TextEditor()
+
+    var isDisposed = false
+        private set
 
     init {
-        content = textArea
+        content = textEditor
 
         val paths = chapter.toRoot().let { it.subList(1, it.size) }
         if (paths.isNotEmpty()) {
             tooltip = Tooltip(paths.joinToString(" > ") { it.title })
         }
 
-        textArea.isWrapText = EditorSettings.wrapText
-        textArea.setUndoManager(UndoManagerFactory.unlimitedHistoryFactory())
-        textArea.paragraphGraphicFactory = LineNumberFactory.get(textArea) { "%${it}d" }
+        textEditor.isWrapText = EditorSettings.wrapText
+        textEditor.paragraphGraphicFactory = LineNumberFactory.get(textEditor) { "%${it}d" }
+        textEditor.undoManager.mark()
         chapter.text?.let {
             with(LoadTextTask(it)) {
                 setOnRunning {
                     updateProgress(App.tr("jem.loadText.hint", chapter.title))
                 }
                 setOnSucceeded {
-                    textArea.replaceText(value)
-                    textArea.undoManager.forgetHistory()
-                    textArea.moveTo(0)
+                    textEditor.replaceText(value)
+                    textEditor.undoManager.forgetHistory()
+                    textEditor.undoManager.mark()
                     hideProgress()
                 }
                 Imabw.submit(this)
@@ -207,13 +221,38 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
         }
     }
 
+    private var cacheFile: File? = null
+
     fun cache() {
-        println("cache the text for ${chapter.title}")
+        Log.t(tagId) { "cache text for '${chapter.title}'" }
+        if (textEditor.document.length <= 1024) {
+            chapter.text = textOf(textEditor.document)
+            return
+        }
+        File.createTempFile("imabw-text-", ".txt").let {
+            try {
+                it.bufferedWriter().use { it.writeLines(textEditor.document.paragraphs) }
+                chapter.text = textOf(flobOf(it.toPath(), "text/plain"), "UTF-8")
+            } catch (e: Exception) {
+                Log.e(tagId, e) { "cannot cache text to '$it'" }
+                if (it.delete()) {
+                    Log.e(tagId) { "cannot delete cache file: $it" }
+                }
+            }
+            cacheFile = it
+        }
     }
 
     fun cacheIfNeed() {
-        if (isModified && !isIgnored) {
-            cache()
+        if (isModified && !isDisposed) {
+            Imabw.submit { cache() }
+        }
+    }
+
+    fun dispose() {
+        isDisposed = true
+        if (cacheFile?.delete() == false) {
+            Log.e(tagId) { "cannot delete cache file: $cacheFile" }
         }
     }
 }

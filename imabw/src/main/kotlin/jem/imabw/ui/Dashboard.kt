@@ -32,10 +32,10 @@ import jclp.EventBus
 import jclp.log.Log
 import jclp.text.TEXT_PLAIN
 import jem.author
-import jem.imabw.BookEvent
 import jem.imabw.Imabw
 import jem.imabw.UISettings
 import jem.imabw.Workbench
+import jem.imabw.WorkflowEvent
 import jem.imabw.editor.ChapterTab
 import jem.imabw.editor.EditorPane
 import jem.imabw.toc.NavPane
@@ -71,7 +71,7 @@ class Dashboard : IApplication(), CommandHandler {
         }
         initActions()
         restoreState(UISettings)
-        EventBus.register<BookEvent> { refreshTitle() }
+        EventBus.register<WorkflowEvent> { refreshTitle() }
         statusText = App.tr("status.ready")
     }
 
@@ -88,6 +88,7 @@ class Dashboard : IApplication(), CommandHandler {
 
     internal fun dispose() {
         saveState(UISettings)
+        EditorPane.dispose()
         stage.close()
     }
 
@@ -102,7 +103,6 @@ class Dashboard : IApplication(), CommandHandler {
     }
 
     private fun refreshTitle() {
-        println("refresh title")
         val work = Workbench.work!!
         val book = work.book
         with(StringBuilder()) {
@@ -215,7 +215,7 @@ object Indicator : HBox() {
 
     private fun initRuler() {
         EditorPane.selectionModel.selectedItemProperty().addListener { _, old, new ->
-            (old as? ChapterTab)?.textArea?.let { text ->
+            (old as? ChapterTab)?.textEditor?.let { text ->
                 @Suppress("UNCHECKED_CAST")
                 (text.properties[this] as? InvalidationListener)?.let { listener ->
                     text.caretPositionProperty().removeListener(listener)
@@ -223,7 +223,7 @@ object Indicator : HBox() {
                 }
             }
             if (new is ChapterTab) {
-                new.textArea.also { text ->
+                new.textEditor.also { text ->
                     InvalidationListener {
                         updateCaret(text.currentParagraph + 1, text.caretColumn + 1, text.selection.length)
                     }.let { listener ->

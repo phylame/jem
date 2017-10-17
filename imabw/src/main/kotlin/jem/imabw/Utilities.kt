@@ -22,6 +22,7 @@ import javafx.concurrent.Task
 import mala.App
 import java.io.File
 import java.nio.charset.Charset
+import java.util.*
 
 abstract class ProgressTask<V> : Task<V>() {
     init {
@@ -54,4 +55,12 @@ class ReadLineTask(val file: File, val charset: Charset = Charsets.UTF_8) : Prog
     }
 
     override fun call() = file.readLines(charset)
+}
+
+object FileCache {
+    private val files = LinkedList<File>()
+
+    fun dispose(){
+
+    }
 }

@@ -43,6 +43,8 @@ fun <T : Hierarchical<T>> T.isAncestor(item: T): Boolean {
     return false
 }
 
+fun <T : Hierarchical<T>> T.isSelfOrAncestor(item: T) = item === this || isAncestor(item)
+
 fun <T : Hierarchical<T>> T.getPath(top: T?): List<T> {
     val list = LinkedList<T>()
     var parent: T? = this

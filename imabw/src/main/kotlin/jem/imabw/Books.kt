@@ -65,7 +65,7 @@ class LoadBookTask(val param: ParserParam) : ProgressTask<Book>() {
     override fun call() = loadBook(param)
 }
 
-class MakeBookTask(val param: MakerParam) : ProgressTask<String>() {
+open class MakeBookTask(val param: MakerParam) : ProgressTask<String>() {
     init {
         setOnRunning {
             updateProgress(tr("jem.makeBook.hint", param.book.title, param.actualPath))

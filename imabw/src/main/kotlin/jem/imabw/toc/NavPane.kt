@@ -25,8 +25,6 @@ import javafx.concurrent.Task
 import javafx.geometry.Pos
 import javafx.scene.control.*
 import javafx.scene.image.ImageView
-import javafx.scene.input.KeyCode
-import javafx.scene.input.KeyEvent
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.BorderPane
 import javafx.util.Callback
@@ -94,20 +92,6 @@ object NavPane : BorderPane(), CommandHandler {
                 }
             }
         }
-        tree.addEventHandler(KeyEvent.KEY_PRESSED) { event ->
-            // only ENTER pressed
-            if (!event.isShortcutDown && !event.isShiftDown && !event.isAltDown && event.code == KeyCode.ENTER) {
-                selectedItems.forEach {
-                    if (!it.isLeaf) {
-                        it.isExpanded = !it.isExpanded
-                        event.consume()
-                    } else if (it.isNotRoot) {
-                        EditorPane.openTab(it.value, CellFactory.getIcon(it))
-                        event.consume()
-                    }
-                }
-            }
-        }
     }
 
     private fun initActions() {
@@ -131,6 +115,12 @@ object NavPane : BorderPane(), CommandHandler {
         actionMap["gotoChapter"]?.disableProperty?.bind(Bindings.createBooleanBinding(Callable {
             EditorPane.selectedTab == null
         }, EditorPane.selectionModel.selectedItemProperty()))
+
+        tree.focusedProperty().addListener { _, _, focused->
+            println(tree.isVisible)
+            println(tree.isMouseTransparent)
+            println("tree focused: $focused")
+        }
 
         sceneProperty().addListener { _, _, scene ->
             scene?.focusOwnerProperty()?.addListener { _, _, new ->

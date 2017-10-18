@@ -24,7 +24,7 @@ import java.io.File
 import java.nio.charset.Charset
 import java.util.*
 
-abstract class ProgressTask<V> : Task<V>() {
+abstract class ProgressTask<V>(val isBlock: Boolean = false) : Task<V>() {
     init {
         messageProperty().addListener { _, _, text -> updateProgress(text) }
         setOnScheduled { showProgress() }
@@ -35,6 +35,9 @@ abstract class ProgressTask<V> : Task<V>() {
 
     open fun showProgress() {
         Imabw.fxApp.showProgress()
+        if (isBlock) {
+            Imabw.fxApp.stage.scene.root.isDisable = true
+        }
     }
 
     open fun updateProgress(text: String) {
@@ -43,6 +46,9 @@ abstract class ProgressTask<V> : Task<V>() {
 
     open fun hideProgress() {
         Imabw.fxApp.hideProgress()
+        if (isBlock) {
+            Imabw.fxApp.stage.scene.root.isDisable = false
+        }
     }
 }
 
@@ -60,7 +66,7 @@ class ReadLineTask(val file: File, val charset: Charset = Charsets.UTF_8) : Prog
 object FileCache {
     private val files = LinkedList<File>()
 
-    fun dispose(){
+    fun dispose() {
 
     }
 }

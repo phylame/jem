@@ -20,12 +20,10 @@ package jem.imabw.editor
 
 import javafx.application.Platform
 import javafx.beans.binding.Bindings
+import javafx.beans.value.ChangeListener
 import javafx.collections.ListChangeListener
 import javafx.scene.Node
-import javafx.scene.control.ContextMenu
-import javafx.scene.control.Tab
-import javafx.scene.control.TabPane
-import javafx.scene.control.Tooltip
+import javafx.scene.control.*
 import jclp.EventBus
 import jclp.flob.flobOf
 import jclp.io.writeLines
@@ -42,11 +40,11 @@ import mala.App
 import mala.ixin.CommandHandler
 import mala.ixin.IxIn
 import mala.ixin.init
-import org.fxmisc.richtext.ClipboardActions
 import org.fxmisc.richtext.LineNumberFactory
 import org.fxmisc.richtext.StyleClassedTextArea
-import org.fxmisc.richtext.StyledTextArea
+import org.fxmisc.richtext.model.NavigationActions
 import java.io.File
+
 
 object EditorPane : TabPane(), CommandHandler {
     private val tabMenu = ContextMenu()
@@ -138,8 +136,8 @@ object EditorPane : TabPane(), CommandHandler {
 
         sceneProperty().addListener { _, _, scene ->
             scene?.focusOwnerProperty()?.addListener { _, _, new ->
-                val actions = arrayOf("replace", "joinLine", "duplicateText", "toggleCase")
-                if (new is StyledTextArea<*>) {
+                val actions = arrayOf("replace")
+                if (new is TextEditor) {
                     val notEditable = new.editableProperty().not()
                     for (action in actions) {
                         actionMap[action]?.disableProperty?.bind(notEditable)
@@ -206,11 +204,15 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
             tooltip = Tooltip(paths.joinToString(" > ") { it.title })
         }
 
-        textEditor.plainTextChanges().addObserver {
-            if (isReady && isModified) {
-                EventBus.post(ModificationEvent(chapter, ModificationType.TEXT_MODIFIED))
-            }
+//        textEditor.plainTextChanges().addObserver {
+//            if (isReady && isModified) {
+//                EventBus.post(ModificationEvent(chapter, ModificationType.TEXT_MODIFIED))
+//            }
+//        }
+        textEditor.undoManager.atMarkedPositionProperty().addListener { observable, oldValue, newValue ->
+            println("$oldValue,$newValue")
         }
+
         textEditor.isWrapText = EditorSettings.wrapText
         textEditor.paragraphGraphicFactory = LineNumberFactory.get(textEditor) { "%${it}d" }
         val text = chapter.text
@@ -242,13 +244,13 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
 
     fun cache() {
         Log.t(tagId) { "cache text for '${chapter.title}'" }
-        if (textEditor.document.length <= 1024) {
-            chapter.text = textOf(textEditor.document)
+        if (textEditor.document.length() <= 1024) {
+            chapter.text = textOf(textEditor.text)
             return
         }
         File.createTempFile("imabw-text-", ".txt").let {
             try {
-                it.bufferedWriter().use { it.writeLines(textEditor.document.paragraphs) }
+                it.bufferedWriter().use { it.writeLines(textEditor.paragraphs) }
                 chapter.text = textOf(flobOf(it.toPath(), "text/plain"), "UTF-8")
             } catch (e: Exception) {
                 Log.e(tagId, e) { "cannot cache text to '$it'" }
@@ -274,32 +276,38 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
     }
 }
 
-class TextEditor : StyleClassedTextArea(), Editable {
+class TextEditor : StyleClassedTextArea(false), Editable {
+    override fun cut() {
+        selectLineIfEmpty()
+        super.cut()
+    }
+
+    override fun copy() {
+        val oldSelection = selectLineIfEmpty()
+        super.copy()
+        if (oldSelection != null)
+            selectRange(oldSelection.start, oldSelection.end)
+    }
+
+    private fun selectLineIfEmpty(): IndexRange? {
+        var oldSelection: IndexRange? = null
+        if (selectedText.isEmpty()) {
+            oldSelection = selection
+            selectLine()
+            nextChar(NavigationActions.SelectionPolicy.ADJUST)
+        }
+        return oldSelection
+    }
+
     override fun onEdit(command: String) {
         when (command) {
             "undo" -> undo()
             "redo" -> redo()
-            "cut" -> cutParagraph()
-            "copy" -> copyParagraph()
+            "cut" -> cut()
+            "copy" -> copy()
             "paste" -> paste()
             "delete" -> replaceSelection("")
             "selectAll" -> selectAll()
         }
-    }
-}
-
-fun ClipboardActions<*>.cutParagraph() {
-    if (selection.length > 0) {
-        cut()
-    } else {
-        println("cut paragraph")
-    }
-}
-
-fun ClipboardActions<*>.copyParagraph() {
-    if (selection.length > 0) {
-        copy()
-    } else {
-        println("copy paragraph")
     }
 }

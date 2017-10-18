@@ -114,7 +114,7 @@ fun Reader.copyRange(output: Writer, size: Long = -1, bufferSize: Int = DEFAULT_
     return total
 }
 
-fun Writer.writeLines(lines: Collection<CharSequence>, separator: String = System.lineSeparator()) {
+fun Writer.writeLines(lines: Collection<*>, separator: String = System.lineSeparator()) {
     val end = lines.size - 1
     lines.forEachIndexed { i, line ->
         write(line.toString())

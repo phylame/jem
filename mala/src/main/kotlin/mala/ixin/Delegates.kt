@@ -25,6 +25,8 @@ import javafx.scene.Scene
 import javafx.scene.control.Label
 import javafx.scene.control.Menu
 import javafx.scene.control.ProgressIndicator
+import javafx.scene.input.KeyCode
+import javafx.scene.input.KeyEvent
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
 import javafx.stage.Screen
@@ -32,6 +34,7 @@ import javafx.stage.Stage
 import mala.App
 import mala.AppDelegate
 import mala.Plugin
+
 
 interface IPlugin : Plugin {
     fun ready() {}
@@ -76,21 +79,35 @@ abstract class IApplication : Application() {
         IxIn.delegate.fxApp = this
         stage = primaryStage
 
-        primaryStage.icons += App.assets.imageFor("icon")
-        primaryStage.setOnCloseRequest {
-            IxIn.delegate.handle("exit", stage)
-            it.consume()
-        }
-
         appPane = AppPane()
         primaryStage.scene = Scene(appPane).apply {
             setup(this, appPane)
+            initScene(this)
         }
 
+        primaryStage.icons += App.assets.imageFor("icon")
         App.plugins.with<IPlugin> { ready() }
         IxIn.delegate.onReady()
 
         primaryStage.show()
+    }
+
+    private fun initScene(scene: Scene) {
+        scene.windowProperty().addListener { _, _, window ->
+            window.setOnCloseRequest {
+                IxIn.delegate.handle("exit", stage)
+                it.consume()
+            }
+
+            // workaround for a bug in JavaFX: unselect menubar if window looses focus
+            window.focusedProperty().addListener { _, _, focused ->
+                if (!focused) {
+                    // send an ESC key event to the menubar
+                    appPane.menuBar?.fireEvent(KeyEvent(KeyEvent.KEY_PRESSED, KeyEvent.CHAR_UNDEFINED, "",
+                            KeyCode.ESCAPE, false, false, false, false))
+                }
+            }
+        }
     }
 
     open fun setup(scene: Scene, appPane: AppPane) {}

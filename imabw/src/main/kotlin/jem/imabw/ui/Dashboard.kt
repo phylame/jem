@@ -251,3 +251,7 @@ private val editActions = arrayOf(
 interface Editable {
     fun onEdit(command: String)
 }
+
+interface ActionAware {
+    fun bindActions()
+}

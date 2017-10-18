@@ -111,6 +111,6 @@ object Imabw : IDelegate() {
     }
 
     private val executor = lazy {
-        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
+        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1)
     }
 }

@@ -131,7 +131,7 @@ object Workbench : CommandHandler {
             error(tr("d.openBook.title"), tr("err.jem.unsupported", param.epmName))
             return
         }
-        with(LoadBookTask(param)) {
+        with(LoadBookTask(param, true)) {
             setOnSucceeded {
                 activateWork(Work(value, param))
                 EventBus.post(WorkflowEvent(work!!.book, WorkflowType.BOOK_OPENED))
@@ -155,7 +155,7 @@ object Workbench : CommandHandler {
             error(tr("d.saveBook.title"), tr("err.jem.unsupported", param.epmName))
             return
         }
-        val task = object : MakeBookTask(param) {
+        val task = object : MakeBookTask(param, true) {
             override fun call(): String {
                 EditorPane.cacheTexts()
                 return makeBook(this.param)
@@ -184,7 +184,7 @@ object Workbench : CommandHandler {
                 return
             }
         }
-        with(MakeBookTask(MakerParam(chapter.asBook(), file.path, format, defaultMakerSettings()))) {
+        with(MakeBookTask(MakerParam(chapter.asBook(), file.path, format, defaultMakerSettings()), true)) {
             Imabw.submit(this)
         }
     }

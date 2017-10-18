@@ -40,20 +40,13 @@
         "paste",
         "delete",
         null,
-        {
-          "id": "menuFind",
-          "items": [
-            "find",
-            "replace",
-            "findNext",
-            "findPrevious"
-          ]
-        },
         "selectAll",
         null,
-        "joinLine",
-        "duplicateText",
-        "toggleCase"
+        "find",
+        "replace",
+        null,
+        "findNext",
+        "findPrevious"
       ]
     },
     {

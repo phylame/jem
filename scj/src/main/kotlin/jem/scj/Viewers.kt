@@ -120,7 +120,7 @@ fun viewExtensions(book: Book, names: Collection<String>, settings: ViewSettings
 
 fun viewChapter(chapter: Chapter, name: String, settings: ViewSettings) {
     val tokens = name.split("$")
-    val indices = parseIndices(tokens.first()) ?: return
+    val indices = parseIndices(tokens.first())?.map { it - 1 } ?: return
     val names = listOf(if (tokens.size > 1) tokens[1] else "text")
     viewAttributes(locateChapter(chapter, indices) ?: return, names, settings, false)
 }

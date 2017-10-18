@@ -88,7 +88,7 @@ val Hierarchical<*>.depth: Int
 fun <T : Hierarchical<T>> T.locate(indices: Collection<Int>): T? {
     var item: T? = null
     for (index in indices) {
-        item = get(if (index < 0) index + size else index)
+        item = (item ?: this).get(if (index < 0) index + size else index)
     }
     return item
 }

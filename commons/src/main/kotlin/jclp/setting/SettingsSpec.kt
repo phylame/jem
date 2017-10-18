@@ -60,7 +60,13 @@ fun Settings.getBoolean(key: String) = get(key, Boolean::class.java)
 class SettingsDelegate<T : Any>(private val type: Class<T>, private val default: T, private val key: String = "") {
     @Suppress("UNCHECKED_CAST")
     operator fun getValue(settings: Settings, property: KProperty<*>): T {
-        return settings.get(key or { property.name }, type) ?: default
+        val key = key or { property.name }
+        val value = settings.get(key, type)
+        if (value == null) {
+            settings[key] = default
+            return default
+        }
+        return value
     }
 
     operator fun setValue(settings: Settings, property: KProperty<*>, value: T) {

@@ -20,7 +20,6 @@ package jem.imabw.editor
 
 import javafx.application.Platform
 import javafx.beans.binding.Bindings
-import javafx.beans.value.ChangeListener
 import javafx.collections.ListChangeListener
 import javafx.scene.Node
 import javafx.scene.control.*
@@ -40,13 +39,14 @@ import mala.App
 import mala.ixin.CommandHandler
 import mala.ixin.IxIn
 import mala.ixin.init
+import mala.ixin.resetDisable
 import org.fxmisc.richtext.LineNumberFactory
+import org.fxmisc.richtext.NavigationActions
 import org.fxmisc.richtext.StyleClassedTextArea
-import org.fxmisc.richtext.model.NavigationActions
 import java.io.File
 
 
-object EditorPane : TabPane(), CommandHandler {
+object EditorPane : TabPane(), CommandHandler, Editable {
     private val tabMenu = ContextMenu()
     private val textMenu = ContextMenu()
 
@@ -57,7 +57,7 @@ object EditorPane : TabPane(), CommandHandler {
     init {
         id = "editor-pane"
         Imabw.register(this)
-        App.registerCleanup { dispose() }
+        App.registerCleanup { chapterTabs.forEach { it.dispose() } }
 
         val designer = Imabw.dashboard.appDesigner
         designer.items["tabContext"]?.let {
@@ -69,11 +69,11 @@ object EditorPane : TabPane(), CommandHandler {
         selectionModel.selectedItemProperty().addListener { _, old, new ->
             (old as? ChapterTab)?.let {
                 it.contextMenu = null
-                it.textEditor.contextMenu = null
+                it.editor.contextMenu = null
             }
             (new as? ChapterTab)?.let {
                 it.contextMenu = tabMenu
-                it.textEditor.contextMenu = textMenu
+                it.editor.contextMenu = textMenu
                 Platform.runLater { it.content.requestFocus() }
             }
         }
@@ -84,7 +84,7 @@ object EditorPane : TabPane(), CommandHandler {
         })
         EventBus.register<WorkflowEvent> {
             if (it.what == WorkflowType.BOOK_SAVED) {
-                chapterTabs.forEach { it.resetModified() }
+                chapterTabs.forEach { it.reset() }
             } else if (it.what == WorkflowType.BOOK_CLOSED) {
                 removeTab(it.source)
             }
@@ -116,57 +116,18 @@ object EditorPane : TabPane(), CommandHandler {
         chapterTabs.filter { it.isModified }.forEach { it.cache() }
     }
 
-    internal fun dispose() {
-        chapterTabs.forEach { it.dispose() }
-    }
-
     private fun initActions() {
         val actionMap = IxIn.actionMap
 
-        val tabCount = Bindings.size(tabs)
-        val notMultiTabs = tabCount.lessThan(2)
+        val notMultiTabs = Bindings.size(tabs).lessThan(2)
         actionMap["nextTab"]?.disableProperty?.bind(notMultiTabs)
         actionMap["previousTab"]?.disableProperty?.bind(notMultiTabs)
         actionMap["closeOtherTabs"]?.disableProperty?.bind(notMultiTabs)
 
-        val noTabs = tabCount.isEqualTo(0)
+        val noTabs = Bindings.isEmpty(tabs)
         actionMap["closeTab"]?.disableProperty?.bind(noTabs)
         actionMap["closeAllTabs"]?.disableProperty?.bind(noTabs)
         actionMap["closeUnmodifiedTabs"]?.disableProperty?.bind(noTabs)
-
-        sceneProperty().addListener { _, _, scene ->
-            scene?.focusOwnerProperty()?.addListener { _, _, new ->
-                val actions = arrayOf("replace")
-                if (new is TextEditor) {
-                    val notEditable = new.editableProperty().not()
-                    for (action in actions) {
-                        actionMap[action]?.disableProperty?.bind(notEditable)
-                    }
-                    actionMap["cut"]?.disableProperty?.bind(notEditable)
-                    actionMap["copy"]?.let {
-                        it.disableProperty.unbind()
-                        it.isDisable = false
-                    }
-                    actionMap["paste"]?.disableProperty?.bind(notEditable)
-                    actionMap["delete"]?.disableProperty?.bind(notEditable)
-                    actionMap["undo"]?.disableProperty?.bind(notEditable.or(Bindings.not(new.undoAvailableProperty())))
-                    actionMap["redo"]?.disableProperty?.bind(notEditable.or(Bindings.not(new.redoAvailableProperty())))
-                    actionMap["lock"]?.let {
-                        it.isSelected = !new.isEditable
-                        it.isDisable = false
-                    }
-                } else {
-                    actions.mapNotNull { actionMap[it] }.forEach {
-                        it.disableProperty.unbind()
-                        it.isDisable = true
-                    }
-                    actionMap["lock"]?.let {
-                        it.isSelected = false
-                        it.isDisable = true
-                    }
-                }
-            }
-        }
     }
 
     override fun handle(command: String, source: Any): Boolean {
@@ -177,80 +138,76 @@ object EditorPane : TabPane(), CommandHandler {
             "closeAllTabs" -> tabs.clear()
             "closeOtherTabs" -> tabs.removeIf { it !== selectedTab }
             "closeUnmodifiedTabs" -> tabs.removeIf { (it as? ChapterTab)?.isModified != true }
-            "lock" -> selectedTab?.textEditor?.let { it.isEditable = !it.isEditable }
+            "lock" -> selectedTab?.editor?.let { it.isEditable = !it.isEditable }
             else -> return false
         }
         return true
+    }
+
+    override fun onEdit(command: String) {
+        selectedTab?.editor?.onEdit(command)
     }
 }
 
 class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
     private val tagId = javaClass.simpleName
 
-    val isModified get() = !textEditor.undoManager.isAtMarkedPosition
-
-    val textEditor = TextEditor()
+    private var cacheFile: File? = null
 
     private var isReady = false
+
+    val isModified get() = !editor.undoManager.isAtMarkedPosition
+
+    val editor = TextEditor()
 
     var isDisposed = false
         private set
 
     init {
-        content = textEditor
-
-        val paths = chapter.toRoot().let { it.subList(1, it.size) }
-        if (paths.isNotEmpty()) {
-            tooltip = Tooltip(paths.joinToString(" > ") { it.title })
+        content = editor
+        chapter.toRoot().let { it.subList(1, it.size) }.takeIf { it.isNotEmpty() }?.let {
+            tooltip = Tooltip(it.joinToString(" > ") { it.title })
         }
-
-//        textEditor.plainTextChanges().addObserver {
-//            if (isReady && isModified) {
-//                EventBus.post(ModificationEvent(chapter, ModificationType.TEXT_MODIFIED))
-//            }
-//        }
-        textEditor.undoManager.atMarkedPositionProperty().addListener { observable, oldValue, newValue ->
-            println("$oldValue,$newValue")
-        }
-
-        textEditor.isWrapText = EditorSettings.wrapText
-        textEditor.paragraphGraphicFactory = LineNumberFactory.get(textEditor) { "%${it}d" }
-        val text = chapter.text
-        if (text == null) {
-            textEditor.undoManager.mark()
-            isReady = true
-        } else {
-            with(LoadTextTask(text)) {
-                setOnRunning {
-                    updateProgress(App.tr("jem.loadText.hint", chapter.title))
+        editor.undoManager.atMarkedPositionProperty().addListener { _, _, isMarked ->
+            if (isReady) {
+                if (isMarked) {
+                    EventBus.post(ModificationEvent(chapter, ModificationType.TEXT_UNDONE))
+                } else {
+                    EventBus.post(ModificationEvent(chapter, ModificationType.TEXT_MODIFIED))
                 }
-                setOnSucceeded {
-                    textEditor.replaceText(value)
-                    textEditor.undoManager.forgetHistory()
-                    textEditor.undoManager.mark()
-                    hideProgress()
-                    isReady = true
-                }
-                Imabw.submit(this)
             }
         }
+        loadText()
     }
 
-    internal fun resetModified() {
-        textEditor.undoManager.mark()
+    private fun loadText() {
+        val text = chapter.text
+        if (text == null) {
+            isReady = true
+        } else with(LoadTextTask(text)) {
+            setOnRunning {
+                updateProgress(App.tr("jem.loadText.hint", chapter.title))
+            }
+            setOnSucceeded {
+                editor.replaceText(value)
+                editor.undoManager.forgetHistory()
+                editor.undoManager.mark()
+                hideProgress()
+                isReady = true
+            }
+            Imabw.submit(this)
+        }
     }
-
-    private var cacheFile: File? = null
 
     fun cache() {
         Log.t(tagId) { "cache text for '${chapter.title}'" }
-        if (textEditor.document.length() <= 1024) {
-            chapter.text = textOf(textEditor.text)
+        if (editor.document.length <= 1024) {
+            chapter.text = textOf(editor.text)
             return
         }
         File.createTempFile("imabw-text-", ".txt").let {
             try {
-                it.bufferedWriter().use { it.writeLines(textEditor.paragraphs) }
+                it.bufferedWriter().use { it.writeLines(editor.paragraphs) }
                 chapter.text = textOf(flobOf(it.toPath(), "text/plain"), "UTF-8")
             } catch (e: Exception) {
                 Log.e(tagId, e) { "cannot cache text to '$it'" }
@@ -268,6 +225,10 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
         }
     }
 
+    fun reset() {
+        editor.undoManager.mark()
+    }
+
     fun dispose() {
         isDisposed = true
         if (cacheFile?.delete() == false) {
@@ -277,6 +238,42 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
 }
 
 class TextEditor : StyleClassedTextArea(false), Editable {
+    init {
+        isWrapText = EditorSettings.wrapText
+        if (EditorSettings.showLineNumber) {
+            paragraphGraphicFactory = LineNumberFactory.get(this)
+        }
+        focusedProperty().addListener { _, _, focused ->
+            if (focused) {
+                initActions()
+            } else {
+                IxIn.actionMap["lock"]?.let {
+                    it.isSelected = false
+                    it.isDisable = true
+                }
+            }
+        }
+    }
+
+    private fun initActions() {
+        val actionMap = IxIn.actionMap
+        val notEditable = editableProperty().not()
+        actionMap["cut"]?.disableProperty?.bind(notEditable)
+        actionMap["copy"]?.resetDisable()
+        actionMap["paste"]?.disableProperty?.bind(notEditable)
+        actionMap["delete"]?.disableProperty?.bind(notEditable)
+        actionMap["undo"]?.disableProperty?.bind(notEditable.or(Bindings.not(undoAvailableProperty())))
+        actionMap["redo"]?.disableProperty?.bind(notEditable.or(Bindings.not(redoAvailableProperty())))
+        actionMap["find"]?.resetDisable()
+        actionMap["findNext"]?.resetDisable()
+        actionMap["findPrevious"]?.resetDisable()
+        actionMap["replace"]?.disableProperty?.bind(notEditable)
+        actionMap["lock"]?.let {
+            it.isSelected = !isEditable
+            it.isDisable = false
+        }
+    }
+
     override fun cut() {
         selectLineIfEmpty()
         super.cut()
@@ -285,18 +282,9 @@ class TextEditor : StyleClassedTextArea(false), Editable {
     override fun copy() {
         val oldSelection = selectLineIfEmpty()
         super.copy()
-        if (oldSelection != null)
+        if (oldSelection != null) {
             selectRange(oldSelection.start, oldSelection.end)
-    }
-
-    private fun selectLineIfEmpty(): IndexRange? {
-        var oldSelection: IndexRange? = null
-        if (selectedText.isEmpty()) {
-            oldSelection = selection
-            selectLine()
-            nextChar(NavigationActions.SelectionPolicy.ADJUST)
         }
-        return oldSelection
     }
 
     override fun onEdit(command: String) {
@@ -309,5 +297,15 @@ class TextEditor : StyleClassedTextArea(false), Editable {
             "delete" -> replaceSelection("")
             "selectAll" -> selectAll()
         }
+    }
+
+    private fun selectLineIfEmpty(): IndexRange? {
+        var oldSelection: IndexRange? = null
+        if (selectedText.isEmpty()) {
+            oldSelection = selection
+            selectLine()
+            nextChar(NavigationActions.SelectionPolicy.ADJUST)
+        }
+        return oldSelection
     }
 }

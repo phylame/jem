@@ -25,6 +25,7 @@ import javafx.concurrent.Task
 import javafx.geometry.Pos
 import javafx.scene.control.*
 import javafx.scene.image.ImageView
+import javafx.scene.input.KeyCode
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.BorderPane
 import javafx.util.Callback
@@ -42,6 +43,8 @@ import jem.title
 import mala.App
 import mala.App.tr
 import mala.ixin.*
+import org.fxmisc.wellbehaved.event.EventPattern
+import org.fxmisc.wellbehaved.event.Nodes
 import java.util.concurrent.Callable
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -84,11 +87,11 @@ object NavPane : BorderPane(), CommandHandler {
         Imabw.dashboard.appDesigner.items["navContext"]?.let {
             tree.contextMenu = it.toContextMenu(Imabw, App, App.assets, IxIn.actionMap, null)
         }
-        tree.addEventHandler(MouseEvent.MOUSE_PRESSED) { event ->
-            if (event.clickCount == 2 && event.isPrimaryButtonDown) {
+        tree.addEventHandler(MouseEvent.MOUSE_PRESSED) { e ->
+            if (e.clickCount == 2 && e.isPrimaryButtonDown) {
                 tree.selectionModel.selectedItem?.takeIf { it.isLeaf && it.isNotRoot }?.let {
                     EditorPane.openTab(it.value, CellFactory.getIcon(it))
-                    event.consume()
+                    e.consume()
                 }
             }
         }
@@ -115,12 +118,6 @@ object NavPane : BorderPane(), CommandHandler {
         actionMap["gotoChapter"]?.disableProperty?.bind(Bindings.createBooleanBinding(Callable {
             EditorPane.selectedTab == null
         }, EditorPane.selectionModel.selectedItemProperty()))
-
-        tree.focusedProperty().addListener { _, _, focused->
-            println(tree.isVisible)
-            println(tree.isMouseTransparent)
-            println("tree focused: $focused")
-        }
 
         sceneProperty().addListener { _, _, scene ->
             scene?.focusOwnerProperty()?.addListener { _, _, new ->

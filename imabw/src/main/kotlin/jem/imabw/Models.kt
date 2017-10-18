@@ -49,7 +49,8 @@ enum class ModificationType {
     ATTRIBUTE_MODIFIED,
     EXTENSIONS_MODIFIED,
     CONTENTS_MODIFIED,
-    TEXT_MODIFIED
+    TEXT_MODIFIED,
+    TEXT_UNDONE
 }
 
 data class ModificationEvent(val source: Chapter, val what: ModificationType)
@@ -131,7 +132,7 @@ object Workbench : CommandHandler {
             error(tr("d.openBook.title"), tr("err.jem.unsupported", param.epmName))
             return
         }
-        with(LoadBookTask(param, true)) {
+        with(LoadBookTask(param)) {
             setOnSucceeded {
                 activateWork(Work(value, param))
                 EventBus.post(WorkflowEvent(work!!.book, WorkflowType.BOOK_OPENED))
@@ -155,7 +156,7 @@ object Workbench : CommandHandler {
             error(tr("d.saveBook.title"), tr("err.jem.unsupported", param.epmName))
             return
         }
-        val task = object : MakeBookTask(param, true) {
+        val task = object : MakeBookTask(param) {
             override fun call(): String {
                 EditorPane.cacheTexts()
                 return makeBook(this.param)
@@ -166,7 +167,7 @@ object Workbench : CommandHandler {
         }
         task.setOnSucceeded {
             work.outParam = param
-            work.isModified = false
+            work.resetModifications()
             IxIn.actionMap["fileDetails"]?.isDisable = false
             EventBus.post(WorkflowEvent(work.book, WorkflowType.BOOK_SAVED))
             Imabw.message(tr("jem.saveBook.success", param.book.title, work.path))
@@ -184,7 +185,7 @@ object Workbench : CommandHandler {
                 return
             }
         }
-        with(MakeBookTask(MakerParam(chapter.asBook(), file.path, format, defaultMakerSettings()), true)) {
+        with(MakeBookTask(MakerParam(chapter.asBook(), file.path, format, defaultMakerSettings()))) {
             Imabw.submit(this)
         }
     }
@@ -312,17 +313,7 @@ object Workbench : CommandHandler {
 }
 
 class Work(val book: Book, val inParam: ParserParam? = null) : EventAction<ModificationEvent> {
-    var isModified
-        get() = modifications.values.any { it.isModified }
-        internal set(value) {
-            if (!value) {
-                modifications.values.forEach { it.reset() }
-                IxIn.actionMap["saveFile"]?.isDisable = true
-            } else {
-                IxIn.actionMap["saveFile"]?.isDisable = false
-            }
-            EventBus.post(WorkflowEvent(book, WorkflowType.BOOK_MODIFIED))
-        }
+    val isModified get() = modifications.values.any { it.isModified }
 
     var path = inParam?.path
         private set
@@ -347,6 +338,11 @@ class Work(val book: Book, val inParam: ParserParam? = null) : EventAction<Modif
         }
     }
 
+    internal fun resetModifications() {
+        modifications.values.forEach { it.reset() }
+        IxIn.actionMap["saveFile"]?.isDisable = true
+    }
+
     // rename *.pmab.swp to *.pmab
     private fun adjustOutput() {
         outParam?.actualPath?.takeIf { it.endsWith(SWAP_SUFFIX) }?.let { tmp ->
@@ -365,6 +361,13 @@ class Work(val book: Book, val inParam: ParserParam? = null) : EventAction<Modif
         }
     }
 
+    private fun notifyModified() {
+        if (isModified) {
+            IxIn.actionMap["saveFile"]?.isDisable = false
+        }
+        EventBus.post(WorkflowEvent(book, WorkflowType.BOOK_MODIFIED))
+    }
+
     override fun invoke(e: ModificationEvent) {
         val m = modifications.getOrPut(e.source) { Modification() }
         when (e.what) {
@@ -372,16 +375,14 @@ class Work(val book: Book, val inParam: ParserParam? = null) : EventAction<Modif
             ModificationType.EXTENSIONS_MODIFIED -> m.extensions++
             ModificationType.CONTENTS_MODIFIED -> m.contents++
             ModificationType.TEXT_MODIFIED -> m.text++
+            ModificationType.TEXT_UNDONE -> m.text--
         }
-        isModified = true
+        notifyModified()
     }
 
     private class Modification {
         var text = 0
-            set(value) {
-                if (value != 0) println("text modified")
-                field = value
-            }
+
         var contents = 0
             set(value) {
                 if (value != 0) println("contents modified")

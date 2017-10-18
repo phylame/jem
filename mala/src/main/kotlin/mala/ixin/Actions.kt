@@ -81,6 +81,11 @@ fun ActionMap.updateAccelerators(keys: Properties) {
     }
 }
 
+fun Action.resetDisable() {
+    disableProperty.unbind()
+    isDisable = false
+}
+
 val Action.actualIconBinding
     get() = object : ObjectBinding<Image>() {
         init {

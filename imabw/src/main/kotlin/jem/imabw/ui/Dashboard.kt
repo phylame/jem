@@ -88,7 +88,6 @@ class Dashboard : IApplication(), CommandHandler {
 
     internal fun dispose() {
         saveState(UISettings)
-        EditorPane.dispose()
         stage.close()
     }
 
@@ -215,7 +214,7 @@ object Indicator : HBox() {
 
     private fun initRuler() {
         EditorPane.selectionModel.selectedItemProperty().addListener { _, old, new ->
-            (old as? ChapterTab)?.textEditor?.let { text ->
+            (old as? ChapterTab)?.editor?.let { text ->
                 @Suppress("UNCHECKED_CAST")
                 (text.properties[this] as? InvalidationListener)?.let { listener ->
                     text.caretPositionProperty().removeListener(listener)
@@ -223,7 +222,7 @@ object Indicator : HBox() {
                 }
             }
             if (new is ChapterTab) {
-                new.textEditor.also { text ->
+                new.editor.also { text ->
                     InvalidationListener {
                         updateCaret(text.currentParagraph + 1, text.caretColumn + 1, text.selection.length)
                     }.let { listener ->

@@ -40,7 +40,7 @@ fun makeBook(param: MakerParam) = EpmManager.writeBook(param) ?: throw UnknownEp
 
 class UnknownEpmException : JemException("")
 
-open class LoadBookTask(val param: ParserParam, isBlock: Boolean = false) : ProgressTask<Book>(isBlock) {
+open class LoadBookTask(val param: ParserParam) : ProgressTask<Book>() {
     init {
         setOnRunning {
             updateProgress(tr("jem.loadBook.hint", param.path))
@@ -59,7 +59,7 @@ open class LoadBookTask(val param: ParserParam, isBlock: Boolean = false) : Prog
     override fun call() = loadBook(param)
 }
 
-open class MakeBookTask(val param: MakerParam, isBlock: Boolean = false) : ProgressTask<String>(isBlock) {
+open class MakeBookTask(val param: MakerParam) : ProgressTask<String>() {
     init {
         setOnRunning {
             updateProgress(tr("jem.makeBook.hint", param.book.title, param.actualPath))
@@ -78,7 +78,7 @@ open class MakeBookTask(val param: MakerParam, isBlock: Boolean = false) : Progr
     override fun call() = makeBook(param)
 }
 
-open class LoadTextTask(private val text: Text, isBlock: Boolean = false) : ProgressTask<String>(isBlock) {
+open class LoadTextTask(private val text: Text) : ProgressTask<String>() {
     init {
         setOnRunning {
             updateProgress(tr("misc.progress.hint"))

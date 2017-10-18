@@ -46,9 +46,7 @@ object UISettings : IxInSettings() {
 object EditorSettings : MalaSettings("config/editor.ini") {
     var wrapText by delegate(false, "editor.wrapText")
 
-    var fontFamily by delegate("System", "editor.font.family")
-
-    var fontSize by delegate(14.0, "editor.font.size")
+    var showLineNumber by delegate(true, "editor.showLineNumber")
 }
 
 object History {

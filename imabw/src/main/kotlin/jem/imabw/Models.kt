@@ -19,6 +19,7 @@
 package jem.imabw
 
 import javafx.concurrent.Task
+import javafx.scene.control.Alert
 import javafx.scene.control.ButtonType
 import javafx.scene.control.Label
 import javafx.scene.layout.GridPane
@@ -49,11 +50,10 @@ enum class ModificationType {
     ATTRIBUTE_MODIFIED,
     EXTENSIONS_MODIFIED,
     CONTENTS_MODIFIED,
-    TEXT_MODIFIED,
-    TEXT_UNDONE
+    TEXT_MODIFIED
 }
 
-data class ModificationEvent(val source: Chapter, val what: ModificationType)
+data class ModificationEvent(val chapter: Chapter, val what: ModificationType, val count: Int = 1)
 
 enum class WorkflowType {
     BOOK_OPENED,
@@ -63,7 +63,7 @@ enum class WorkflowType {
     BOOK_SAVED
 }
 
-data class WorkflowEvent(val source: Book, val what: WorkflowType)
+data class WorkflowEvent(val book: Book, val what: WorkflowType)
 
 object Workbench : CommandHandler {
     var work: Work? = null
@@ -81,8 +81,8 @@ object Workbench : CommandHandler {
             path?.let { History.remove(it) }
         }
         last?.apply {
-            EventBus.post(WorkflowEvent(book, WorkflowType.BOOK_CLOSED))
             path?.let { History.insert(it) }
+            EventBus.post(WorkflowEvent(book, WorkflowType.BOOK_CLOSED))
             cleanup()
         }
         IxIn.actionMap.apply {
@@ -95,7 +95,7 @@ object Workbench : CommandHandler {
         val work = work!!
         if (!work.isModified) {
             block()
-        } else with(confirm(title, tr("d.askSave.hint", work.book.title))) {
+        } else with(alert(Alert.AlertType.CONFIRMATION, title, tr("d.askSave.hint", work.book.title))) {
             buttonTypes.setAll(ButtonType.CANCEL, ButtonType.YES, ButtonType.NO)
             when (showAndWait().get()) {
                 ButtonType.YES -> saveFile(block)
@@ -105,7 +105,7 @@ object Workbench : CommandHandler {
     }
 
     fun newBook(title: String) {
-        Imabw.fxApp.apply {
+        with(Imabw.fxApp) {
             showProgress()
             activateWork(Work(Book(title)))
             EventBus.post(WorkflowEvent(work!!.book, WorkflowType.BOOK_CREATED))
@@ -158,7 +158,7 @@ object Workbench : CommandHandler {
         }
         val task = object : MakeBookTask(param) {
             override fun call(): String {
-                EditorPane.cacheTexts()
+                EditorPane.cacheTabs()
                 return makeBook(this.param)
             }
         }
@@ -168,6 +168,7 @@ object Workbench : CommandHandler {
         task.setOnSucceeded {
             work.outParam = param
             work.resetModifications()
+            IxIn.actionMap["saveFile"]?.isDisable = true
             IxIn.actionMap["fileDetails"]?.isDisable = false
             EventBus.post(WorkflowEvent(work.book, WorkflowType.BOOK_SAVED))
             Imabw.message(tr("jem.saveBook.success", param.book.title, work.path))
@@ -243,6 +244,7 @@ object Workbench : CommandHandler {
     internal fun start() {
         println("TODO: parse app arguments: ${App.arguments.asList()}")
         newBook(tr("jem.book.untitled"))
+        editAttributes(work!!.book, Imabw.fxApp.stage)
     }
 
     internal fun dispose() {
@@ -251,6 +253,16 @@ object Workbench : CommandHandler {
             cleanup()
         }
         History.sync()
+    }
+
+    internal fun openFile(path: String) {
+        ensureSaved(tr("d.openBook.title")) {
+            if (path.isEmpty()) {
+                openBookFile()?.let { openBook(ParserParam(it.path)) }
+            } else {
+                openBook(ParserParam(path))
+            }
+        }
     }
 
     private fun saveFile(done: (() -> Unit)? = null) {
@@ -300,9 +312,7 @@ object Workbench : CommandHandler {
                     newBook(it)
                 }
             }
-            "openFile" -> ensureSaved(tr("d.openBook.title")) {
-                openBookFile()?.let { openBook(ParserParam(it.path)) }
-            }
+            "openFile" -> openFile("")
             "saveFile" -> saveFile()
             "saveAsFile" -> exportBook(work!!.book)
             "clearHistory" -> History.clear()
@@ -340,7 +350,6 @@ class Work(val book: Book, val inParam: ParserParam? = null) : EventAction<Modif
 
     internal fun resetModifications() {
         modifications.values.forEach { it.reset() }
-        IxIn.actionMap["saveFile"]?.isDisable = true
     }
 
     // rename *.pmab.swp to *.pmab
@@ -362,20 +371,17 @@ class Work(val book: Book, val inParam: ParserParam? = null) : EventAction<Modif
     }
 
     private fun notifyModified() {
-        if (isModified) {
-            IxIn.actionMap["saveFile"]?.isDisable = false
-        }
+        IxIn.actionMap["saveFile"]?.isDisable = !isModified
         EventBus.post(WorkflowEvent(book, WorkflowType.BOOK_MODIFIED))
     }
 
     override fun invoke(e: ModificationEvent) {
-        val m = modifications.getOrPut(e.source) { Modification() }
+        val m = modifications.getOrPut(e.chapter) { Modification() }
         when (e.what) {
-            ModificationType.ATTRIBUTE_MODIFIED -> m.attributes++
-            ModificationType.EXTENSIONS_MODIFIED -> m.extensions++
-            ModificationType.CONTENTS_MODIFIED -> m.contents++
-            ModificationType.TEXT_MODIFIED -> m.text++
-            ModificationType.TEXT_UNDONE -> m.text--
+            ModificationType.ATTRIBUTE_MODIFIED -> m.attributes += e.count
+            ModificationType.EXTENSIONS_MODIFIED -> m.extensions += e.count
+            ModificationType.CONTENTS_MODIFIED -> m.contents += e.count
+            ModificationType.TEXT_MODIFIED -> m.text += e.count
         }
         notifyModified()
     }

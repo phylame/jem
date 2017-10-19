@@ -25,7 +25,6 @@ import javafx.scene.control.MenuItem
 import javafx.scene.control.SeparatorMenuItem
 import jclp.io.createRecursively
 import jclp.setting.delegate
-import jem.epm.ParserParam
 import mala.App
 import mala.AppSettings
 import mala.MalaSettings
@@ -78,9 +77,7 @@ object History {
                         if (i == 0 && isEmpty) { // insert separator
                             items.add(0, SeparatorMenuItem())
                         }
-                        items.add(0, MenuItem(path).apply {
-                            setOnAction { Workbench.openBook(ParserParam(text)) }
-                        })
+                        items.add(0, MenuItem(path).apply { setOnAction { Workbench.openFile(text) } })
                     }
                 }
             }

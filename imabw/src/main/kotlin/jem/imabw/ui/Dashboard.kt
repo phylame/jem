@@ -69,6 +69,7 @@ class Dashboard : IApplication(), CommandHandler {
             SplitPane.setResizableWithParent(NavPane, false)
             appPane.center = it
         }
+
         initActions()
         restoreState(UISettings)
         EventBus.register<WorkflowEvent> { refreshTitle() }

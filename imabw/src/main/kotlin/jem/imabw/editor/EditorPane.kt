@@ -41,10 +41,10 @@ import mala.ixin.IxIn
 import mala.ixin.init
 import mala.ixin.resetDisable
 import org.fxmisc.richtext.LineNumberFactory
-import org.fxmisc.richtext.NavigationActions
 import org.fxmisc.richtext.StyleClassedTextArea
+import org.fxmisc.richtext.model.NavigationActions
 import java.io.File
-
+import java.util.concurrent.Callable
 
 object EditorPane : TabPane(), CommandHandler, Editable {
     private val tabMenu = ContextMenu()
@@ -55,9 +55,12 @@ object EditorPane : TabPane(), CommandHandler, Editable {
     val chapterTabs get() = tabs.asSequence().filterIsInstance<ChapterTab>()
 
     init {
-        id = "editor-pane"
         Imabw.register(this)
         App.registerCleanup { chapterTabs.forEach { it.dispose() } }
+
+        id = "editor-pane"
+        isFocusTraversable = false
+        tabClosingPolicy = TabClosingPolicy.ALL_TABS
 
         val designer = Imabw.dashboard.appDesigner
         designer.items["tabContext"]?.let {
@@ -84,9 +87,9 @@ object EditorPane : TabPane(), CommandHandler, Editable {
         })
         EventBus.register<WorkflowEvent> {
             if (it.what == WorkflowType.BOOK_SAVED) {
-                chapterTabs.forEach { it.reset() }
+                chapterTabs.forEach { it.resetModification() }
             } else if (it.what == WorkflowType.BOOK_CLOSED) {
-                removeTab(it.source)
+                removeTab(it.book)
             }
         }
         initActions()
@@ -112,8 +115,8 @@ object EditorPane : TabPane(), CommandHandler, Editable {
         }
     }
 
-    fun cacheTexts() {
-        chapterTabs.filter { it.isModified }.forEach { it.cache() }
+    fun cacheTabs() {
+        chapterTabs.forEach { it.cacheIfNeed() }
     }
 
     private fun initActions() {
@@ -171,7 +174,7 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
         editor.undoManager.atMarkedPositionProperty().addListener { _, _, isMarked ->
             if (isReady) {
                 if (isMarked) {
-                    EventBus.post(ModificationEvent(chapter, ModificationType.TEXT_UNDONE))
+                    EventBus.post(ModificationEvent(chapter, ModificationType.TEXT_MODIFIED, -1))
                 } else {
                     EventBus.post(ModificationEvent(chapter, ModificationType.TEXT_MODIFIED))
                 }
@@ -199,9 +202,9 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
         }
     }
 
-    fun cache() {
+    fun cacheText() {
         Log.t(tagId) { "cache text for '${chapter.title}'" }
-        if (editor.document.length <= 1024) {
+        if (editor.document.length() <= 1024) {
             chapter.text = textOf(editor.text)
             return
         }
@@ -221,11 +224,11 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
 
     fun cacheIfNeed() {
         if (isModified && !isDisposed) {
-            Imabw.submit { cache() }
+            Imabw.submit { cacheText() }
         }
     }
 
-    fun reset() {
+    fun resetModification() {
         editor.undoManager.mark()
     }
 
@@ -262,8 +265,14 @@ class TextEditor : StyleClassedTextArea(false), Editable {
         actionMap["copy"]?.resetDisable()
         actionMap["paste"]?.disableProperty?.bind(notEditable)
         actionMap["delete"]?.disableProperty?.bind(notEditable)
-        actionMap["undo"]?.disableProperty?.bind(notEditable.or(Bindings.not(undoAvailableProperty())))
-        actionMap["redo"]?.disableProperty?.bind(notEditable.or(Bindings.not(redoAvailableProperty())))
+        val notUndo = Bindings.createBooleanBinding(Callable {
+            !undoManager.isUndoAvailable
+        }, undoManager.undoAvailableProperty())
+        actionMap["undo"]?.disableProperty?.bind(notEditable.or(notUndo))
+        val notRedo = Bindings.createBooleanBinding(Callable {
+            !undoManager.isRedoAvailable
+        }, undoManager.redoAvailableProperty())
+        actionMap["redo"]?.disableProperty?.bind(notEditable.or(notRedo))
         actionMap["find"]?.resetDisable()
         actionMap["findNext"]?.resetDisable()
         actionMap["findPrevious"]?.resetDisable()

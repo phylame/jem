@@ -25,16 +25,18 @@ import javafx.stage.Modality
 import javafx.stage.Window
 import jclp.VariantMap
 import jclp.traceText
+import jem.Attributes
 import jem.Chapter
 import jem.epm.EpmManager
 import jem.epm.PMAB_NAME
 import jem.imabw.History
 import jem.imabw.Imabw
+import jem.title
 import mala.App
 import mala.ixin.graphicFor
 import java.io.File
 
-private fun Dialog<*>.init(title: String, owner: Window) {
+fun Dialog<*>.init(title: String, owner: Window) {
     headerText = null
     this.title = title
     initModality(Modality.WINDOW_MODAL)
@@ -53,8 +55,10 @@ fun error(title: String, content: String, owner: Window = Imabw.fxApp.stage) {
     alert(Alert.AlertType.ERROR, title, content, owner).showAndWait()
 }
 
-fun confirm(title: String, content: String, owner: Window = Imabw.fxApp.stage): Alert {
-    return alert(Alert.AlertType.CONFIRMATION, title, content, owner)
+fun confirm(title: String, content: String, owner: Window = Imabw.fxApp.stage): Boolean {
+    return with(alert(Alert.AlertType.CONFIRMATION, title, content, owner)) {
+        showAndWait().get() == ButtonType.OK
+    }
 }
 
 fun traceback(title: String, content: String, throwable: Throwable, owner: Window = Imabw.fxApp.stage) {
@@ -165,9 +169,33 @@ fun openBookFiles(owner: Window = Imabw.fxApp.stage): List<File>? {
 }
 
 fun editAttributes(chapter: Chapter, owner: Window = Imabw.fxApp.stage) {
-    println("edit attributes of $chapter")
+    with(Dialog<ButtonType>()) {
+        isResizable = true
+        init(chapter.title, owner)
+        val pane = object : VariantPane(chapter.attributes) {
+            override fun getAvailableKeys(): Collection<String> {
+                return Attributes.names
+            }
+        }
+        dialogPane.content = pane
+        dialogPane.buttonTypes.setAll(ButtonType.OK, ButtonType.CANCEL)
+        showAndWait()
+    }
 }
 
-fun editVariants(map: VariantMap, title: String, owner: Window = Imabw.fxApp.stage) {
-    println("edit variants for $title: $map")
+fun editVariants(map: VariantMap, title: String, owner: Window = Imabw.fxApp.stage): Boolean {
+    val pane = VariantPane(map)
+    with(Dialog<ButtonType>()) {
+        isResizable = true
+        init(title, owner)
+        dialogPane.content = pane
+        dialogPane.buttonTypes.setAll(ButtonType.OK, ButtonType.CANCEL)
+        return if (showAndWait().get() == ButtonType.OK && pane.isModified) {
+            map.clear()
+            for (item in pane.data) {
+                map[item.key.value] = item.value.value
+            }
+            true
+        } else false
+    }
 }

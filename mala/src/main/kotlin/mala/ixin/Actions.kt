@@ -81,9 +81,9 @@ fun ActionMap.updateAccelerators(keys: Properties) {
     }
 }
 
-fun Action.resetDisable() {
+fun Action.resetDisable(disable: Boolean = false) {
     disableProperty.unbind()
-    isDisable = false
+    isDisable = disable
 }
 
 val Action.actualIconBinding

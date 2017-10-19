@@ -25,8 +25,7 @@ import javafx.concurrent.Task
 import javafx.geometry.Pos
 import javafx.scene.control.*
 import javafx.scene.image.ImageView
-import javafx.scene.input.KeyCode
-import javafx.scene.input.MouseEvent
+import javafx.scene.input.MouseButton
 import javafx.scene.layout.BorderPane
 import javafx.util.Callback
 import jclp.EventBus
@@ -43,7 +42,8 @@ import jem.title
 import mala.App
 import mala.App.tr
 import mala.ixin.*
-import org.fxmisc.wellbehaved.event.EventPattern
+import org.fxmisc.wellbehaved.event.EventPattern.mouseClicked
+import org.fxmisc.wellbehaved.event.InputMap.consume
 import org.fxmisc.wellbehaved.event.Nodes
 import java.util.concurrent.Callable
 import java.util.concurrent.atomic.AtomicInteger
@@ -71,7 +71,7 @@ object NavPane : BorderPane(), CommandHandler {
 
         EventBus.register<WorkflowEvent> {
             if (it.what == WorkflowType.BOOK_CREATED || it.what == WorkflowType.BOOK_OPENED) {
-                tree.root = it.source.toTreeItem()
+                tree.root = it.book.toTreeItem()
                 tree.selectionModel.select(0)
                 tree.root.isExpanded = true
                 tree.requestFocus()
@@ -87,19 +87,16 @@ object NavPane : BorderPane(), CommandHandler {
         Imabw.dashboard.appDesigner.items["navContext"]?.let {
             tree.contextMenu = it.toContextMenu(Imabw, App, App.assets, IxIn.actionMap, null)
         }
-        tree.addEventHandler(MouseEvent.MOUSE_PRESSED) { e ->
-            if (e.clickCount == 2 && e.isPrimaryButtonDown) {
-                tree.selectionModel.selectedItem?.takeIf { it.isLeaf && it.isNotRoot }?.let {
-                    EditorPane.openTab(it.value, CellFactory.getIcon(it))
-                    e.consume()
-                }
+        Nodes.addInputMap(tree, consume(mouseClicked().onlyIf { it.clickCount == 2 && it.button == MouseButton.PRIMARY }, {
+            selectedNode?.takeIf { it.isLeaf && it.isNotRoot }?.let {
+                EditorPane.openTab(it.value, CellFactory.getIcon(it))
             }
-        }
+        }))
     }
 
     private fun initActions() {
-        val selection = selectedItems
-        val hasBook = Bindings.createBooleanBinding(Callable { selection.any { it?.isRoot == true } }, selection)
+        val selection = selectedNodes
+        val hasBook = Bindings.createBooleanBinding(Callable { selection.any { it.isRoot } }, selection)
         val empty = Bindings.isEmpty(selection)
         val multiple = Bindings.size(selection).greaterThan(1)
         val emptyOrBook = empty.or(hasBook)
@@ -119,30 +116,30 @@ object NavPane : BorderPane(), CommandHandler {
             EditorPane.selectedTab == null
         }, EditorPane.selectionModel.selectedItemProperty()))
 
-        sceneProperty().addListener { _, _, scene ->
-            scene?.focusOwnerProperty()?.addListener { _, _, new ->
-                val actions = arrayOf("undo", "redo", "cut", "copy", "paste", "find", "findNext", "findPrevious")
-                if (new === tree) {
-                    for (action in actions) {
-                        actionMap[action]?.let {
-                            it.disableProperty.unbind()
-                            it.isDisable = true
-                        }
-                    }
-                    actionMap["delete"]?.disableProperty?.bind(hasBook)
+        tree.focusedProperty().addListener { _, _, focused ->
+            if (focused) {
+                val actions = arrayOf("undo", "redo", "cut", "copy", "paste", "replace")
+                for (action in actions) {
+                    actionMap[action]?.resetDisable(true)
                 }
+                actionMap["delete"]?.disableProperty?.bind(hasBook)
+                actionMap["find"]?.resetDisable()
+                actionMap["findNext"]?.resetDisable()
+                actionMap["findPrevious"]?.resetDisable()
             }
         }
     }
 
-    val currentItems: List<ChapterNode>
+    val currentNodes: List<ChapterNode>
         get() = with(tree.selectionModel) {
             val items = selectedItems.toList()
             clearSelection()
             items
         }
 
-    val selectedItems: ObservableList<ChapterNode> get() = tree.selectionModel.selectedItems
+    val selectedNodes: ObservableList<ChapterNode> get() = tree.selectionModel.selectedItems
+
+    val selectedNode get() = tree.selectionModel.selectedItem
 
     fun createChapter(): Chapter? {
         return input(tr("d.newChapter.title"), tr("d.newChapter.tip"), tr("jem.chapter.untitled"))?.let {
@@ -161,11 +158,11 @@ object NavPane : BorderPane(), CommandHandler {
 
     @Command
     fun renameChapter() {
-        val treeItem = tree.selectionModel.selectedItem
-        val chapter = treeItem!!.value
+        val node = selectedNode
+        val chapter = node!!.value
         input(tr("d.renameChapter.title"), tr("d.renameChapter.tip"), chapter.title)?.let {
             chapter.title = it
-            treeItem.refresh()
+            node.refresh()
             EventBus.post(ModificationEvent(chapter, ModificationType.ATTRIBUTE_MODIFIED))
         }
     }
@@ -174,7 +171,7 @@ object NavPane : BorderPane(), CommandHandler {
     fun importChapter() {
         val files = openBookFiles() ?: return
 
-        val targets = currentItems
+        val targets = currentNodes
         val fxApp = Imabw.fxApp.apply { showProgress() }
 
         val succeed = AtomicInteger()
@@ -210,7 +207,7 @@ object NavPane : BorderPane(), CommandHandler {
     fun insertNodes(sources: Collection<ChapterNode>, targets: Collection<ChapterNode>, mode: InsertMode) {
         if (sources.isEmpty() || targets.isEmpty()) return
         require(sources.none { it in targets }) { "Cannot insert node to self" }
-        val dump = targets.takeIf { it !== selectedItems } ?: targets.toList()
+        val dump = targets.takeIf { it !== selectedNodes } ?: targets.toList()
         dump.forEachIndexed { index, target ->
             // clone chapter(s) except the first one
             val items = if (index == 0) sources else sources.map { it.value.clone().toTreeItem() }
@@ -238,11 +235,12 @@ object NavPane : BorderPane(), CommandHandler {
     }
 
     fun removeNodes(nodes: Collection<ChapterNode>) {
-        nodes.reversed().forEach { node ->
-            val chapter = node.value
-            val parentNode = node.parent
+        nodes.reversed().forEach {
+            val chapter = it.value
+            val parentNode = it.parent
             val parentChapter = parentNode.value
-            parentNode.children.remove(node.apply { parentChapter.remove(chapter) })
+            parentNode.children.remove(it)
+            parentChapter.remove(chapter)
             EditorPane.removeTab(chapter)
             Imabw.submit { chapter.cleanup() }
             EventBus.post(ModificationEvent(parentChapter, ModificationType.CONTENTS_MODIFIED))
@@ -262,26 +260,28 @@ object NavPane : BorderPane(), CommandHandler {
     fun collapseNode(node: ChapterNode) {
         if (node.isExpanded) {
             node.children.forEach { collapseNode(it) }
+            node.isExpanded = false
         }
-        node.isExpanded = false
     }
 
     override fun handle(command: String, source: Any): Boolean {
         when (command) {
-            "delete" -> removeNodes(selectedItems)
+            "delete" -> removeNodes(selectedNodes)
             "selectAll" -> tree.selectionModel.selectAll()
-            "editText" -> selectedItems.forEach { EditorPane.openTab(it.value, CellFactory.getIcon(it)) }
+            "editText" -> selectedNodes.forEach { EditorPane.openTab(it.value, CellFactory.getIcon(it)) }
             "newChapter" -> createChapter()?.let {
-                insertNodes(listOf(it.toTreeItem()), currentItems, InsertMode.TO_PARENT)
+                insertNodes(listOf(it.toTreeItem()), currentNodes, InsertMode.TO_PARENT)
             }
             "insertChapter" -> createChapter()?.let {
-                insertNodes(listOf(it.toTreeItem()), currentItems, InsertMode.BEFORE_ITEM)
+                insertNodes(listOf(it.toTreeItem()), currentNodes, InsertMode.BEFORE_ITEM)
             }
-            "exportChapter" -> Workbench.exportBooks(selectedItems.map { it.value })
-            "viewAttributes" -> editAttributes(tree.selectionModel.selectedItem.value!!)
+            "exportChapter" -> Workbench.exportBooks(selectedNodes.map { it.value })
+            "viewAttributes" -> editAttributes(selectedNode!!.value)
             "bookAttributes" -> editAttributes(Workbench.work!!.book)
             "bookExtensions" -> Workbench.work!!.book.let {
-                editVariants(it.extensions, tr("d.editExtension.title", it.title))
+                if (editVariants(it.extensions, tr("d.editExtension.title", it.title))) {
+                    EventBus.post(ModificationEvent(it, ModificationType.EXTENSIONS_MODIFIED))
+                }
             }
             "gotoChapter" -> EditorPane.selectedTab?.chapter?.let {
                 locateChapter(it)
@@ -338,29 +338,17 @@ private class ChapterCell : TreeCell<Chapter>() {
     override fun updateItem(chapter: Chapter?, empty: Boolean) {
         super.updateItem(chapter, empty)
         text = chapter?.title
-        graphic = when {
-            empty || chapter == null -> null
-            chapter.isRoot -> ImageView(CellFactory.bookIcon)
-            chapter.isSection -> ImageView(CellFactory.sectionIcon)
-            else -> ImageView(CellFactory.chapterIcon)
-        }
+        graphic = if (empty || chapter == null) null else CellFactory.getIcon(chapter)
         tooltip = null
         chapter?.intro?.let {
-            val intro = chapter.tag as? String
-            if (intro != null) {
-                tooltip = createTooltip(intro)
-            } else if (chapter.tag == null) {
-                chapter.tag = this
-                with(LoadTextTask(it)) {
-                    setOnSucceeded {
-                        value.takeIf { it.isNotEmpty() }?.let { text ->
-                            tooltip = createTooltip(text)
-                            chapter.tag = text
-                        }
-                        hideProgress()
+            with(LoadTextTask(it)) {
+                setOnSucceeded {
+                    value.takeIf { it.isNotEmpty() }?.let { text ->
+                        tooltip = createTooltip(text)
                     }
-                    Imabw.submit(this)
+                    hideProgress()
                 }
+                Imabw.submit(this)
             }
         }
     }

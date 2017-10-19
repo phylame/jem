@@ -86,10 +86,10 @@ abstract class IApplication : Application() {
         }
 
         primaryStage.icons += App.assets.imageFor("icon")
+        primaryStage.show()
+
         App.plugins.with<IPlugin> { ready() }
         IxIn.delegate.onReady()
-
-        primaryStage.show()
     }
 
     private fun initScene(scene: Scene) {

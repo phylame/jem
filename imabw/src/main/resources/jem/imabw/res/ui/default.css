@@ -39,19 +39,22 @@
 
 .tool-bar {
     -fx-padding: 2px 4px;
+    -fx-focus-traversable: false;
 }
 
-.tool-bar .button, .tool-bar .separator {
+.tool-bar .button, .tool-bar .toggle-button, .tool-bar .separator {
     -fx-padding: 2px;
     -fx-background-color: transparent;
+    -fx-focus-traversable: false;
 }
 
-.tool-bar .button:hover {
+.tool-bar .button:hover, .tool-bar .toggle-button:hover {
     -fx-background-color: -fx-shadow-highlight-color, -fx-outer-border, -fx-inner-border, -fx-body-color;
 }
 
-.split-pane, .tree-view, .styled-text-area {
+.split-pane, .tree-view, .table-view, .styled-text-area {
     -fx-padding: 0;
+    -fx-background-insets: 0;
     -fx-background-color: -fx-control-inner-background;
     -fx-text-fill: -fx-text-background-color;
 }
@@ -74,10 +77,6 @@
 }
 
 #nav-tool-bar {
-    -fx-background-color: transparent;
-}
-
-#toc-tree:focused {
     -fx-background-color: transparent;
 }
 
@@ -104,8 +103,7 @@
 
 .styled-text-area {
     -fx-font-size: 1.2em;
-    -fx-font-family: serif;
-    -fx-text-fill: red;
+    -fx-font-family: sans-serif;
 }
 
 .app-status-bar {
@@ -134,14 +132,11 @@
     -fx-focus-traversable: false;
 }
 
-.dialog-content {
-    -fx-padding: 0;
-    -fx-border-style: solid;
-    -fx-border-width: 0.666em;
-    -fx-border-color: -fx-background;
-    -fx-background-color: transparent;
+.variant-pane .table-view {
+    -fx-background-insets: 0;
+    -fx-background-color: -fx-control-inner-background;
 }
 
-.form-legend {
-    -fx-font-weight: bold;
+.variant-pane .tool-bar {
+    -fx-background-color: transparent;
 }

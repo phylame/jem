@@ -19,6 +19,7 @@
 package jem.imabw
 
 import javafx.concurrent.Task
+import javafx.geometry.VPos
 import javafx.scene.control.Alert
 import javafx.scene.control.ButtonType
 import javafx.scene.control.Label
@@ -244,7 +245,6 @@ object Workbench : CommandHandler {
     internal fun start() {
         println("TODO: parse app arguments: ${App.arguments.asList()}")
         newBook(tr("jem.book.untitled"))
-        editAttributes(work!!.book, Imabw.fxApp.stage)
     }
 
     internal fun dispose() {
@@ -285,10 +285,9 @@ object Workbench : CommandHandler {
         with(info(tr("d.exportBook.title"), "")) {
             width = owner.width * 0.5
             dialogPane.content = GridPane().apply {
-                hgap = 4.0
-                vgap = 4.0
-                styleClass += "dialog-content"
-                val legend = Label(tr("d.exportBook.result")).apply { styleClass += "form-legend" }
+                val legend = Label(tr("d.exportBook.result")).apply {
+                    style = "-fx-font-weight: bold;"
+                }
                 add(legend, 0, 0, 2, 1)
                 init(listOf(
                         Label(tr("d.exportBook.succeed")),
@@ -298,7 +297,7 @@ object Workbench : CommandHandler {
                         Label(succeed.joinToString("\n") or { tr("misc.empty") }),
                         Label(ignored.joinToString("\n") or { tr("misc.empty") }),
                         Label(failed.joinToString("\n") or { tr("misc.empty") })
-                ), 1)
+                ), 1, VPos.TOP)
             }
             showAndWait()
         }

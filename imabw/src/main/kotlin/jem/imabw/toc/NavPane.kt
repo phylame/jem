@@ -276,8 +276,12 @@ object NavPane : BorderPane(), CommandHandler {
                 insertNodes(listOf(it.toTreeItem()), currentNodes, InsertMode.BEFORE_ITEM)
             }
             "exportChapter" -> Workbench.exportBooks(selectedNodes.map { it.value })
-            "viewAttributes" -> editAttributes(selectedNode!!.value)
-            "bookAttributes" -> editAttributes(Workbench.work!!.book)
+            "viewAttributes" -> if (editAttributes(selectedNode!!.value)) {
+                EventBus.post(ModificationEvent(selectedNode!!.value, ModificationType.ATTRIBUTE_MODIFIED))
+            }
+            "bookAttributes" -> if (editAttributes(Workbench.work!!.book)) {
+                EventBus.post(ModificationEvent(Workbench.work!!.book, ModificationType.ATTRIBUTE_MODIFIED))
+            }
             "bookExtensions" -> Workbench.work!!.book.let {
                 if (editVariants(it.extensions, tr("d.editExtension.title", it.title))) {
                     EventBus.post(ModificationEvent(it, ModificationType.EXTENSIONS_MODIFIED))

@@ -24,17 +24,17 @@ import javafx.stage.FileChooser
 import javafx.stage.Modality
 import javafx.stage.Window
 import jclp.VariantMap
+import jclp.Variants
 import jclp.traceText
-import jem.Attributes
-import jem.Chapter
+import jem.*
 import jem.epm.EpmManager
 import jem.epm.PMAB_NAME
 import jem.imabw.History
 import jem.imabw.Imabw
-import jem.title
 import mala.App
 import mala.ixin.graphicFor
 import java.io.File
+import java.util.*
 
 fun Dialog<*>.init(title: String, owner: Window) {
     headerText = null
@@ -66,7 +66,6 @@ fun traceback(title: String, content: String, throwable: Throwable, owner: Windo
         dialogPane.expandableContent = TextArea().apply {
             isEditable = false
             isFocusTraversable = false
-            styleClass += "dialog-content"
         }
         dialogPane.buttonTypes += ButtonType.CLOSE
         graphic = App.assets.graphicFor("dialog/bug")
@@ -168,26 +167,40 @@ fun openBookFiles(owner: Window = Imabw.fxApp.stage): List<File>? {
     return fileChooser.showOpenMultipleDialog(owner)?.also { fileChooser.initialDirectory = it.first().parentFile }
 }
 
-fun editAttributes(chapter: Chapter, owner: Window = Imabw.fxApp.stage) {
+fun editAttributes(chapter: Chapter, owner: Window = Imabw.fxApp.stage): Boolean {
     with(Dialog<ButtonType>()) {
         isResizable = true
-        init(chapter.title, owner)
+        init(App.tr("d.editAttribute.title", chapter.title), owner)
         val pane = object : VariantPane(chapter.attributes) {
-            override fun getAvailableKeys(): Collection<String> {
-                return Attributes.names
+            override fun availableNames() = Attributes.names
+
+            override fun ignoredNames() = listOf(COVER, INTRO)
+
+            override fun getItemType(key: String) = Attributes.getType(key) ?: Variants.STRING
+
+            override fun getItemName(key: String) = Attributes.getName(key) ?: key.capitalize()
+
+            override fun toString(value: Any) = when (value) {
+                is Locale -> value.displayName
+                else -> value.toString()
             }
         }
         dialogPane.content = pane
         dialogPane.buttonTypes.setAll(ButtonType.OK, ButtonType.CANCEL)
-        showAndWait()
+        return if (showAndWait().get() == ButtonType.OK && pane.isModified) {
+            val map = chapter.attributes.apply { clear() }
+            for (item in pane.data) {
+                map[item.key.value] = item.value.value
+            }
+            true
+        } else false
     }
 }
 
 fun editVariants(map: VariantMap, title: String, owner: Window = Imabw.fxApp.stage): Boolean {
-    val pane = VariantPane(map)
     with(Dialog<ButtonType>()) {
-        isResizable = true
         init(title, owner)
+        val pane = VariantPane(map)
         dialogPane.content = pane
         dialogPane.buttonTypes.setAll(ButtonType.OK, ButtonType.CANCEL)
         return if (showAndWait().get() == ButtonType.OK && pane.isModified) {

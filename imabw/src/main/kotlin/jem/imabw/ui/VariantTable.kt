@@ -18,6 +18,7 @@
 
 package jem.imabw.ui
 
+import javafx.application.Platform
 import javafx.beans.binding.Bindings
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
@@ -27,7 +28,7 @@ import javafx.scene.control.*
 import javafx.scene.input.KeyCode
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.GridPane
-import javafx.scene.layout.VBox
+import javafx.util.StringConverter
 import jclp.VariantMap
 import jclp.Variants
 import mala.App
@@ -48,7 +49,6 @@ class VariantItem(key: String, name: String, value: Any) {
 }
 
 open class VariantPane(val map: VariantMap) : BorderPane() {
-    val ignoredNames = mutableSetOf<String>()
     val exportableTypes = mutableSetOf(Variants.FLOB, Variants.TEXT)
     val data = FXCollections.observableArrayList<VariantItem>()
     val table = TableView<VariantItem>(data)
@@ -62,23 +62,29 @@ open class VariantPane(val map: VariantMap) : BorderPane() {
     private val selectedItems get() = table.selectionModel.selectedItems
 
     init {
-        initData()
-        initTable()
-        initToolBar()
         center = table
         right = toolbar
+        styleClass += "variant-pane"
+        initTable()
+        initToolBar()
+        initData()
     }
 
     protected open fun isEditable(item: VariantItem) = true
 
-    protected open fun getItemName(id: String) = id.capitalize()
+    protected open fun getItemName(key: String) = key.capitalize()
 
-    protected open fun getAvailableKeys(): Collection<String> {
-        return emptyList()
-    }
+    protected open fun getItemType(key: String) = Variants.STRING
+
+    protected open fun ignoredNames(): Collection<String> = emptyList()
+
+    protected open fun availableNames(): Collection<String> = emptyList()
+
+    protected open fun toString(value: Any) = value.toString()
 
     private fun initTable() {
         with(table) {
+            isEditable = true
             Nodes.addInputMap(this, InputMap.consume(EventPattern.keyPressed(KeyCode.DELETE), {
                 if (selectedItems.isNotEmpty()) removeItem(selectedItems, true)
             }))
@@ -96,7 +102,7 @@ open class VariantPane(val map: VariantMap) : BorderPane() {
                 setCellValueFactory { it.value.typeName }
             }
             columns += TableColumn<VariantItem, String>(tr("d.editVariant.value")).apply {
-                setCellValueFactory { Bindings.convert(it.value.value) }
+                setCellValueFactory { Bindings.createStringBinding(Callable { toString(it.value.value.value) }, it.value.value) }
             }
         }
     }
@@ -134,9 +140,11 @@ open class VariantPane(val map: VariantMap) : BorderPane() {
     }
 
     private fun initData() {
-        map.filter { it.first !in ignoredNames }.mapTo(data) { (id, value) ->
+        map.filter { it.first !in ignoredNames() }.mapTo(data) { (id, value) ->
             VariantItem(id, getItemName(id), value)
         }
+        table.selectionModel.select(0)
+        Platform.runLater { table.requestFocus() }
     }
 
     private fun newItem() {
@@ -152,10 +160,20 @@ open class VariantPane(val map: VariantMap) : BorderPane() {
     }
 
     private fun removeItem(items: Collection<VariantItem>, showWarn: Boolean = false) {
-        if (!showWarn || confirm("Remove", "Are you sure?")) {
-            for (item in items) {
-                data.remove(item)
+        require(items.isNotEmpty()) { "no selected items" }
+        if (showWarn) {
+            val hint = if (items.size == 1) {
+                tr("d.removeVariant.oneHint", items.first().name.value)
+            } else {
+                tr("d.removeVariant.moreHint", items.size)
             }
+            if (!confirm(tr("d.removeVariant.title"), hint)) {
+                return
+            }
+        }
+        for (item in items) {
+            data.remove(item)
+            isModified = true
         }
     }
 
@@ -163,43 +181,81 @@ open class VariantPane(val map: VariantMap) : BorderPane() {
     }
 
     private inner class NewItemDialog : Dialog<ButtonType>() {
+        private val names = ComboBox<KeyedItem>()
+        private val types = ComboBox<KeyedItem>()
+        private lateinit var defaultTypeItem: KeyedItem
+
         lateinit var item: VariantItem
 
         init {
-            val box = VBox()
             val pane = GridPane()
             pane.hgap = 8.0
             pane.vgap = 8.0
             pane.init(listOf(
-                    Label("Name:"),
-                    Label("Type:")
+                    Label(tr("d.newVariant.name")),
+                    Label(tr("d.newVariant.type"))
             ), listOf(
-                    ComboBox<KeyedItem>().apply { initNames(this) },
-                    ComboBox<KeyedItem>().apply { initTypes(this) }
+                    names.apply { initNames(this) },
+                    types.apply { initTypes(this) }
             ))
-            box.children += pane
-
-            dialogPane.content = box
-            init("New Item", scene.window)
+            dialogPane.content = pane
+            init(tr("d.newVariant.title"), scene.window)
             dialogPane.buttonTypes.setAll(ButtonType.OK, ButtonType.CANCEL)
-        }
-
-        private fun initNames(comboBox: ComboBox<KeyedItem>) {
-            for (key in getAvailableKeys() - data.map { it.key.value }) {
-                comboBox.items.add(KeyedItem(key, getItemName(key)))
+            setOnCloseRequest {
+                println(names.isEditable)
+                val key = if (names.isEditable) names.editor.text else names.selectionModel.selectedItem.key
+                println(key)
+                item = VariantItem(key, "", Variants.getDefault(types.selectionModel.selectedItem.key)!!)
             }
-            comboBox.selectionModel.selectFirst()
+            Platform.runLater { names.selectionModel.select(0) }
         }
 
-        private fun initTypes(comboBox: ComboBox<KeyedItem>) {
+        private fun initNames(nameCombo: ComboBox<KeyedItem>) {
+            nameCombo.prefWidth = minOf(scene.width * 0.8, 360.0)
+            nameCombo.converter = object : StringConverter<KeyedItem>() {
+                override fun toString(item: KeyedItem?): String? = item?.name
+
+                override fun fromString(name: String) = KeyedItem(name, getItemName(name))
+            }
+            for (key in availableNames() - ignoredNames() - data.map { it.key.value }) {
+                nameCombo.items.add(KeyedItem(key, getItemName(key)))
+            }
+            nameCombo.items.add(KeyedItem("", tr("d.newVariant.customized")))
+            nameCombo.selectionModel.selectedItemProperty().addListener { _, _, nameItem ->
+                if (nameItem != null) {
+                    if (nameItem.key.isEmpty()) {
+                        names.isEditable = true
+                        types.selectionModel.select(defaultTypeItem)
+                    } else {
+                        names.isEditable = false
+                        val typeItem = types.items.find { it.key == getItemType(nameItem.key) }
+                        if (typeItem != null) {
+                            types.selectionModel.select(typeItem)
+                            types.isDisable = true
+                        } else {
+                            types.selectionModel.select(defaultTypeItem)
+                            types.isDisable = false
+                        }
+                    }
+                } else {
+                    names.isEditable = false
+                }
+            }
+        }
+
+        private fun initTypes(typeCombo: ComboBox<KeyedItem>) {
+            typeCombo.prefWidth = minOf(scene.width * 0.8, 360.0)
             for (type in Variants.allTypes) {
-                comboBox.items.add(KeyedItem(type, Variants.getName(type) ?: type.capitalize()))
+                typeCombo.items.add(KeyedItem(type, Variants.getName(type) ?: type.capitalize()).also {
+                    if (it.key == Variants.STRING) {
+                        defaultTypeItem = it
+                    }
+                })
             }
-            comboBox.selectionModel.selectFirst()
         }
     }
 
-    private class KeyedItem(val id: String, val name: String) {
+    private class KeyedItem(val key: String, val name: String) {
         override fun toString() = name
     }
 }

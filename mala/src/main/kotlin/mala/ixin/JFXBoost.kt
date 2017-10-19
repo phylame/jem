@@ -27,7 +27,6 @@ import javafx.geometry.HPos
 import javafx.geometry.VPos
 import javafx.scene.Group
 import javafx.scene.Node
-import javafx.scene.control.Label
 import javafx.scene.control.Tooltip
 import javafx.scene.control.TreeItem
 import javafx.scene.control.TreeView
@@ -54,21 +53,20 @@ operator fun Group.plusAssign(elements: Collection<Node>) {
     children.addAll(elements)
 }
 
-fun GridPane.init(labels: Collection<Node>, fields: Collection<Node>, firstRow: Int = 0) {
+fun GridPane.init(labels: Collection<Node>, fields: Collection<Node>, firstRow: Int = 0, vPos: VPos = VPos.CENTER) {
     val nodes = ArrayList<Node>(fields.size)
-    fields.forEachIndexed { index, node ->
-        nodes += node
-        node.styleClass += "form-field"
-        GridPane.setValignment(node, VPos.CENTER)
-        GridPane.setHalignment(node, HPos.LEFT)
-        add(node, 1, firstRow + index)
-    }
     labels.forEachIndexed { index, node ->
+        nodes += node
         node.styleClass += "form-label"
-        GridPane.setValignment(node, VPos.CENTER)
+        GridPane.setValignment(node, vPos)
         GridPane.setHalignment(node, HPos.RIGHT)
         add(node, 0, firstRow + index)
-        (node as? Label)?.labelFor = nodes[index]
+    }
+    fields.forEachIndexed { index, node ->
+        node.styleClass += "form-field"
+        GridPane.setValignment(node, vPos)
+        GridPane.setHalignment(node, HPos.LEFT)
+        add(node, 1, firstRow + index)
     }
 }
 

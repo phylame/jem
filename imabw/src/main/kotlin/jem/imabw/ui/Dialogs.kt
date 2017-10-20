@@ -24,7 +24,6 @@ import javafx.stage.FileChooser
 import javafx.stage.Modality
 import javafx.stage.Window
 import jclp.VariantMap
-import jclp.Variants
 import jclp.traceText
 import jem.*
 import jem.epm.EpmManager
@@ -172,11 +171,11 @@ fun editAttributes(chapter: Chapter, owner: Window = Imabw.fxApp.stage): Boolean
         isResizable = true
         init(App.tr("d.editAttribute.title", chapter.title), owner)
         val pane = object : VariantPane(chapter.attributes) {
-            override fun availableNames() = Attributes.names
+            override fun availableKeys() = Attributes.names
 
-            override fun ignoredNames() = listOf(COVER, INTRO)
+            override fun ignoredKeys() = listOf(TITLE, COVER, INTRO)
 
-            override fun getItemType(key: String) = Attributes.getType(key) ?: Variants.STRING
+            override fun getItemType(key: String) = Attributes.getType(key) ?: null
 
             override fun getItemName(key: String) = Attributes.getName(key) ?: key.capitalize()
 
@@ -188,10 +187,7 @@ fun editAttributes(chapter: Chapter, owner: Window = Imabw.fxApp.stage): Boolean
         dialogPane.content = pane
         dialogPane.buttonTypes.setAll(ButtonType.OK, ButtonType.CANCEL)
         return if (showAndWait().get() == ButtonType.OK && pane.isModified) {
-            val map = chapter.attributes.apply { clear() }
-            for (item in pane.data) {
-                map[item.key.value] = item.value.value
-            }
+            pane.syncToSource()
             true
         } else false
     }
@@ -204,10 +200,7 @@ fun editVariants(map: VariantMap, title: String, owner: Window = Imabw.fxApp.sta
         dialogPane.content = pane
         dialogPane.buttonTypes.setAll(ButtonType.OK, ButtonType.CANCEL)
         return if (showAndWait().get() == ButtonType.OK && pane.isModified) {
-            map.clear()
-            for (item in pane.data) {
-                map[item.key.value] = item.value.value
-            }
+            pane.syncToSource()
             true
         } else false
     }

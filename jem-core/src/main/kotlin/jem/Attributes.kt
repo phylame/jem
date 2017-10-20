@@ -70,6 +70,8 @@ object Attributes : VariantValidator {
 
     fun getName(name: String) = if (name.isNotEmpty()) M.optTr("attribute.$name") else null
 
+    fun getDefault(name: String) = getType(name)?.let { Variants.getDefault(it) }
+
     fun newAttributes() = VariantMap(this)
 
     override fun invoke(name: String, value: Any) {

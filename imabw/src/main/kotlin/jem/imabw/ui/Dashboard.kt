@@ -31,6 +31,7 @@ import javafx.scene.layout.HBox
 import jclp.EventBus
 import jclp.log.Log
 import jclp.text.TEXT_PLAIN
+import jclp.text.or
 import jem.author
 import jem.imabw.Imabw
 import jem.imabw.UISettings
@@ -44,21 +45,21 @@ import mala.App
 import mala.ixin.*
 
 class Dashboard : IApplication(), CommandHandler {
-    private val TAG = "Dashboard"
+    private val tagId = "Dashboard"
 
     lateinit var splitPane: SplitPane
 
-    lateinit var appDesigner: AppDesigner
+    lateinit var designer: AppDesigner
 
     override fun init() {
         Imabw.register(this)
     }
 
     override fun setup(scene: Scene, appPane: AppPane) {
-        appDesigner = App.assets.designerFor("ui/designer.json")!!
-        scene.stylesheets += App.assets.resourceFor("ui/default.css")!!.toExternalForm()
+        designer = App.assets.designerFor("ui/designer.json")!!
+        scene.stylesheets += UISettings.stylesheetUri or { App.assets.resourceFor("ui/default.css")!!.toExternalForm() }
 
-        appPane.setup(appDesigner, actionMap, menuMap)
+        appPane.setup(designer, actionMap, menuMap)
         actionMap.updateAccelerators(App.assets.propertiesFor("ui/keys.properties")!!)
         appPane.statusBar?.right = Indicator
 
@@ -138,11 +139,7 @@ class Dashboard : IApplication(), CommandHandler {
                 }
             }
             in editActions -> stage.scene.focusOwner.let {
-                if (it is Editable) {
-                    it.onEdit(command)
-                } else {
-                    Log.d(TAG) { "focused object is not editable: $it" }
-                }
+                (it as? Editable)?.onEdit(command) ?: Log.d(tagId) { "focused object is not editable: $it" }
             }
             else -> return false
         }
@@ -216,10 +213,9 @@ object Indicator : HBox() {
     private fun initRuler() {
         EditorPane.selectionModel.selectedItemProperty().addListener { _, old, new ->
             (old as? ChapterTab)?.editor?.let { text ->
-                @Suppress("UNCHECKED_CAST")
-                (text.properties[this] as? InvalidationListener)?.let { listener ->
-                    text.caretPositionProperty().removeListener(listener)
-                    text.selectionProperty().removeListener(listener)
+                (text.properties[this] as? InvalidationListener)?.let {
+                    text.caretPositionProperty().removeListener(it)
+                    text.selectionProperty().removeListener(it)
                 }
             }
             if (new is ChapterTab) {
@@ -250,8 +246,4 @@ private val editActions = arrayOf(
 
 interface Editable {
     fun onEdit(command: String)
-}
-
-interface ActionAware {
-    fun bindActions()
 }

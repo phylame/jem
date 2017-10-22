@@ -18,32 +18,42 @@
 
 package jem.imabw.ui
 
+import javafx.application.Platform
+import javafx.beans.binding.Bindings
 import javafx.scene.control.*
+import javafx.scene.layout.BorderPane
+import javafx.scene.layout.VBox
 import javafx.stage.DirectoryChooser
 import javafx.stage.FileChooser
 import javafx.stage.Modality
 import javafx.stage.Window
 import jclp.VariantMap
 import jclp.traceText
-import jem.*
+import jem.Chapter
 import jem.epm.EpmManager
 import jem.epm.PMAB_NAME
 import jem.imabw.History
 import jem.imabw.Imabw
+import jem.imabw.UISettings
+import jem.title
 import mala.App
 import mala.ixin.graphicFor
 import java.io.File
-import java.util.*
+import java.util.concurrent.Callable
 
-fun Dialog<*>.init(title: String, owner: Window) {
+fun Dialog<*>.init(title: String, owner: Window, tag: String) {
     headerText = null
     this.title = title
     initModality(Modality.WINDOW_MODAL)
     initOwner(owner)
+    if (tag.isNotEmpty()) {
+        setOnShowing { UISettings.restore(this, tag) }
+        setOnHidden { UISettings.store(this, tag) }
+    }
 }
 
 fun alert(type: Alert.AlertType, title: String, content: String, owner: Window = Imabw.fxApp.stage): Alert {
-    return Alert(type, content).apply { init(title, owner) }
+    return Alert(type, content).apply { init(title, owner, "") }
 }
 
 fun info(title: String, content: String, owner: Window = Imabw.fxApp.stage): Alert {
@@ -75,12 +85,72 @@ fun traceback(title: String, content: String, throwable: Throwable, owner: Windo
     }
 }
 
-fun input(title: String, content: String, text: String, owner: Window = Imabw.fxApp.stage): String? {
-    return TextInputDialog(text).run {
+fun input(
+        title: String,
+        label: String,
+        initial: String,
+        canEmpty: Boolean = true,
+        mustDiff: Boolean = false,
+        owner: Window = Imabw.fxApp.stage
+): String? {
+    return with(TextInputDialog(initial)) {
         graphic = null
-        init(title, owner)
-        this.contentText = content
+        init(title, owner, "")
+        val textField = editor
+        val okButton = dialogPane.lookupButton(ButtonType.OK)
+        if (!canEmpty) {
+            if (mustDiff) {
+                okButton.disableProperty().bind(Bindings.createBooleanBinding(Callable {
+                    textField.text.let { it.isEmpty() || it == initial }
+                }, textField.textProperty()))
+            } else {
+                okButton.disableProperty().bind(Bindings.isEmpty(textField.textProperty()))
+            }
+        } else if (mustDiff) {
+            okButton.disableProperty().bind(Bindings.notEqual(textField.textProperty(), initial))
+        }
+        contentText = label
         showAndWait().let { if (it.isPresent) it.get() else null }
+    }
+}
+
+fun longText(
+        title: String,
+        initial: String,
+        canEmpty: Boolean = true,
+        mustDiff: Boolean = false,
+        owner: Window = Imabw.fxApp.stage
+): String? {
+    with(Dialog<ButtonType>()) {
+        init(title, owner, "longText")
+        val root = VBox().apply {
+            dialogPane.content = this
+        }
+        val textArea = TextArea().apply {
+            text = initial
+            isWrapText = true
+            root.children += this
+            selectAll()
+        }
+        val openButton = ButtonType(App.tr("ui.button.open"), ButtonBar.ButtonData.LEFT)
+        dialogPane.buttonTypes.addAll(ButtonType.OK, ButtonType.CANCEL, openButton)
+        dialogPane.lookupButton(openButton).setOnMousePressed {
+            it.consume()
+        }
+        val okButton = dialogPane.lookupButton(ButtonType.OK)
+        if (!canEmpty) {
+            if (mustDiff) {
+                okButton.disableProperty().bind(Bindings.createBooleanBinding(Callable {
+                    textArea.text.let { it.isEmpty() || it == initial }
+                }, textArea.textProperty()))
+            } else {
+                okButton.disableProperty().bind(Bindings.isEmpty(textArea.textProperty()))
+            }
+        } else if (mustDiff) {
+            okButton.disableProperty().bind(Bindings.notEqual(textArea.textProperty(), initial))
+        }
+        Platform.runLater { textArea.requestFocus() }
+        return if (showAndWait().get() == ButtonType.OK) textArea.text else null
     }
 }
 
@@ -110,6 +180,12 @@ private fun setExtensionFilters(chooser: FileChooser, extensions: Collection<Col
             }
         }
     }
+}
+
+fun selectFile(title: String, owner: Window = Imabw.fxApp.stage): File? {
+    fileChooser.title = title
+    fileChooser.extensionFilters.clear()
+    return fileChooser.showOpenDialog(owner)
 }
 
 fun selectDirectory(title: String, owner: Window = Imabw.fxApp.stage): File? {
@@ -169,25 +245,11 @@ fun openBookFiles(owner: Window = Imabw.fxApp.stage): List<File>? {
 fun editAttributes(chapter: Chapter, owner: Window = Imabw.fxApp.stage): Boolean {
     with(Dialog<ButtonType>()) {
         isResizable = true
-        init(App.tr("d.editAttribute.title", chapter.title), owner)
-        val pane = object : VariantPane(chapter.attributes) {
-            override fun availableKeys() = Attributes.names
-
-            override fun ignoredKeys() = listOf(TITLE, COVER, INTRO)
-
-            override fun getItemType(key: String) = Attributes.getType(key) ?: null
-
-            override fun getItemName(key: String) = Attributes.getName(key) ?: key.capitalize()
-
-            override fun toString(value: Any) = when (value) {
-                is Locale -> value.displayName
-                else -> value.toString()
-            }
-        }
-        dialogPane.content = pane
+        init(App.tr("d.editAttribute.title", chapter.title), owner, "attributes")
+        val pane = AttributePane(chapter).apply { dialogPane.content = BorderPane(this) }
         dialogPane.buttonTypes.setAll(ButtonType.OK, ButtonType.CANCEL)
         return if (showAndWait().get() == ButtonType.OK && pane.isModified) {
-            pane.syncToSource()
+            pane.syncVariants()
             true
         } else false
     }
@@ -195,12 +257,13 @@ fun editAttributes(chapter: Chapter, owner: Window = Imabw.fxApp.stage): Boolean
 
 fun editVariants(map: VariantMap, title: String, owner: Window = Imabw.fxApp.stage): Boolean {
     with(Dialog<ButtonType>()) {
-        init(title, owner)
-        val pane = VariantPane(map)
+        init(title, owner, "extensions")
+        isResizable = true
+        val pane = VariantPane(map, false)
         dialogPane.content = pane
         dialogPane.buttonTypes.setAll(ButtonType.OK, ButtonType.CANCEL)
         return if (showAndWait().get() == ButtonType.OK && pane.isModified) {
-            pane.syncToSource()
+            pane.syncVariants()
             true
         } else false
     }

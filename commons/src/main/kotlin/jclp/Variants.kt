@@ -21,13 +21,13 @@ package jclp
 import jclp.flob.emptyFlob
 import jclp.io.getProperties
 import jclp.log.Log
+import jclp.text.Converters
 import jclp.text.emptyText
 import java.io.IOException
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.*
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Supplier
 
 val Any?.actualValue
@@ -102,10 +102,13 @@ object Variants {
 
     fun getDefault(id: String) = if (id.isNotEmpty()) lookupType(id)?.value?.actualValue else null
 
+    fun parse(id: String, str: String): Any? = getClass(id)?.let { Converters.parse(str, it) }
+
     fun printable(obj: Any) = getType(obj)?.let {
         when (it) {
-            STRING, BOOLEAN, INTEGER, REAL, DATETIME, DATE, TIME -> obj.toString()
+            STRING, INTEGER, REAL, DATETIME, DATE, TIME, TEXT, FLOB -> obj.toString()
             LOCALE -> (obj as Locale).displayName
+            BOOLEAN -> M.tr("value.$obj")
             else -> null
         }
     }
@@ -163,42 +166,6 @@ object Variants {
 
         var value: Any? = null
     }
-}
-
-interface Reusable {
-    fun retain()
-
-    fun release()
-}
-
-fun Any.retainSelf() {
-    (this as? Reusable)?.retain()
-}
-
-fun Any.releaseSelf() {
-    (this as? Reusable)?.release()
-}
-
-abstract class ReusableHelper : Reusable {
-    private var refCount = AtomicInteger(1)
-
-    override fun retain() {
-        require(refCount.get() != 0) { "object is disposed" }
-        refCount.incrementAndGet()
-    }
-
-    override fun release() {
-        require(refCount.get() != 0) { "object is disposed" }
-        if (refCount.decrementAndGet() == 0) {
-            dispose()
-        }
-    }
-
-    protected abstract fun dispose()
-}
-
-abstract class ReusableSource : ReusableHelper(), AutoCloseable {
-    override fun dispose() = close()
 }
 
 typealias VariantValidator = (String, Any) -> Unit

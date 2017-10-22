@@ -84,7 +84,7 @@ object NavPane : BorderPane(), CommandHandler {
         tree.id = "toc-tree"
         tree.cellFactory = CellFactory
         tree.selectionModel.selectionMode = SelectionMode.MULTIPLE
-        Imabw.dashboard.appDesigner.items["navContext"]?.let {
+        Imabw.dashboard.designer.items["navContext"]?.let {
             tree.contextMenu = it.toContextMenu(Imabw, App, App.assets, IxIn.actionMap, null)
         }
         Nodes.addInputMap(tree, consume(mouseClicked().onlyIf { it.clickCount == 2 && it.button == MouseButton.PRIMARY }, {
@@ -142,7 +142,7 @@ object NavPane : BorderPane(), CommandHandler {
     val selectedNode get() = tree.selectionModel.selectedItem
 
     fun createChapter(): Chapter? {
-        return input(tr("d.newChapter.title"), tr("d.newChapter.tip"), tr("jem.chapter.untitled"))?.let {
+        return input(tr("d.newChapter.title"), tr("d.newChapter.tip"), tr("jem.chapter.untitled"), false)?.let {
             Chapter(it)
         }
     }
@@ -160,7 +160,7 @@ object NavPane : BorderPane(), CommandHandler {
     fun renameChapter() {
         val node = selectedNode
         val chapter = node!!.value
-        input(tr("d.renameChapter.title"), tr("d.renameChapter.tip"), chapter.title)?.let {
+        input(tr("d.renameChapter.title"), tr("d.renameChapter.tip"), chapter.title, false, true)?.let {
             chapter.title = it
             node.refresh()
             EventBus.post(ModificationEvent(chapter, ModificationType.ATTRIBUTE_MODIFIED))
@@ -308,7 +308,7 @@ object NavHeader : BorderPane() {
 
         right = ToolBar().also {
             it.id = "nav-tool-bar"
-            Imabw.dashboard.appDesigner.items["navTools"]?.let { items ->
+            Imabw.dashboard.designer.items["navTools"]?.let { items ->
                 it.init(items, Imabw, App, App.assets, IxIn.actionMap)
             }
             BorderPane.setAlignment(it, Pos.CENTER)

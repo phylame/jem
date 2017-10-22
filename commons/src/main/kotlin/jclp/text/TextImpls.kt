@@ -18,10 +18,10 @@
 
 package jclp.text
 
-import jclp.Reusable
-import jclp.ReusableHelper
+import jclp.DisposableSupport
 import jclp.flob.Flob
 import jclp.releaseSelf
+import jclp.retainSelf
 import java.io.Reader
 import java.io.Writer
 import java.nio.charset.Charset
@@ -40,10 +40,15 @@ fun textOf(cs: CharSequence, type: String = TEXT_PLAIN): Text = StringText(type,
 
 fun emptyText(type: String = TEXT_PLAIN) = textOf("", type)
 
-private open class FlobText(type: String, val flob: Flob, encoding: String? = null) : AbstractText(type) {
+private class FlobText(override val type: String, val flob: Flob, encoding: String? = null) : DisposableSupport(), Text {
     private val charset: Charset = when {
         encoding == null || encoding.isEmpty() -> Charset.defaultCharset()
         else -> Charset.forName(encoding)
+    }
+
+    init {
+        flob.retainSelf()
+        require(type.isNotEmpty()) { "type cannot be empty" }
     }
 
     override fun toString() = openReader().use(Reader::readText)
@@ -53,19 +58,8 @@ private open class FlobText(type: String, val flob: Flob, encoding: String? = nu
     override fun writeTo(output: Writer) = openReader().use { it.copyTo(output) }
 
     private fun openReader() = flob.openStream().bufferedReader(charset)
+
+    override fun dispose() = flob.releaseSelf()
 }
 
-fun textOf(source: Flob, encoding: String? = null, type: String = TEXT_PLAIN): Text {
-    if (source is Reusable) {
-        source.retain()
-        return object : FlobText(type, source, encoding), Reusable {
-            val helper = object : ReusableHelper() {
-                override fun dispose() = flob.releaseSelf()
-            }
-
-            override fun release() = helper.release()
-            override fun retain() = helper.retain()
-        }
-    }
-    return FlobText(type, source, encoding)
-}
+fun textOf(source: Flob, encoding: String? = null, type: String = TEXT_PLAIN): Text = FlobText(type, source, encoding)

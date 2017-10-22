@@ -18,8 +18,7 @@
 
 package jclp.flob
 
-import jclp.Reusable
-import jclp.ReusableHelper
+import jclp.DisposableSupport
 import jclp.io.clippedStream
 import jclp.io.copyRange
 import jclp.io.detectMime
@@ -64,7 +63,7 @@ private class PathFlob(private val path: Path, mime: String) : AbstractFlob(mime
 
     override fun openStream(): InputStream = Files.newInputStream(path)
 
-    override fun toString() = "file://${name.replace('\\', '/')}"
+    override fun toString() = "file://${name.replace('\\', '/')};mime=$mime"
 }
 
 fun flobOf(path: Path, mime: String = ""): Flob = PathFlob(path, mime)
@@ -90,7 +89,9 @@ private class BlockFlob(
         private val offset: Long,
         private val length: Long,
         mime: String
-) : AbstractFlob(mime), Reusable {
+) : DisposableSupport(), Flob {
+    override val mime: String = detectMime(name, mime)
+
     init {
         file.retainSelf()
         require(offset + length <= file.length()) { "offset($offset) + length($length) > total(${file.length()})" }
@@ -106,39 +107,29 @@ private class BlockFlob(
         it.copyRange(output, length)
     }
 
-    private val helper = object : ReusableHelper() {
-        override fun dispose() = file.releaseSelf()
-    }
-
-    override fun release() = helper.release()
-
-    override fun retain() = helper.retain()
-
     override fun toString() = "clip://${super.toString()}"
+
+    override fun dispose() = file.releaseSelf()
 }
 
 fun flobOf(name: String, file: RandomAccessFile, offset: Long, length: Long, mime: String = ""): Flob {
     return BlockFlob(name, file, offset, length, mime)
 }
 
-private class VDMFlob(val reader: VDMReader, override val name: String, mime: String) : AbstractFlob(mime), Reusable {
+private class VDMFlob(val reader: VDMReader, override val name: String, mime: String) : DisposableSupport(), Flob {
     init {
         reader.retainSelf()
     }
+
+    override val mime: String = detectMime(name, mime)
 
     private val entry = reader.getEntry(name) ?: throw IllegalArgumentException("No such entry '$name'")
 
     override fun openStream() = reader.getInputStream(entry)
 
-    private val helper = object : ReusableHelper() {
-        override fun dispose() = reader.releaseSelf()
-    }
-
-    override fun release() = helper.release()
-
-    override fun retain() = helper.retain()
-
     override fun toString() = "$entry;mime=$mime"
+
+    override fun dispose() = reader.releaseSelf()
 }
 
 fun flobOf(reader: VDMReader, name: String, mime: String = ""): Flob = VDMFlob(reader, name, mime)

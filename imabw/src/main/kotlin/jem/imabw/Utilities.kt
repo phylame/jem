@@ -19,10 +19,16 @@
 package jem.imabw
 
 import javafx.concurrent.Task
+import javafx.scene.control.ComboBox
+import javafx.util.StringConverter
 import mala.App
 import java.io.File
 import java.nio.charset.Charset
 import java.util.*
+
+class KeyAndName(val key: String, val name: String) {
+    override fun toString() = name
+}
 
 abstract class ProgressTask<V> : Task<V>() {
     init {
@@ -57,10 +63,24 @@ class ReadLineTask(val file: File, val charset: Charset = Charsets.UTF_8) : Prog
     override fun call() = file.readLines(charset)
 }
 
-object FileCache {
-    private val files = LinkedList<File>()
+class LocalePicker(initial: Locale = Locale.getDefault()) : ComboBox<Locale>() {
+    init {
+        converter = object : StringConverter<Locale>() {
+            override fun toString(locale: Locale) = locale.displayName
 
-    fun dispose() {
-
+            override fun fromString(string: String?) = throw InternalError("Not Editable")
+        }
+        var index = 0
+        var selection = -1
+        Locale.getAvailableLocales().forEach {
+            if (it !== Locale.ROOT) {
+                items.add(it)
+                if (it == initial) {
+                    selection = index
+                }
+                ++index
+            }
+        }
+        selectionModel.select(selection)
     }
 }

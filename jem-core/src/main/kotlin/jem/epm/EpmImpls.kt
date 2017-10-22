@@ -18,7 +18,7 @@
 
 package jem.epm
 
-import jclp.Reusable
+import jclp.AutoDisposable
 import jclp.log.Log
 import jclp.releaseSelf
 import jclp.setting.Settings
@@ -47,8 +47,8 @@ interface CommonParser<I : Closeable> : Parser {
     fun parse(input: I, arguments: Settings?): Book
 
     override fun parse(input: String, arguments: Settings?) = open(input, arguments).let { source ->
-        if (source !is Reusable) {
-            Log.w("EpmImpl") { "open(input, arguments) not returned '${Reusable::class.java.name}'" }
+        if (source !is AutoDisposable) {
+            Log.w("EpmImpl") { "open(input, arguments) not returned '${AutoDisposable::class.java.name}'" }
         }
         try {
             parse(source, arguments)

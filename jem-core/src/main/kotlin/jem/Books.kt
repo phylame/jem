@@ -76,11 +76,12 @@ open class Chapter(
         clear()
     }
 
-    fun cleanup() {
+    open fun cleanup() {
         isCleaned = true
         clear(true)
         attributes.clear()
         text = null
+        tag = null
     }
 
     private var isCleaned = false
@@ -140,6 +141,11 @@ open class Book : Chapter {
     }
 
     constructor(chapter: Chapter, deepCopy: Boolean) : super(chapter, deepCopy)
+
+    override fun cleanup() {
+        super.cleanup()
+        extensions.clear()
+    }
 
     override fun dumpTo(chapter: Chapter, deepCopy: Boolean) {
         super.dumpTo(chapter, deepCopy)

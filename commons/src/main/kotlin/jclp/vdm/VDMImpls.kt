@@ -18,7 +18,7 @@
 
 package jclp.vdm
 
-import jclp.ReusableSource
+import jclp.DisposableCloseable
 import jclp.io.createRecursively
 import jclp.synchronized
 import java.io.*
@@ -45,7 +45,7 @@ private class FileVDMEntry(
     var stream: OutputStream? = null
 }
 
-private class FileVDMReader(val dir: File) : ReusableSource(), VDMReader {
+private class FileVDMReader(val dir: File) : DisposableCloseable(), VDMReader {
     override val comment = null
 
     override val name: String = dir.path
@@ -177,7 +177,7 @@ private class ZipVDMEntry(val entry: ZipEntry, val reader: ZipVDMReader? = null,
     } ?: entry.toString()
 }
 
-private class ZipVDMReader(val zip: ZipFile) : ReusableSource(), VDMReader {
+private class ZipVDMReader(val zip: ZipFile) : DisposableCloseable(), VDMReader {
     override val name: String = zip.name
 
     override val comment: String? = zip.comment
@@ -192,9 +192,7 @@ private class ZipVDMReader(val zip: ZipFile) : ReusableSource(), VDMReader {
 
     override val size get() = zip.size()
 
-    override fun close() {
-        zip.close()
-    }
+    override fun close() = zip.close()
 
     override fun toString() = "ZipVDMReader@${hashCode()}{zip=$name}"
 }

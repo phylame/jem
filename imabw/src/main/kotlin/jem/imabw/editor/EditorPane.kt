@@ -38,8 +38,8 @@ import jem.title
 import mala.App
 import mala.ixin.CommandHandler
 import mala.ixin.IxIn
-import mala.ixin.init
 import mala.ixin.resetDisable
+import mala.ixin.toContextMenu
 import org.fxmisc.richtext.LineNumberFactory
 import org.fxmisc.richtext.StyleClassedTextArea
 import org.fxmisc.richtext.model.NavigationActions
@@ -47,8 +47,8 @@ import java.io.File
 import java.util.concurrent.Callable
 
 object EditorPane : TabPane(), CommandHandler, Editable {
-    private val tabMenu = ContextMenu()
-    private val textMenu = ContextMenu()
+    private val tabMenu: ContextMenu?
+    private val textMenu: ContextMenu?
 
     val selectedTab get() = selectionModel.selectedItem as? ChapterTab
 
@@ -62,13 +62,9 @@ object EditorPane : TabPane(), CommandHandler, Editable {
         isFocusTraversable = false
         tabClosingPolicy = TabClosingPolicy.ALL_TABS
 
-        val designer = Imabw.dashboard.appDesigner
-        designer.items["tabContext"]?.let {
-            tabMenu.init(it, Imabw, App, App.assets, IxIn.actionMap, null)
-        }
-        designer.items["textContext"]?.let {
-            textMenu.init(it, Imabw, App, App.assets, IxIn.actionMap, null)
-        }
+        val designer = Imabw.dashboard.designer
+        tabMenu = designer.items["tabContext"]?.toContextMenu(Imabw, App, App.assets, IxIn.actionMap, null)
+        textMenu = designer.items["textContext"]?.toContextMenu(Imabw, App, App.assets, IxIn.actionMap, null)
         selectionModel.selectedItemProperty().addListener { _, old, new ->
             (old as? ChapterTab)?.let {
                 it.contextMenu = null
@@ -82,7 +78,7 @@ object EditorPane : TabPane(), CommandHandler, Editable {
         }
         tabs.addListener(ListChangeListener {
             while (it.next()) {
-                it.removed.forEach { (it as? ChapterTab)?.cacheIfNeed() }
+                it.removed.forEach { (it as? ChapterTab)?.cacheIfNeed(true) }
             }
         })
         EventBus.register<WorkflowEvent> {
@@ -116,7 +112,7 @@ object EditorPane : TabPane(), CommandHandler, Editable {
     }
 
     fun cacheTabs() {
-        chapterTabs.forEach { it.cacheIfNeed() }
+        chapterTabs.forEach { it.cacheIfNeed(false) }
     }
 
     private fun initActions() {
@@ -210,7 +206,9 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
         }
         File.createTempFile("imabw-text-", ".txt").let {
             try {
-                it.bufferedWriter().use { it.writeLines(editor.paragraphs) }
+                it.bufferedWriter().use {
+                    it.writeLines(editor.paragraphs.asSequence().map { it.text }.iterator())
+                }
                 chapter.text = textOf(flobOf(it.toPath(), "text/plain"), "UTF-8")
             } catch (e: Exception) {
                 Log.e(tagId, e) { "cannot cache text to '$it'" }
@@ -222,9 +220,13 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
         }
     }
 
-    fun cacheIfNeed() {
+    fun cacheIfNeed(async: Boolean) {
         if (isModified && !isDisposed) {
-            Imabw.submit { cacheText() }
+            if (async) {
+                Imabw.submit { cacheText() }
+            } else {
+                cacheText()
+            }
         }
     }
 

@@ -36,7 +36,6 @@ object SimpleFacade : LogFacade {
     private fun print(tag: String, level: LogLevel, msg: String) {
         val text = "[${LocalDateTime.now()}] [${Thread.currentThread().name}] ${level.name[0]}/$tag: $msg"
         if (level.code > LogLevel.WARN.code) {
-            println(text)
         } else {
             System.err.println(text)
         }

@@ -21,10 +21,12 @@ package jem.imabw
 import javafx.beans.binding.Bindings
 import javafx.collections.FXCollections
 import javafx.collections.ListChangeListener
+import javafx.scene.control.Dialog
 import javafx.scene.control.MenuItem
 import javafx.scene.control.SeparatorMenuItem
 import jclp.io.createRecursively
 import jclp.setting.delegate
+import jclp.setting.getDouble
 import mala.App
 import mala.AppSettings
 import mala.MalaSettings
@@ -39,7 +41,25 @@ object GeneralSettings : AppSettings() {
 }
 
 object UISettings : IxInSettings() {
+    var stylesheetUri by delegate("", "ui.stylesheet.uri")
+
     var navigationBarVisible by delegate(true, "form.navigationBar.visible")
+
+    fun restore(dialog: Dialog<*>, tag: String) {
+        dialog.dialogPane.apply {
+            getDouble("dialog.$tag.width")?.let { prefWidth = it }
+            getDouble("dialog.$tag.height")?.let { prefHeight = it }
+        }
+        getDouble("dialog.$tag.x")?.let { dialog.x = it }
+        getDouble("dialog.$tag.y")?.let { dialog.y = it }
+    }
+
+    fun store(dialog: Dialog<*>, tag: String) {
+        set("dialog.$tag.width", dialog.dialogPane.width)
+        set("dialog.$tag.height", dialog.dialogPane.height)
+        set("dialog.$tag.x", dialog.x)
+        set("dialog.$tag.y", dialog.y)
+    }
 }
 
 object EditorSettings : MalaSettings("config/editor.ini") {

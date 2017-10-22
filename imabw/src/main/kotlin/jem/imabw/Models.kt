@@ -360,9 +360,7 @@ class Work(val book: Book, val inParam: ParserParam? = null) : EventAction<Modif
                 return
             }
             File(tmp.substring(0, tmp.length - SWAP_SUFFIX.length)).apply {
-                if (!delete()) {
-                    Log.e("Work") { "cannot delete temp file '$this'" }
-                } else if (!swap.renameTo(this)) {
+                if (!delete() || !swap.renameTo(this)) {
                     Log.e("Work") { "cannot rename '$tmp' to '$this'" }
                 }
             }

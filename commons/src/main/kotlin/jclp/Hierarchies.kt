@@ -28,6 +28,18 @@ interface Hierarchical<T : Hierarchical<T>> : Iterable<T> {
     operator fun get(index: Int): T
 }
 
+val Hierarchical<*>.depth: Int
+    get() {
+        if (size == 0) {
+            return 0
+        }
+        var depth = 0
+        for (item in this) {
+            depth = maxOf(depth, item.depth)
+        }
+        return depth + 1
+    }
+
 val Hierarchical<*>.isRoot get() = parent == null
 
 val Hierarchical<*>.isNotRoot get() = parent != null
@@ -57,14 +69,6 @@ fun <T : Hierarchical<T>> T.getPath(top: T?): List<T> {
 
 fun <T : Hierarchical<T>> T.toRoot() = getPath(null)
 
-fun <T : Hierarchical<T>> T.locate(indices: IntArray): T? {
-    var item: T? = null
-    for (index in indices) {
-        item = get(if (index < 0) index + size else index)
-    }
-    return item
-}
-
 fun <T : Hierarchical<T>> T.mostBelow(top: T? = null): T {
     var parent: T = this
     while (parent.parent != top) {
@@ -73,17 +77,13 @@ fun <T : Hierarchical<T>> T.mostBelow(top: T? = null): T {
     return parent
 }
 
-val Hierarchical<*>.depth: Int
-    get() {
-        if (size == 0) {
-            return 0
-        }
-        var depth = 0
-        for (item in this) {
-            depth = maxOf(depth, item.depth)
-        }
-        return depth + 1
+fun <T : Hierarchical<T>> T.locate(indices: IntArray): T? {
+    var item: T? = null
+    for (index in indices) {
+        item = get(if (index < 0) index + size else index)
     }
+    return item
+}
 
 fun <T : Hierarchical<T>> T.locate(indices: Collection<Int>): T? {
     var item: T? = null

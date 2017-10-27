@@ -210,7 +210,7 @@ internal class TOCBuilder(
     private fun relativeToText(path: Path) = textRoot.relativize(path).vdmPath
 
     private fun writeFlob(flob: Flob, id: String): Pair<Item, Path> {
-        val mime = flob.mime
+        val mime = flob.mimeType
         return opf.newItem(id, "${classifyDir(mime)}$id${suffixName(flob.name)}", mime) {
             writer.useStream(it.vdmPath) {
                 flob.writeTo(it)

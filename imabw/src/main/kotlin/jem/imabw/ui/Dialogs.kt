@@ -27,7 +27,7 @@ import javafx.stage.DirectoryChooser
 import javafx.stage.FileChooser
 import javafx.stage.Modality
 import javafx.stage.Window
-import jclp.VariantMap
+import jclp.ValueMap
 import jclp.traceText
 import jem.Chapter
 import jem.epm.EpmManager
@@ -255,7 +255,7 @@ fun editAttributes(chapter: Chapter, owner: Window = Imabw.fxApp.stage): Boolean
     }
 }
 
-fun editVariants(map: VariantMap, title: String, owner: Window = Imabw.fxApp.stage): Boolean {
+fun editVariants(map: ValueMap, title: String, owner: Window = Imabw.fxApp.stage): Boolean {
     with(Dialog<ButtonType>()) {
         init(title, owner, "extensions")
         isResizable = true

@@ -18,10 +18,10 @@
 
 package jem.format.pmab
 
-import jclp.VariantMap
-import jclp.Variants
+import jclp.ValueMap
+import jclp.TypeManager
 import jclp.flob.flobOf
-import jclp.releaseSelf
+import jclp.tryRelease
 import jclp.setting.Settings
 import jclp.setting.getString
 import jclp.text.Text
@@ -121,7 +121,7 @@ internal object PmabParser : VDMParser {
         if (tag == "item") {
             parseItem(sb.toString().trim(), data).also {
                 data.values[data.itemName] = it
-                it.releaseSelf()
+                it.tryRelease()
             }
         }
     }
@@ -149,21 +149,21 @@ internal object PmabParser : VDMParser {
             "chapter" -> data.chapter = data.chapter.parent!!
             "item" -> parseItem(sb.toString().trim(), data).also {
                 data.chapter[data.itemName] = it
-                it.releaseSelf()
+                it.tryRelease()
             }
             "content" -> (parseItem(sb.toString().trim(), data) as Text).also {
                 data.chapter.text = it
-                it.releaseSelf()
+                it.tryRelease()
             }
         }
     }
 
     private fun fallbackType(name: String, type: String): String {
-        if (type == Variants.STRING) {
+        if (type == TypeManager.STRING) {
             Attributes.getType(name)?.let { return it }
         }
         return when (name) {
-            WORDS -> Variants.STRING
+            WORDS -> TypeManager.STRING
             else -> type
         }
     }
@@ -175,12 +175,12 @@ internal object PmabParser : VDMParser {
         val parts = itemType.split(';')
         val type = parts.first()
         return when (type) {
-            Variants.STRING, "" -> text
-            Variants.REAL -> parseDouble(text) { data.xmlPosition() }
-            Variants.BOOLEAN -> text.toBoolean()
-            Variants.INTEGER, "unit" -> parseInt(text) { data.xmlPosition() }
-            Variants.LOCALE -> Locale.forLanguageTag(text.replace('_', '-'))
-            Variants.DATETIME -> {
+            TypeManager.STRING, "" -> text
+            TypeManager.REAL -> parseDouble(text) { data.xmlPosition() }
+            TypeManager.BOOLEAN -> text.toBoolean()
+            TypeManager.INTEGER, "unit" -> parseInt(text) { data.xmlPosition() }
+            TypeManager.LOCALE -> Locale.forLanguageTag(text.replace('_', '-'))
+            TypeManager.DATETIME -> {
                 val format = data.getConfig("datetimeFormat") ?: itemType.valueFor("format") ?: ""
                 if ("h" in format || "H" in format) {
                     parseDateTime(text, format) { data.xmlPosition() }.let {
@@ -191,11 +191,11 @@ internal object PmabParser : VDMParser {
                     parseDate(text, format) { data.xmlPosition() }
                 }
             }
-            Variants.DATE -> {
+            TypeManager.DATE -> {
                 val format = data.getConfig("dateFormat") ?: itemType.valueFor("format") ?: ""
                 parseDate(text, format) { data.xmlPosition() }
             }
-            Variants.TIME -> {
+            TypeManager.TIME -> {
                 val format = data.getConfig("timeFormat") ?: itemType.valueFor("format") ?: ""
                 parseTime(text, format) { data.xmlPosition() }
             }
@@ -203,7 +203,7 @@ internal object PmabParser : VDMParser {
                 type.startsWith("text/") -> {
                     val encoding = data.getConfig("encoding") ?: itemType.valueFor("encoding")
                     val flob = flobOf(data.reader, text, type)
-                    textOf(flob, encoding, type.substring(5)).also { flob.releaseSelf() }
+                    textOf(flob, encoding, type.substring(5)).also { flob.tryRelease() }
                 }
                 type.matches("[\\w]+/.+".toRegex()) -> flobOf(data.reader, text, type)
                 else -> text
@@ -226,7 +226,7 @@ internal object PmabParser : VDMParser {
 
         lateinit var itemName: String
 
-        lateinit var values: VariantMap
+        lateinit var values: ValueMap
 
         lateinit var meta: MutableMap<String, String>
 

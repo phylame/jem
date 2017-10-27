@@ -112,7 +112,7 @@ internal object PmabMaker : VDMMaker {
         }
     }
 
-    private fun writeItems(map: VariantMap, tag: String, prefix: String, data: Local) {
+    private fun writeItems(map: ValueMap, tag: String, prefix: String, data: Local) {
         with(data.render) {
             beginTag(tag)
             for ((name, value) in map) {
@@ -127,25 +127,25 @@ internal object PmabMaker : VDMMaker {
     private fun writeItem(name: String, value: Any, prefix: String, data: Local) {
         with(data.render) {
             beginTag("item").attribute("name", name)
-            var type = Variants.getType(value) ?: Variants.STRING
+            var type = TypeManager.getType(value) ?: TypeManager.STRING
             val text = when (type) {
-                Variants.TEXT -> (value as Text).let {
+                TypeManager.TEXT -> (value as Text).let {
                     type = typeOf(it, data)
                     writeText(it, prefix + name, data)
                 }
-                Variants.FLOB -> (value as Flob).let {
-                    type = it.mime
+                TypeManager.FLOB -> (value as Flob).let {
+                    type = it.mimeType
                     writeFlob(it, prefix + name, data)
                 }
-                Variants.DATE -> (data.getConfig("dateFormat") ?: DATE_FORMAT).let {
+                TypeManager.DATE -> (data.getConfig("dateFormat") ?: DATE_FORMAT).let {
                     type += ";format=" + it
                     (value as LocalDate).format(DateTimeFormatter.ofPattern(it))
                 }
-                Variants.TIME -> (data.getConfig("timeFormat") ?: TIME_FORMAT).let {
+                TypeManager.TIME -> (data.getConfig("timeFormat") ?: TIME_FORMAT).let {
                     type += ";format=" + it
                     (value as LocalTime).format(DateTimeFormatter.ofPattern(it))
                 }
-                Variants.DATETIME -> (data.getConfig("datetimeFormat") ?: DATE_TIME_FORMAT).let {
+                TypeManager.DATETIME -> (data.getConfig("datetimeFormat") ?: DATE_TIME_FORMAT).let {
                     type += ";format=" + it
                     (value as LocalDateTime).format(DateTimeFormatter.ofPattern(it))
                 }

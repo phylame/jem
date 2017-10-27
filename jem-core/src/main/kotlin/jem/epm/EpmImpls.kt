@@ -20,7 +20,7 @@ package jem.epm
 
 import jclp.AutoDisposable
 import jclp.log.Log
-import jclp.releaseSelf
+import jclp.tryRelease
 import jclp.setting.Settings
 import jclp.setting.getInt
 import jclp.setting.getString
@@ -55,7 +55,7 @@ interface CommonParser<I : Closeable> : Parser {
         } catch (e: Exception) {
             throw e
         } finally {
-            source.releaseSelf()
+            source.tryRelease()
         }
     }
 }

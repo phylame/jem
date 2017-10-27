@@ -103,7 +103,7 @@ internal class NCXBuilder(
         newMeta("dtb:totalPageCount", "0")
         newMeta("dtb:maxPageNumber", "0")
 
-        book.extensions.filter { it.first.startsWith(NCX_META_PREFIX) }.forEach { (name, value) ->
+        book.extensions.filter { it.key.startsWith(NCX_META_PREFIX) }.forEach { (name, value) ->
             newMeta(name.substring(NCX_META_PREFIX.length), value.toString())
         }
 

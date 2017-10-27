@@ -18,6 +18,7 @@
 
 package jclp.io
 
+import jclp.text.or
 import java.util.*
 
 const val UNKNOWN_MIME = "application/octet-stream"
@@ -36,8 +37,6 @@ fun mapMimes(mimes: Map<String, String>) {
 
 fun getMime(path: String) = if (path.isNotEmpty()) extName(path).let {
     if (it.isEmpty()) UNKNOWN_MIME else mimeMap.getProperty(it) ?: UNKNOWN_MIME
-} else {
-    ""
-}
+} else ""
 
-fun detectMime(path: String, mime: String) = mime.takeIf(String::isNotEmpty) ?: getMime(path)
+fun detectMime(path: String, mime: String) = mime or { getMime(path) }

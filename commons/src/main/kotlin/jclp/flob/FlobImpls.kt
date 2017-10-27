@@ -23,60 +23,59 @@ import jclp.io.clippedStream
 import jclp.io.copyRange
 import jclp.io.detectMime
 import jclp.io.getResource
-import jclp.releaseSelf
-import jclp.retainSelf
+import jclp.tryRelease
+import jclp.tryRetain
 import jclp.vdm.VDMReader
-import java.io.ByteArrayInputStream
-import java.io.InputStream
-import java.io.OutputStream
-import java.io.RandomAccessFile
+import java.io.*
 import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Path
 
-abstract class AbstractFlob(private val type: String) : Flob {
-    override val mime get() = detectMime(name, type)
-
-    override fun toString() = "$name;mime=$mime"
-}
-
-private class URLFlob(private val url: URL, mime: String) : AbstractFlob(mime) {
+private class URLFlob(private val url: URL, mime: String) : Flob {
     override val name: String = url.path
+
+    override val mimeType = detectMime(mime, name)
 
     override fun openStream(): InputStream = url.openStream()
 
-    override fun toString() = "$url;mime=$mime"
+    override fun toString() = "$url;mime=$mimeType"
 }
 
 fun flobOf(url: URL, mime: String = ""): Flob = URLFlob(url, mime)
 
 fun flobOf(uri: String, loader: ClassLoader? = null, mime: String = ""): Flob {
-    return flobOf(getResource(uri, loader) ?: throw IllegalArgumentException("No such resource: '$uri'"), mime)
+    return flobOf(getResource(uri, loader) ?: throw IOException("No such resource: '$uri'"), mime)
 }
 
-private class PathFlob(private val path: Path, mime: String) : AbstractFlob(mime) {
+private class PathFlob(private val path: Path, mime: String) : Flob {
     init {
-        require(Files.isRegularFile(path)) { "$path is not file" }
+        require(Files.isRegularFile(path)) { "$path is not regular file" }
     }
 
     override val name: String = path.toString()
 
+    override val mimeType = detectMime(mime, name)
+
     override fun openStream(): InputStream = Files.newInputStream(path)
 
-    override fun toString() = "file://${name.replace('\\', '/')};mime=$mime"
+    override fun toString() = "${path.toUri()};mime=$mimeType"
 }
 
 fun flobOf(path: Path, mime: String = ""): Flob = PathFlob(path, mime)
 
-private class ByteFlob(override val name: String, private val data: ByteArray, mime: String) : AbstractFlob(mime) {
+fun flobOf(file: File, mime: String = ""): Flob = PathFlob(file.toPath(), mime)
+
+private class ByteFlob(override val name: String, private val data: ByteArray, mime: String) : Flob {
+    override val mimeType = detectMime(mime, name)
+
     override fun openStream() = ByteArrayInputStream(data)
 
-    override fun writeTo(output: OutputStream) = data.let {
-        output.write(it)
-        it.size.toLong()
+    override fun writeTo(output: OutputStream) = with(data) {
+        output.write(this)
+        size.toLong()
     }
 
-    override fun toString() = "bytes://${super.toString()}"
+    override fun toString() = "bytes://$name;mime=$mimeType"
 }
 
 fun flobOf(name: String, data: ByteArray, mime: String): Flob = ByteFlob(name, data, mime)
@@ -90,26 +89,28 @@ private class BlockFlob(
         private val length: Long,
         mime: String
 ) : DisposableSupport(), Flob {
-    override val mime: String = detectMime(name, mime)
+    override val mimeType: String = detectMime(name, mime)
 
     init {
-        file.retainSelf()
         require(offset + length <= file.length()) { "offset($offset) + length($length) > total(${file.length()})" }
+        file.tryRetain()
     }
 
-    override fun openStream() = file.let {
-        it.seek(offset)
-        it.clippedStream(offset, length)
+    override fun openStream() = with(file) {
+        seek(offset)
+        clippedStream(offset, length)
     }
 
-    override fun writeTo(output: OutputStream) = file.let {
-        it.seek(offset)
-        it.copyRange(output, length)
+    override fun writeTo(output: OutputStream) = with(file) {
+        seek(offset)
+        copyRange(output, length)
     }
 
-    override fun toString() = "clip://${super.toString()}"
+    override fun toString() = "clip://$name;mime=$mimeType"
 
-    override fun dispose() = file.releaseSelf()
+    override fun dispose() {
+        file.tryRelease()
+    }
 }
 
 fun flobOf(name: String, file: RandomAccessFile, offset: Long, length: Long, mime: String = ""): Flob {
@@ -117,19 +118,21 @@ fun flobOf(name: String, file: RandomAccessFile, offset: Long, length: Long, mim
 }
 
 private class VDMFlob(val reader: VDMReader, override val name: String, mime: String) : DisposableSupport(), Flob {
+    private val entry = reader.getEntry(name) ?: throw IOException("No such entry '$name'")
+
     init {
-        reader.retainSelf()
+        reader.tryRetain()
     }
 
-    override val mime: String = detectMime(name, mime)
-
-    private val entry = reader.getEntry(name) ?: throw IllegalArgumentException("No such entry '$name'")
+    override val mimeType: String = detectMime(name, mime)
 
     override fun openStream() = reader.getInputStream(entry)
 
-    override fun toString() = "$entry;mime=$mime"
+    override fun toString() = "$entry;mime=$mimeType"
 
-    override fun dispose() = reader.releaseSelf()
+    override fun dispose() {
+        reader.tryRelease()
+    }
 }
 
 fun flobOf(reader: VDMReader, name: String, mime: String = ""): Flob = VDMFlob(reader, name, mime)

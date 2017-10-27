@@ -25,7 +25,7 @@ infix inline fun CharSequence?.or(default: () -> CharSequence) = if (this != nul
 fun String.remove(cs: CharSequence) = if (cs.isEmpty()) this else replace(cs.toString(), "")
 
 fun String.valueFor(name: String, partSeparator: String = ";", valueSeparator: String = "="): String? {
-    split(partSeparator).map(String::trim).forEach {
+    split(partSeparator).map { it.trim() }.forEach {
         val parts = it.split(valueSeparator)
         if (parts.first().trim() == name) {
             return if (parts.size > 1) parts[1].trim() else null

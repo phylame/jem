@@ -18,7 +18,7 @@
 
 package jem.scj
 
-import jclp.Variants
+import jclp.TypeManager
 import jclp.locate
 import jclp.text.or
 import jclp.walk
@@ -80,7 +80,7 @@ fun viewAttributes(chapter: Chapter, names: Collection<String>, settings: ViewSe
             }
             else -> {
                 val value: Any? = chapter[name]
-                val str = if (value != null) Variants.printable(value) ?: value.toString() else ""
+                val str = if (value != null) TypeManager.printable(value) ?: value.toString() else ""
                 if (str.isNotEmpty() || !settings.skipEmpty) {
                     values += tr("view.attrPattern", getName(name) ?: name, str)
                 }
@@ -108,7 +108,7 @@ fun viewExtensions(book: Book, names: Collection<String>, settings: ViewSettings
                 values += if (value == null) {
                     tr("view.extPattern", name, "", "")
                 } else {
-                    tr("view.extPattern", name, Variants.getType(value) ?: "", Variants.printable(value) ?: value.toString())
+                    tr("view.extPattern", name, TypeManager.getType(value) ?: "", TypeManager.printable(value) ?: value.toString())
                 }
             }
         }

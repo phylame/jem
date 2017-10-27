@@ -19,7 +19,7 @@
 package mala
 
 import jclp.TranslatorWrapper
-import jclp.createInstance
+import jclp.getInstance
 import jclp.log.Log
 import jclp.text.or
 import java.util.*
@@ -99,7 +99,7 @@ object App : TranslatorWrapper() {
     }
 
     val plugins by lazy {
-        PluginManager("META-INF/mala/plugin.ini", javaClass.classLoader)
+        PluginManager("META-INF/mala/plugin.lst", javaClass.classLoader)
     }
 
     fun run(delegate: AppDelegate, args: Array<String>) {
@@ -179,11 +179,13 @@ object App : TranslatorWrapper() {
     }
 
     private fun onQuit(code: Int) {
-        this.code = code
-        state = AppState.STOPPING
-        plugins.destroy()
-        delegate.onStop()
-        cleanups.forEach(Cleanup::invoke)
+        if (state == AppState.RUNNING) {
+            this.code = code
+            state = AppState.STOPPING
+            plugins.destroy()
+            delegate.onStop()
+            cleanups.forEach(Cleanup::invoke)
+        }
     }
 }
 
@@ -195,7 +197,7 @@ object Launcher {
         }
         try {
             Class.forName(args.first()).takeIf { AppDelegate::class.java.isInstance(it) }?.let {
-                App.run(it.createInstance() as AppDelegate, args.copyOfRange(1, args.size + 1))
+                App.run(it.getInstance() as AppDelegate, args.copyOfRange(1, args.size + 1))
             } ?: throw RuntimeException("No instance of AppDelegate: ${args.first()}")
         } catch (e: Exception) {
             throw RuntimeException("Cannot load delegate class", e)

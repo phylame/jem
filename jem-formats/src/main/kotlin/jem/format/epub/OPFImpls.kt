@@ -158,7 +158,7 @@ internal class OPFBuilder(book: Book, writer: VDMWriter, settings: Settings?) : 
         newMeta("jem:version", Build.VERSION)
         newMeta("jem:vendor", Build.VENDOR)
 
-        book.extensions.filter { it.first.startsWith(OPF_META_PREFIX) }.forEach { (name, value) ->
+        book.extensions.filter { it.key.startsWith(OPF_META_PREFIX) }.forEach { (name, value) ->
             newMeta(name.substring(OPF_META_PREFIX.length), value.toString())
         }
 

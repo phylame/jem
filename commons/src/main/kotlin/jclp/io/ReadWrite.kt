@@ -19,6 +19,7 @@
 package jclp.io
 
 import java.io.*
+import java.util.*
 
 fun InputStream.copyRange(output: OutputStream, size: Long = -1, bufferSize: Int = DEFAULT_BUFFER_SIZE): Long {
     return reading().copyRange(output.writing(), size, bufferSize)
@@ -122,6 +123,33 @@ fun Writer.writeLines(lines: Iterator<*>, separator: String = System.lineSeparat
         } else {
             break
         }
+    }
+}
+
+class LineIterator(private val reader: BufferedReader, private val closeOnEnd: Boolean = false) : Iterator<String> {
+    private var isDone = false
+    private var nextLine: String? = null
+
+    override fun hasNext(): Boolean {
+        if (nextLine == null && !isDone) {
+            nextLine = reader.readLine()
+            if (nextLine == null) {
+                isDone = true
+                if (closeOnEnd) {
+                    reader.close()
+                }
+            }
+        }
+        return nextLine != null
+    }
+
+    override fun next(): String {
+        if (!hasNext()) {
+            throw NoSuchElementException()
+        }
+        val answer = nextLine
+        nextLine = null
+        return answer!!
     }
 }
 

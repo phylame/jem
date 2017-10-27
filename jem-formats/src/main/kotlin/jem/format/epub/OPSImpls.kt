@@ -63,7 +63,7 @@ private fun classifyPath(name: String, mime: String) = when {
 }
 
 fun VDMWriter.writeToOps(flob: Flob, name: String): String {
-    val path = classifyPath(name, flob.mime)
+    val path = classifyPath(name, flob.mimeType)
     write(opsPathOf(path), flob)
     return path
 }

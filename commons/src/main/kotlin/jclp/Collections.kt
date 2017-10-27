@@ -21,7 +21,7 @@ package jclp
 import java.util.*
 import java.util.concurrent.ThreadLocalRandom
 
-fun <E> List<E>.choose() = get(ThreadLocalRandom.current().nextInt(0, size))
+fun <E> List<E>.chooseAny() = get(ThreadLocalRandom.current().nextInt(0, size))
 
 fun MutableList<*>.swap(from: Int, to: Int) = Collections.swap(this, from, to)
 
@@ -48,10 +48,15 @@ fun MutableMap<in String, in String>.putAll(from: Properties) {
     }
 }
 
-fun <E : Iterable<E>> E.walk(level: Int = 0, index: Int = 0, block: E.(Int, Int) -> Unit) {
-    block(level, index)
+fun <E : Iterable<E>> E.walk(level: Int = 0, index: Int = 0, firstMode: Boolean = true, block: E.(Int, Int) -> Unit) {
+    if (firstMode) {
+        block(level, index)
+    }
     val lv = level + 1
     forEachIndexed { i, e ->
-        e.walk(lv, i, block)
+        e.walk(lv, i, firstMode, block)
+    }
+    if (!firstMode) {
+        block(level, index)
     }
 }

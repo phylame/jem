@@ -18,7 +18,7 @@
 
 package jem.scj
 
-import jclp.Variants
+import jclp.TypeManager
 import jclp.text.Converters
 import jem.Attributes
 import jem.Book
@@ -123,7 +123,7 @@ fun makeBook(param: MakerParam): String {
 private fun attachAttributes(book: Book) {
     for ((k, v) in SCI.outAttributes) {
         try {
-            val clazz = Variants.getClass(Attributes.getType(k) ?: continue) ?: continue
+            val clazz = TypeManager.getClass(Attributes.getType(k) ?: continue) ?: continue
             Converters.parse(v.toString(), clazz)?.let { book[k] = it } ?: App.error(tr("err.misc.badString", v))
         } catch (e: Exception) {
             App.error(tr("err.misc.badString", v), e)

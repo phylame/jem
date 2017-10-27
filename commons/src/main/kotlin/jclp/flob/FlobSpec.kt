@@ -24,7 +24,7 @@ import java.io.OutputStream
 interface Flob {
     val name: String
 
-    val mime: String
+    val mimeType: String
 
     fun openStream(): InputStream
 
@@ -33,10 +33,10 @@ interface Flob {
     }
 }
 
-open class FlobWrapper(private val flob: Flob) : Flob {
+open class FlobWrapper(val flob: Flob) : Flob {
     override val name = flob.name
 
-    override val mime = flob.mime
+    override val mimeType = flob.mimeType
 
     override fun openStream() = flob.openStream()
 

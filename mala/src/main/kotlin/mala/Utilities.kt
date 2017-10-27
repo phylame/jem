@@ -60,14 +60,14 @@ open class MalaSettings(name: String, load: Boolean = true, sync: Boolean = true
     companion object {
         init {
             Converters[LogLevel::class.java] = object : Converter<LogLevel> {
-                override fun render(obj: LogLevel) = obj.name
+                override fun render(value: LogLevel) = value.name
 
-                override fun parse(str: String) = LogLevel.valueOf(str.toUpperCase())
+                override fun parse(text: String) = LogLevel.valueOf(text.toUpperCase())
             }
             Converters[AppVerbose::class.java] = object : Converter<AppVerbose> {
-                override fun render(obj: AppVerbose) = obj.name
+                override fun render(value: AppVerbose) = value.name
 
-                override fun parse(str: String) = AppVerbose.valueOf(str.toUpperCase())
+                override fun parse(text: String) = AppVerbose.valueOf(text.toUpperCase())
             }
         }
     }

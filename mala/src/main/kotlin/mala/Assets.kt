@@ -19,7 +19,6 @@
 package mala
 
 import jclp.Linguist
-import jclp.io.CLASSPATH_PREFIX
 import jclp.io.getProperties
 import jclp.io.getResource
 import java.util.*
@@ -29,8 +28,8 @@ class AssetManager(base: String, private val loader: ClassLoader? = null) {
 
     init {
         require(base.isNotEmpty()) { "base path cannot be empty" }
-        val path = base.replaceFirst("$CLASSPATH_PREFIX/", CLASSPATH_PREFIX)
-        home = if (path != CLASSPATH_PREFIX && !path.endsWith("/")) path + '/' else path
+        val path = base.replaceFirst("$!/", "!")
+        home = if (path != "!" && !path.endsWith("/")) path + '/' else path
     }
 
     fun pathOf(name: String) = home + name.trimStart('/')

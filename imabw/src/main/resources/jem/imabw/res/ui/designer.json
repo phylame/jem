@@ -7,8 +7,7 @@
           "id": "menuNew",
           "items": [
             "newFile",
-            "newChapter",
-            "bookCrawler"
+            "newChapter"
           ]
         },
         "openFile",
@@ -77,10 +76,7 @@
         "goto",
         null,
         "back",
-        "forward",
-        null,
-        "nextSection",
-        "previousSection"
+        "forward"
       ]
     },
     {

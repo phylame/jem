@@ -19,11 +19,11 @@
 package jem
 
 import jclp.Hierarchy
-import jclp.VariantMap
+import jclp.ValueMap
 import jclp.flob.Flob
 import jclp.log.Log
-import jclp.releaseSelf
-import jclp.retainSelf
+import jclp.tryRelease
+import jclp.tryRetain
 import jclp.text.Text
 import jem.Attributes.VALUE_SEPARATOR
 
@@ -35,15 +35,15 @@ open class Chapter(
 
     var text: Text? = text
         set(value) {
-            field?.releaseSelf()
-            value?.retainSelf()
+            field?.tryRelease()
+            value?.tryRetain()
             field = value
         }
 
     var tag: Any? = tag
         set(value) {
-            field?.releaseSelf()
-            value?.retainSelf()
+            field?.tryRelease()
+            value?.tryRetain()
             field = value
         }
 
@@ -107,8 +107,8 @@ open class Chapter(
             val list = ArrayList<Chapter>(children.size)
             children.forEach { list.add(it.clone()) }
             chapter.children = list
-            text?.retainSelf()
-            tag?.retainSelf()
+            text?.tryRetain()
+            tag?.tryRetain()
         }
     }
 
@@ -133,7 +133,7 @@ fun Chapter.newChapter(title: String = "", text: Text? = null, cover: Flob? = nu
 }
 
 open class Book : Chapter {
-    var extensions = VariantMap()
+    var extensions = ValueMap()
         private set
 
     constructor(title: String = "", author: String = "") : super(title) {

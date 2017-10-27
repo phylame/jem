@@ -28,13 +28,13 @@ import javafx.scene.control.*
 import javafx.scene.input.KeyCode
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.GridPane
-import jclp.VariantMap
-import jclp.Variants
+import jclp.ValueMap
+import jclp.TypeManager
 import jclp.flob.Flob
 import jclp.flob.flobOf
 import jclp.log.Log
-import jclp.releaseSelf
-import jclp.retainSelf
+import jclp.tryRelease
+import jclp.tryRetain
 import jclp.text.Text
 import jclp.text.textOf
 import jem.imabw.KeyAndName
@@ -65,7 +65,7 @@ class VariantItem(key: String, value: Any) {
             unbind(valueProperty)
         }
 
-        override fun computeValue() = Variants.getType(value)
+        override fun computeValue() = TypeManager.getType(value)
     }
     internal val typeNameProperty = object : StringBinding() {
         init {
@@ -76,14 +76,14 @@ class VariantItem(key: String, value: Any) {
             unbind(typeProperty)
         }
 
-        override fun computeValue() = Variants.getName(typeProperty.value)
+        override fun computeValue() = TypeManager.getName(typeProperty.value)
     }
 
     var key by keyProperty
     var value by valueProperty
 }
 
-open class VariantPane(val map: VariantMap, showName: Boolean = true) : BorderPane() {
+open class VariantPane(val map: ValueMap, showName: Boolean = true) : BorderPane() {
     private val newValues = LinkedList<Any>()
     val data = FXCollections.observableArrayList<VariantItem>()
     val table = TableView<VariantItem>(data)
@@ -108,7 +108,7 @@ open class VariantPane(val map: VariantMap, showName: Boolean = true) : BorderPa
     }
 
     fun syncVariants() {
-        data.forEach { it.value?.retainSelf() }
+        data.forEach { it.value?.tryRetain() }
         for (name in map.names.toList() - ignoredKeys()) {
             map.remove(name)
         }
@@ -117,8 +117,8 @@ open class VariantPane(val map: VariantMap, showName: Boolean = true) : BorderPa
                 map[it] = item.valueProperty.value
             }
         }
-        data.forEach { it.value?.releaseSelf() }
-        newValues.forEach { it.releaseSelf() }
+        data.forEach { it.value?.tryRelease() }
+        newValues.forEach { it.tryRelease() }
     }
 
     protected open fun getItemName(key: String) = key
@@ -131,7 +131,7 @@ open class VariantPane(val map: VariantMap, showName: Boolean = true) : BorderPa
 
     protected open fun availableKeys(): Collection<String> = emptyList()
 
-    protected open fun toString(value: Any) = Variants.printable(value)
+    protected open fun toString(value: Any) = TypeManager.printable(value)
 
     protected open fun newDialogTitle() = tr("d.newVariant.title")
 
@@ -181,7 +181,7 @@ open class VariantPane(val map: VariantMap, showName: Boolean = true) : BorderPa
             }
             items += newButton("export").apply {
                 setOnAction { exportItem(selectedItem) }
-                val exportableTypes = arrayOf(Variants.FLOB, Variants.TEXT)
+                val exportableTypes = arrayOf(TypeManager.FLOB, TypeManager.TEXT)
                 disableProperty().bind(Bindings.createBooleanBinding(Callable {
                     selection.size != 1 || selection.first().typeProperty.value !in exportableTypes
                 }, selection))
@@ -196,7 +196,7 @@ open class VariantPane(val map: VariantMap, showName: Boolean = true) : BorderPa
     }
 
     private fun initData() {
-        map.filter { it.first !in ignoredKeys() }.mapTo(data) { VariantItem(it.first, it.second) }
+        map.filter { it.key !in ignoredKeys() }.mapTo(data) { VariantItem(it.key, it.value) }
         table.selectionModel.select(0)
     }
 
@@ -251,7 +251,7 @@ open class VariantPane(val map: VariantMap, showName: Boolean = true) : BorderPa
             }
             val typeCombo = ComboBox<KeyAndName>().apply {
                 prefWidth = minOf(400.0, this@VariantPane.width * 0.5)
-                items.addAll(Variants.allTypes.map { KeyAndName(it, Variants.getName(it) ?: it.capitalize()) })
+                items.addAll(TypeManager.allTypes.map { KeyAndName(it, TypeManager.getName(it) ?: it.capitalize()) })
                 selectionModel.select(0)
             }
             dialogPane.content = GridPane().apply {
@@ -266,7 +266,7 @@ open class VariantPane(val map: VariantMap, showName: Boolean = true) : BorderPa
             nameField.requestFocus()
             okButton.isDisable = true
             if (showAndWait().get() == ButtonType.OK) {
-                val value = Variants.getDefault(typeCombo.selectionModel.selectedItem.key)
+                val value = TypeManager.getDefault(typeCombo.selectionModel.selectedItem.key)
                 data += VariantItem(nameField.text.trim(), value?.also { newValues += it } ?: "")
                 table.selectionModel.apply { clearSelection() }.selectLast()
                 table.scrollTo(table.items.size - 1)
@@ -319,30 +319,30 @@ open class VariantPane(val map: VariantMap, showName: Boolean = true) : BorderPa
             super.startEdit()
             val item = selectedItem
             when (item.typeProperty.value) {
-                Variants.BOOLEAN -> {
+                TypeManager.BOOLEAN -> {
                     item.value = !(item.value as Boolean)
                     isModified = true
                     cancelEdit()
                 }
-                Variants.DATE -> {
+                TypeManager.DATE -> {
                     graphic = DatePicker(item.value as LocalDate).apply {
                         isShowWeekNumbers = true
                         setOnAction { commitEdit(value as T) }
                     }
                 }
-                Variants.LOCALE -> {
+                TypeManager.LOCALE -> {
                     graphic = LocalePicker(item.value as Locale).apply {
                         setOnAction { commitEdit(value as T) }
                     }
                 }
-                Variants.TEXT -> {
+                TypeManager.TEXT -> {
                     longText(tr("d.editVariant.title", getItemName(item.key!!)), item.value.toString(), owner = scene.window)?.let {
                         item.value = textOf(it)
                         isModified = true
                     }
                     cancelEdit()
                 }
-                Variants.FLOB -> {
+                TypeManager.FLOB -> {
                     selectFile(tr("d.selectFile.title"), scene.window)?.let {
                         item.value = flobOf(it.toPath())
                         isModified = true
@@ -367,7 +367,7 @@ open class VariantPane(val map: VariantMap, showName: Boolean = true) : BorderPa
             val item = selectedItem as VariantItem
             item.value = if (value is String) {
                 try {
-                    Variants.parse(item.typeProperty.value, value) ?: return
+                    TypeManager.parse(item.typeProperty.value, value) ?: return
                 } catch (e: Exception) {
                     Log.e("editVariant", e) { "bad input string for ${item.key}" }
                     return

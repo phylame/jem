@@ -19,9 +19,10 @@
 package jem.crawler
 
 import jclp.Linguist
-import jclp.flob.AbstractFlob
+import jclp.flob.Flob
+import jclp.io.actualStream
+import jclp.io.detectMime
 import jclp.io.htmlTrim
-import jclp.io.openStream
 import jclp.setting.Settings
 import org.json.JSONObject
 import org.jsoup.Jsoup
@@ -47,10 +48,12 @@ fun fetchJson(url: String, method: String, settings: Settings?) = openConnection
 
 class CrawlerFlob(
         private val url: String, private val method: String, private val settings: Settings?, mime: String = ""
-) : AbstractFlob(mime) {
+) : Flob {
     override val name = url
 
-    override fun openStream() = openConnection(url, method, settings).openStream()
+    override val mimeType = detectMime(mime, url)
+
+    override fun openStream() = openConnection(url, method, settings).actualStream()
 }
 
 fun Element.selectText(query: String, separator: String = "") = select(query).joinText(separator)

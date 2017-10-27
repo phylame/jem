@@ -31,11 +31,6 @@ subprojects {
     group = 'pw.phylame.jem'
     version = '5.0'
 
-    repositories {
-        mavenLocal()
-        jcenter()
-    }
-
     task sourcesJar(type: Jar) {
         from sourceSets.main.allSource
         classifier 'sources'
@@ -48,5 +43,14 @@ subprojects {
                 from components.java
             }
         }
+    }
+
+    repositories {
+        mavenLocal()
+        jcenter()
+    }
+
+    dependencies {
+        testCompile group: 'junit', name: 'junit', version: '4.12'
     }
 }

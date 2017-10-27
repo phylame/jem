@@ -18,10 +18,10 @@
 
 package jem.crawler
 
-import jclp.choose
+import jclp.chooseAny
 import jclp.io.HttpRequest
 import jclp.io.openResource
-import jclp.io.openStream
+import jclp.io.actualStream
 import jclp.setting.Settings
 import jclp.setting.getInt
 import jclp.setting.getString
@@ -38,7 +38,7 @@ val userAgents by lazy {
 
 val Settings?.connectTimes inline get() = this?.getInt("crawler.net.tryTimes") ?: 3
 val Settings?.connectTimeout inline get() = this?.getInt("crawler.net.timeout") ?: 5000
-val Settings?.userAgent inline get() = this?.getString("crawler.net.userAgent") ?: userAgents.choose()
+val Settings?.userAgent inline get() = this?.getString("crawler.net.userAgent") ?: userAgents.chooseAny()
 val Settings?.charset inline get() = this?.getString("crawler.net.charset") ?: "UTF-8"
 
 inline fun <R> connectLoop(url: String, settings: Settings?, block: () -> R): R {
@@ -67,5 +67,5 @@ fun openConnection(url: String, method: String, settings: Settings?): URLConnect
 
 fun URLConnection.openReader(settings: Settings?): Reader {
     val encoding = contentType?.valueFor("charset", ";") ?: settings.charset
-    return openStream().reader(Charset.forName(encoding))
+    return actualStream().reader(Charset.forName(encoding))
 }

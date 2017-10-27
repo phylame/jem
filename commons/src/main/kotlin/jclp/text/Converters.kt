@@ -27,9 +27,9 @@ import java.time.LocalTime
 import java.util.*
 
 interface Converter<T> {
-    fun render(obj: T): String
+    fun render(value: T): String
 
-    fun parse(str: String): T
+    fun parse(text: String): T
 }
 
 object Converters {
@@ -44,29 +44,22 @@ object Converters {
     @Suppress("UNCHECKED_CAST")
     operator fun <T : Any> get(type: Class<T>) = converters[type.canonicalType] as Converter<T>?
 
-    operator fun <T : Any> set(type: Class<T>, converter: Converter<T>?) = converters.put(type.canonicalType, converter)
+    operator fun <T : Any> set(type: Class<T>, converter: Converter<T>?) = if (converter == null) {
+        converters.remove(type)
+    } else converters.put(type.canonicalType, converter)
 
-    fun render(obj: Any) = (obj as? CharSequence)?.toString() ?: render(obj, obj.javaClass)
+    fun render(value: Any) = (value as? CharSequence)?.toString() ?: render(value, value.javaClass)
 
-    fun <T : Any> render(obj: T, type: Class<T>) = (obj as? CharSequence)?.toString() ?: get(type)?.render(obj)
+    fun <T : Any> render(value: T, type: Class<T>) = (value as? CharSequence)?.toString() ?: get(type)?.render(value)
 
-    inline fun <reified T : Any> parse(str: String) = parse(str, T::class.java)
+    inline fun <reified T : Any> parse(text: String) = parse(text, T::class.java)
 
     @Suppress("UNCHECKED_CAST")
-    fun <T : Any> parse(str: String, type: Class<T>): T? {
-        return if (CharSequence::class.java == type || String::class.java == type) str as T else get(type)?.parse(str)
+    fun <T : Any> parse(text: String, type: Class<T>): T? {
+        return if (CharSequence::class.java == type || String::class.java == type) text as T else get(type)?.parse(text)
     }
 
     private fun registerDefaults() {
-        Class::class.java.let { set(it, DefaultConverter(it)) }
-        Locale::class.java.let { set(it, DefaultConverter(it)) }
-        String::class.java.let { set(it, DefaultConverter(it)) }
-        Boolean::class.java.let { set(it, DefaultConverter(it)) }
-        Date::class.java.let { set(it, DefaultConverter(it)) }
-        LocalTime::class.java.let { set(it, DefaultConverter(it)) }
-        LocalDate::class.java.let { set(it, DefaultConverter(it)) }
-        LocalDateTime::class.java.let { set(it, DefaultConverter(it)) }
-
         Byte::class.java.let { set(it, DefaultConverter(it)) }
         Short::class.java.let { set(it, DefaultConverter(it)) }
         Int::class.java.let { set(it, DefaultConverter(it)) }
@@ -74,45 +67,55 @@ object Converters {
         Float::class.java.let { set(it, DefaultConverter(it)) }
         Double::class.java.let { set(it, DefaultConverter(it)) }
 
-        set(Text::class.java, object : Converter<Text> {
-            override fun parse(str: String) = textOf(str)
+        Class::class.java.let { set(it, DefaultConverter(it)) }
+        Locale::class.java.let { set(it, DefaultConverter(it)) }
+        String::class.java.let { set(it, DefaultConverter(it)) }
+        Boolean::class.java.let { set(it, DefaultConverter(it)) }
 
-            override fun render(obj: Text) = throw UnsupportedOperationException()
+        Date::class.java.let { set(it, DefaultConverter(it)) }
+        LocalTime::class.java.let { set(it, DefaultConverter(it)) }
+        LocalDate::class.java.let { set(it, DefaultConverter(it)) }
+        LocalDateTime::class.java.let { set(it, DefaultConverter(it)) }
+
+        set(Text::class.java, object : Converter<Text> {
+            override fun parse(text: String) = textOf(text)
+
+            override fun render(value: Text) = value.toString()
         })
 
         set(Flob::class.java, object : Converter<Flob> {
-            override fun parse(str: String) = flobOf(str)
+            override fun parse(text: String) = flobOf(text)
 
-            override fun render(obj: Flob) = throw UnsupportedOperationException()
+            override fun render(value: Flob) = throw UnsupportedOperationException()
         })
     }
 }
 
 class DefaultConverter<T>(private val type: Class<T>) : Converter<T> {
-    override fun render(obj: T): String = when (obj) {
-        is Date -> obj.format(ISO_FORMAT)
-        is Class<*> -> (obj as Class<*>).name
-        else -> obj.toString()
+    override fun render(value: T): String = when (value) {
+        is Date -> value.format(ISO_FORMAT)
+        is Class<*> -> value.name
+        else -> value.toString()
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun parse(str: String): T {
+    override fun parse(text: String): T {
         return when (type) {
-            String::class.java -> str as T
-            Byte::class.java -> java.lang.Byte.decode(str) as T
-            Short::class.java -> java.lang.Short.decode(str) as T
-            Int::class.java -> java.lang.Integer.decode(str) as T
-            Long::class.java -> java.lang.Long.decode(str) as T
-            Float::class.java -> java.lang.Float.valueOf(str) as T
-            Double::class.java -> java.lang.Double.valueOf(str) as T
-            Boolean::class.java -> java.lang.Boolean.valueOf(str) as T
-            Date::class.java -> detectDate(str) as T? ?: throw IllegalArgumentException("Illegal date string: $str")
-            Locale::class.java -> parseLocale(str) as T
-            LocalDate::class.java -> LocalDate.parse(str, looseISODate) as T
-            LocalTime::class.java -> LocalTime.parse(str, looseISOTime) as T
-            LocalDateTime::class.java -> LocalDateTime.parse(str, looseISODateTime) as T
-            Class::class.java -> Class.forName(str) as T
-            else -> throw IllegalStateException("Unreachable code")
+            String::class.java -> text as T
+            Byte::class.java -> java.lang.Byte.decode(text) as T
+            Short::class.java -> java.lang.Short.decode(text) as T
+            Int::class.java -> java.lang.Integer.decode(text) as T
+            Long::class.java -> java.lang.Long.decode(text) as T
+            Float::class.java -> java.lang.Float.valueOf(text) as T
+            Double::class.java -> java.lang.Double.valueOf(text) as T
+            Boolean::class.java -> java.lang.Boolean.valueOf(text) as T
+            Date::class.java -> detectDate(text) as T? ?: throw IllegalArgumentException("Illegal date string: $text")
+            Locale::class.java -> parseLocale(text) as T
+            LocalDate::class.java -> LocalDate.parse(text, looseISODate) as T
+            LocalTime::class.java -> LocalTime.parse(text, looseISOTime) as T
+            LocalDateTime::class.java -> LocalDateTime.parse(text, looseISODateTime) as T
+            Class::class.java -> Class.forName(text) as T
+            else -> throw InternalError("Unreachable Code")
         }
     }
 }

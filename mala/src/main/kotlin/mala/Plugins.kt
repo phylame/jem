@@ -18,7 +18,8 @@
 
 package mala
 
-import jclp.createInstance
+import jclp.getInstance
+import mala.App.die
 import mala.App.error
 import mala.App.optTr
 import java.io.InputStream
@@ -87,12 +88,12 @@ class PluginManager(private val path: String, private val loader: ClassLoader? =
             if (!Plugin::class.java.isAssignableFrom(clazz)) {
                 error(optTr("mala.err.badPlugin", "plugin must be sub-class of ''{0}'': {1}", Plugin::class.java.name, path))
             }
-            val plugin = clazz.createInstance() as Plugin
+            val plugin = clazz.getInstance() as Plugin
             if (filter?.invoke(plugin) != false) {
                 plugins += plugin
             }
         } catch (e: ReflectiveOperationException) {
-            error(optTr("mala.err.loadPlugin", "cannot load plugin: {0}", path), e)
+            die(optTr("mala.err.loadPlugin", "cannot load plugin: {0}", path), e)
         }
     }
 }

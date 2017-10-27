@@ -18,20 +18,19 @@
 
 package jclp.io
 
-import java.io.File
 import java.io.InputStream
 import java.net.MalformedURLException
 import java.net.URL
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.util.*
-
-const val CLASSPATH_PREFIX = "!"
 
 fun defaultLoader(): ClassLoader = Thread.currentThread().contextClassLoader ?: ClassLoader.getSystemClassLoader()
 
 fun getResource(uri: String, loader: ClassLoader? = null): URL? = when {
     uri.isEmpty() -> throw IllegalArgumentException("'uri' cannot be empty")
-    uri.startsWith(CLASSPATH_PREFIX) -> (loader ?: defaultLoader()).getResource(uri.substring(CLASSPATH_PREFIX.length))
-    else -> File(uri).takeIf(File::exists)?.toURI()?.toURL() ?: try {
+    uri.startsWith("!") -> (loader ?: defaultLoader()).getResource(uri.substring(1))
+    else -> Paths.get(uri).takeIf { Files.exists(it) }?.toUri()?.toURL() ?: try {
         URL(uri)
     } catch (e: MalformedURLException) {
         null

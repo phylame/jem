@@ -21,21 +21,21 @@ package jclp.io
 import java.io.File
 
 fun splitPath(path: String): Pair<Int, Int> {
-    var seppos: Int
-    var extpos = path.length
-    var extFound = false
-    seppos = extpos - 1
-    while (seppos >= 0) {
-        val ch = path[seppos]
-        if (ch == '.' && !extFound) {
-            extpos = seppos
-            extFound = true
+    var begin: Int
+    var end = path.length
+    var found = false
+    begin = end - 1
+    while (begin >= 0) {
+        val ch = path[begin]
+        if (ch == '.' && !found) {
+            end = begin
+            found = true
         } else if (ch == '/' || ch == '\\') {
             break
         }
-        --seppos
+        --begin
     }
-    return seppos to extpos
+    return begin to end
 }
 
 fun baseName(path: String) = splitPath(path).let { path.substring(it.first + 1, it.second) }

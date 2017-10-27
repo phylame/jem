@@ -30,13 +30,13 @@ interface Text {
 
     operator fun iterator() = toString().split("\r\n", "\n", "\r").iterator()
 
-    fun writeTo(output: Writer) = toString().let {
-        output.write(it)
-        it.length.toLong()
+    fun writeTo(output: Writer) = with(toString()) {
+        output.write(this)
+        length.toLong()
     }
 }
 
-open class TextWrapper(private val text: Text) : Text {
+open class TextWrapper(val text: Text) : Text {
     override val type = text.type
 
     override fun toString() = text.toString()

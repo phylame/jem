@@ -34,10 +34,16 @@ interface LogFacade {
     fun log(tag: String, level: LogLevel, msg: String)
 
     fun log(tag: String, level: LogLevel, msg: String, t: Throwable)
+
+    fun setLevel(level: LogLevel) {}
 }
 
 object Log {
     var level: LogLevel = LogLevel.INFO
+        set(value) {
+            field = value
+            facade.setLevel(value)
+        }
 
     var facade: LogFacade = SimpleFacade
 

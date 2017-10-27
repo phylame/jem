@@ -33,12 +33,10 @@ fun Map<String, String>.joinToQuery(encoding: String = "UTF-8"): String {
     return entries.joinToString("&") { "${it.key.quote(encoding)}=${it.value.quote(encoding)}" }
 }
 
-fun URLConnection.openStream(): InputStream {
+fun URLConnection.actualStream(): InputStream {
     return if (getHeaderField("Content-Encoding")?.contains("gzip", true) == true) {
         GZIPInputStream(getInputStream())
-    } else {
-        getInputStream()
-    }
+    } else getInputStream()
 }
 
 data class HttpRequest(private val url: String, private val method: String = "GET") {

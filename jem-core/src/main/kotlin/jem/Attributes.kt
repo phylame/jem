@@ -18,15 +18,13 @@
 
 package jem
 
-import jclp.VariantMap
-import jclp.VariantValidator
-import jclp.Variants
+import jclp.TypeManager
+import jclp.ValueMap
+import jclp.ValueValidator
 import jclp.flob.Flob
 import jclp.io.getProperties
-import jclp.log.Log
 import jclp.putAll
 import jclp.text.Text
-import java.io.IOException
 import java.time.LocalDate
 import java.util.*
 import kotlin.reflect.KProperty
@@ -49,35 +47,31 @@ const val TITLE = "title"
 const val VENDOR = "vendor"
 const val WORDS = "words"
 
-object Attributes : VariantValidator {
+object Attributes : ValueValidator {
     const val VALUE_SEPARATOR = ";"
 
     private val types = hashMapOf<String, String>()
 
     init {
-        try {
-            getProperties("!jem/attributes.properties")?.let { types.putAll(it) }
-        } catch (e: IOException) {
-            Log.e("Attributes", e) { "cannot load attribute mapping" }
-        }
+        getProperties("!jem/attributes.properties")?.let { types.putAll(it) }
     }
 
     val names get() = types.keys
 
     fun getType(name: String) = types[name]
 
-    fun mapType(name: String, id: String) = types.put(name, id)
+    fun mapType(name: String, type: String) = types.put(name, type)
 
     fun getName(name: String) = if (name.isNotEmpty()) M.optTr("attribute.$name") else null
 
-    fun getDefault(name: String) = getType(name)?.let { Variants.getDefault(it) }
+    fun getDefault(name: String) = getType(name)?.let { TypeManager.getDefault(it) }
 
-    fun newAttributes() = VariantMap(this)
+    fun newAttributes() = ValueMap(this)
 
     override fun invoke(name: String, value: Any) {
         getType(name)?.let {
-            require(Variants.getClass(it)?.isInstance(value) != false) {
-                "attribute '$name' must be '$it', found '${Variants.getType(value)}'"
+            require(TypeManager.getClass(it)?.isInstance(value) != false) {
+                "attribute '$name' must be '$it', found '${TypeManager.getType(value)}'"
             }
         }
     }

@@ -22,7 +22,7 @@ infix fun CharSequence?.or(default: CharSequence) = if (this != null && isNotEmp
 
 infix inline fun CharSequence?.or(default: () -> CharSequence) = if (this != null && isNotEmpty()) toString() else default().toString()
 
-fun String.remove(cs: CharSequence) = if (cs.isEmpty()) this else replace(cs.toString(), "")
+fun String.remove(cs: CharSequence) = if (cs.isEmpty()) this else replaceFirst(cs.toString(), "")
 
 fun String.valueFor(name: String, partSeparator: String = ";", valueSeparator: String = "="): String? {
     split(partSeparator).map { it.trim() }.forEach {

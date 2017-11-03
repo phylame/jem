@@ -168,7 +168,7 @@ object TypeManager {
 
 typealias ValueValidator = (String, Any) -> Unit
 
-class ValueMap(private val validator: ValueValidator? = null) : Iterable<Map.Entry<String, Any>>, Cloneable {
+class ValueMap(private val validator: ValueValidator? = null) : Iterable<MutableMap.MutableEntry<String, Any>>, Cloneable {
     private var map = hashMapOf<String, Any>()
 
     fun isNotEmpty() = map.isNotEmpty()

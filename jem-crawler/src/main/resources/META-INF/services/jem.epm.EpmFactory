@@ -17,3 +17,4 @@
 #
 
 jem.crawler.CrawlerParser
+jem.crawler.ext.ZXCHMParser

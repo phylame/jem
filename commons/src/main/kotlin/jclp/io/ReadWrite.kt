@@ -120,8 +120,6 @@ fun Writer.writeLines(lines: Iterator<*>, separator: String = System.lineSeparat
         write(lines.next().toString())
         if (lines.hasNext()) {
             write(separator)
-        } else {
-            break
         }
     }
 }

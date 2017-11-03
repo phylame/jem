@@ -30,9 +30,8 @@ interface Text {
 
     operator fun iterator() = toString().split("\r\n", "\n", "\r").iterator()
 
-    fun writeTo(output: Writer) = with(toString()) {
-        output.write(this)
-        length.toLong()
+    fun writeTo(output: Writer) {
+        output.write(toString())
     }
 }
 

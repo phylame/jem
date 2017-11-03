@@ -51,7 +51,7 @@ class CrawlerFlob(
 ) : Flob {
     override val name = url
 
-    override val mimeType = detectMime(mime, url)
+    override val mimeType = detectMime(name, mime)
 
     override fun openStream() = openConnection(url, method, settings).actualStream()
 }

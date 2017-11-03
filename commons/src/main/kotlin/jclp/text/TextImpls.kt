@@ -53,7 +53,9 @@ private class FlobText(override val type: String, val flob: Flob, encoding: Stri
 
     override fun iterator() = LineIterator(openReader(), true)
 
-    override fun writeTo(output: Writer) = openReader().use { it.copyTo(output) }
+    override fun writeTo(output: Writer) {
+        openReader().use { it.copyTo(output) }
+    }
 
     private fun openReader() = flob.openStream().bufferedReader(charset)
 

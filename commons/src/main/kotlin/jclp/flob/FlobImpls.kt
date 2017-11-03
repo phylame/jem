@@ -34,7 +34,7 @@ import java.nio.file.Path
 private class URLFlob(private val url: URL, mime: String) : Flob {
     override val name: String = url.path
 
-    override val mimeType = detectMime(mime, name)
+    override val mimeType = detectMime(name, mime)
 
     override fun openStream(): InputStream = url.openStream()
 
@@ -54,7 +54,7 @@ private class PathFlob(private val path: Path, mime: String) : Flob {
 
     override val name: String = path.toString()
 
-    override val mimeType = detectMime(mime, name)
+    override val mimeType = detectMime(name, mime)
 
     override fun openStream(): InputStream = Files.newInputStream(path)
 
@@ -66,7 +66,7 @@ fun flobOf(path: Path, mime: String = ""): Flob = PathFlob(path, mime)
 fun flobOf(file: File, mime: String = ""): Flob = PathFlob(file.toPath(), mime)
 
 private class ByteFlob(override val name: String, private val data: ByteArray, mime: String) : Flob {
-    override val mimeType = detectMime(mime, name)
+    override val mimeType = detectMime(name, mime)
 
     override fun openStream() = ByteArrayInputStream(data)
 

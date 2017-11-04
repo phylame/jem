@@ -72,8 +72,9 @@ interface VDMWriter : Closeable {
 }
 
 inline fun <R> VDMWriter.useStream(name: String, block: (OutputStream) -> R): R = with(newEntry(name)) {
+    val stream = putEntry(this)
     try {
-        block(putEntry(this))
+        block(stream)
     } finally {
         closeEntry(this)
     }

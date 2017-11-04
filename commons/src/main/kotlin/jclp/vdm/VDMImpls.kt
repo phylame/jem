@@ -39,7 +39,8 @@ private class FileVDMEntry(
 
     override val isDirectory = Files.isDirectory(path)
 
-    override val lastModified = Files.getLastModifiedTime(path).toMillis()
+    override val lastModified
+        get() = if (Files.exists(path)) Files.getLastModifiedTime(path).toMillis() else -1
 
     override val name: String = name + if (isDirectory) "/" else ""
 
@@ -107,10 +108,11 @@ private class FileVDMWriter(val root: Path) : VDMWriter {
     } else if (entry.stream != null) {
         throw IllegalArgumentException("Entry is opened")
     } else {
-        if (Files.notExists(root)) {
-            Files.createDirectories(root)
+        val path = entry.path
+        if (Files.notExists(path.parent)) {
+            Files.createDirectories(path.parent)
         }
-        Files.newOutputStream(entry.path).also {
+        Files.newOutputStream(path).also {
             entry.stream = it
             streams += it
         }

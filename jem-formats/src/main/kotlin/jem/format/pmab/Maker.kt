@@ -19,10 +19,11 @@
 package jem.format.pmab
 
 import jclp.*
-import jclp.flob.Flob
+import jclp.io.Flob
 import jclp.io.extName
 import jclp.setting.Settings
 import jclp.setting.getString
+import jclp.text.ConverterManager
 import jclp.text.TEXT_PLAIN
 import jclp.text.Text
 import jclp.vdm.VDMWriter
@@ -149,7 +150,7 @@ internal object PmabMaker : VDMMaker {
                     type += ";format=" + it
                     (value as LocalDateTime).format(DateTimeFormatter.ofPattern(it))
                 }
-                else -> null
+                else -> ConverterManager.render(value)
             }
             attribute("type", type).text(text ?: value.toString()).endTag()
         }

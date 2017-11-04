@@ -24,7 +24,7 @@ import javafx.collections.ListChangeListener
 import javafx.scene.Node
 import javafx.scene.control.*
 import jclp.EventBus
-import jclp.flob.flobOf
+import jclp.io.flobOf
 import jclp.io.writeLines
 import jclp.isAncestor
 import jclp.isSelfOrAncestor
@@ -209,7 +209,7 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
                 it.bufferedWriter().use {
                     it.writeLines(editor.paragraphs.asSequence().map { it.text }.iterator())
                 }
-                chapter.text = textOf(flobOf(it.toPath(), "text/plain"), "UTF-8")
+                chapter.text = textOf(flobOf(it.toPath(), "text/plain"), Charsets.UTF_8)
             } catch (e: Exception) {
                 Log.e(tagId, e) { "cannot cache text to '$it'" }
                 if (it.delete()) {

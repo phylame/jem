@@ -24,7 +24,6 @@ import javafx.collections.ListChangeListener
 import javafx.scene.control.Dialog
 import javafx.scene.control.MenuItem
 import javafx.scene.control.SeparatorMenuItem
-import jclp.io.createRecursively
 import jclp.setting.delegate
 import jclp.setting.getDouble
 import mala.App
@@ -32,7 +31,8 @@ import mala.AppSettings
 import mala.MalaSettings
 import mala.ixin.IxIn
 import mala.ixin.IxInSettings
-import java.io.File
+import java.nio.file.Files
+import java.nio.file.Paths
 
 object GeneralSettings : AppSettings() {
     var enableHistory by delegate(true, "app.history.enable")
@@ -69,7 +69,7 @@ object EditorSettings : MalaSettings("config/editor.ini") {
 }
 
 object History {
-    private val file = File(App.home, "config/history.txt")
+    private val file = Paths.get(App.home, "config/history.txt")
 
     private val paths = FXCollections.observableArrayList<String>()
 
@@ -132,7 +132,7 @@ object History {
 
     fun load() {
         if (GeneralSettings.enableHistory) {
-            if (file.exists()) {
+            if (Files.exists(file)) {
                 with(ReadLineTask(file)) {
                     setOnSucceeded {
                         paths += value
@@ -146,11 +146,15 @@ object History {
 
     fun sync() {
         if (GeneralSettings.enableHistory && isModified) {
-            if (file.exists() || file.parentFile.createRecursively()) {
-                file.bufferedWriter().use { out ->
-                    paths.forEach { out.append(it).append("\n") }
+            if (Files.notExists(file)) {
+                try {
+                    Files.createDirectories(file.parent)
+                } catch (e: Exception) {
+                    App.error("cannot create directory for history", e)
+                    return
                 }
             }
+            Files.write(file, paths)
         }
     }
 }

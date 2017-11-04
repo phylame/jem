@@ -41,6 +41,6 @@ fun openResource(uri: String, loader: ClassLoader? = null, reload: Boolean = fal
     return getResource(uri, loader)?.openConnection()?.apply { if (reload) useCaches = false }?.getInputStream()
 }
 
-fun getProperties(uri: String, loader: ClassLoader? = null, reload: Boolean = false): Properties? {
+fun loadProperties(uri: String, loader: ClassLoader? = null, reload: Boolean = false): Properties? {
     return openResource(uri, loader, reload)?.use { Properties().apply { load(it) } }
 }

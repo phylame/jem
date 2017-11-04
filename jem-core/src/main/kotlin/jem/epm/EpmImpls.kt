@@ -20,7 +20,7 @@ package jem.epm
 
 import jclp.AutoDisposable
 import jclp.log.Log
-import jclp.tryRelease
+import jclp.release
 import jclp.setting.Settings
 import jclp.setting.getInt
 import jclp.setting.getString
@@ -28,8 +28,8 @@ import jclp.vdm.*
 import jem.Book
 import jem.M
 import java.io.Closeable
-import java.io.File
 import java.io.IOException
+import java.nio.file.Paths
 
 const val PMAB_NAME = "pmab"
 const val PARSER_VDM_TYPE_KEY = "maker.vdm.type"
@@ -55,7 +55,7 @@ interface CommonParser<I : Closeable> : Parser {
         } catch (e: Exception) {
             throw e
         } finally {
-            source.tryRelease()
+            source.release()
         }
     }
 }
@@ -73,7 +73,7 @@ interface CommonMaker<O : Closeable> : Maker {
 interface VDMParser : CommonParser<VDMReader>, FileParser {
     override fun open(input: String, arguments: Settings?): VDMReader = arguments?.getString(PARSER_VDM_TYPE_KEY)?.let {
         VDMManager.openReader(it, input) ?: throw IOException(M.tr("err.vdm.unsupported", it))
-    } ?: detectReader(File(input))
+    } ?: detectReader(Paths.get(input))
 }
 
 interface VDMMaker : CommonMaker<VDMWriter> {

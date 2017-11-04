@@ -18,33 +18,31 @@
 
 package jem
 
-import jclp.Hierarchy
+import jclp.HierarchySupport
 import jclp.ValueMap
-import jclp.flob.Flob
+import jclp.io.Flob
 import jclp.log.Log
-import jclp.tryRelease
-import jclp.tryRetain
+import jclp.release
+import jclp.retain
 import jclp.text.Text
 import jem.Attributes.VALUE_SEPARATOR
 
 open class Chapter(
         title: String = "", text: Text? = null, cover: Flob? = null, intro: Text? = null, tag: Any? = null
-) : Hierarchy<Chapter>(), Cloneable {
+) : HierarchySupport<Chapter>(), Cloneable {
     var attributes = Attributes.newAttributes()
         private set
 
     var text: Text? = text
         set(value) {
-            field?.tryRelease()
-            value?.tryRetain()
-            field = value
+            field.release()
+            field = value.retain()
         }
 
     var tag: Any? = tag
         set(value) {
-            field?.tryRelease()
-            value?.tryRetain()
-            field = value
+            field?.release()
+            field = value.retain()
         }
 
     init {
@@ -107,8 +105,8 @@ open class Chapter(
             val list = ArrayList<Chapter>(children.size)
             children.forEach { list.add(it.clone()) }
             chapter.children = list
-            text?.tryRetain()
-            tag?.tryRetain()
+            text.retain()
+            tag.retain()
         }
     }
 

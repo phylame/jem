@@ -25,12 +25,6 @@ fun <E> List<E>.chooseAny() = get(ThreadLocalRandom.current().nextInt(0, size))
 
 fun MutableList<*>.swap(from: Int, to: Int) = Collections.swap(this, from, to)
 
-fun <E> MutableSet<E>.synchronized(): MutableSet<E> = Collections.synchronizedSet(this)
-
-fun <E> MutableList<E>.synchronized(): MutableList<E> = Collections.synchronizedList(this)
-
-fun <K, V> MutableMap<K, V>.synchronized(): MutableMap<K, V> = Collections.synchronizedMap(this)
-
 inline fun <K, V> MutableMap<K, V>.getOrPut(key: K, default: (K) -> V?): V? {
     var value = get(key)
     if (value == null && (key !in this)) {

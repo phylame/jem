@@ -18,7 +18,7 @@
 
 package jem.format.epub
 
-import jclp.io.getMime
+import jclp.io.mimeType
 import jclp.setting.Settings
 import jclp.vdm.VDMWriter
 import jclp.vdm.useStream
@@ -57,7 +57,7 @@ internal class OPFBuilder(book: Book, writer: VDMWriter, settings: Settings?) : 
         val path = root.resolve(name)
         return items.getOrPut(id) {
             init(path)
-            Item(id, root.relativize(path).vdmPath, mime ?: getMime(name))
+            Item(id, root.relativize(path).vdmPath, mime ?: mimeType(name))
         } to path
     }
 

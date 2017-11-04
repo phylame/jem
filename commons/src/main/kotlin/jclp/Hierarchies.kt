@@ -80,7 +80,7 @@ fun <T : Hierarchical<T>> T.mostBelow(top: T? = null): T {
 fun <T : Hierarchical<T>> T.locate(indices: IntArray): T? {
     var item: T? = null
     for (index in indices) {
-        item = get(if (index < 0) index + size else index)
+        item = (item ?: this)[if (index < 0) index + size else index]
     }
     return item
 }
@@ -88,12 +88,12 @@ fun <T : Hierarchical<T>> T.locate(indices: IntArray): T? {
 fun <T : Hierarchical<T>> T.locate(indices: Collection<Int>): T? {
     var item: T? = null
     for (index in indices) {
-        item = (item ?: this).get(if (index < 0) index + size else index)
+        item = (item ?: this)[if (index < 0) index + size else index]
     }
     return item
 }
 
-open class Hierarchy<T : Hierarchy<T>> : Hierarchical<T> {
+open class HierarchySupport<T : HierarchySupport<T>> : Hierarchical<T> {
     override var parent: T? = null
         protected set
 
@@ -119,9 +119,15 @@ open class Hierarchy<T : Hierarchy<T>> : Hierarchical<T> {
         children.add(index, ensureSolitary(item))
     }
 
+    fun extend(items: Iterable<T>) {
+        items.forEach { append(it) }
+    }
+
     final override fun get(index: Int) = children[index]
 
-    fun indexOf(item: T) = if (item.parent === this) children.indexOf(item) else -1
+    fun indexOf(item: T) = if (item.parent !== this) {
+        -1
+    } else children.indices.firstOrNull { children[it] === item } ?: -1
 
     operator fun contains(item: T) = indexOf(item) != -1
 
@@ -135,35 +141,35 @@ open class Hierarchy<T : Hierarchy<T>> : Hierarchical<T> {
     }
 
     fun replaceAt(index: Int, item: T): T {
-        val current = children.set(index, ensureSolitary(item))
-        current.parent = null
-        return current
+        val old = children.set(index, ensureSolitary(item))
+        old.parent = null
+        return old
     }
 
     operator fun set(index: Int, item: T) {
         replaceAt(index, item)
     }
 
-    fun remove(item: T) = when {
-        item.parent !== this -> false
-        children.remove(item) -> {
-            item.parent = null
-            true
+    fun swap(from: Int, to: Int) = children.swap(from, to)
+
+    fun remove(item: T): Boolean {
+        val index = indexOf(item)
+        if (index == -1) {
+            return false
         }
-        else -> false
+        removeAt(index)
+        return true
+    }
+
+    fun removeAt(index: Int): T {
+        val old = children.removeAt(index)
+        old.parent = null
+        return old
     }
 
     operator fun minusAssign(item: T) {
         remove(item)
     }
-
-    fun removeAt(index: Int): T {
-        val current = children.removeAt(index)
-        current.parent = null
-        return current
-    }
-
-    fun swap(from: Int, to: Int) = children.swap(from, to)
 
     fun clear() {
         children.onEach { it.parent = null }.clear()
@@ -171,12 +177,13 @@ open class Hierarchy<T : Hierarchy<T>> : Hierarchical<T> {
 
     final override fun iterator() = children.iterator()
 
+    @Suppress("UNCHECKED_CAST")
     private fun ensureSolitary(item: T): T {
-        require(item !== this) { "Cannot add self to children list: $item" }
-        require(item !== parent) { "Cannot add parent to children list: %$item" }
-        require(item.parent == null) { "Item has been in certain parent: $item" }
-        @Suppress("UNCHECKED_CAST")
-        item.parent = this as T
+        require(item !== this) { "Cannot add self to child list" }
+        require(item !== parent) { "Cannot add parent to child list" }
+        require(item.parent == null) { "Item has been in certain hierarchy" }
+        require(!item.isAncestor(this as T)) { "Cannot add ancestor to child list" }
+        item.parent = this
         return item
     }
 }

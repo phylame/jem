@@ -18,7 +18,7 @@
 
 package jem.format.epub
 
-import jclp.flob.Flob
+import jclp.io.Flob
 import jclp.setting.Settings
 import jclp.vdm.VDMWriter
 import jclp.vdm.useStream

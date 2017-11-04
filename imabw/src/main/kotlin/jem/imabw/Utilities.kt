@@ -22,8 +22,9 @@ import javafx.concurrent.Task
 import javafx.scene.control.ComboBox
 import javafx.util.StringConverter
 import mala.App
-import java.io.File
 import java.nio.charset.Charset
+import java.nio.file.Files
+import java.nio.file.Path
 import java.util.*
 
 class KeyAndName(val key: String, val name: String) {
@@ -52,7 +53,7 @@ abstract class ProgressTask<V> : Task<V>() {
     }
 }
 
-class ReadLineTask(val file: File, val charset: Charset = Charsets.UTF_8) : ProgressTask<List<String>>() {
+class ReadLineTask(val file: Path, val charset: Charset = Charsets.UTF_8) : ProgressTask<List<String>>() {
     init {
         setOnFailed {
             hideProgress()
@@ -60,7 +61,7 @@ class ReadLineTask(val file: File, val charset: Charset = Charsets.UTF_8) : Prog
         }
     }
 
-    override fun call() = file.readLines(charset)
+    override fun call(): List<String> = Files.readAllLines(file, charset)
 }
 
 class LocalePicker(initial: Locale = Locale.getDefault()) : ComboBox<Locale>() {

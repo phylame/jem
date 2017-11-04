@@ -19,11 +19,12 @@
 package jem.crawler
 
 import jclp.Linguist
-import jclp.flob.Flob
+import jclp.io.Flob
 import jclp.io.actualStream
-import jclp.io.detectMime
 import jclp.io.htmlTrim
+import jclp.io.mimeType
 import jclp.setting.Settings
+import jclp.text.or
 import org.json.JSONObject
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -51,7 +52,7 @@ class CrawlerFlob(
 ) : Flob {
     override val name = url
 
-    override val mimeType = detectMime(name, mime)
+    override val mimeType = mime or { mimeType(name) }
 
     override fun openStream() = openConnection(url, method, settings).actualStream()
 }

@@ -18,12 +18,13 @@
 
 package jem.format.pmab
 
-import jclp.ValueMap
 import jclp.TypeManager
-import jclp.flob.flobOf
-import jclp.tryRelease
+import jclp.ValueMap
+import jclp.io.flobOf
+import jclp.release
 import jclp.setting.Settings
 import jclp.setting.getString
+import jclp.text.ConverterManager
 import jclp.text.Text
 import jclp.text.textOf
 import jclp.text.valueFor
@@ -36,6 +37,7 @@ import jem.format.util.*
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.InputStream
+import java.nio.charset.Charset
 import java.util.*
 
 internal object PmabParser : VDMParser {
@@ -105,13 +107,13 @@ internal object PmabParser : VDMParser {
         var hasText = false
         when (tag) {
             "item" -> {
-                data.itemName = data.getAttribute("name")
+                data.itemName = data.xmlAttribute("name")
                 data.itemType = xpp.getAttributeValue(null, "type")
                 hasText = true
             }
             "attributes" -> data.values = data.book.attributes
             "extensions" -> data.values = data.book.extensions
-            "meta" -> data.meta[data.getAttribute("name")] = data.getAttribute("value")
+            "meta" -> data.meta[data.xmlAttribute("name")] = data.xmlAttribute("value")
             "head" -> data.meta = hashMapOf()
         }
         return hasText
@@ -121,7 +123,7 @@ internal object PmabParser : VDMParser {
         if (tag == "item") {
             parseItem(sb.toString().trim(), data).also {
                 data.values[data.itemName] = it
-                it.tryRelease()
+                it.release()
             }
         }
     }
@@ -131,7 +133,7 @@ internal object PmabParser : VDMParser {
         var hasText = false
         when (tag) {
             "item" -> {
-                data.itemName = data.getAttribute("name")
+                data.itemName = data.xmlAttribute("name")
                 data.itemType = xpp.getAttributeValue(null, "type")
                 hasText = true
             }
@@ -149,11 +151,11 @@ internal object PmabParser : VDMParser {
             "chapter" -> data.chapter = data.chapter.parent!!
             "item" -> parseItem(sb.toString().trim(), data).also {
                 data.chapter[data.itemName] = it
-                it.tryRelease()
+                it.release()
             }
             "content" -> (parseItem(sb.toString().trim(), data) as Text).also {
                 data.chapter.text = it
-                it.tryRelease()
+                it.release()
             }
         }
     }
@@ -203,15 +205,15 @@ internal object PmabParser : VDMParser {
                 type.startsWith("text/") -> {
                     val encoding = data.getConfig("encoding") ?: itemType.valueFor("encoding")
                     val flob = flobOf(data.reader, text, type)
-                    textOf(flob, encoding, type.substring(5)).also { flob.tryRelease() }
+                    textOf(flob, encoding?.let { Charset.forName(it) }, type.substring(5)).also { flob.release() }
                 }
                 type.matches("[\\w]+/.+".toRegex()) -> flobOf(data.reader, text, type)
-                else -> text
+                else -> TypeManager.getClass(type)?.let { ConverterManager.parse(text, it) } ?: text
             }
         }
     }
 
-    private fun getVersion(xpp: XmlPullParser, key: String, data: Local) = data.getAttribute("version").let {
+    private fun getVersion(xpp: XmlPullParser, key: String, data: Local) = data.xmlAttribute("version").let {
         when (it) {
             "3.0" -> 3
             "2.0" -> 2
@@ -241,7 +243,7 @@ internal object PmabParser : VDMParser {
             return xpp
         }
 
-        fun getAttribute(name: String) = xmlAttribute(xpp, name, entry)
+        fun xmlAttribute(name: String) = xmlAttribute(xpp, name, entry)
 
         fun getConfig(key: String) = arguments?.getString("parser.pmab.$key")
 

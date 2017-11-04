@@ -28,13 +28,13 @@ import javafx.scene.control.*
 import javafx.scene.input.KeyCode
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.GridPane
-import jclp.ValueMap
 import jclp.TypeManager
-import jclp.flob.Flob
-import jclp.flob.flobOf
+import jclp.ValueMap
+import jclp.io.Flob
+import jclp.io.flobOf
 import jclp.log.Log
-import jclp.tryRelease
-import jclp.tryRetain
+import jclp.release
+import jclp.retain
 import jclp.text.Text
 import jclp.text.textOf
 import jem.imabw.KeyAndName
@@ -108,7 +108,7 @@ open class VariantPane(val map: ValueMap, showName: Boolean = true) : BorderPane
     }
 
     fun syncVariants() {
-        data.forEach { it.value?.tryRetain() }
+        data.forEach { it.value.retain() }
         for (name in map.names.toList() - ignoredKeys()) {
             map.remove(name)
         }
@@ -117,8 +117,8 @@ open class VariantPane(val map: ValueMap, showName: Boolean = true) : BorderPane
                 map[it] = item.valueProperty.value
             }
         }
-        data.forEach { it.value?.tryRelease() }
-        newValues.forEach { it.tryRelease() }
+        data.forEach { it.value.release() }
+        newValues.forEach { it.release() }
     }
 
     protected open fun getItemName(key: String) = key

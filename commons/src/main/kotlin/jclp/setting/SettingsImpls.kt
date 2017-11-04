@@ -19,24 +19,24 @@
 package jclp.setting
 
 import jclp.actualValue
-import jclp.canonicalType
 import jclp.log.Log
+import jclp.objectType
 import jclp.putAll
-import jclp.text.Converters
+import jclp.text.ConverterManager
 import java.io.Reader
 import java.io.Writer
 import java.util.*
 
-private typealias Predicate = (Any?) -> Boolean
+private typealias Predication = (Any?) -> Boolean
 
-data class Dependency(val key: String, val condition: Predicate? = null)
+data class Dependency(val key: String, val condition: Predication? = null)
 
 data class Definition(
         val key: String,
-        var type: Class<*>? = null,
+        val type: Class<*>,
         var default: Any? = null,
         var description: String = "",
-        var constraint: Predicate? = null,
+        var constraint: Predication? = null,
         var dependencies: List<Dependency> = emptyList()
 )
 
@@ -57,14 +57,15 @@ abstract class AbstractSettings : Settings {
 
     fun setDefinition(key: String, definition: Definition) = definitions.put(key, definition)
 
-    override fun get(key: String) = handleGet(key) ?: definitions[key]?.default?.actualValue
+    private fun getDefault(key: String) = definitions[key]?.default?.actualValue
+
+    override fun get(key: String) = handleGet(key) ?: getDefault(key)
 
     @Suppress("UNCHECKED_CAST")
     override operator fun <T : Any> get(key: String, type: Class<T>): T? {
-        val value = handleGet(key)
-        val clazz = type.canonicalType
+        val value = handleGet(key) ?: return getDefault(key) as? T
+        val clazz = type.objectType
         return when {
-            value == null -> definitions[key]?.default?.actualValue as? T
             clazz.isInstance(value) -> value as T
             else -> convertValue(value, clazz)
         }
@@ -72,11 +73,11 @@ abstract class AbstractSettings : Settings {
 
     override fun set(key: String, value: Any): Any? {
         definitions[key]?.let {
-            if (it.type?.isInstance(value) == false) {
-                throw IllegalArgumentException("'$key' require '$it'")
+            if (!it.type.isInstance(value)) {
+                throw IllegalArgumentException("'$key' require type of '${it.type}'")
             }
             if (it.constraint?.invoke(value) == false) {
-                throw IllegalArgumentException("illegal '$value' for '$key'")
+                throw IllegalArgumentException("Illegal '$value' for '$key'")
             }
         }
         return handleSet(key, value)
@@ -85,11 +86,11 @@ abstract class AbstractSettings : Settings {
     override fun contains(key: String) = handleGet(key) != null
 }
 
-open class MapSettings(values: Map<String, Any>? = null, definitions: Map<String, Definition>? = null) : AbstractSettings() {
+open class MapSettings(map: Map<String, Any>? = null, definitions: Map<String, Definition>? = null) : AbstractSettings() {
     private val values = hashMapOf<String, Any>()
 
     init {
-        values?.forEach { set(it.key, it.value) }
+        map?.let { values += it }
         definitions?.forEach { setDefinition(it.key, it.value) }
         initValues()
     }
@@ -100,14 +101,14 @@ open class MapSettings(values: Map<String, Any>? = null, definitions: Map<String
 
     override fun handleSet(key: String, value: Any) = values.put(key, value)
 
-    override fun iterator() = values.map { it.toPair() }.iterator()
-
     override fun remove(key: String) = values.remove(key)
+
+    override fun iterator() = values.iterator()
 
     override fun clear() = values.clear()
 
     override fun <T : Any> convertValue(value: Any, type: Class<T>) = (value as? String)?.let {
-        Converters.parse(it, type)
+        ConverterManager.parse(it, type)
     } ?: throw IllegalStateException("value is not a string: $value")
 
     override fun toString() = values.toString()
@@ -123,7 +124,7 @@ open class MapSettings(values: Map<String, Any>? = null, definitions: Map<String
     fun sync(writer: Writer, comment: String? = null) {
         val props = Properties()
         for ((key, value) in values) {
-            props[key] = value as? CharSequence ?: Converters.render(value)
+            props[key] = ConverterManager.render(value)
         }
         props.store(writer, comment)
     }
@@ -132,7 +133,7 @@ open class MapSettings(values: Map<String, Any>? = null, definitions: Map<String
         for (entry in values) {
             val type = getDefinition(entry.key)?.type ?: continue
             try {
-                entry.setValue(Converters.parse(entry.value.toString(), type) ?: continue)
+                entry.setValue(ConverterManager.parse(entry.value.toString(), type) ?: continue)
             } catch (e: Exception) {
                 Log.e(javaClass.simpleName, e) { "invalid value(${entry.value}) for type($type)" }
             }

@@ -17,7 +17,7 @@
  */
 
 .root {
-    -fx-font-size: 13px;
+    -fx-font-size: 14px;
 }
 
 .menu-bar {
@@ -35,6 +35,10 @@
 
 .menu-button > .label {
     -fx-alignment: center;
+}
+
+.context-menu {
+    -fx-padding: 0;
 }
 
 .tool-bar {

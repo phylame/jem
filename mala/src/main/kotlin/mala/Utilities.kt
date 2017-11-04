@@ -18,14 +18,14 @@
 
 package mala
 
-import jclp.io.createRecursively
 import jclp.log.Log
 import jclp.log.LogLevel
 import jclp.setting.MapSettings
 import jclp.setting.delegate
 import jclp.text.Converter
-import jclp.text.Converters
-import java.io.File
+import jclp.text.ConverterManager
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.util.*
 
 interface Describable {
@@ -39,19 +39,23 @@ interface Describable {
 }
 
 open class MalaSettings(name: String, load: Boolean = true, sync: Boolean = true) : MapSettings() {
-    val file = File(App.home, name)
+    val file = Paths.get(App.home, name)
 
     init {
-        if (load && file.exists()) {
-            @Suppress("LeakingThis")
-            file.reader().use(this::load)
+        if (load && Files.exists(file)) {
+            Files.newBufferedReader(file).use { load(it) }
         }
         if (sync) {
             App.registerCleanup({
-                if (file.exists() || file.parentFile.createRecursively()) {
-                    sync(file.writer())
+                if (Files.notExists(file.parent)) {
+                    try {
+                        Files.createDirectories(file.parent)
+                        Files.newBufferedWriter(file).use { sync(it) }
+                    } catch (e: Exception) {
+                        App.error("cannot create directory for settings file: $file", e)
+                    }
                 } else {
-                    App.error("cannot create directory for settings file: $file")
+                    Files.newBufferedWriter(file).use { sync(it) }
                 }
             })
         }
@@ -59,12 +63,12 @@ open class MalaSettings(name: String, load: Boolean = true, sync: Boolean = true
 
     companion object {
         init {
-            Converters[LogLevel::class.java] = object : Converter<LogLevel> {
+            ConverterManager[LogLevel::class.java] = object : Converter<LogLevel> {
                 override fun render(value: LogLevel) = value.name
 
                 override fun parse(text: String) = LogLevel.valueOf(text.toUpperCase())
             }
-            Converters[AppVerbose::class.java] = object : Converter<AppVerbose> {
+            ConverterManager[AppVerbose::class.java] = object : Converter<AppVerbose> {
                 override fun render(value: AppVerbose) = value.name
 
                 override fun parse(text: String) = AppVerbose.valueOf(text.toUpperCase())
@@ -74,16 +78,19 @@ open class MalaSettings(name: String, load: Boolean = true, sync: Boolean = true
 }
 
 open class AppSettings(name: String = "config/general.ini") : MalaSettings(name) {
-    private val blacklist = File(App.home, "config/blacklist.txt")
+    private val blacklist = Paths.get(App.home, "config/blacklist.txt")
 
     init {
         App.registerCleanup({
-            if (blacklist.exists() || blacklist.parentFile.createRecursively()) {
-                blacklist.bufferedWriter().use { out ->
-                    pluginBlacklist.forEach { out.append(it).append("\n") }
+            if (Files.notExists(blacklist.parent)) {
+                try {
+                    Files.createDirectories(blacklist.parent)
+                    Files.write(blacklist, pluginBlacklist)
+                } catch (e: Exception) {
+                    App.error("cannot create file for plugin blacklist: $blacklist", e)
                 }
             } else {
-                App.error("cannot create file for plugin blacklist")
+                Files.write(blacklist, pluginBlacklist)
             }
         })
     }
@@ -98,7 +105,11 @@ open class AppSettings(name: String = "config/general.ini") : MalaSettings(name)
 
     val pluginBlacklist by lazy {
         hashSetOf<String>().apply {
-            blacklist.takeIf(File::exists)?.useLines { this += it }
+            try {
+                this += Files.readAllLines(blacklist)
+            } catch (e: Exception) {
+                App.error("cannot load plugin blacklist: $blacklist", e)
+            }
         }
     }
 }

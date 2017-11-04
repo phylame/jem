@@ -18,69 +18,74 @@
 
 package jclp.vdm
 
-import jclp.DisposableCloseable
-import jclp.io.createRecursively
-import jclp.synchronized
+import jclp.DisposableSupport
 import java.io.*
+import java.nio.file.Files
 import java.nio.file.NotDirectoryException
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 
+const val VDM_ZIP = "zip"
+const val VDM_DIRECTORY = "dir"
+
 private class FileVDMEntry(
-        val file: File, name: String, val reader: FileVDMReader? = null, val writer: FileVDMWriter? = null
+        val path: Path, name: String, val reader: FileVDMReader? = null, val writer: FileVDMWriter? = null
 ) : VDMEntry {
     override val comment = null
 
-    override val isDirectory = file.isDirectory
+    override val isDirectory = Files.isDirectory(path)
 
-    override val lastModified = file.lastModified()
+    override val lastModified = Files.getLastModifiedTime(path).toMillis()
 
-    override val name = name + if (file.isDirectory) "/" else ""
+    override val name: String = name + if (isDirectory) "/" else ""
 
-    override fun toString() = "file:/${file.canonicalPath.replace('\\', '/')}"
+    override fun toString(): String = path.toUri().toString()
 
     var stream: OutputStream? = null
 }
 
-private class FileVDMReader(val dir: File) : DisposableCloseable(), VDMReader {
+private class FileVDMReader(val root: Path) : DisposableSupport(), VDMReader {
     override val comment = null
 
-    override val name: String = dir.path
+    override val name: String = root.toString()
 
-    private val streams = LinkedList<InputStream>().synchronized()
+    private val streams = LinkedList<InputStream>()
 
     override fun getEntry(name: String): FileVDMEntry? {
         require(name.isNotEmpty()) { "name for entry cannot be empty" }
-        return File(dir, name).takeIf(File::isFile)?.let {
+        return root.resolve(name).takeIf { Files.isRegularFile(it) }?.let {
             FileVDMEntry(it, name.replace('\\', '/'), this)
         }
     }
 
-    override fun getInputStream(entry: VDMEntry) = if (entry !is FileVDMEntry || entry.reader != this) {
+    override fun getInputStream(entry: VDMEntry): InputStream = if (entry !is FileVDMEntry || entry.reader != this) {
         throw IllegalArgumentException("Invalid entry: $entry")
-    } else {
-        FileInputStream(entry.file).apply { streams += this }
-    }
+    } else Files.newInputStream(entry.path).also { streams += it }
 
     override val entries: Iterator<VDMEntry>
         get() {
-            val begin = dir.path.length + 1
-            return walkDir().map {
-                FileVDMEntry(it, it.path.substring(begin).replace('\\', '/'), this)
+            val begin = root.toString().length + 1
+            return walkRoot().map {
+                FileVDMEntry(it, it.toString().substring(begin).replace('\\', '/'), this)
             }.iterator()
         }
 
-    override val size get() = walkDir().count()
+    override val size get() = walkRoot().count().toInt()
 
-    private fun walkDir() = dir.walkTopDown().filter { it !== dir }
+    private fun walkRoot() = Files.walk(root).filter { it !== root }
 
-    override fun toString() = "FileVDMReader@${hashCode()}{dir=$dir}"
+    override fun toString() = "FileVDMReader@${hashCode()}{root=$root}"
 
     override fun close() {
-        streams.onEach(InputStream::close).clear()
+        streams.onEach { it.close() }.clear()
+    }
+
+    override fun dispose() {
+        close()
     }
 
     fun finalize() {
@@ -88,25 +93,26 @@ private class FileVDMReader(val dir: File) : DisposableCloseable(), VDMReader {
     }
 }
 
-private class FileVDMWriter(val dir: File) : VDMWriter {
-    private val streams = LinkedList<OutputStream>().synchronized()
+private class FileVDMWriter(val root: Path) : VDMWriter {
+    private val streams = LinkedList<OutputStream>()
 
     override fun setComment(comment: String) {}
 
     override fun setProperty(name: String, value: Any) {}
 
-    override fun newEntry(name: String) = FileVDMEntry(File(dir, name), name, writer = this)
+    override fun newEntry(name: String) = FileVDMEntry(root.resolve(name), name, writer = this)
 
-    override fun putEntry(entry: VDMEntry) = if (entry !is FileVDMEntry || entry.writer !== this) {
+    override fun putEntry(entry: VDMEntry): OutputStream = if (entry !is FileVDMEntry || entry.writer !== this) {
         throw IllegalArgumentException("Invalid entry $entry")
-    } else if (!entry.file.parentFile.createRecursively()) {
-        throw IOException("Cannot create directory ${entry.file.parent}")
     } else if (entry.stream != null) {
         throw IllegalArgumentException("Entry is opened")
     } else {
-        FileOutputStream(entry.file).apply {
-            entry.stream = this
-            streams += this
+        if (Files.notExists(root)) {
+            Files.createDirectories(root)
+        }
+        Files.newOutputStream(entry.path).also {
+            entry.stream = it
+            streams += it
         }
     }
 
@@ -123,13 +129,14 @@ private class FileVDMWriter(val dir: File) : VDMWriter {
         }
     }
 
-    override fun toString() = "FileVDMWriter@${hashCode()}{dir=$dir}"
+    override fun toString() = "FileVDMWriter@${hashCode()}{root=$root}"
 
     override fun close() {
-        streams.onEach {
-            it.flush()
-            it.close()
-        }.clear()
+        for (stream in streams) {
+            stream.flush()
+            stream.close()
+        }
+        streams.clear()
     }
 
     fun finalize() {
@@ -146,16 +153,16 @@ class FileVDMFactory : VDMFactory {
 
     override fun getWriter(output: Any): VDMWriter = FileVDMWriter(getDirectory(output, false))
 
-    private fun getDirectory(arg: Any, reading: Boolean): File {
+    private fun getDirectory(arg: Any, reading: Boolean): Path {
         val dir = when (arg) {
-            is File -> arg
-            is String -> File(arg)
-            is Path -> arg.toFile()
+            is File -> arg.toPath()
+            is String -> Paths.get(arg)
+            is Path -> arg
             else -> throw IllegalArgumentException(arg.toString())
         }
         if (reading) {
-            if (!dir.exists()) throw FileNotFoundException(dir.path)
-            if (!dir.isDirectory) throw NotDirectoryException(dir.path)
+            if (Files.notExists(dir)) throw FileNotFoundException(dir.toString())
+            if (!Files.isDirectory(dir)) throw NotDirectoryException(dir.toString())
         }
         return dir
     }
@@ -177,7 +184,7 @@ private class ZipVDMEntry(val entry: ZipEntry, val reader: ZipVDMReader? = null,
     } ?: entry.toString()
 }
 
-private class ZipVDMReader(val zip: ZipFile) : DisposableCloseable(), VDMReader {
+private class ZipVDMReader(val zip: ZipFile) : DisposableSupport(), VDMReader {
     override val name: String = zip.name
 
     override val comment: String? = zip.comment
@@ -193,6 +200,8 @@ private class ZipVDMReader(val zip: ZipFile) : DisposableCloseable(), VDMReader 
     override val size get() = zip.size()
 
     override fun close() = zip.close()
+
+    override fun dispose() = close()
 
     override fun toString() = "ZipVDMReader@${hashCode()}{zip=$name}"
 }
@@ -253,7 +262,6 @@ class ZipVDMFactory : VDMFactory {
     override fun toString() = name
 }
 
-const val VDM_ZIP = "zip"
-const val VDM_DIRECTORY = "dir"
-
-fun detectReader(file: File): VDMReader = if (file.isDirectory) FileVDMReader(file) else ZipVDMReader(ZipFile(file))
+fun detectReader(path: Path): VDMReader = if (Files.isDirectory(path))
+    FileVDMReader(path)
+else ZipVDMReader(ZipFile(path.toFile()))

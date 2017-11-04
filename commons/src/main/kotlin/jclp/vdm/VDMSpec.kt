@@ -20,7 +20,7 @@ package jclp.vdm
 
 import jclp.ServiceManager
 import jclp.ServiceProvider
-import jclp.flob.Flob
+import jclp.io.Flob
 import jclp.text.Text
 import java.io.Closeable
 import java.io.InputStream
@@ -53,6 +53,8 @@ interface VDMReader : Closeable {
 
 fun VDMReader.openStream(name: String) = getEntry(name)?.let(this::getInputStream)
 
+fun VDMReader.readBytes(name: String) = openStream(name)?.use { it.readBytes() }
+
 fun VDMReader.readText(name: String, charset: Charset = Charsets.UTF_8): String? {
     return openStream(name)?.use { it.reader(charset).readText() }
 }
@@ -69,11 +71,11 @@ interface VDMWriter : Closeable {
     fun closeEntry(entry: VDMEntry)
 }
 
-inline fun <R> VDMWriter.useStream(name: String, block: (OutputStream) -> R): R = newEntry(name).let {
+inline fun <R> VDMWriter.useStream(name: String, block: (OutputStream) -> R): R = with(newEntry(name)) {
     try {
-        block(putEntry(it))
+        block(putEntry(this))
     } finally {
-        closeEntry(it)
+        closeEntry(this)
     }
 }
 
@@ -83,9 +85,9 @@ fun VDMWriter.write(name: String, flob: Flob) = useStream(name) {
 }
 
 fun VDMWriter.write(name: String, text: Text, charset: Charset = Charsets.UTF_8) = useStream(name) {
-    it.writer(charset).let { writer ->
-        text.writeTo(writer)
-        writer.flush()
+    with(it.writer(charset)) {
+        text.writeTo(this)
+        flush()
     }
 }
 

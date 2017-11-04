@@ -18,7 +18,7 @@
 
 package mala.cli
 
-import jclp.text.Converters
+import jclp.text.ConverterManager
 import mala.App
 import org.apache.commons.cli.CommandLine
 
@@ -59,7 +59,7 @@ class TypedFetcher<T : Any>(
         private val type: Class<T>, override val opt: String, override val validator: Validator<T>? = null
 ) : ValueFetcher<T> {
     override fun parse(str: String) = try {
-        Converters.parse(str, type) ?: App.die("cannot convert '$str' with type '$type'")
+        ConverterManager.parse(str, type) ?: App.die("cannot convert '$str' with type '$type'")
     } catch (e: RuntimeException) {
         App.die("cannot convert input '$str' with type '$type'", e)
     }

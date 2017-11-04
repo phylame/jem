@@ -22,12 +22,10 @@ import java.io.CharArrayWriter
 import java.io.PrintWriter
 import java.util.*
 
-val Throwable.traceText: String
-    get() {
-        return with(CharArrayWriter()) {
-            printStackTrace(PrintWriter(this))
-            toString()
-        }
+val Throwable.dumpToText: String
+    get() = with(CharArrayWriter()) {
+        printStackTrace(PrintWriter(this))
+        toString()
     }
 
 typealias EventAction<T> = (T) -> Unit
@@ -41,7 +39,7 @@ object EventBus {
 
     fun <T : Any> register(type: Class<T>, action: EventAction<T>) {
         synchronized(this) {
-            observers.getOrPut(type.canonicalType) { arrayListOf() }!! += (action)
+            observers.getOrPut(type.objectType) { arrayListOf() }!! += (action)
         }
     }
 
@@ -51,7 +49,7 @@ object EventBus {
 
     fun <T : Any> unregistere(type: Class<T>, action: EventAction<T>) {
         synchronized(this) {
-            observers[type.canonicalType]?.remove(action)
+            observers[type.objectType]?.remove(action)
         }
     }
 
@@ -66,7 +64,7 @@ object EventBus {
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> post(event: T, type: Class<T>) {
         synchronized(this) {
-            for (observer in observers[type.canonicalType] ?: return) {
+            for (observer in observers[type.objectType] ?: return) {
                 if ((event as? Consumable)?.isConsumed != true) {
                     (observer as EventAction<T>)(event)
                 }

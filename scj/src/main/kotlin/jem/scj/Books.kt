@@ -19,7 +19,7 @@
 package jem.scj
 
 import jclp.TypeManager
-import jclp.text.Converters
+import jclp.text.ConverterManager
 import jem.Attributes
 import jem.Book
 import jem.JemException
@@ -124,7 +124,7 @@ private fun attachAttributes(book: Book) {
     for ((k, v) in SCI.outAttributes) {
         try {
             val clazz = TypeManager.getClass(Attributes.getType(k) ?: continue) ?: continue
-            Converters.parse(v.toString(), clazz)?.let { book[k] = it } ?: App.error(tr("err.misc.badString", v))
+            ConverterManager.parse(v.toString(), clazz)?.let { book[k] = it } ?: App.error(tr("err.misc.badString", v))
         } catch (e: Exception) {
             App.error(tr("err.misc.badString", v), e)
         }

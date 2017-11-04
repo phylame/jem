@@ -18,7 +18,6 @@
 
 package mala.ixin
 
-import jclp.synchronized
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.util.*
@@ -30,8 +29,8 @@ interface CommandHandler {
 annotation class Command(val name: String = "")
 
 class CommandDispatcher(proxies: Array<out Any> = emptyArray()) : CommandHandler {
-    private val handlers = LinkedList<CommandHandler>().synchronized()
-    private val invocations = hashMapOf<String, Invocation>().synchronized()
+    private val handlers = LinkedList<CommandHandler>()
+    private val invocations = hashMapOf<String, Invocation>()
 
     init {
         register(proxies)
@@ -52,11 +51,15 @@ class CommandDispatcher(proxies: Array<out Any> = emptyArray()) : CommandHandler
                 val command = it.getAnnotation(Command::class.java)
                 if (command != null) {
                     val invocation = Invocation(proxy, it)
-                    invocations.put(if (command.name.isNotEmpty()) command.name else it.name, invocation)
+                    synchronized(invocations) {
+                        invocations.put(if (command.name.isNotEmpty()) command.name else it.name, invocation)
+                    }
                 }
             }
             if (proxy is CommandHandler) {
-                handlers += proxy
+                synchronized(handlers) {
+                    handlers += proxy
+                }
                 continue
             }
         }

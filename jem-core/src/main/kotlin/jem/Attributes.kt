@@ -21,8 +21,8 @@ package jem
 import jclp.TypeManager
 import jclp.ValueMap
 import jclp.ValueValidator
-import jclp.flob.Flob
-import jclp.io.getProperties
+import jclp.io.Flob
+import jclp.io.loadProperties
 import jclp.putAll
 import jclp.text.Text
 import java.time.LocalDate
@@ -53,7 +53,7 @@ object Attributes : ValueValidator {
     private val types = hashMapOf<String, String>()
 
     init {
-        getProperties("!jem/attributes.properties")?.let { types.putAll(it) }
+        loadProperties("!jem/attributes.properties")?.let { types.putAll(it) }
     }
 
     val names get() = types.keys

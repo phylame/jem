@@ -18,9 +18,9 @@
 
 package jem.format.epub
 
-import jclp.flob.Flob
-import jclp.flob.flobOf
-import jclp.io.getProperties
+import jclp.io.Flob
+import jclp.io.flobOf
+import jclp.io.loadProperties
 import jclp.io.suffixName
 import jclp.log.Log
 import jclp.setting.Settings
@@ -240,7 +240,7 @@ internal class TOCBuilder(
 
 internal object Templates {
     init {
-        Velocity.init(getProperties("!jem/format/epub/velocity.properties"))
+        Velocity.init(loadProperties("!jem/format/epub/velocity.properties"))
     }
 
     fun getTemplate(name: String): Template = Velocity.getTemplate("jem/format/epub/$name.vm")

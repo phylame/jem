@@ -34,7 +34,7 @@ import javafx.scene.image.Image
 import javafx.scene.image.ImageView
 import javafx.scene.layout.GridPane
 import javafx.scene.layout.Pane
-import jclp.Hierarchy
+import jclp.HierarchySupport
 import kotlin.reflect.KProperty
 
 operator fun Pane.plusAssign(node: Node) {
@@ -70,7 +70,7 @@ fun GridPane.init(labels: Collection<Node>, fields: Collection<Node>, firstRow: 
     }
 }
 
-fun <T : Hierarchy<T>> T.toTreeItem(): TreeItem<T> = object : TreeItem<T>(this) {
+fun <T : HierarchySupport<T>> T.toTreeItem(): TreeItem<T> = object : TreeItem<T>(this) {
     private var isFirstTime = true
 
     override fun isLeaf() = value.size == 0

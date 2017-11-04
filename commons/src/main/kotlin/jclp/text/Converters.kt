@@ -19,8 +19,6 @@
 package jclp.text
 
 import jclp.*
-import jclp.flob.Flob
-import jclp.flob.flobOf
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -32,21 +30,21 @@ interface Converter<T> {
     fun parse(text: String): T
 }
 
-object Converters {
+object ConverterManager {
     private val converters = IdentityHashMap<Class<*>, Converter<*>>()
 
     init {
         registerDefaults()
     }
 
-    operator fun contains(type: Class<*>) = type.canonicalType in converters
+    operator fun contains(type: Class<*>) = type.objectType in converters
 
     @Suppress("UNCHECKED_CAST")
-    operator fun <T : Any> get(type: Class<T>) = converters[type.canonicalType] as Converter<T>?
+    operator fun <T : Any> get(type: Class<T>) = converters[type.objectType] as Converter<T>?
 
     operator fun <T : Any> set(type: Class<T>, converter: Converter<T>?) = if (converter == null) {
         converters.remove(type)
-    } else converters.put(type.canonicalType, converter)
+    } else converters.put(type.objectType, converter)
 
     fun render(value: Any) = (value as? CharSequence)?.toString() ?: render(value, value.javaClass)
 
@@ -67,7 +65,6 @@ object Converters {
         Float::class.java.let { set(it, DefaultConverter(it)) }
         Double::class.java.let { set(it, DefaultConverter(it)) }
 
-        Class::class.java.let { set(it, DefaultConverter(it)) }
         Locale::class.java.let { set(it, DefaultConverter(it)) }
         String::class.java.let { set(it, DefaultConverter(it)) }
         Boolean::class.java.let { set(it, DefaultConverter(it)) }
@@ -76,25 +73,12 @@ object Converters {
         LocalTime::class.java.let { set(it, DefaultConverter(it)) }
         LocalDate::class.java.let { set(it, DefaultConverter(it)) }
         LocalDateTime::class.java.let { set(it, DefaultConverter(it)) }
-
-        set(Text::class.java, object : Converter<Text> {
-            override fun parse(text: String) = textOf(text)
-
-            override fun render(value: Text) = value.toString()
-        })
-
-        set(Flob::class.java, object : Converter<Flob> {
-            override fun parse(text: String) = flobOf(text)
-
-            override fun render(value: Flob) = throw UnsupportedOperationException()
-        })
     }
 }
 
-class DefaultConverter<T>(private val type: Class<T>) : Converter<T> {
+private class DefaultConverter<T>(val type: Class<T>) : Converter<T> {
     override fun render(value: T): String = when (value) {
         is Date -> value.format(ISO_FORMAT)
-        is Class<*> -> value.name
         else -> value.toString()
     }
 
@@ -114,7 +98,6 @@ class DefaultConverter<T>(private val type: Class<T>) : Converter<T> {
             LocalDate::class.java -> LocalDate.parse(text, looseISODate) as T
             LocalTime::class.java -> LocalTime.parse(text, looseISOTime) as T
             LocalDateTime::class.java -> LocalDateTime.parse(text, looseISODateTime) as T
-            Class::class.java -> Class.forName(text) as T
             else -> throw InternalError("Unreachable Code")
         }
     }

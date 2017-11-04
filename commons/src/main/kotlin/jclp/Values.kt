@@ -18,11 +18,11 @@
 
 package jclp
 
-import jclp.flob.Flob
-import jclp.flob.emptyFlob
-import jclp.io.getProperties
+import jclp.io.Flob
+import jclp.io.emptyFlob
+import jclp.io.loadProperties
 import jclp.log.Log
-import jclp.text.Converters
+import jclp.text.ConverterManager
 import jclp.text.Text
 import jclp.text.emptyText
 import java.time.LocalDate
@@ -32,15 +32,7 @@ import java.time.temporal.Temporal
 import java.util.*
 import java.util.function.Supplier
 
-val Any?.actualValue
-    get() = when (this) {
-        is Function0<*> -> invoke()
-        is Supplier<*> -> get()
-        is Lazy<*> -> value
-        else -> this
-    }
-
-val <T : Any> Class<T>.canonicalType
+val <T : Any> Class<T>.objectType
     get() = if (isPrimitive) kotlin.javaObjectType else this
 
 fun Class<*>.getInstance(): Any = try {
@@ -48,6 +40,14 @@ fun Class<*>.getInstance(): Any = try {
 } catch (ignored: ReflectiveOperationException) {
     newInstance()
 }
+
+val Any?.actualValue
+    get() = when (this) {
+        is Function0<*> -> invoke()
+        is Supplier<*> -> get()
+        is Lazy<*> -> value
+        else -> this
+    }
 
 object TypeManager {
     // standard type ids
@@ -80,7 +80,7 @@ object TypeManager {
 
     fun mapClass(name: String, clazz: Class<*>) {
         require(name.isNotEmpty()) { "type name cannot be empty" }
-        val type = clazz.canonicalType
+        val type = clazz.objectType
         fetchType(name).clazz = type
         classes.put(type, name)
         cache.remove(name)
@@ -90,7 +90,7 @@ object TypeManager {
 
     fun getType(value: Any) = getType(value.javaClass)
 
-    fun getType(clazz: Class<*>) = classes.getOrPut(clazz.canonicalType) { cls ->
+    fun getType(clazz: Class<*>) = classes.getOrPut(clazz.objectType) { cls ->
         types.entries.run {
             firstOrNull { it.value.clazz == cls } ?: firstOrNull { it.value.clazz!!.isAssignableFrom(cls) }
         }?.key
@@ -104,7 +104,7 @@ object TypeManager {
 
     fun getDefault(name: String) = if (name.isNotEmpty()) lookupType(name)?.default?.actualValue else null
 
-    fun parse(name: String, text: String): Any? = getClass(name)?.let { Converters.parse(text, it) }
+    fun parse(name: String, text: String): Any? = getClass(name)?.let { ConverterManager.parse(text, it) }
 
     fun printable(value: Any) = when (value) {
         is Locale -> value.displayName
@@ -132,7 +132,7 @@ object TypeManager {
     }
 
     private fun initBuiltins() {
-        getProperties("!jclp/types.properties")?.let {
+        loadProperties("!jclp/types.properties")?.let {
             for ((key, value) in it) {
                 try {
                     mapClass(value.toString(), Class.forName(key.toString()))
@@ -171,36 +171,38 @@ typealias ValueValidator = (String, Any) -> Unit
 class ValueMap(private val validator: ValueValidator? = null) : Iterable<MutableMap.MutableEntry<String, Any>>, Cloneable {
     private var map = hashMapOf<String, Any>()
 
-    fun isNotEmpty() = map.isNotEmpty()
-
-    fun isEmpty() = map.isEmpty()
-
-    val names get() = map.keys
-
-    val size get() = map.size
-
-    fun update(others: ValueMap) {
-        update(others.map)
-    }
-
-    fun update(values: Map<String, Any>) {
-        values.forEach { set(it.key, it.value) }
-    }
-
     operator fun set(name: String, value: Any): Any? {
         require(name.isNotEmpty()) { "name cannot be empty" }
         validator?.invoke(name, value)
-        value.tryRetain()
-        return map.put(name, value)?.also { it.tryRelease() }
+        return map.put(name, value).also {
+            value.retain()
+            it.release()
+        }
     }
+
+    fun update(other: ValueMap) {
+        update(other.map)
+    }
+
+    fun update(map: Map<String, Any>) {
+        map.forEach { set(it.key, it.value) }
+    }
+
+    val size get() = map.size
+
+    val names get() = map.keys
+
+    fun isEmpty() = map.isEmpty()
+
+    fun isNotEmpty() = map.isNotEmpty()
 
     operator fun contains(name: String) = name.isNotEmpty() && name in map
 
     operator fun get(name: String) = if (name.isEmpty()) null else map[name]
 
-    fun remove(name: String) = if (name.isEmpty()) null else map.remove(name)?.also { it.tryRelease() }
+    fun remove(name: String) = if (name.isEmpty()) null else map.remove(name)?.release()
 
-    fun clear() = map.onEach { it.value.tryRelease() }.clear()
+    fun clear() = map.apply { values.releaseAll() }.clear()
 
     override fun iterator() = map.entries.iterator()
 
@@ -210,7 +212,7 @@ class ValueMap(private val validator: ValueValidator? = null) : Iterable<Mutable
     public override fun clone(): ValueMap {
         val copy = super.clone() as ValueMap
         copy.map = map.clone() as HashMap<String, Any>
-        copy.map.values.forEach { it.tryRetain() }
+        copy.map.values.retainAll()
         return copy
     }
 }

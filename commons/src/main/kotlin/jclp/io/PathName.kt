@@ -18,7 +18,12 @@
 
 package jclp.io
 
-import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.nio.file.spi.FileTypeDetector
+
+const val UNKNOWN_MIME = "application/octet-stream"
 
 fun splitPath(path: String): Pair<Int, Int> {
     var begin: Int
@@ -48,4 +53,12 @@ fun extName(path: String) = splitPath(path).second.let { if (it != path.length) 
 
 fun suffixName(path: String) = splitPath(path).second.let { if (it != path.length) path.substring(it) else "" }
 
-fun File.createRecursively() = exists() || mkdirs()
+fun mimeType(path: String) = Files.probeContentType(Paths.get(path)) ?: UNKNOWN_MIME
+
+class LocalMimeDetector : FileTypeDetector() {
+    private val mimes = loadProperties("!jclp/io/mime.properties")!!
+
+    override fun probeContentType(path: Path): String? {
+        return mimes.getProperty(extName(path.toString()))
+    }
+}

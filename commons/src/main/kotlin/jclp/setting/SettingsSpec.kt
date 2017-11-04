@@ -19,30 +19,28 @@
 package jclp.setting
 
 import jclp.text.or
+import java.time.LocalDate
+import java.time.LocalTime
 import kotlin.reflect.KProperty
 
-interface Settings : Iterable<Pair<String, Any>> {
+interface Settings : Iterable<MutableMap.MutableEntry<String, Any>> {
     fun isEnable(key: String): Boolean
+
+    operator fun set(key: String, value: Any): Any?
+
+    fun update(settings: Settings) {
+        settings.forEach { set(it.key, it.value) }
+    }
+
+    fun update(values: Map<String, Any>) {
+        values.forEach { set(it.key, it.value) }
+    }
 
     operator fun get(key: String): Any?
 
     fun <T : Any> get(key: String, type: Class<T>): T?
 
-    operator fun set(key: String, value: Any): Any?
-
     operator fun contains(key: String): Boolean
-
-    fun update(values: Map<String, Any>) {
-        for ((key, value) in values) {
-            set(key, value)
-        }
-    }
-
-    fun update(settings: Settings) {
-        for ((first, second) in settings) {
-            set(first, second)
-        }
-    }
 
     fun remove(key: String): Any?
 
@@ -56,6 +54,10 @@ fun Settings.getDouble(key: String) = get(key, Double::class.java)
 fun Settings.getString(key: String) = get(key, String::class.java)
 
 fun Settings.getBoolean(key: String) = get(key, Boolean::class.java)
+
+fun Settings.getDate(key: String) = get(key, LocalDate::class.java)
+
+fun Settings.getTime(key: String) = get(key, LocalTime::class.java)
 
 class SettingsDelegate<T : Any>(private val type: Class<T>, private val default: T, private val key: String = "") {
     @Suppress("UNCHECKED_CAST")

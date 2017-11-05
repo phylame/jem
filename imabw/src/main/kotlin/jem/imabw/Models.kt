@@ -121,7 +121,7 @@ object Workbench : CommandHandler {
 
     fun openBook(param: ParserParam) {
         work?.path?.let {
-            if (File(it) == File(param.path)) {
+            if (Files.isSameFile(Paths.get(it), Paths.get(param.path))) {
                 Log.w("openBook") { "'${param.path} is already opened'" }
                 return
             }
@@ -268,7 +268,8 @@ object Workbench : CommandHandler {
             if (path.isEmpty()) {
                 openBookFile()?.let { openBook(ParserParam(it.path)) }
             } else {
-                openBook(ParserParam(path))
+                val file = Paths.get(path).toAbsolutePath()
+                openBook(ParserParam(if (Files.exists(file)) file.normalize().toString() else path))
             }
         }
     }

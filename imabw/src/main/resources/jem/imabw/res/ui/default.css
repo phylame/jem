@@ -38,6 +38,8 @@
 }
 
 .context-menu {
+    -fx-background-color: -fx-control-inner-background;
+    -fx-background-insets: 0;
     -fx-padding: 0;
 }
 
@@ -63,8 +65,8 @@
     -fx-text-fill: -fx-text-background-color;
 }
 
-#main-split-pane > .split-pane-divider {
-    -fx-padding: 0 3px;
+.split-pane-divider {
+    -fx-padding: 0 2px;
     -fx-background-color: -fx-outer-border, -fx-inner-border;
 }
 
@@ -100,14 +102,8 @@
 
 .lineno {
     -fx-alignment: top-right;
-    -fx-font-family: monospace;
     -fx-background-color: -fx-text-box-border;
     -fx-text-fill: -fx-text-background-color;
-}
-
-.styled-text-area {
-    -fx-font-size: 1.2em;
-    -fx-font-family: sans-serif;
 }
 
 .app-status-bar {
@@ -143,4 +139,10 @@
 
 .variant-pane .tool-bar {
     -fx-background-color: transparent;
+}
+
+.error-text {
+    -fx-background-insets: 0;
+    -fx-background-color: transparent;
+    -fx-focus-traversable: false;
 }

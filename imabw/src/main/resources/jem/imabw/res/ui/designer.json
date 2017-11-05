@@ -100,7 +100,9 @@
     },
     {
       "id": "menuTools",
-      "items": []
+      "items": [
+        "pluginManager"
+      ]
     },
     {
       "id": "menuWindow",
@@ -122,8 +124,6 @@
     {
       "id": "menuHelp",
       "items": [
-        "pluginManager",
-        null,
         "help",
         "about"
       ]

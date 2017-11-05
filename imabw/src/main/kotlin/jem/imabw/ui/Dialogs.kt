@@ -72,14 +72,16 @@ fun confirm(title: String, content: String, owner: Window = Imabw.fxApp.stage): 
 
 fun traceback(title: String, content: String, throwable: Throwable, owner: Window = Imabw.fxApp.stage) {
     with(alert(Alert.AlertType.NONE, title, content, owner)) {
-        dialogPane.expandableContent = TextArea().apply {
+        val textArea = TextArea().apply {
             isEditable = false
             isFocusTraversable = false
+            styleClass += "error-text"
         }
+        dialogPane.expandableContent = textArea
         dialogPane.buttonTypes += ButtonType.CLOSE
         graphic = App.assets.graphicFor("dialog/bug")
         dialogPane.expandedProperty().addListener { _ ->
-            (dialogPane.expandableContent as TextArea).let { if (it.text.isEmpty()) it.text = throwable.dumpToText }
+            if (textArea.text.isEmpty()) textArea.text = throwable.dumpToText
         }
         showAndWait()
     }

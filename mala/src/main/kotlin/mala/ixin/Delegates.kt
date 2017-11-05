@@ -25,8 +25,6 @@ import javafx.scene.Scene
 import javafx.scene.control.Label
 import javafx.scene.control.Menu
 import javafx.scene.control.ProgressIndicator
-import javafx.scene.input.KeyCode
-import javafx.scene.input.KeyEvent
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
 import javafx.stage.Screen
@@ -60,7 +58,7 @@ abstract class IDelegate : AppDelegate, CommandHandler {
 typealias MenuMap = MutableMap<String, Menu>
 typealias ActionMap = MutableMap<String, Action>
 
-abstract class IApplication : Application() {
+abstract class IApplication(val settings: IxInSettings) : Application() {
     lateinit var stage: Stage
 
     lateinit var appPane: AppPane
@@ -82,9 +80,36 @@ abstract class IApplication : Application() {
         appPane = AppPane()
         primaryStage.scene = Scene(appPane).apply {
             setup(this, appPane)
-            initScene(this)
+            windowProperty().addListener { _, _, window ->
+                window.setOnCloseRequest {
+                    IxIn.delegate.handle("exit", stage)
+                    it.consume()
+                }
+            }
         }
 
+        primaryStage.fullScreenProperty().addListener { _, _, fulled ->
+            if (fulled) {
+                settings.stageX = stage.x
+                settings.stageY = stage.y
+                settings.stageWidth = stage.width
+                settings.stageHeight = stage.height
+            } else {
+                stage.x = settings.stageX
+                stage.y = settings.stageY
+                stage.width = settings.stageWidth
+                stage.height = settings.stageHeight
+            }
+        }
+        primaryStage.maximizedProperty().addListener { _, _, maximized ->
+            if (maximized) {
+                settings.stageWidth = stage.width
+                settings.stageHeight = stage.height
+            } else {
+                stage.width = settings.stageWidth
+                stage.height = settings.stageHeight
+            }
+        }
         primaryStage.icons += App.assets.imageFor("icon")
         primaryStage.show()
 
@@ -92,27 +117,9 @@ abstract class IApplication : Application() {
         IxIn.delegate.onReady()
     }
 
-    private fun initScene(scene: Scene) {
-        scene.windowProperty().addListener { _, _, window ->
-            window.setOnCloseRequest {
-                IxIn.delegate.handle("exit", stage)
-                it.consume()
-            }
-
-            // workaround for a bug in JavaFX: unselect menubar if window looses focus
-            window.focusedProperty().addListener { _, _, focused ->
-                if (!focused) {
-                    // send an ESC key event to the menubar
-                    appPane.menuBar?.fireEvent(KeyEvent(KeyEvent.KEY_PRESSED, KeyEvent.CHAR_UNDEFINED, "",
-                            KeyCode.ESCAPE, false, false, false, false))
-                }
-            }
-        }
-    }
-
     open fun setup(scene: Scene, appPane: AppPane) {}
 
-    open fun restoreState(settings: IxInSettings) {
+    open fun restoreState() {
         val stage = stage
 
         val bounds = Screen.getPrimary().visualBounds
@@ -125,19 +132,25 @@ abstract class IApplication : Application() {
 
         stage.isResizable = settings.stageResizable
         stage.isAlwaysOnTop = settings.stageAlwaysOnTop
+        stage.isFullScreen = settings.stageFullScreen
+        stage.isMaximized = settings.stageMaximized
 
         appPane.toolBar?.isVisible = settings.toolBarVisible
         appPane.statusBar?.isVisible = settings.statusBarVisible
     }
 
-    open fun saveState(settings: IxInSettings) {
-        settings.stageX = stage.x
-        settings.stageY = stage.y
-        settings.stageWidth = stage.width
-        settings.stageHeight = stage.height
+    open fun saveState() {
+        if (!stage.isFullScreen && !stage.isMaximized) {
+            settings.stageX = stage.x
+            settings.stageY = stage.y
+            settings.stageWidth = stage.width
+            settings.stageHeight = stage.height
+        }
 
         settings.stageResizable = stage.isResizable
         settings.stageAlwaysOnTop = stage.isAlwaysOnTop
+        settings.stageFullScreen = stage.isFullScreen
+        settings.stageMaximized = stage.isMaximized
 
         settings.toolBarVisible = appPane.toolBar!!.isVisible
         settings.statusBarVisible = appPane.statusBar!!.isVisible

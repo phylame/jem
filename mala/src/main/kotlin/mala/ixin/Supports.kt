@@ -56,11 +56,14 @@ object IxIn {
 open class IxInSettings(name: String = "config/ui.ini") : MalaSettings(name) {
     var stageX by delegate(-1.0, "form.location.x")
     var stageY by delegate(-1.0, "form.location.y")
-    var stageWidth by delegate(-1.0, "form.size.width")
-    var stageHeight by delegate(-1.0, "form.size.height")
 
     var stageAlwaysOnTop by delegate(false, "form.alwaysOnTop")
+
+    var stageWidth by delegate(-1.0, "form.size.width")
+    var stageHeight by delegate(-1.0, "form.size.height")
     var stageResizable by delegate(true, "form.size.resizable")
+    var stageMaximized by delegate(false, "form.size.maximized")
+    var stageFullScreen by delegate(false, "form.size.fullScreen")
 
     var toolBarVisible by delegate(true, "form.toolBar.visible")
     var statusBarVisible by delegate(true, "form.statusBar.visible")

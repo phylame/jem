@@ -32,6 +32,7 @@ import jclp.EventBus
 import jclp.log.Log
 import jclp.text.TEXT_PLAIN
 import jclp.text.or
+import jem.Attributes
 import jem.author
 import jem.imabw.Imabw
 import jem.imabw.UISettings
@@ -39,12 +40,11 @@ import jem.imabw.Workbench
 import jem.imabw.WorkflowEvent
 import jem.imabw.editor.ChapterTab
 import jem.imabw.editor.EditorPane
-import jem.imabw.toc.NavPane
 import jem.title
 import mala.App
 import mala.ixin.*
 
-class Dashboard : IApplication(), CommandHandler {
+class Dashboard : IApplication(UISettings), CommandHandler {
     private val tagId = "Dashboard"
 
     lateinit var splitPane: SplitPane
@@ -72,24 +72,24 @@ class Dashboard : IApplication(), CommandHandler {
         }
 
         initActions()
-        restoreState(UISettings)
+        restoreState()
         EventBus.register<WorkflowEvent> { refreshTitle() }
         statusText = App.tr("status.ready")
     }
 
-    override fun restoreState(settings: IxInSettings) {
-        super.restoreState(settings)
+    override fun restoreState() {
+        super.restoreState()
         NavPane.isVisible = UISettings.navigationBarVisible
         if (!NavPane.isVisible) splitPane.items.remove(0, 1)
     }
 
-    override fun saveState(settings: IxInSettings) {
-        super.saveState(settings)
+    override fun saveState() {
+        super.saveState()
         UISettings.navigationBarVisible = NavPane.isVisible
     }
 
     internal fun dispose() {
-        saveState(UISettings)
+        saveState()
         stage.close()
     }
 
@@ -114,7 +114,7 @@ class Dashboard : IApplication(), CommandHandler {
             append(" - ")
             book.author.takeIf { it.isNotEmpty() }?.let {
                 append("[")
-                append(it)
+                append(it.replace(Attributes.VALUE_SEPARATOR, " & "))
                 append("] - ")
             }
             work.path?.let {

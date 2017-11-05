@@ -21,7 +21,7 @@
 }
 
 .menu-bar {
-    -fx-padding: 0 4px;
+    -fx-padding: 0;
     -fx-background-insets: 0 0 0 0, 0 0 1 0;
 }
 
@@ -38,9 +38,12 @@
 }
 
 .context-menu {
+    -fx-padding: 0;
+}
+
+.menu-bar .context-menu {
     -fx-background-color: -fx-control-inner-background;
     -fx-background-insets: 0;
-    -fx-padding: 0;
 }
 
 .tool-bar {
@@ -86,13 +89,39 @@
     -fx-background-color: transparent;
 }
 
-#toc-tree .tree-cell {
+#nav-tree .tree-cell {
     -fx-padding: 2px 0;
     -fx-font-size: 1em;
 }
 
-#toc-tree:focused .tree-cell:filled:selected {
+#nav-tree:focused .tree-cell:filled:selected {
     -fx-background-color: -fx-selection-bar;
+}
+
+#editor-pane .tab-header-background {
+    -fx-background-color: -fx-text-box-border;
+}
+
+#editor-pane .tab-header-area {
+    -fx-padding: 0;
+}
+
+#editor-pane .tab {
+    -fx-padding: 1 4;
+    -fx-background-color: transparent, -fx-inner-border;
+    -fx-background-insets: 0, 0 2 1 0;
+    -fx-background-radius: 0;
+}
+
+#editor-pane .tab:selected {
+    -fx-background-color: -fx-selection-bar, -fx-background;
+    -fx-background-insets: 0 2 0 0, 0 2 2 0;
+}
+
+#editor-pane .tab:selected .focus-indicator {
+    -fx-border-width: 0;
+    -fx-border-insets: 0;
+    -fx-border-radius: 0;
 }
 
 .intro-tooltip {

@@ -40,10 +40,6 @@ object Imabw : IDelegate() {
 
     override fun onStart() {
         restoreState(GeneralSettings)
-        Thread.UncaughtExceptionHandler { t, e ->
-            println("$t, $e")
-            e.printStackTrace()
-        }
     }
 
     override fun run() {

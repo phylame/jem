@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package jem.imabw.toc
+package jem.imabw.ui
 
 import javafx.application.Platform
 import javafx.beans.binding.Bindings
@@ -36,7 +36,6 @@ import jem.Chapter
 import jem.epm.ParserParam
 import jem.imabw.*
 import jem.imabw.editor.EditorPane
-import jem.imabw.ui.*
 import jem.intro
 import jem.title
 import mala.App
@@ -48,12 +47,12 @@ import org.fxmisc.wellbehaved.event.Nodes
 import java.util.concurrent.Callable
 import java.util.concurrent.atomic.AtomicInteger
 
-typealias ChapterNode = TreeItem<Chapter>
+private typealias ChapterNode = TreeItem<Chapter>
 
 object NavPane : BorderPane(), CommandHandler {
-    private const val TAG = "Nav"
+    private const val TAG = "NavPane"
 
-    private val tree: TreeView<Chapter> = object : TreeView<Chapter>(ChapterNode()), Editable {
+    private val tree = object : TreeView<Chapter>(), Editable {
         override fun onEdit(command: String) {
             handle(command, this)
         }
@@ -80,8 +79,8 @@ object NavPane : BorderPane(), CommandHandler {
     }
 
     private fun initTree() {
-        val tree = this.tree
-        tree.id = "toc-tree"
+        val tree = tree
+        tree.id = "nav-tree"
         tree.cellFactory = CellFactory
         tree.selectionModel.selectionMode = SelectionMode.MULTIPLE
         Imabw.dashboard.designer.items["navContext"]?.let {
@@ -111,6 +110,10 @@ object NavPane : BorderPane(), CommandHandler {
         actionMap["editText"]?.disableProperty?.bind(emptyOrBook)
         actionMap["moveChapter"]?.disableProperty?.bind(emptyOrBook)
         actionMap["mergeChapter"]?.disableProperty?.bind(emptyOrBook.or(multiple.not()))
+        actionMap["upChapter"]?.disableProperty?.bind(emptyOrBook)
+        actionMap["downChapter"]?.disableProperty?.bind(emptyOrBook)
+        actionMap["upgradeChapter"]?.disableProperty?.bind(emptyOrBook)
+        actionMap["degradeChapter"]?.disableProperty?.bind(emptyOrBook)
         actionMap["viewAttributes"]?.disableProperty?.bind(emptyOrMultiple)
         actionMap["gotoChapter"]?.disableProperty?.bind(Bindings.createBooleanBinding(Callable {
             EditorPane.selectedTab == null
@@ -124,8 +127,8 @@ object NavPane : BorderPane(), CommandHandler {
                 }
                 actionMap["delete"]?.disableProperty?.bind(hasBook)
                 actionMap["find"]?.resetDisable()
-                actionMap["findNext"]?.resetDisable()
-                actionMap["findPrevious"]?.resetDisable()
+                actionMap["findNext"]?.resetDisable(true)
+                actionMap["findPrevious"]?.resetDisable(true)
             }
         }
     }
@@ -341,8 +344,8 @@ object CellFactory : Callback<TreeView<Chapter>, TreeCell<Chapter>> {
 private class ChapterCell : TreeCell<Chapter>() {
     override fun updateItem(chapter: Chapter?, empty: Boolean) {
         super.updateItem(chapter, empty)
+        graphic = chapter?.let { CellFactory.getIcon(it) }
         text = chapter?.title
-        graphic = if (empty || chapter == null) null else CellFactory.getIcon(chapter)
         tooltip = null
         chapter?.intro?.let {
             with(LoadTextTask(it)) {

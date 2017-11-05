@@ -42,6 +42,8 @@ import mala.ixin.CommandHandler
 import mala.ixin.IxIn
 import mala.ixin.init
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -93,8 +95,10 @@ object Workbench : CommandHandler {
     }
 
     fun ensureSaved(title: String, block: () -> Unit) {
-        val work = work!!
-        if (!work.isModified) {
+        val work = work
+        if (work == null) {
+            block()
+        } else if (!work.isModified) {
             block()
         } else with(alert(Alert.AlertType.CONFIRMATION, title, tr("d.askSave.hint", work.book.title))) {
             buttonTypes.setAll(ButtonType.CANCEL, ButtonType.YES, ButtonType.NO)
@@ -243,8 +247,12 @@ object Workbench : CommandHandler {
     }
 
     internal fun start() {
-        println("TODO: parse app arguments: ${App.arguments.asList()}")
-        newBook(tr("jem.book.untitled"))
+        val path = App.arguments.firstOrNull()?.let { Paths.get(it) }
+        if (path != null && Files.isRegularFile(path)) {
+            openFile(path.toString())
+        } else {
+            newBook(tr("jem.book.untitled"))
+        }
     }
 
     internal fun dispose() {

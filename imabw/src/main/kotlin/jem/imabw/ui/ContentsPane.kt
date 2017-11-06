@@ -344,18 +344,23 @@ object CellFactory : Callback<TreeView<Chapter>, TreeCell<Chapter>> {
 private class ChapterCell : TreeCell<Chapter>() {
     override fun updateItem(chapter: Chapter?, empty: Boolean) {
         super.updateItem(chapter, empty)
-        graphic = chapter?.let { CellFactory.getIcon(it) }
-        text = chapter?.title
-        tooltip = null
-        chapter?.intro?.let {
-            with(LoadTextTask(it)) {
-                setOnSucceeded {
-                    value.takeIf { it.isNotEmpty() }?.let { text ->
-                        tooltip = createTooltip(text)
+        if (chapter == null) {
+            text = null
+            graphic = null
+            tooltip = null
+        } else {
+            text = chapter.title
+            graphic = CellFactory.getIcon(chapter)
+            chapter.intro?.let {
+                with(LoadTextTask(it)) {
+                    setOnSucceeded {
+                        value.takeIf { it.isNotEmpty() }?.let { text ->
+                            tooltip = createTooltip(text)
+                        }
+                        hideProgress()
                     }
-                    hideProgress()
+                    Imabw.submit(this)
                 }
-                Imabw.submit(this)
             }
         }
     }

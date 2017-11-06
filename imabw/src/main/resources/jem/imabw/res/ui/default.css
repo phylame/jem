@@ -115,8 +115,8 @@
     -fx-border-radius: 0;
 }
 
-.intro-tooltip{
--fx-font-size: 1em;
+.intro-tooltip {
+    -fx-font-size: 1em;
 }
 
 .lineno {

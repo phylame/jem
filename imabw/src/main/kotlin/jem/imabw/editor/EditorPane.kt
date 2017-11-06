@@ -189,6 +189,7 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
             }
             setOnSucceeded {
                 editor.replaceText(value)
+                editor.selectRange(0, 0)
                 editor.undoManager.forgetHistory()
                 editor.undoManager.mark()
                 hideProgress()

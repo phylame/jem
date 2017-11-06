@@ -121,7 +121,7 @@ object Workbench : CommandHandler {
 
     fun openBook(param: ParserParam) {
         work?.path?.let {
-            if (Files.isSameFile(Paths.get(it), Paths.get(param.path))) {
+            if (Paths.get(it) == Paths.get(param.path)) {
                 Log.w("openBook") { "'${param.path} is already opened'" }
                 return
             }

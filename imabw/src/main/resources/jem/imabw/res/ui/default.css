@@ -25,10 +25,6 @@
     -fx-background-insets: 0 0 0 0, 0 0 1 0;
 }
 
-.menu, .menu-item {
-    -fx-font-size: 1em;
-}
-
 .menu-button {
     -fx-padding: 3px 4px;
 }
@@ -39,11 +35,6 @@
 
 .context-menu {
     -fx-padding: 0;
-}
-
-.menu-bar .context-menu {
-    -fx-background-color: -fx-control-inner-background;
-    -fx-background-insets: 0;
 }
 
 .tool-bar {
@@ -115,7 +106,7 @@
 
 #editor-pane .tab:selected {
     -fx-background-color: -fx-selection-bar, -fx-background;
-    -fx-background-insets: 0 2 0 0, 0 2 2 0;
+    -fx-background-insets: 0 2 0 0, 0 2 3 0;
 }
 
 #editor-pane .tab:selected .focus-indicator {
@@ -124,9 +115,8 @@
     -fx-border-radius: 0;
 }
 
-.intro-tooltip {
-    -fx-indent: 2em;
-    -fx-font-size: 1em;
+.intro-tooltip{
+-fx-font-size: 1em;
 }
 
 .lineno {

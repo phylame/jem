@@ -16,28 +16,32 @@
  * limitations under the License.
  */
 
-package jclp.text
+package jem.util.text
 
-import jclp.DisposableSupport
-import jclp.io.Flob
-import jclp.io.LineIterator
-import jclp.io.writeLines
-import jclp.release
-import jclp.retain
+import jem.util.DisposableSupport
+import jem.util.io.Flob
+import jem.util.io.LineIterator
+import jem.util.io.writeLines
+import jem.util.release
+import jem.util.retain
 import java.io.Writer
 import java.nio.charset.Charset
 
 const val TEXT_HTML = "html"
 const val TEXT_PLAIN = "plain"
 
-interface Text {
-    val type get() = TEXT_PLAIN
+interface Text : Iterable<String> {
+    val type: String
 
     override fun toString(): String
 
-    operator fun iterator(): Iterator<String> = LineSplitter(toString())
+    override fun iterator(): Iterator<String> {
+        return LineSplitter(toString())
+    }
 
-    fun writeTo(output: Writer) = output.write(toString())
+    fun writeTo(output: Writer) {
+        output.write(toString())
+    }
 }
 
 open class TextWrapper(val text: Text) : Text {
@@ -59,7 +63,7 @@ private class StringText(val text: CharSequence, override val type: String) : Te
 }
 
 fun textOf(text: CharSequence, type: String = TEXT_PLAIN): Text {
-    require(type.isNotEmpty()) { "type cannot be empty" }
+    require(type.isNotEmpty()) { "'type' cannot be empty" }
     return StringText(text, type)
 }
 
@@ -67,15 +71,17 @@ fun emptyText(type: String = TEXT_PLAIN) = textOf("", type)
 
 abstract class IteratorText(final override val type: String) : Text {
     init {
-        require(type.isNotEmpty()) { "type cannot be empty" }
+        require(type.isNotEmpty()) { "'type' cannot be empty" }
     }
 
     abstract override fun iterator(): Iterator<String>
 
-    override fun toString() = iterator().asSequence().joinToString(System.lineSeparator())
+    override fun toString(): String {
+        return joinToString(System.lineSeparator())
+    }
 
     override fun writeTo(output: Writer) {
-        output.writeLines(iterator(), System.lineSeparator())
+        output.writeLines(this)
     }
 }
 
@@ -92,7 +98,7 @@ private class FlobText(val flob: Flob, val charset: Charset, override val type: 
 
     override fun iterator() = LineIterator(openReader(), true)
 
-    private fun openReader() = flob.openStream().bufferedReader(charset)
+    fun openReader() = flob.openStream().bufferedReader(charset)
 
     override fun writeTo(output: Writer) {
         openReader().use { it.copyTo(output) }
@@ -104,6 +110,6 @@ private class FlobText(val flob: Flob, val charset: Charset, override val type: 
 }
 
 fun textOf(flob: Flob, charset: Charset? = null, type: String = TEXT_PLAIN): Text {
-    require(type.isNotEmpty()) { "type cannot be empty" }
+    require(type.isNotEmpty()) { "'type' cannot be empty" }
     return FlobText(flob, charset ?: Charset.defaultCharset(), type)
 }

@@ -16,13 +16,9 @@
  * limitations under the License.
  */
 
-package jclp.io
+package jem.util.io
 
-import jclp.DisposableSupport
-import jclp.release
-import jclp.retain
-import jclp.text.or
-import jclp.vdm.VDMReader
+import jem.util.text.or
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -79,7 +75,9 @@ private class FileFlob(val path: Path, mime: String) : Flob {
 
     override val mimeType = mime or { mimeType(name) }
 
-    override fun openStream(): InputStream = Files.newInputStream(path)
+    override fun openStream(): InputStream {
+        return Files.newInputStream(path)
+    }
 
     override fun writeTo(output: OutputStream) {
         Files.copy(path, output)
@@ -103,23 +101,3 @@ private class ByteFlob(val data: ByteArray, override val name: String, mime: Str
 fun flobOf(name: String, data: ByteArray, mime: String): Flob = ByteFlob(data, name, mime)
 
 fun emptyFlob(name: String = "_empty_", mime: String = "") = flobOf(name, ByteArray(0), mime)
-
-private class VDMFlob(val reader: VDMReader, override val name: String, mime: String) : DisposableSupport(), Flob {
-    val entry = reader.getEntry(name) ?: throw IOException("No such entry: $name")
-
-    init {
-        reader.retain()
-    }
-
-    override val mimeType = mime or { mimeType(name) }
-
-    override fun openStream() = reader.getInputStream(entry)
-
-    override fun toString() = "$entry;mime=$mimeType"
-
-    override fun dispose() {
-        reader.release()
-    }
-}
-
-fun flobOf(reader: VDMReader, name: String, mime: String = ""): Flob = VDMFlob(reader, name, mime)

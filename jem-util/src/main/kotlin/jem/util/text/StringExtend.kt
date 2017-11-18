@@ -18,8 +18,6 @@
 
 package jem.util.text
 
-operator fun String.get(start: Int, end: Int) = substring(start, end)
-
 infix fun String?.or(default: String) = if (this != null && isNotEmpty()) this else default
 
 infix fun String?.or(default: () -> String) = if (this != null && isNotEmpty()) this else default()
@@ -59,8 +57,9 @@ class LineSplitter(private val text: String) : Iterator<String> {
         return start != -1
     }
 
-    override fun next(): String {
-        if (!hasNext()) throw NoSuchElementException()
-        return text.substring(start, end).also { start = -1 }
+    override fun next() = if (!hasNext()) {
+        throw NoSuchElementException()
+    } else {
+        text.substring(start, end).also { start = -1 }
     }
 }

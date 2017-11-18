@@ -18,7 +18,12 @@
 
 package jem.util.io
 
+import jem.util.DisposableSupport
+import jem.util.release
+import jem.util.retain
 import jem.util.text.or
+import jem.util.vdm.VDMEntry
+import jem.util.vdm.VDMReader
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -66,18 +71,15 @@ private class URLFlob(val url: URL, mime: String) : Flob {
 
 fun flobOf(url: URL, mime: String = ""): Flob = URLFlob(url, mime)
 
-fun flobOf(uri: String, loader: ClassLoader? = null, mime: String = ""): Flob {
-    return getResource(uri, loader)?.let { flobOf(it, mime) } ?: throw IOException("No such resource: $uri")
-}
+fun flobOf(uri: String, loader: ClassLoader? = null, mime: String = ""): Flob =
+        getResource(uri, loader)?.let { flobOf(it, mime) } ?: throw IOException("No such resource: $uri")
 
 private class FileFlob(val path: Path, mime: String) : Flob {
     override val name = path.fileName.toString()
 
     override val mimeType = mime or { mimeType(name) }
 
-    override fun openStream(): InputStream {
-        return Files.newInputStream(path)
-    }
+    override fun openStream(): InputStream = Files.newInputStream(path)
 
     override fun writeTo(output: OutputStream) {
         Files.copy(path, output)
@@ -101,3 +103,26 @@ private class ByteFlob(val data: ByteArray, override val name: String, mime: Str
 fun flobOf(name: String, data: ByteArray, mime: String): Flob = ByteFlob(data, name, mime)
 
 fun emptyFlob(name: String = "_empty_", mime: String = "") = flobOf(name, ByteArray(0), mime)
+
+private class VDMFlob(val reader: VDMReader, val entry: VDMEntry, mime: String) : DisposableSupport(), Flob {
+    init {
+        reader.retain()
+    }
+
+    override val name = entry.name
+
+    override val mimeType = mime or { mimeType(name) }
+
+    override fun openStream() = reader.getInputStream(entry)
+
+    override fun toString() = "$entry;mime=$mimeType"
+
+    override fun dispose() {
+        reader.release()
+    }
+}
+
+fun flobOf(reader: VDMReader, name: String, mime: String = ""): Flob {
+    val entry = reader.getEntry(name) ?: throw IOException("No such entry: $name")
+    return VDMFlob(reader, entry, mime)
+}

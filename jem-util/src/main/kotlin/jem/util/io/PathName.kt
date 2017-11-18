@@ -25,6 +25,8 @@ import java.nio.file.spi.FileTypeDetector
 
 const val UNKNOWN_MIME = "application/octet-stream"
 
+fun String.slashify() = this.replace('\\', '/')
+
 fun splitPath(path: String): Pair<Int, Int> {
     val length = path.length
     var end = length
@@ -57,14 +59,11 @@ fun extName(path: String) = with(splitPath(path).second) {
     if (this != path.length) path.substring(this + 1) else ""
 }
 
-fun mimeType(path: String): String {
-    return Files.probeContentType(Paths.get(path)) ?: UNKNOWN_MIME
-}
+fun mimeType(path: String) = Files.probeContentType(Paths.get(path)) ?: UNKNOWN_MIME
 
 class LocalMimeDetector : FileTypeDetector() {
     private val mimes = loadProperties("!jem/util/io/mime.properties")!!
 
-    override fun probeContentType(path: Path): String? {
-        return mimes.getProperty(extName(path.toString()))
-    }
+    override fun probeContentType(path: Path): String?
+            = mimes.getProperty(extName(path.toString()))
 }

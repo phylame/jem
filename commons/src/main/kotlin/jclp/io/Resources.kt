@@ -28,7 +28,7 @@ import java.util.*
 fun defaultLoader(): ClassLoader = Thread.currentThread().contextClassLoader ?: ClassLoader.getSystemClassLoader()
 
 fun getResource(uri: String, loader: ClassLoader? = null): URL? = when {
-    uri.isEmpty() -> throw IllegalArgumentException("'uri' cannot be empty")
+    uri.isEmpty() -> throw IllegalArgumentException("uri cannot be empty")
     uri.startsWith("!") -> (loader ?: defaultLoader()).getResource(uri.substring(1))
     else -> Paths.get(uri).takeIf { Files.exists(it) }?.toUri()?.toURL() ?: try {
         URL(uri)

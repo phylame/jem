@@ -35,9 +35,8 @@ interface Text : Iterable<String> {
 
     override fun toString(): String
 
-    override fun iterator(): Iterator<String> {
-        return LineSplitter(toString())
-    }
+    override fun iterator(): Iterator<String>
+            = LineSplitter(toString())
 
     fun writeTo(output: Writer) {
         output.write(toString())
@@ -63,7 +62,7 @@ private class StringText(val text: CharSequence, override val type: String) : Te
 }
 
 fun textOf(text: CharSequence, type: String = TEXT_PLAIN): Text {
-    require(type.isNotEmpty()) { "'type' cannot be empty" }
+    require(type.isNotEmpty()) { "type cannot be empty" }
     return StringText(text, type)
 }
 
@@ -71,14 +70,12 @@ fun emptyText(type: String = TEXT_PLAIN) = textOf("", type)
 
 abstract class IteratorText(final override val type: String) : Text {
     init {
-        require(type.isNotEmpty()) { "'type' cannot be empty" }
+        require(type.isNotEmpty()) { "type cannot be empty" }
     }
 
     abstract override fun iterator(): Iterator<String>
 
-    override fun toString(): String {
-        return joinToString(System.lineSeparator())
-    }
+    override fun toString() = joinToString(System.lineSeparator())
 
     override fun writeTo(output: Writer) {
         output.writeLines(this)
@@ -110,6 +107,6 @@ private class FlobText(val flob: Flob, val charset: Charset, override val type: 
 }
 
 fun textOf(flob: Flob, charset: Charset? = null, type: String = TEXT_PLAIN): Text {
-    require(type.isNotEmpty()) { "'type' cannot be empty" }
+    require(type.isNotEmpty()) { "type cannot be empty" }
     return FlobText(flob, charset ?: Charset.defaultCharset(), type)
 }

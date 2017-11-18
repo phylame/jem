@@ -21,14 +21,14 @@ package jem.util.value
 import jem.util.release
 import jem.util.retain
 
-typealias VariantMap = Map<String, Any>
-typealias VariantEntry = Map.Entry<String, Any>
+private typealias VariantMap = Map<String, Any>
+private typealias VariantEntry = Map.Entry<String, Any>
 
 interface ValueValidator {
     fun validate(name: String, value: Any)
 }
 
-class ValueMap(val validator: ValueValidator? = null) : Iterable<VariantEntry>, Cloneable {
+class ValueMap(private val validator: ValueValidator? = null) : Iterable<VariantEntry>, Cloneable {
     private var map = hashMapOf<String, Any>()
 
     val size get() = map.size
@@ -40,8 +40,7 @@ class ValueMap(val validator: ValueValidator? = null) : Iterable<VariantEntry>, 
     fun isNotEmpty() = map.isNotEmpty()
 
     operator fun set(name: String, value: Any): Any? {
-        println("set $name with $value")
-        require(name.isNotEmpty()) { "'name' cannot be empty" }
+        require(name.isNotEmpty()) { "name cannot be empty" }
         validator?.validate(name, value)
         val old = map.put(name, value)
         value.retain()
@@ -57,29 +56,19 @@ class ValueMap(val validator: ValueValidator? = null) : Iterable<VariantEntry>, 
         update(other.map)
     }
 
-    operator fun contains(name: String): Boolean {
-        return name.isNotEmpty() && name in map
-    }
+    operator fun contains(name: String) = name.isNotEmpty() && name in map
 
-    operator fun get(name: String): Any? {
-        return if (name.isEmpty()) null else map[name]
-    }
+    operator fun get(name: String) = if (name.isEmpty()) null else map[name]
 
-    fun remove(name: String): Any? {
-        return if (name.isEmpty()) null else map.remove(name)?.release()
-    }
+    fun remove(name: String) = if (name.isEmpty()) null else map.remove(name)?.release()
 
     fun clear() {
         map.onEach { it.value.release() }.clear()
     }
 
-    override fun iterator(): Iterator<VariantEntry> {
-        return map.entries.iterator()
-    }
+    override fun iterator(): Iterator<VariantEntry> = map.entries.iterator()
 
-    override fun toString(): String {
-        return map.toString()
-    }
+    override fun toString(): String = map.toString()
 
     @Suppress("UNCHECKED_CAST")
     override fun clone(): ValueMap {

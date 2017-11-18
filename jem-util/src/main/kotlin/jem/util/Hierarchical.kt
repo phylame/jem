@@ -75,9 +75,7 @@ fun <T : Hierarchical<T>> T.pathTo(top: T?): List<T> {
     return list
 }
 
-fun <T : Hierarchical<T>> T.toRoot(): List<T> {
-    return pathTo(null)
-}
+fun <T : Hierarchical<T>> T.toRoot() = pathTo(null)
 
 
 fun <T : Hierarchical<T>> T.locate(indices: IntArray): T? {
@@ -127,7 +125,7 @@ open class HierarchySupport<T : HierarchySupport<T>> : Hierarchical<T> {
     final override fun get(index: Int) = children[index]
 
     fun indexOf(item: T) = if (item.parent === this) {
-        children.indices.firstOrNull { children[it] === item } ?: -1
+        children.indexOfFirst { it === item }
     } else {
         -1
     }

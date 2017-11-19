@@ -18,7 +18,7 @@
 
 package jclp
 
-import jclp.io.defaultLoader
+import jclp.io.defaultClassLoader
 import jclp.io.openResource
 import java.io.File
 import java.text.MessageFormat
@@ -26,7 +26,8 @@ import java.util.*
 import java.util.Locale
 import kotlin.collections.LinkedHashMap
 
-fun parseLocale(tag: String): Locale = Locale.forLanguageTag(tag.replace('_', '-'))
+fun parseLocale(tag: String): Locale
+        = Locale.forLanguageTag(tag.replace('_', '-'))
 
 interface Translator {
     fun tr(key: String): String
@@ -62,20 +63,16 @@ fun Translator.detach(vararg translators: Translator) {
 
 private const val ERR_NO_TRANSLATOR = "translator is not initialized"
 
-open class TranslatorWrapper : Translator {
-    var translator: Translator? = null
-
+open class TranslatorWrapper(var translator: Translator? = null) : Translator {
     override fun tr(key: String) = translator?.tr(key) ?: throw IllegalStateException(ERR_NO_TRANSLATOR)
 
     override fun optTr(key: String): String? = translator?.optTr(key)
 
-    override fun tr(key: String, vararg args: Any?): String {
-        return translator?.tr(key, *args) ?: throw IllegalStateException(ERR_NO_TRANSLATOR)
-    }
+    override fun tr(key: String, vararg args: Any?): String =
+            translator?.tr(key, *args) ?: throw IllegalStateException(ERR_NO_TRANSLATOR)
 
-    override fun optTr(key: String, fallback: String, vararg args: Any?): String {
-        return translator?.optTr(key, fallback, *args) ?: MessageFormat.format(fallback, *args)
-    }
+    override fun optTr(key: String, fallback: String, vararg args: Any?): String =
+            translator?.optTr(key, fallback, *args) ?: MessageFormat.format(fallback, *args)
 
     override fun attach(translators: Collection<Translator>) {
         translator?.attach(translators)
@@ -131,7 +128,7 @@ open class Linguist(
     override fun handleGet(key: String): String = getBundle().getString(key)
 
     private fun getBundle(): ResourceBundle = try {
-        ResourceBundle.getBundle(name, locale ?: Locale.getDefault(), loader ?: defaultLoader(), ResourceControl)
+        ResourceBundle.getBundle(name, locale ?: Locale.getDefault(), loader ?: defaultClassLoader(), ResourceControl)
     } catch (e: MissingResourceException) {
         if (isDummy) DummyBundle else throw e
     }

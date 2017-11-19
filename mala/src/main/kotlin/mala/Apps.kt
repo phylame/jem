@@ -19,7 +19,7 @@
 package mala
 
 import jclp.TranslatorWrapper
-import jclp.getInstance
+import jclp.actualInstance
 import jclp.log.Log
 import jclp.text.or
 import java.util.*
@@ -197,7 +197,7 @@ object Launcher {
         }
         try {
             Class.forName(args.first()).takeIf { AppDelegate::class.java.isInstance(it) }?.let {
-                App.run(it.getInstance() as AppDelegate, args.copyOfRange(1, args.size + 1))
+                App.run(it.actualInstance() as AppDelegate, args.copyOfRange(1, args.size + 1))
             } ?: throw RuntimeException("No instance of AppDelegate: ${args.first()}")
         } catch (e: Exception) {
             throw RuntimeException("Cannot load delegate class", e)

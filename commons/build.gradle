@@ -18,7 +18,7 @@
 
 plugins {
     id 'java-library'
-    id 'org.jetbrains.kotlin.jvm' version '1.1.51'
+    id 'org.jetbrains.kotlin.jvm' version '1.1.60'
 }
 
 version = '3.0'
@@ -26,8 +26,8 @@ group = 'pw.phylame.util'
 description = 'Commons & Utilities for Java'
 
 dependencies {
-    api 'org.jetbrains.kotlin:kotlin-stdlib'
-    compileOnly "org.slf4j:slf4j-api:$slf4jVersion"
+    api 'org.jetbrains.kotlin:kotlin-stdlib-jre8'
+    implementation "org.slf4j:slf4j-api:$slf4jVersion"
 }
 
 compileKotlin {

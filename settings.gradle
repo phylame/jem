@@ -18,7 +18,6 @@
 
 rootProject.name = 'jem'
 
-include 'jem-util'
 include 'commons'
 include 'jem-core'
 include 'jem-formats'

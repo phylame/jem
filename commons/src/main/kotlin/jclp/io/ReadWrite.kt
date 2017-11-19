@@ -22,7 +22,7 @@ import java.io.BufferedReader
 import java.io.Writer
 import java.util.*
 
-fun Writer.writeLines(lines: Iterator<*>, separator: String = System.lineSeparator()) {
+fun Writer.writeLines(lines: Iterator<CharSequence>, separator: String = System.lineSeparator()) {
     while (lines.hasNext()) {
         write(lines.next().toString())
         if (lines.hasNext()) {
@@ -49,11 +49,9 @@ class LineIterator(private val reader: BufferedReader, private val autoClose: Bo
     }
 
     override fun next(): String {
-        if (!hasNext()) {
-            throw NoSuchElementException()
-        }
-        val answer = nextLine
+        if (!hasNext()) throw NoSuchElementException()
+        val line = nextLine!!
         nextLine = null
-        return answer!!
+        return line
     }
 }

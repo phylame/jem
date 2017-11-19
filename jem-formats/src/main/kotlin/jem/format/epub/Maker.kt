@@ -19,9 +19,9 @@
 package jem.format.epub
 
 import jclp.io.Flob
+import jclp.io.extName
 import jclp.io.flobOf
 import jclp.io.loadProperties
-import jclp.io.suffixName
 import jclp.log.Log
 import jclp.setting.Settings
 import jclp.setting.getString
@@ -211,7 +211,7 @@ internal class TOCBuilder(
 
     private fun writeFlob(flob: Flob, id: String): Pair<Item, Path> {
         val mime = flob.mimeType
-        return opf.newItem(id, "${classifyDir(mime)}$id${suffixName(flob.name)}", mime) {
+        return opf.newItem(id, "${classifyDir(mime)}$id.${extName(flob.name)}", mime) {
             writer.useStream(it.vdmPath) {
                 flob.writeTo(it)
             }

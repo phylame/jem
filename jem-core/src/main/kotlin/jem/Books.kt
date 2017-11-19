@@ -41,7 +41,7 @@ open class Chapter(
 
     var tag: Any? = tag
         set(value) {
-            field?.release()
+            field.release()
             field = value.retain()
         }
 
@@ -65,29 +65,14 @@ open class Chapter(
 
     operator fun set(name: String, value: Any) = attributes.set(name, value)
 
-    operator fun set(name: String, values: Collection<Any>) = attributes.set(name, values.joinToString(VALUE_SEPARATOR))
+    operator fun set(name: String, values: Collection<Any>)
+            = attributes.set(name, values.joinToString(VALUE_SEPARATOR))
 
     val isSection get() = size != 0
 
     fun clear(cleanup: Boolean) {
-        if (cleanup) forEach(Chapter::cleanup)
+        if (cleanup) forEach { it.cleanup() }
         clear()
-    }
-
-    open fun cleanup() {
-        isCleaned = true
-        clear(true)
-        attributes.clear()
-        text = null
-        tag = null
-    }
-
-    private var isCleaned = false
-
-    protected fun finalize() {
-        if (!isCleaned) {
-            Log.w(javaClass.simpleName) { "'$title' is not cleaned" }
-        }
     }
 
     public override fun clone() = (super.clone() as Chapter).also {
@@ -103,10 +88,26 @@ open class Chapter(
         if (deepCopy) {
             chapter.attributes = attributes.clone()
             val list = ArrayList<Chapter>(children.size)
-            children.forEach { list.add(it.clone()) }
+            children.mapTo(list) { it.clone() }
             chapter.children = list
             text.retain()
             tag.retain()
+        }
+    }
+
+    private var isCleaned = false
+
+    open fun cleanup() {
+        isCleaned = true
+        clear(true)
+        attributes.clear()
+        text = null
+        tag = null
+    }
+
+    protected fun finalize() {
+        if (!isCleaned) {
+            Log.w("Chapter") { "$title is not cleaned" }
         }
     }
 

@@ -21,24 +21,26 @@ package jclp
 import java.util.*
 
 interface Hierarchical<T : Hierarchical<T>> : Iterable<T> {
-    val size: Int
-
     val parent: T?
 
     operator fun get(index: Int): T
+
+    val size: Int
 }
 
 val Hierarchical<*>.depth: Int
     get() {
-        if (size == 0) {
-            return 0
-        }
+        if (size == 0) return 0
         var depth = 0
         for (item in this) {
             depth = maxOf(depth, item.depth)
         }
         return depth + 1
     }
+
+val Hierarchical<*>.isEmpty get() = size == 0
+
+val Hierarchical<*>.isNotEmpty get() = size != 0
 
 val Hierarchical<*>.isRoot get() = parent == null
 
@@ -47,35 +49,33 @@ val Hierarchical<*>.isNotRoot get() = parent != null
 fun <T : Hierarchical<T>> T.isAncestor(item: T): Boolean {
     var parent = item.parent
     while (parent != null) {
-        if (parent === this) {
-            return true
-        }
+        if (parent === this) return true
         parent = parent.parent
     }
     return false
 }
 
-fun <T : Hierarchical<T>> T.isSelfOrAncestor(item: T) = item === this || isAncestor(item)
-
-fun <T : Hierarchical<T>> T.getPath(top: T?): List<T> {
-    val list = LinkedList<T>()
-    var parent: T? = this
-    while (parent !== top) {
-        list.addFirst(parent)
-        parent = parent!!.parent
-    }
-    return list
-}
-
-fun <T : Hierarchical<T>> T.toRoot() = getPath(null)
-
-fun <T : Hierarchical<T>> T.mostBelow(top: T? = null): T {
+fun <T : Hierarchical<T>> T.belowOf(top: T? = null): T {
     var parent: T = this
     while (parent.parent != top) {
         parent = parent.parent!!
     }
     return parent
 }
+
+val <T : Hierarchical<T>> T.root get() = belowOf(null)
+
+fun <T : Hierarchical<T>> T.pathTo(top: T?): List<T> {
+    val list = LinkedList<T>()
+    var parent: T? = this
+    while (parent !== top) {
+        list.addFirst(parent)
+        parent = parent?.parent
+    }
+    return list
+}
+
+fun <T : Hierarchical<T>> T.toRoot() = pathTo(null)
 
 fun <T : Hierarchical<T>> T.locate(indices: IntArray): T? {
     var item: T? = null
@@ -94,15 +94,17 @@ fun <T : Hierarchical<T>> T.locate(indices: Collection<Int>): T? {
 }
 
 open class HierarchySupport<T : HierarchySupport<T>> : Hierarchical<T> {
-    override var parent: T? = null
+    final override var parent: T? = null
         protected set
 
     protected var children = arrayListOf<T>()
 
-    final override val size get() = children.size
-
     fun append(item: T) {
         children.add(ensureSolitary(item))
+    }
+
+    fun extend(items: Iterable<T>) {
+        items.forEach { append(it) }
     }
 
     operator fun plusAssign(item: T) {
@@ -110,32 +112,28 @@ open class HierarchySupport<T : HierarchySupport<T>> : Hierarchical<T> {
     }
 
     operator fun plusAssign(items: Iterable<T>) {
-        for (item in items) {
-            append(item)
-        }
+        extend(items)
     }
 
     fun insert(index: Int, item: T) {
         children.add(index, ensureSolitary(item))
     }
 
-    fun extend(items: Iterable<T>) {
-        items.forEach { append(it) }
-    }
+    final override val size get() = children.size
 
     final override fun get(index: Int) = children[index]
 
-    fun indexOf(item: T) = if (item.parent !== this) {
+    fun indexOf(item: T) = if (item.parent === this) {
+        children.indexOfFirst { it === item }
+    } else {
         -1
-    } else children.indices.firstOrNull { children[it] === item } ?: -1
+    }
 
     operator fun contains(item: T) = indexOf(item) != -1
 
     fun replace(item: T, target: T): Boolean {
         val index = indexOf(item)
-        if (index == -1) {
-            return false
-        }
+        if (index == -1) return false
         replaceAt(index, target)
         return true
     }
@@ -150,13 +148,13 @@ open class HierarchySupport<T : HierarchySupport<T>> : Hierarchical<T> {
         replaceAt(index, item)
     }
 
-    fun swap(from: Int, to: Int) = children.swap(from, to)
+    fun swap(from: Int, to: Int) {
+        Collections.swap(children, from, to)
+    }
 
     fun remove(item: T): Boolean {
         val index = indexOf(item)
-        if (index == -1) {
-            return false
-        }
+        if (index == -1) return false
         removeAt(index)
         return true
     }

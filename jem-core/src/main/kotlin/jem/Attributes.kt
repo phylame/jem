@@ -53,7 +53,9 @@ object Attributes : ValueValidator {
     private val types = hashMapOf<String, String>()
 
     init {
-        loadProperties("!jem/attributes.properties")?.let { types.putAll(it) }
+        loadProperties("!jem/attributes.properties")?.let {
+            types.putAll(it)
+        }
     }
 
     val names get() = types.keys
@@ -79,9 +81,8 @@ object Attributes : ValueValidator {
 
 class AttributeDelegate<T : Any?>(private val default: T) {
     @Suppress("UNCHECKED_CAST")
-    operator fun getValue(chapter: Chapter, property: KProperty<*>): T {
-        return chapter.attributes[property.name] as? T ?: default
-    }
+    operator fun getValue(chapter: Chapter, property: KProperty<*>): T =
+            chapter.attributes[property.name] as? T ?: default
 
     operator fun setValue(chapter: Chapter, property: KProperty<*>, value: T) {
         chapter.attributes[property.name] = value!!

@@ -18,7 +18,7 @@
 
 package jclp
 
-import jclp.io.defaultLoader
+import jclp.io.defaultClassLoader
 import jclp.log.Log
 import java.util.*
 
@@ -29,7 +29,7 @@ interface ServiceProvider {
 }
 
 open class ServiceManager<T : ServiceProvider>(type: Class<T>, loader: ClassLoader? = null) {
-    private val serviceLoader = ServiceLoader.load(type, loader ?: defaultLoader())
+    private val serviceLoader = ServiceLoader.load(type, loader ?: defaultClassLoader())
     private val localRegistry = hashMapOf<String, T>()
     private val serviceProviders = hashSetOf<T>()
 
@@ -55,11 +55,11 @@ open class ServiceManager<T : ServiceProvider>(type: Class<T>, loader: ClassLoad
     }
 
     private fun initServices() {
-        val it = serviceLoader.iterator()
+        val iter = serviceLoader.iterator()
         try {
-            while (it.hasNext()) {
+            while (iter.hasNext()) {
                 try {
-                    serviceProviders += it.next()
+                    serviceProviders += iter.next()
                 } catch (e: ServiceConfigurationError) {
                     Log.e(javaClass.simpleName, e) { "providers.next()" }
                 }

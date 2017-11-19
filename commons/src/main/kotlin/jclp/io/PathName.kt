@@ -25,40 +25,45 @@ import java.nio.file.spi.FileTypeDetector
 
 const val UNKNOWN_MIME = "application/octet-stream"
 
+fun String.slashify() = this.replace('\\', '/')
+
 fun splitPath(path: String): Pair<Int, Int> {
-    var begin: Int
-    var end = path.length
-    var found = false
-    begin = end - 1
-    while (begin >= 0) {
-        val ch = path[begin]
-        if (ch == '.' && !found) {
-            end = begin
-            found = true
-        } else if (ch == '/' || ch == '\\') {
-            break
+    val length = path.length
+    var end = length
+    var start = 0
+    loop@ for (i in length - 1 downTo 0) {
+        when (path[i]) {
+            '.' -> end = i
+            '/', '\\' -> {
+                start = i + 1
+                break@loop
+            }
         }
-        --begin
     }
-    return begin to end
+    return start to end
 }
 
-fun baseName(path: String) = splitPath(path).let { path.substring(it.first + 1, it.second) }
+fun baseName(path: String) = with(splitPath(path)) {
+    path.substring(first, second)
+}
 
-fun dirName(path: String) = splitPath(path).first.let { if (it != -1) path.substring(0, it) else "" }
+fun dirName(path: String) = with(splitPath(path).first) {
+    path.substring(0, this)
+}
 
-fun fullName(path: String) = splitPath(path).first.let { path.substring(if (it != 0) it + 1 else it) }
+fun fullName(path: String) = with(splitPath(path).first) {
+    if (this != 0) path.substring(this) else path
+}
 
-fun extName(path: String) = splitPath(path).second.let { if (it != path.length) path.substring(it + 1) else "" }
-
-fun suffixName(path: String) = splitPath(path).second.let { if (it != path.length) path.substring(it) else "" }
+fun extName(path: String) = with(splitPath(path).second) {
+    if (this != path.length) path.substring(this + 1) else ""
+}
 
 fun mimeType(path: String) = Files.probeContentType(Paths.get(path)) ?: UNKNOWN_MIME
 
 class LocalMimeDetector : FileTypeDetector() {
     private val mimes = loadProperties("!jclp/io/mime.properties")!!
 
-    override fun probeContentType(path: Path): String? {
-        return mimes.getProperty(extName(path.toString()))
-    }
+    override fun probeContentType(path: Path): String?
+            = mimes.getProperty(extName(path.toString()))
 }

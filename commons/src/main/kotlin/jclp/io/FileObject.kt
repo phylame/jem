@@ -22,6 +22,7 @@ import jclp.DisposableSupport
 import jclp.release
 import jclp.retain
 import jclp.text.or
+import jclp.vdm.VDMEntry
 import jclp.vdm.VDMReader
 import java.io.IOException
 import java.io.InputStream
@@ -70,9 +71,8 @@ private class URLFlob(val url: URL, mime: String) : Flob {
 
 fun flobOf(url: URL, mime: String = ""): Flob = URLFlob(url, mime)
 
-fun flobOf(uri: String, loader: ClassLoader? = null, mime: String = ""): Flob {
-    return getResource(uri, loader)?.let { flobOf(it, mime) } ?: throw IOException("No such resource: $uri")
-}
+fun flobOf(uri: String, loader: ClassLoader? = null, mime: String = ""): Flob =
+        getResource(uri, loader)?.let { flobOf(it, mime) } ?: throw IOException("No such resource: $uri")
 
 private class FileFlob(val path: Path, mime: String) : Flob {
     override val name = path.fileName.toString()
@@ -104,12 +104,12 @@ fun flobOf(name: String, data: ByteArray, mime: String): Flob = ByteFlob(data, n
 
 fun emptyFlob(name: String = "_empty_", mime: String = "") = flobOf(name, ByteArray(0), mime)
 
-private class VDMFlob(val reader: VDMReader, override val name: String, mime: String) : DisposableSupport(), Flob {
-    val entry = reader.getEntry(name) ?: throw IOException("No such entry: $name")
-
+private class VDMFlob(val reader: VDMReader, val entry: VDMEntry, mime: String) : DisposableSupport(), Flob {
     init {
         reader.retain()
     }
+
+    override val name = entry.name
 
     override val mimeType = mime or { mimeType(name) }
 
@@ -122,4 +122,7 @@ private class VDMFlob(val reader: VDMReader, override val name: String, mime: St
     }
 }
 
-fun flobOf(reader: VDMReader, name: String, mime: String = ""): Flob = VDMFlob(reader, name, mime)
+fun flobOf(reader: VDMReader, name: String, mime: String = ""): Flob {
+    val entry = reader.getEntry(name) ?: throw IOException("No such entry: $name")
+    return VDMFlob(reader, entry, mime)
+}

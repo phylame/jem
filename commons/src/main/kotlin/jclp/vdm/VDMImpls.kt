@@ -19,12 +19,16 @@
 package jclp.vdm
 
 import jclp.DisposableSupport
+import jclp.VariantMap
+import jclp.io.slashify
 import java.io.*
+import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.NotDirectoryException
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
+import java.util.zip.Deflater
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
@@ -49,29 +53,33 @@ private class FileVDMEntry(
     var stream: OutputStream? = null
 }
 
+
 private class FileVDMReader(val root: Path) : DisposableSupport(), VDMReader {
     override val comment = null
 
-    override val name: String = root.toString()
+    override val name = root.toString()
 
     private val streams = LinkedList<InputStream>()
 
     override fun getEntry(name: String): FileVDMEntry? {
         require(name.isNotEmpty()) { "name for entry cannot be empty" }
         return root.resolve(name).takeIf { Files.isRegularFile(it) }?.let {
-            FileVDMEntry(it, name.replace('\\', '/'), this)
+            FileVDMEntry(it, name.slashify(), this)
         }
     }
 
-    override fun getInputStream(entry: VDMEntry): InputStream = if (entry !is FileVDMEntry || entry.reader != this) {
-        throw IllegalArgumentException("Invalid entry: $entry")
-    } else Files.newInputStream(entry.path).also { streams += it }
+    override fun getInputStream(entry: VDMEntry): InputStream =
+            if (entry !is FileVDMEntry || entry.reader != this) {
+                throw IllegalArgumentException("Invalid entry: $entry")
+            } else {
+                Files.newInputStream(entry.path).also { streams += it }
+            }
 
     override val entries: Iterator<VDMEntry>
         get() {
             val begin = root.toString().length + 1
             return walkRoot().map {
-                FileVDMEntry(it, it.toString().substring(begin).replace('\\', '/'), this)
+                FileVDMEntry(it, it.toString().substring(begin).slashify(), this)
             }.iterator()
         }
 
@@ -99,24 +107,24 @@ private class FileVDMWriter(val root: Path) : VDMWriter {
 
     override fun setComment(comment: String) {}
 
-    override fun setProperty(name: String, value: Any) {}
-
     override fun newEntry(name: String) = FileVDMEntry(root.resolve(name), name, writer = this)
 
-    override fun putEntry(entry: VDMEntry): OutputStream = if (entry !is FileVDMEntry || entry.writer !== this) {
-        throw IllegalArgumentException("Invalid entry $entry")
-    } else if (entry.stream != null) {
-        throw IllegalArgumentException("Entry is opened")
-    } else {
-        val path = entry.path
-        if (Files.notExists(path.parent)) {
-            Files.createDirectories(path.parent)
-        }
-        Files.newOutputStream(path).also {
-            entry.stream = it
-            streams += it
-        }
-    }
+    override fun putEntry(entry: VDMEntry): OutputStream =
+            if (entry !is FileVDMEntry || entry.writer !== this) {
+                throw IllegalArgumentException("Invalid entry $entry")
+            } else if (entry.stream != null) {
+                throw IllegalArgumentException("Entry is already opened")
+            } else {
+                val path = entry.path
+                if (Files.notExists(path.parent)) {
+                    Files.createDirectories(path.parent)
+                }
+                with(Files.newOutputStream(path)) {
+                    entry.stream = this
+                    streams += this
+                    this
+                }
+            }
 
     override fun closeEntry(entry: VDMEntry) {
         if (entry !is FileVDMEntry || entry.writer !== this) {
@@ -125,9 +133,9 @@ private class FileVDMWriter(val root: Path) : VDMWriter {
             throw IllegalArgumentException("Entry is not opened")
         }
         entry.stream?.let {
+            streams -= it
             it.flush()
             it.close()
-            streams -= it
         }
     }
 
@@ -151,15 +159,17 @@ class FileVDMFactory : VDMFactory {
 
     override val name = "Factory for FileVDM"
 
-    override fun getReader(input: Any): VDMReader = FileVDMReader(getDirectory(input, true))
+    override fun getReader(input: Any, props: VariantMap): VDMReader =
+            FileVDMReader(getDirectory(input, true))
 
-    override fun getWriter(output: Any): VDMWriter = FileVDMWriter(getDirectory(output, false))
+    override fun getWriter(output: Any, props: VariantMap): VDMWriter =
+            FileVDMWriter(getDirectory(output, false))
 
     private fun getDirectory(arg: Any, reading: Boolean): Path {
         val dir = when (arg) {
-            is File -> arg.toPath()
-            is String -> Paths.get(arg)
             is Path -> arg
+            is String -> Paths.get(arg)
+            is File -> arg.toPath()
             else -> throw IllegalArgumentException(arg.toString())
         }
         if (reading) {
@@ -181,9 +191,8 @@ private class ZipVDMEntry(val entry: ZipEntry, val reader: ZipVDMReader? = null,
 
     override val lastModified = entry.time
 
-    override fun toString() = reader?.let {
-        "zip:file:/${it.name.replace('\\', '/')}!$entry"
-    } ?: entry.toString()
+    override fun toString() =
+            reader?.let { "zip:file:/${it.name.slashify()}!$entry" } ?: entry.toString()
 }
 
 private class ZipVDMReader(val zip: ZipFile) : DisposableSupport(), VDMReader {
@@ -193,19 +202,23 @@ private class ZipVDMReader(val zip: ZipFile) : DisposableSupport(), VDMReader {
 
     override fun getEntry(name: String) = zip.getEntry(name)?.let { ZipVDMEntry(it, this) }
 
-    override fun getInputStream(entry: VDMEntry): InputStream = if (entry !is ZipVDMEntry || entry.reader !== this) {
-        throw IllegalArgumentException("Invalid entry $entry")
-    } else zip.getInputStream(entry.entry)
+    override fun getInputStream(entry: VDMEntry): InputStream =
+            if (entry !is ZipVDMEntry || entry.reader !== this) {
+                throw IllegalArgumentException("Invalid entry $entry")
+            } else {
+                zip.getInputStream(entry.entry)
+            }
 
-    override val entries get() = zip.entries().asSequence().map { ZipVDMEntry(it, this) }.iterator()
+    override val entries
+        get() = zip.entries().asSequence().map { ZipVDMEntry(it, this) }.iterator()
+
+    override fun toString() = "ZipVDMReader@${hashCode()}{zip=$name}"
 
     override val size get() = zip.size()
 
     override fun close() = zip.close()
 
     override fun dispose() = close()
-
-    override fun toString() = "ZipVDMReader@${hashCode()}{zip=$name}"
 }
 
 private class ZipVDMWriter(val zip: ZipOutputStream) : VDMWriter {
@@ -213,18 +226,14 @@ private class ZipVDMWriter(val zip: ZipOutputStream) : VDMWriter {
         zip.setComment(comment)
     }
 
-    override fun setProperty(name: String, value: Any) {
-        when (name) {
-            "method" -> zip.setMethod(value as Int)
-            "level" -> zip.setLevel(value as Int)
-        }
-    }
-
     override fun newEntry(name: String) = ZipVDMEntry(ZipEntry(name), writer = this)
 
-    override fun putEntry(entry: VDMEntry) = if (entry !is ZipVDMEntry || entry.writer !== this) {
-        throw IllegalArgumentException("Invalid entry $entry")
-    } else zip.apply { zip.putNextEntry(entry.entry) }
+    override fun putEntry(entry: VDMEntry): ZipOutputStream =
+            if (entry !is ZipVDMEntry || entry.writer !== this) {
+                throw IllegalArgumentException("Invalid entry $entry")
+            } else {
+                zip.apply { zip.putNextEntry(entry.entry) }
+            }
 
     override fun closeEntry(entry: VDMEntry) {
         if (entry !is ZipVDMEntry || entry.writer !== this) {
@@ -244,26 +253,40 @@ class ZipVDMFactory : VDMFactory {
 
     override val name = "Factory for ZipVDM"
 
-    override fun getReader(input: Any): VDMReader = ZipVDMReader(when (input) {
-        is String -> ZipFile(input)
-        is File -> ZipFile(input)
-        is ZipFile -> input
-        is Path -> ZipFile(input.toFile())
-        else -> throw IllegalArgumentException(input.toString())
-    })
+    override fun getReader(input: Any, props: VariantMap): VDMReader {
+        val mode = props["mode"] as Int? ?: ZipFile.OPEN_READ
+        val charset = props["charset"] as Charset? ?: Charsets.UTF_8
+        return ZipVDMReader(when (input) {
+            is String -> ZipFile(File(input), mode, charset)
+            is File -> ZipFile(input, mode, charset)
+            is ZipFile -> input
+            is Path -> ZipFile(input.toFile(), mode, charset)
+            else -> throw IllegalArgumentException(input.toString())
+        })
+    }
 
-    override fun getWriter(output: Any): VDMWriter = ZipVDMWriter(when (output) {
-        is ZipOutputStream -> output
-        is OutputStream -> ZipOutputStream(output)
-        is String -> ZipOutputStream(FileOutputStream(output))
-        is File -> ZipOutputStream(output.outputStream())
-        is Path -> ZipOutputStream(output.toFile().outputStream())
-        else -> throw IllegalArgumentException(output.toString())
-    })
+    override fun getWriter(output: Any, props: VariantMap): VDMWriter {
+        val charset = props["charset"] as Charset? ?: Charsets.UTF_8
+        val method = props["method"] as Int? ?: ZipOutputStream.DEFLATED
+        val level = props["level"] as Int? ?: Deflater.DEFAULT_COMPRESSION
+        val zip = when (output) {
+            is ZipOutputStream -> output
+            is OutputStream -> ZipOutputStream(output, charset)
+            is String -> ZipOutputStream(FileOutputStream(output), charset)
+            is File -> ZipOutputStream(output.outputStream(), charset)
+            is Path -> ZipOutputStream(output.toFile().outputStream(), charset)
+            else -> throw IllegalArgumentException(output.toString())
+        }
+        zip.setMethod(method)
+        zip.setLevel(level)
+        return ZipVDMWriter(zip)
+    }
 
     override fun toString() = name
 }
 
-fun detectReader(path: Path): VDMReader = if (Files.isDirectory(path))
+fun detectReader(path: Path): VDMReader = if (!Files.isDirectory(path)) {
+    ZipVDMReader(ZipFile(path.toFile()))
+} else {
     FileVDMReader(path)
-else ZipVDMReader(ZipFile(path.toFile()))
+}

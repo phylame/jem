@@ -18,6 +18,7 @@
 
 package jclp.setting
 
+import jclp.VariantMap
 import jclp.actualValue
 import jclp.log.Log
 import jclp.objectType
@@ -64,10 +65,11 @@ abstract class AbstractSettings : Settings {
     @Suppress("UNCHECKED_CAST")
     override operator fun <T : Any> get(key: String, type: Class<T>): T? {
         val value = handleGet(key) ?: return getDefault(key) as? T
-        val clazz = type.objectType
-        return when {
-            clazz.isInstance(value) -> value as T
-            else -> convertValue(value, clazz)
+        val objectClass = type.objectType
+        return if (objectClass.isInstance(value)) {
+            value as T
+        } else {
+            convertValue(value, objectClass)
         }
     }
 
@@ -86,7 +88,7 @@ abstract class AbstractSettings : Settings {
     override fun contains(key: String) = handleGet(key) != null
 }
 
-open class MapSettings(map: Map<String, Any>? = null, definitions: Map<String, Definition>? = null) : AbstractSettings() {
+open class MapSettings(map: VariantMap? = null, definitions: Map<String, Definition>? = null) : AbstractSettings() {
     private val values = hashMapOf<String, Any>()
 
     init {
@@ -141,4 +143,4 @@ open class MapSettings(map: Map<String, Any>? = null, definitions: Map<String, D
     }
 }
 
-fun Map<String, Any>.toSettings() = MapSettings(this)
+fun VariantMap.toSettings() = MapSettings(this)

@@ -18,12 +18,14 @@
 
 package jclp.setting
 
+import jclp.VariantEntry
+import jclp.VariantMap
 import jclp.text.or
 import java.time.LocalDate
 import java.time.LocalTime
 import kotlin.reflect.KProperty
 
-interface Settings : Iterable<MutableMap.MutableEntry<String, Any>> {
+interface Settings : Iterable<VariantEntry> {
     fun isEnable(key: String): Boolean
 
     operator fun set(key: String, value: Any): Any?
@@ -32,7 +34,7 @@ interface Settings : Iterable<MutableMap.MutableEntry<String, Any>> {
         settings.forEach { set(it.key, it.value) }
     }
 
-    fun update(values: Map<String, Any>) {
+    fun update(values: VariantMap) {
         values.forEach { set(it.key, it.value) }
     }
 
@@ -76,6 +78,5 @@ class SettingsDelegate<T : Any>(private val type: Class<T>, private val default:
     }
 }
 
-inline fun <reified T : Any> Settings.delegate(default: T, key: String = ""): SettingsDelegate<T> {
-    return SettingsDelegate(T::class.java, default, key)
-}
+inline fun <reified T : Any> Settings.delegate(default: T, key: String = "") =
+        SettingsDelegate(T::class.java, default, key)

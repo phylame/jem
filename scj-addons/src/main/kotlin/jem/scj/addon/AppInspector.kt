@@ -18,6 +18,7 @@
 
 package jem.scj.addon
 
+import jclp.VariantMap
 import jem.scj.SCI
 import jem.scj.SCISettings
 import mala.App
@@ -82,7 +83,7 @@ class AppInspector : SCJAddon() {
                 .action(object : SingleFetcher() {
                     @Suppress("UNCHECKED_CAST")
                     override fun init(context: AppContext, cmd: CommandLine) {
-                        SCISettings.update(cmd.getOptionProperties("S") as Map<String, Any>)
+                        SCISettings.update(cmd.getOptionProperties("S") as VariantMap)
                     }
                 })
     }

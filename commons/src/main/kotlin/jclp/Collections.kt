@@ -21,9 +21,10 @@ package jclp
 import java.util.*
 import java.util.concurrent.ThreadLocalRandom
 
-fun <E> List<E>.chooseAny() = get(ThreadLocalRandom.current().nextInt(0, size))
+typealias VariantMap = Map<String, Any>
+typealias VariantEntry = Map.Entry<String, Any>
 
-fun MutableList<*>.swap(from: Int, to: Int) = Collections.swap(this, from, to)
+fun <E> List<E>.chooseAny() = get(ThreadLocalRandom.current().nextInt(0, size))
 
 inline fun <K, V> MutableMap<K, V>.getOrPut(key: K, default: (K) -> V?): V? {
     var value = get(key)

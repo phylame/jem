@@ -42,19 +42,29 @@ object ConverterManager {
     @Suppress("UNCHECKED_CAST")
     operator fun <T : Any> get(type: Class<T>) = converters[type.objectType] as Converter<T>?
 
-    operator fun <T : Any> set(type: Class<T>, converter: Converter<T>?) = if (converter == null) {
+    operator fun <T : Any> set(type: Class<T>, converter: Converter<T>?) = if (converter != null) {
+        converters.put(type.objectType, converter)
+    } else {
         converters.remove(type)
-    } else converters.put(type.objectType, converter)
+    }
 
     fun render(value: Any) = (value as? CharSequence)?.toString() ?: render(value, value.javaClass)
 
-    fun <T : Any> render(value: T, type: Class<T>) = (value as? CharSequence)?.toString() ?: get(type)?.render(value)
+    fun <T : Any> render(value: T, type: Class<T>) = if (CharSequence::class.java.isAssignableFrom(type)) {
+        value.toString()
+    } else {
+        get(type)?.render(value)
+    }
 
     inline fun <reified T : Any> parse(text: String) = parse(text, T::class.java)
 
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> parse(text: String, type: Class<T>): T? {
-        return if (CharSequence::class.java == type || String::class.java == type) text as T else get(type)?.parse(text)
+        return if (CharSequence::class.java == type || String::class.java == type) {
+            text as T
+        } else {
+            get(type)?.parse(text)
+        }
     }
 
     private fun registerDefaults() {
@@ -83,22 +93,20 @@ private class DefaultConverter<T>(val type: Class<T>) : Converter<T> {
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun parse(text: String): T {
-        return when (type) {
-            String::class.java -> text as T
-            Byte::class.java -> java.lang.Byte.decode(text) as T
-            Short::class.java -> java.lang.Short.decode(text) as T
-            Int::class.java -> java.lang.Integer.decode(text) as T
-            Long::class.java -> java.lang.Long.decode(text) as T
-            Float::class.java -> java.lang.Float.valueOf(text) as T
-            Double::class.java -> java.lang.Double.valueOf(text) as T
-            Boolean::class.java -> java.lang.Boolean.valueOf(text) as T
-            Date::class.java -> detectDate(text) as T? ?: throw IllegalArgumentException("Illegal date string: $text")
-            Locale::class.java -> parseLocale(text) as T
-            LocalDate::class.java -> LocalDate.parse(text, looseISODate) as T
-            LocalTime::class.java -> LocalTime.parse(text, looseISOTime) as T
-            LocalDateTime::class.java -> LocalDateTime.parse(text, looseISODateTime) as T
-            else -> throw InternalError("Unreachable Code")
-        }
+    override fun parse(text: String) = when (type) {
+        String::class.java -> text as T
+        Byte::class.java -> java.lang.Byte.decode(text) as T
+        Short::class.java -> java.lang.Short.decode(text) as T
+        Int::class.java -> java.lang.Integer.decode(text) as T
+        Long::class.java -> java.lang.Long.decode(text) as T
+        Float::class.java -> java.lang.Float.valueOf(text) as T
+        Double::class.java -> java.lang.Double.valueOf(text) as T
+        Boolean::class.java -> java.lang.Boolean.valueOf(text) as T
+        Locale::class.java -> parseLocale(text) as T
+        LocalDate::class.java -> LocalDate.parse(text, looseISODate) as T
+        LocalTime::class.java -> LocalTime.parse(text, looseISOTime) as T
+        LocalDateTime::class.java -> LocalDateTime.parse(text, looseISODateTime) as T
+        Date::class.java -> detectDate(text) as T? ?: throw IllegalArgumentException("Illegal date string: $text")
+        else -> throw InternalError("Unreachable Code")
     }
 }

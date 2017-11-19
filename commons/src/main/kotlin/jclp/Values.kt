@@ -35,7 +35,7 @@ import java.util.function.Supplier
 val <T : Any> Class<T>.objectType
     get() = if (isPrimitive) kotlin.javaObjectType else this
 
-fun Class<*>.getInstance(): Any = try {
+fun Class<*>.actualInstance(): Any = try {
     getField("INSTANCE").get(null) // for kotlin object
 } catch (ignored: ReflectiveOperationException) {
     newInstance()
@@ -80,13 +80,14 @@ object TypeManager {
 
     fun mapClass(name: String, clazz: Class<*>) {
         require(name.isNotEmpty()) { "type name cannot be empty" }
-        val type = clazz.objectType
-        fetchType(name).clazz = type
-        classes.put(type, name)
+        val objectClass = clazz.objectType
+        getOrCreateType(name).clazz = objectClass
+        classes.put(objectClass, name)
         cache.remove(name)
     }
 
-    fun getClass(name: String) = if (name.isNotEmpty()) lookupType(name)?.clazz else null
+    fun getClass(name: String)
+            = if (name.isNotEmpty()) lookupType(name)?.clazz else null
 
     fun getType(value: Any) = getType(value.javaClass)
 
@@ -96,15 +97,18 @@ object TypeManager {
         }?.key
     }
 
-    fun getName(name: String) = if (name.isNotEmpty()) M.optTr("type.$name") else null
+    fun getName(name: String)
+            = if (name.isNotEmpty()) M.optTr("type.$name") else null
 
     fun setDefault(name: String, value: Any) {
         requiredType(name).default = value
     }
 
-    fun getDefault(name: String) = if (name.isNotEmpty()) lookupType(name)?.default?.actualValue else null
+    fun getDefault(name: String)
+            = if (name.isNotEmpty()) lookupType(name)?.default?.actualValue else null
 
-    fun parse(name: String, text: String): Any? = getClass(name)?.let { ConverterManager.parse(text, it) }
+    fun parse(name: String, text: String)
+            = getClass(name)?.let { type -> ConverterManager.parse(text, type) }
 
     fun printable(value: Any) = when (value) {
         is Locale -> value.displayName
@@ -116,31 +120,28 @@ object TypeManager {
 
     private fun requiredType(name: String): Item {
         require(name.isNotEmpty()) { "type name cannot be empty" }
-        return lookupType(name) ?: throw IllegalStateException("no such type name $name")
+        return lookupType(name) ?: throw IllegalStateException("no such type for '$name'")
     }
 
-    private fun fetchType(name: String) = lookupType(name) ?: Item().apply { types[name] = this }
+    private fun getOrCreateType(name: String)
+            = lookupType(name) ?: Item().apply { types[name] = this }
 
     private fun lookupType(name: String): Item? {
         var item = cache[name] ?: types[name]
-        if (item != null) {
-            return item
-        }
+        if (item != null) return item
         item = types.values.firstOrNull { name in it.aliases } ?: return null
         cache[name] = item
         return item
     }
 
     private fun initBuiltins() {
-        loadProperties("!jclp/types.properties")?.let {
-            for ((key, value) in it) {
-                try {
-                    mapClass(value.toString(), Class.forName(key.toString()))
-                } catch (e: ClassNotFoundException) {
-                    Log.e("TypeManager", e) { "cannot load type class" }
-                }
+        loadProperties("!jclp/types.properties")?.forEach {
+            try {
+                mapClass(it.value.toString(), Class.forName(it.key.toString()))
+            } catch (e: ClassNotFoundException) {
+                Log.e(javaClass.simpleName, e) { "cannot load type class" }
             }
-        }
+        } ?: Log.w(javaClass.simpleName) { "not found type file: '!jclp/types.properties'" }
     }
 
     private fun initDefaults() {
@@ -168,25 +169,8 @@ object TypeManager {
 
 typealias ValueValidator = (String, Any) -> Unit
 
-class ValueMap(private val validator: ValueValidator? = null) : Iterable<MutableMap.MutableEntry<String, Any>>, Cloneable {
+class ValueMap(private val validator: ValueValidator? = null) : Iterable<VariantEntry>, Cloneable {
     private var map = hashMapOf<String, Any>()
-
-    operator fun set(name: String, value: Any): Any? {
-        require(name.isNotEmpty()) { "name cannot be empty" }
-        validator?.invoke(name, value)
-        return map.put(name, value).also {
-            value.retain()
-            it.release()
-        }
-    }
-
-    fun update(other: ValueMap) {
-        update(other.map)
-    }
-
-    fun update(map: Map<String, Any>) {
-        map.forEach { set(it.key, it.value) }
-    }
 
     val size get() = map.size
 
@@ -196,15 +180,35 @@ class ValueMap(private val validator: ValueValidator? = null) : Iterable<Mutable
 
     fun isNotEmpty() = map.isNotEmpty()
 
+    operator fun set(name: String, value: Any): Any? {
+        require(name.isNotEmpty()) { "name cannot be empty" }
+        validator?.invoke(name, value)
+        val old = map.put(name, value)
+        value.retain()
+        old.release()
+        return old
+    }
+
+    fun update(map: VariantMap) {
+        map.forEach { set(it.key, it.value) }
+    }
+
+    fun update(other: ValueMap) {
+        update(other.map)
+    }
+
     operator fun contains(name: String) = name.isNotEmpty() && name in map
 
     operator fun get(name: String) = if (name.isEmpty()) null else map[name]
 
     fun remove(name: String) = if (name.isEmpty()) null else map.remove(name)?.release()
 
-    fun clear() = map.apply { values.releaseAll() }.clear()
+    fun clear() {
+        map.onEach { it.value.release() }.clear()
+    }
 
-    override fun iterator() = map.entries.iterator()
+    override fun iterator(): Iterator<VariantEntry>
+            = map.entries.iterator()
 
     override fun toString() = map.toString()
 
@@ -212,7 +216,7 @@ class ValueMap(private val validator: ValueValidator? = null) : Iterable<Mutable
     public override fun clone(): ValueMap {
         val copy = super.clone() as ValueMap
         copy.map = map.clone() as HashMap<String, Any>
-        copy.map.values.retainAll()
+        copy.map.onEach { it.value.retain() }
         return copy
     }
 }

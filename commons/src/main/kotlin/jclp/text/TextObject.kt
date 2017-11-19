@@ -30,14 +30,17 @@ import java.nio.charset.Charset
 const val TEXT_HTML = "html"
 const val TEXT_PLAIN = "plain"
 
-interface Text {
-    val type get() = TEXT_PLAIN
+interface Text : Iterable<String> {
+    val type: String
 
     override fun toString(): String
 
-    operator fun iterator(): Iterator<String> = LineSplitter(toString())
+    override fun iterator(): Iterator<String>
+            = LineSplitter(toString())
 
-    fun writeTo(output: Writer) = output.write(toString())
+    fun writeTo(output: Writer) {
+        output.write(toString())
+    }
 }
 
 open class TextWrapper(val text: Text) : Text {
@@ -72,10 +75,10 @@ abstract class IteratorText(final override val type: String) : Text {
 
     abstract override fun iterator(): Iterator<String>
 
-    override fun toString() = iterator().asSequence().joinToString(System.lineSeparator())
+    override fun toString() = joinToString(System.lineSeparator())
 
     override fun writeTo(output: Writer) {
-        output.writeLines(iterator(), System.lineSeparator())
+        output.writeLines(iterator())
     }
 }
 

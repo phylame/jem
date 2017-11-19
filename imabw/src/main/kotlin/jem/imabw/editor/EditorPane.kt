@@ -27,7 +27,6 @@ import jclp.EventBus
 import jclp.io.flobOf
 import jclp.io.writeLines
 import jclp.isAncestor
-import jclp.isSelfOrAncestor
 import jclp.log.Log
 import jclp.text.textOf
 import jclp.toRoot
@@ -102,7 +101,7 @@ object EditorPane : TabPane(), CommandHandler, Editable {
         tabs.iterator().apply {
             while (hasNext()) {
                 (next() as? ChapterTab)?.let {
-                    if (chapter.isSelfOrAncestor(it.chapter)) {
+                    if (chapter === it.chapter || chapter.isAncestor(it.chapter)) {
                         it.dispose()
                         remove()
                     }

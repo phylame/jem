@@ -20,6 +20,7 @@ package jclp.vdm
 
 import jclp.ServiceManager
 import jclp.ServiceProvider
+import jclp.VariantMap
 import jclp.io.Flob
 import jclp.text.Text
 import java.io.Closeable
@@ -51,18 +52,15 @@ interface VDMReader : Closeable {
     val size: Int
 }
 
-fun VDMReader.openStream(name: String) = getEntry(name)?.let(this::getInputStream)
+fun VDMReader.openStream(name: String) = getEntry(name)?.let { getInputStream(it) }
 
-fun VDMReader.readBytes(name: String) = openStream(name)?.use { it.readBytes() }
+fun VDMReader.readBytes(name: String): ByteArray? = openStream(name)?.use { it.readBytes() }
 
-fun VDMReader.readText(name: String, charset: Charset = Charsets.UTF_8): String? {
-    return openStream(name)?.use { it.reader(charset).readText() }
-}
+fun VDMReader.readText(name: String, charset: Charset = Charsets.UTF_8): String? =
+        openStream(name)?.use { it.reader(charset).readText() }
 
 interface VDMWriter : Closeable {
     fun setComment(comment: String)
-
-    fun setProperty(name: String, value: Any)
 
     fun newEntry(name: String): VDMEntry
 
@@ -71,12 +69,14 @@ interface VDMWriter : Closeable {
     fun closeEntry(entry: VDMEntry)
 }
 
-inline fun <R> VDMWriter.useStream(name: String, block: (OutputStream) -> R): R = with(newEntry(name)) {
-    val stream = putEntry(this)
-    try {
-        block(stream)
-    } finally {
-        closeEntry(this)
+inline fun <R> VDMWriter.useStream(name: String, block: (OutputStream) -> R): R {
+    return with(newEntry(name)) {
+        val stream = putEntry(this)
+        try {
+            block(stream)
+        } finally {
+            closeEntry(this)
+        }
     }
 }
 
@@ -93,13 +93,15 @@ fun VDMWriter.write(name: String, text: Text, charset: Charset = Charsets.UTF_8)
 }
 
 interface VDMFactory : ServiceProvider {
-    fun getReader(input: Any): VDMReader
+    fun getReader(input: Any, props: VariantMap): VDMReader
 
-    fun getWriter(output: Any): VDMWriter
+    fun getWriter(output: Any, props: VariantMap): VDMWriter
 }
 
 object VDMManager : ServiceManager<VDMFactory>(VDMFactory::class.java) {
-    fun openReader(name: String, input: Any) = get(name)?.getReader(input)
+    fun openReader(name: String, input: Any, props: VariantMap = emptyMap()): VDMReader? =
+            get(name)?.getReader(input, props)
 
-    fun openWriter(name: String, output: Any) = get(name)?.getWriter(output)
+    fun openWriter(name: String, output: Any, props: VariantMap = emptyMap()): VDMWriter? =
+            get(name)?.getWriter(output, props)
 }

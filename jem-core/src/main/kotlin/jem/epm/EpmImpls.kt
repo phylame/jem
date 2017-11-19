@@ -18,8 +18,6 @@
 
 package jem.epm
 
-import jclp.AutoDisposable
-import jclp.log.Log
 import jclp.release
 import jclp.setting.Settings
 import jclp.setting.getInt
@@ -47,9 +45,6 @@ interface CommonParser<I : Closeable> : Parser {
     fun parse(input: I, arguments: Settings?): Book
 
     override fun parse(input: String, arguments: Settings?) = open(input, arguments).let { source ->
-        if (source !is AutoDisposable) {
-            Log.w("EpmImpl") { "open(input, arguments) not returned '${AutoDisposable::class.java.name}'" }
-        }
         try {
             parse(source, arguments)
         } catch (e: Exception) {
@@ -77,11 +72,14 @@ interface VDMParser : CommonParser<VDMReader>, FileParser {
 }
 
 interface VDMMaker : CommonMaker<VDMWriter> {
-    override fun open(output: String, arguments: Settings?) = (arguments?.getString(MAKER_VDM_TYPE_KEY) ?: VDM_ZIP).let {
-        VDMManager.openWriter(it, output) ?: throw IOException(M.tr("err.vdm.unsupported", it))
-    }.apply {
-        arguments?.getString(MAKER_VDM_COMMENT_KEY)?.takeIf(String::isNotEmpty)?.let { setComment(it) }
-        arguments?.getInt(MAKER_VDM_ZIP_LEVEL_KEY)?.let { setProperty("level", it) }
-        arguments?.getInt(MAKER_VDM_ZIP_METHOD_KEY)?.let { setProperty("method", it) }
+    override fun open(output: String, arguments: Settings?): VDMWriter {
+        val props = hashMapOf<String, Any>()
+        arguments?.getInt(MAKER_VDM_ZIP_LEVEL_KEY)?.let { props["level"] = it }
+        arguments?.getInt(MAKER_VDM_ZIP_METHOD_KEY)?.let { props["method"] = it }
+        return (arguments?.getString(MAKER_VDM_TYPE_KEY) ?: VDM_ZIP).let {
+            VDMManager.openWriter(it, output, props) ?: throw IOException(M.tr("err.vdm.unsupported", it))
+        }.apply {
+            arguments?.getString(MAKER_VDM_COMMENT_KEY)?.takeIf(String::isNotEmpty)?.let { setComment(it) }
+        }
     }
 }

@@ -53,6 +53,6 @@ fun parseDate(text: String, vararg patterns: String): Date? {
     return null
 }
 
-fun detectDate(text: String) = parseDate(text, DATE_TIME_FORMAT, DATE_FORMAT, TIME_FORMAT)
-
 fun Date.format(pattern: String): String = SimpleDateFormat(pattern).format(this)
+
+fun detectDate(text: String) = parseDate(text, DATE_TIME_FORMAT, DATE_FORMAT, TIME_FORMAT)

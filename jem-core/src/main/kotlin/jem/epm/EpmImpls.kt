@@ -65,19 +65,19 @@ interface CommonMaker<O : Closeable> : Maker {
     }
 }
 
-interface VDMParser : CommonParser<VDMReader>, FileParser {
-    override fun open(input: String, arguments: Settings?): VDMReader = arguments?.getString(PARSER_VDM_TYPE_KEY)?.let {
-        VDMManager.openReader(it, input) ?: throw IOException(M.tr("err.vdm.unsupported", it))
+interface VDMParser : CommonParser<VdmReader>, FileParser {
+    override fun open(input: String, arguments: Settings?): VdmReader = arguments?.getString(PARSER_VDM_TYPE_KEY)?.let {
+        VdmManager.openReader(it, input) ?: throw IOException(M.tr("err.vdm.unsupported", it))
     } ?: detectReader(Paths.get(input))
 }
 
-interface VDMMaker : CommonMaker<VDMWriter> {
-    override fun open(output: String, arguments: Settings?): VDMWriter {
+interface VDMMaker : CommonMaker<VdmWriter> {
+    override fun open(output: String, arguments: Settings?): VdmWriter {
         val props = hashMapOf<String, Any>()
         arguments?.getInt(MAKER_VDM_ZIP_LEVEL_KEY)?.let { props["level"] = it }
         arguments?.getInt(MAKER_VDM_ZIP_METHOD_KEY)?.let { props["method"] = it }
         return (arguments?.getString(MAKER_VDM_TYPE_KEY) ?: VDM_ZIP).let {
-            VDMManager.openWriter(it, output, props) ?: throw IOException(M.tr("err.vdm.unsupported", it))
+            VdmManager.openWriter(it, output, props) ?: throw IOException(M.tr("err.vdm.unsupported", it))
         }.apply {
             arguments?.getString(MAKER_VDM_COMMENT_KEY)?.takeIf(String::isNotEmpty)?.let { setComment(it) }
         }

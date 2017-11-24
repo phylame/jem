@@ -46,6 +46,10 @@ object Log {
         }
 
     var facade: LogFacade = SimpleFacade
+        set(value) {
+            field = value
+            facade.setLevel(level)
+        }
 
     fun isEnable(level: LogLevel) = level.code <= this.level.code
 

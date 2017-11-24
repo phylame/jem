@@ -20,7 +20,7 @@ package jem.format.epub
 
 import jclp.depth
 import jclp.setting.Settings
-import jclp.vdm.VDMWriter
+import jclp.vdm.VdmWriter
 import jclp.vdm.useStream
 import jem.*
 import jem.format.util.XmlRender
@@ -33,7 +33,7 @@ private const val NCX_XMLNS = "http://www.daisy.org/z3986/2005/ncx/"
 private const val NCX_META_PREFIX = "jem-ncx-meta-"
 
 internal class NCXBuilder(
-        book: Book, writer: VDMWriter, settings: Settings?, private val opf: OPFBuilder
+        book: Book, writer: VdmWriter, settings: Settings?, private val opf: OPFBuilder
 ) : BuilderBase(book, writer, settings) {
     var count = 0
         private set

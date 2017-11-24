@@ -28,8 +28,8 @@ import jclp.text.ConverterManager
 import jclp.text.Text
 import jclp.text.textOf
 import jclp.text.valueFor
-import jclp.vdm.VDMEntry
-import jclp.vdm.VDMReader
+import jclp.vdm.VdmEntry
+import jclp.vdm.VdmReader
 import jclp.vdm.readText
 import jem.*
 import jem.epm.VDMParser
@@ -41,7 +41,7 @@ import java.nio.charset.Charset
 import java.util.*
 
 internal object PmabParser : VDMParser {
-    override fun parse(input: VDMReader, arguments: Settings?) = if (input.readText(PMAB.MIME_PATH) != PMAB.MIME_PMAB) {
+    override fun parse(input: VdmReader, arguments: Settings?) = if (input.readText(PMAB.MIME_PATH) != PMAB.MIME_PMAB) {
         fail("pmab.parse.badMime", PMAB.MIME_PATH, PMAB.MIME_PMAB)
     } else Book().apply {
         val data = Local(this, input, arguments)
@@ -221,7 +221,7 @@ internal object PmabParser : VDMParser {
         }
     }
 
-    private data class Local(val book: Book, val reader: VDMReader, val arguments: Settings?) {
+    private data class Local(val book: Book, val reader: VdmReader, val arguments: Settings?) {
         var chapter: Chapter = book
 
         var itemType: String? = null
@@ -234,7 +234,7 @@ internal object PmabParser : VDMParser {
 
         lateinit var xpp: XmlPullParser
 
-        lateinit var entry: VDMEntry
+        lateinit var entry: VdmEntry
 
         fun newXpp(): XmlPullParser {
             val factory = XmlPullParserFactory.newInstance()

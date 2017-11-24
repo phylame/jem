@@ -20,7 +20,7 @@ package jem.format.epub
 
 import jclp.io.mimeType
 import jclp.setting.Settings
-import jclp.vdm.VDMWriter
+import jclp.vdm.VdmWriter
 import jclp.vdm.useStream
 import jem.*
 import jem.format.util.M
@@ -42,7 +42,7 @@ data class Spine(val idref: String, val linear: Boolean = true, val properties: 
 
 data class Guide(val href: String, val type: String, val title: String)
 
-internal class OPFBuilder(book: Book, writer: VDMWriter, settings: Settings?) : BuilderBase(book, writer, settings) {
+internal class OPFBuilder(book: Book, writer: VdmWriter, settings: Settings?) : BuilderBase(book, writer, settings) {
     var tocId = ""
 
     val root: Path = Paths.get(getConfig("opsDir") ?: "OEBPS")

@@ -19,7 +19,7 @@
 package mala
 
 import jclp.Linguist
-import jclp.io.loadProperties
+import jclp.io.getProperties
 import jclp.io.getResource
 import java.util.*
 
@@ -36,7 +36,7 @@ class AssetManager(base: String, private val loader: ClassLoader? = null) {
 
     fun resourceFor(name: String) = getResource(pathOf(name), loader)
 
-    fun propertiesFor(name: String, reload: Boolean = false) = loadProperties(pathOf(name), loader, reload)
+    fun propertiesFor(name: String, reload: Boolean = false) = getProperties(pathOf(name), loader, reload)
 
     fun translatorFor(name: String, locale: Locale? = null, dummy: Boolean = true) = Linguist(pathOf(name), locale, loader, dummy)
 

@@ -20,7 +20,7 @@ package jclp
 
 import jclp.io.Flob
 import jclp.io.emptyFlob
-import jclp.io.loadProperties
+import jclp.io.getProperties
 import jclp.log.Log
 import jclp.text.ConverterManager
 import jclp.text.Text
@@ -86,8 +86,8 @@ object TypeManager {
         cache.remove(name)
     }
 
-    fun getClass(name: String)
-            = if (name.isNotEmpty()) lookupType(name)?.clazz else null
+    fun getClass(name: String) =
+            if (name.isNotEmpty()) lookupType(name)?.clazz else null
 
     fun getType(value: Any) = getType(value.javaClass)
 
@@ -97,18 +97,18 @@ object TypeManager {
         }?.key
     }
 
-    fun getName(name: String)
-            = if (name.isNotEmpty()) M.optTr("type.$name") else null
+    fun getName(name: String) =
+            if (name.isNotEmpty()) M.optTr("type.$name") else null
 
     fun setDefault(name: String, value: Any) {
         requiredType(name).default = value
     }
 
-    fun getDefault(name: String)
-            = if (name.isNotEmpty()) lookupType(name)?.default?.actualValue else null
+    fun getDefault(name: String) =
+            if (name.isNotEmpty()) lookupType(name)?.default?.actualValue else null
 
-    fun parse(name: String, text: String)
-            = getClass(name)?.let { type -> ConverterManager.parse(text, type) }
+    fun parse(name: String, text: String) =
+            getClass(name)?.let { type -> ConverterManager.parse(text, type) }
 
     fun printable(value: Any) = when (value) {
         is Locale -> value.displayName
@@ -123,8 +123,8 @@ object TypeManager {
         return lookupType(name) ?: throw IllegalStateException("no such type for '$name'")
     }
 
-    private fun getOrCreateType(name: String)
-            = lookupType(name) ?: Item().apply { types[name] = this }
+    private fun getOrCreateType(name: String) =
+            lookupType(name) ?: Item().apply { types[name] = this }
 
     private fun lookupType(name: String): Item? {
         var item = cache[name] ?: types[name]
@@ -135,7 +135,7 @@ object TypeManager {
     }
 
     private fun initBuiltins() {
-        loadProperties("!jclp/types.properties")?.forEach {
+        getProperties("!jclp/types.properties")?.forEach {
             try {
                 mapClass(it.value.toString(), Class.forName(it.key.toString()))
             } catch (e: ClassNotFoundException) {
@@ -207,8 +207,8 @@ class ValueMap(private val validator: ValueValidator? = null) : Iterable<Variant
         map.onEach { it.value.release() }.clear()
     }
 
-    override fun iterator(): Iterator<VariantEntry>
-            = map.entries.iterator()
+    override fun iterator(): Iterator<VariantEntry> =
+            map.entries.iterator()
 
     override fun toString() = map.toString()
 

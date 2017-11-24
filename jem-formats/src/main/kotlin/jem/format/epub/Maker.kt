@@ -21,14 +21,14 @@ package jem.format.epub
 import jclp.io.Flob
 import jclp.io.extName
 import jclp.io.flobOf
-import jclp.io.loadProperties
+import jclp.io.getProperties
 import jclp.log.Log
 import jclp.setting.Settings
 import jclp.setting.getString
 import jclp.text.TEXT_HTML
 import jclp.text.Text
 import jclp.text.TextWrapper
-import jclp.vdm.VDMWriter
+import jclp.vdm.VdmWriter
 import jclp.vdm.useStream
 import jem.*
 import jem.epm.VDMMaker
@@ -41,7 +41,7 @@ import java.nio.file.Path
 import java.util.*
 
 internal object EpubMaker : VDMMaker {
-    override fun make(book: Book, output: VDMWriter, arguments: Settings?) {
+    override fun make(book: Book, output: VdmWriter, arguments: Settings?) {
         val version = arguments?.getString("epub.make.version") ?: ""
         when (version) {
             "", "2.0" -> writeEPUBv2(book, output, arguments)
@@ -49,7 +49,7 @@ internal object EpubMaker : VDMMaker {
         }
     }
 
-    private fun writeEPUBv2(book: Book, writer: VDMWriter, settings: Settings?) {
+    private fun writeEPUBv2(book: Book, writer: VdmWriter, settings: Settings?) {
         writer.useStream(EPUB.MIME_PATH) { it.write(EPUB.MIME_EPUB.toByteArray()) }
 
         val opf = OPFBuilder(book, writer, settings)
@@ -64,7 +64,7 @@ internal object EpubMaker : VDMMaker {
     }
 }
 
-internal open class BuilderBase(val book: Book, val writer: VDMWriter, val settings: Settings?) {
+internal open class BuilderBase(val book: Book, val writer: VdmWriter, val settings: Settings?) {
     val meta = linkedMapOf<String, Meta>()
 
     val lang: String = (book.language ?: Locale.getDefault()).toLanguageTag()
@@ -84,7 +84,7 @@ internal open class BuilderBase(val book: Book, val writer: VDMWriter, val setti
 
 internal class TOCBuilder(
         book: Book,
-        writer: VDMWriter,
+        writer: VdmWriter,
         settings: Settings?,
         private val ncx: NCXBuilder,
         private val opf: OPFBuilder
@@ -240,7 +240,7 @@ internal class TOCBuilder(
 
 internal object Templates {
     init {
-        Velocity.init(loadProperties("!jem/format/epub/velocity.properties"))
+        Velocity.init(getProperties("!jem/format/epub/velocity.properties"))
     }
 
     fun getTemplate(name: String): Template = Velocity.getTemplate("jem/format/epub/$name.vm")

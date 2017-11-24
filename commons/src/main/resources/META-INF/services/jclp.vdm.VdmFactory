@@ -16,5 +16,5 @@
 # limitations under the License.
 #
 
-jclp.vdm.FileVDMFactory
-jclp.vdm.ZipVDMFactory
+jclp.vdm.FileVdmFactory
+jclp.vdm.ZipVdmFactory

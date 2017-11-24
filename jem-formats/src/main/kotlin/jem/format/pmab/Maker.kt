@@ -26,7 +26,7 @@ import jclp.setting.getString
 import jclp.text.ConverterManager
 import jclp.text.TEXT_PLAIN
 import jclp.text.Text
-import jclp.vdm.VDMWriter
+import jclp.vdm.VdmWriter
 import jclp.vdm.useStream
 import jclp.vdm.write
 import jem.Book
@@ -42,7 +42,7 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 internal object PmabMaker : VDMMaker {
-    override fun make(book: Book, output: VDMWriter, arguments: Settings?) {
+    override fun make(book: Book, output: VdmWriter, arguments: Settings?) {
         val data = Local(book, output, arguments)
         val version = data.getConfig("version")
         when (version) {
@@ -170,7 +170,7 @@ internal object PmabMaker : VDMMaker {
         return path
     }
 
-    private data class Local(val book: Book, val writer: VDMWriter, val arguments: Settings?) {
+    private data class Local(val book: Book, val writer: VdmWriter, val arguments: Settings?) {
         val render = XmlRender(arguments)
 
         val charset: Charset = getConfig("encoding")?.let {

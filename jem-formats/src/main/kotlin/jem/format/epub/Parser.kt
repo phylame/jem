@@ -19,8 +19,8 @@
 package jem.format.epub
 
 import jclp.setting.Settings
-import jclp.vdm.VDMEntry
-import jclp.vdm.VDMReader
+import jclp.vdm.VdmEntry
+import jclp.vdm.VdmReader
 import jclp.vdm.readText
 import jem.Book
 import jem.epm.VDMParser
@@ -31,7 +31,7 @@ import org.xmlpull.v1.XmlPullParserFactory
 import java.io.InputStream
 
 internal object EpubParser : VDMParser {
-    override fun parse(input: VDMReader, arguments: Settings?) = if (input.readText(EPUB.MIME_PATH) != EPUB.MIME_EPUB) {
+    override fun parse(input: VdmReader, arguments: Settings?) = if (input.readText(EPUB.MIME_PATH) != EPUB.MIME_EPUB) {
         fail("epub.parse.badMime", EPUB.MIME_PATH, EPUB.MIME_EPUB)
     } else Book().apply {
         val data = Local(this, input, arguments)
@@ -52,10 +52,10 @@ internal object EpubParser : VDMParser {
         val xpp = data.newXpp()
     }
 
-    private data class Local(val book: Book, val reader: VDMReader, val settings: Settings?) {
+    private data class Local(val book: Book, val reader: VdmReader, val settings: Settings?) {
         lateinit var xpp: XmlPullParser
 
-        lateinit var entry: VDMEntry
+        lateinit var entry: VdmEntry
 
         fun getAttribute(name: String) = xmlAttribute(xpp, name, entry)
 

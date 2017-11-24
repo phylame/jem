@@ -62,8 +62,7 @@ fun extName(path: String) = with(splitPath(path).second) {
 fun mimeType(path: String) = Files.probeContentType(Paths.get(path)) ?: UNKNOWN_MIME
 
 class LocalMimeDetector : FileTypeDetector() {
-    private val mimes = loadProperties("!jclp/io/mime.properties")!!
+    private val mimes = getProperties("!jclp/io/mime.properties")!!
 
-    override fun probeContentType(path: Path): String?
-            = mimes.getProperty(extName(path.toString()))
+    override fun probeContentType(path: Path): String? = mimes.getProperty(extName(path.toString()))
 }

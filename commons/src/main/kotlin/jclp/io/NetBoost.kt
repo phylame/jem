@@ -29,14 +29,15 @@ fun String.htmlTrim() = trim().replace("\u00A0", "")
 
 fun String.quote(encoding: String = "UTF-8"): String = URLEncoder.encode(this, encoding)
 
-fun Map<String, String>.joinToQuery(encoding: String = "UTF-8"): String {
-    return entries.joinToString("&") { "${it.key.quote(encoding)}=${it.value.quote(encoding)}" }
-}
+fun Map<String, String>.joinToQuery(encoding: String = "UTF-8"): String =
+        entries.joinToString("&") { "${it.key.quote(encoding)}=${it.value.quote(encoding)}" }
 
 fun URLConnection.actualStream(): InputStream {
     return if (getHeaderField("Content-Encoding")?.contains("gzip", true) == true) {
         GZIPInputStream(getInputStream())
-    } else getInputStream()
+    } else {
+        getInputStream()
+    }
 }
 
 data class HttpRequest(private val url: String, private val method: String = "GET") {
@@ -63,7 +64,9 @@ data class HttpRequest(private val url: String, private val method: String = "GE
             } else {
                 url + "?" + parameters.joinToQuery(encoding)
             }
-        } else url
+        } else {
+            url
+        }
         return URL(path).openConnection().apply {
             if (this is HttpURLConnection) {
                 this.requestMethod = method.toUpperCase()

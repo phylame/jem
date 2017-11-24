@@ -22,7 +22,7 @@ import jclp.TypeManager
 import jclp.ValueMap
 import jclp.ValueValidator
 import jclp.io.Flob
-import jclp.io.loadProperties
+import jclp.io.getProperties
 import jclp.putAll
 import jclp.text.Text
 import java.time.LocalDate
@@ -53,7 +53,7 @@ object Attributes : ValueValidator {
     private val types = hashMapOf<String, String>()
 
     init {
-        loadProperties("!jem/attributes.properties")?.let {
+        getProperties("!jem/attributes.properties")?.let {
             types.putAll(it)
         }
     }

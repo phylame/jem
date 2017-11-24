@@ -20,14 +20,14 @@ package jem.format.epub
 
 import jclp.io.Flob
 import jclp.setting.Settings
-import jclp.vdm.VDMWriter
+import jclp.vdm.VdmWriter
 import jclp.vdm.useStream
 import jclp.vdm.write
 import jem.format.util.XmlRender
 
 private const val CONTAINER_PATH = "META-INF/container.xml"
 
-fun writeContainer(writer: VDMWriter, settings: Settings?, files: Map<String, String>) {
+fun writeContainer(writer: VdmWriter, settings: Settings?, files: Map<String, String>) {
     writer.useStream(CONTAINER_PATH) {
         XmlRender(settings).apply {
             output(it)
@@ -62,7 +62,7 @@ private fun classifyPath(name: String, mime: String) = when {
     else -> "Extra/$name"
 }
 
-fun VDMWriter.writeToOps(flob: Flob, name: String): String {
+fun VdmWriter.writeToOps(flob: Flob, name: String): String {
     val path = classifyPath(name, flob.mimeType)
     write(opsPathOf(path), flob)
     return path

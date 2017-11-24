@@ -26,8 +26,8 @@ import java.util.*
 import java.util.Locale
 import kotlin.collections.LinkedHashMap
 
-fun parseLocale(tag: String): Locale
-        = Locale.forLanguageTag(tag.replace('_', '-'))
+fun parseLocale(tag: String): Locale =
+        Locale.forLanguageTag(tag.replace('_', '-'))
 
 interface Translator {
     fun tr(key: String): String

@@ -25,21 +25,21 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.*
 
-fun defaultClassLoader(): ClassLoader
-        = Thread.currentThread().contextClassLoader ?: ClassLoader.getSystemClassLoader()
+fun defaultClassLoader(): ClassLoader =
+        Thread.currentThread().contextClassLoader ?: ClassLoader.getSystemClassLoader()
 
-fun getResource(uri: String, loader: ClassLoader? = null): URL? = when {
-    uri.isEmpty() -> throw IllegalArgumentException("uri cannot be empty")
-    uri.startsWith("!") -> (loader ?: defaultClassLoader()).getResource(uri.substring(1))
-    else -> Paths.get(uri).takeIf { Files.exists(it) }?.toUri()?.toURL() ?: try {
-        URL(uri)
+fun getResource(path: String, loader: ClassLoader? = null): URL? = when {
+    path.isEmpty() -> throw IllegalArgumentException("'path' cannot be empty")
+    path.startsWith('!') -> (loader ?: defaultClassLoader()).getResource(path.substring(1))
+    else -> Paths.get(path).takeIf { Files.exists(it) }?.toUri()?.toURL() ?: try {
+        URL(path)
     } catch (e: MalformedURLException) {
         null
     }
 }
 
-fun openResource(uri: String, loader: ClassLoader? = null, reload: Boolean = false): InputStream? =
-        getResource(uri, loader)?.openConnection()?.apply { if (reload) useCaches = false }?.getInputStream()
+fun openResource(path: String, loader: ClassLoader? = null, reload: Boolean = false): InputStream? =
+        getResource(path, loader)?.openConnection()?.apply { if (reload) useCaches = false }?.getInputStream()
 
-fun loadProperties(uri: String, loader: ClassLoader? = null, reload: Boolean = false): Properties? =
-        openResource(uri, loader, reload)?.use { Properties().apply { load(it) } }
+fun getProperties(path: String, loader: ClassLoader? = null, reload: Boolean = false): Properties? =
+        openResource(path, loader, reload)?.use { Properties().apply { load(it) } }

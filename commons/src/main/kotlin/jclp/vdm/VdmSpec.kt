@@ -28,7 +28,7 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.nio.charset.Charset
 
-interface VDMEntry {
+interface VdmEntry {
     val name: String
 
     val comment: String?
@@ -38,38 +38,39 @@ interface VDMEntry {
     val isDirectory: Boolean
 }
 
-interface VDMReader : Closeable {
+interface VdmReader : Closeable {
     val name: String
 
     val comment: String?
 
-    fun getEntry(name: String): VDMEntry?
+    fun getEntry(name: String): VdmEntry?
 
-    fun getInputStream(entry: VDMEntry): InputStream
+    fun getInputStream(entry: VdmEntry): InputStream
 
-    val entries: Iterator<VDMEntry>
+    val entries: Iterator<VdmEntry>
 
     val size: Int
 }
 
-fun VDMReader.openStream(name: String) = getEntry(name)?.let { getInputStream(it) }
+fun VdmReader.openStream(name: String) = getEntry(name)?.let { getInputStream(it) }
 
-fun VDMReader.readBytes(name: String): ByteArray? = openStream(name)?.use { it.readBytes() }
+fun VdmReader.readBytes(name: String, estimatedSize: Int = DEFAULT_BUFFER_SIZE): ByteArray? =
+        openStream(name)?.use { it.readBytes(estimatedSize) }
 
-fun VDMReader.readText(name: String, charset: Charset = Charsets.UTF_8): String? =
+fun VdmReader.readText(name: String, charset: Charset = Charsets.UTF_8): String? =
         openStream(name)?.use { it.reader(charset).readText() }
 
-interface VDMWriter : Closeable {
+interface VdmWriter : Closeable {
     fun setComment(comment: String)
 
-    fun newEntry(name: String): VDMEntry
+    fun newEntry(name: String): VdmEntry
 
-    fun putEntry(entry: VDMEntry): OutputStream
+    fun putEntry(entry: VdmEntry): OutputStream
 
-    fun closeEntry(entry: VDMEntry)
+    fun closeEntry(entry: VdmEntry)
 }
 
-inline fun <R> VDMWriter.useStream(name: String, block: (OutputStream) -> R): R {
+inline fun <R> VdmWriter.useStream(name: String, block: (OutputStream) -> R): R {
     return with(newEntry(name)) {
         val stream = putEntry(this)
         try {
@@ -80,28 +81,28 @@ inline fun <R> VDMWriter.useStream(name: String, block: (OutputStream) -> R): R 
     }
 }
 
-fun VDMWriter.write(name: String, flob: Flob) = useStream(name) {
+fun VdmWriter.write(name: String, flob: Flob) = useStream(name) {
     flob.writeTo(it)
     it.flush()
 }
 
-fun VDMWriter.write(name: String, text: Text, charset: Charset = Charsets.UTF_8) = useStream(name) {
+fun VdmWriter.write(name: String, text: Text, charset: Charset = Charsets.UTF_8) = useStream(name) {
     with(it.writer(charset)) {
         text.writeTo(this)
         flush()
     }
 }
 
-interface VDMFactory : ServiceProvider {
-    fun getReader(input: Any, props: VariantMap): VDMReader
+interface VdmFactory : ServiceProvider {
+    fun getReader(input: Any, props: VariantMap): VdmReader
 
-    fun getWriter(output: Any, props: VariantMap): VDMWriter
+    fun getWriter(output: Any, props: VariantMap): VdmWriter
 }
 
-object VDMManager : ServiceManager<VDMFactory>(VDMFactory::class.java) {
-    fun openReader(name: String, input: Any, props: VariantMap = emptyMap()): VDMReader? =
+object VdmManager : ServiceManager<VdmFactory>(VdmFactory::class.java) {
+    fun openReader(name: String, input: Any, props: VariantMap = emptyMap()): VdmReader? =
             get(name)?.getReader(input, props)
 
-    fun openWriter(name: String, output: Any, props: VariantMap = emptyMap()): VDMWriter? =
+    fun openWriter(name: String, output: Any, props: VariantMap = emptyMap()): VdmWriter? =
             get(name)?.getWriter(output, props)
 }

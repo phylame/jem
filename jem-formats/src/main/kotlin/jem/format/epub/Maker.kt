@@ -31,21 +31,21 @@ import jclp.text.TextWrapper
 import jclp.vdm.VdmWriter
 import jclp.vdm.useStream
 import jem.*
-import jem.epm.VDMMaker
+import jem.epm.VdmMaker
 import jem.format.util.M
-import jem.format.util.fail
+import jem.format.util.failMaker
 import org.apache.velocity.Template
 import org.apache.velocity.VelocityContext
 import org.apache.velocity.app.Velocity
 import java.nio.file.Path
 import java.util.*
 
-internal object EpubMaker : VDMMaker {
+internal object EpubMaker : VdmMaker {
     override fun make(book: Book, output: VdmWriter, arguments: Settings?) {
         val version = arguments?.getString("epub.make.version") ?: ""
         when (version) {
             "", "2.0" -> writeEPUBv2(book, output, arguments)
-            else -> fail("epub.make.unsupportedVersion", version)
+            else -> failMaker("epub.make.unsupportedVersion", version)
         }
     }
 

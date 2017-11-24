@@ -31,9 +31,9 @@ import jclp.vdm.useStream
 import jclp.vdm.write
 import jem.Book
 import jem.Chapter
-import jem.epm.VDMMaker
+import jem.epm.VdmMaker
 import jem.format.util.XmlRender
-import jem.format.util.fail
+import jem.format.util.failMaker
 import java.io.ByteArrayOutputStream
 import java.nio.charset.Charset
 import java.time.LocalDate
@@ -41,13 +41,13 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
-internal object PmabMaker : VDMMaker {
+internal object PmabMaker : VdmMaker {
     override fun make(book: Book, output: VdmWriter, arguments: Settings?) {
         val data = Local(book, output, arguments)
         val version = data.getConfig("version")
         when (version) {
             null, "3.0" -> writePMABv3(data)
-            else -> fail("pmab.make.unsupportedVersion", version)
+            else -> failMaker("pmab.make.unsupportedVersion", version)
         }
     }
 
@@ -88,9 +88,9 @@ internal object PmabMaker : VDMMaker {
             writeItems(chapter.attributes, "attributes", prefix + "-", data)
             chapter.text?.let {
                 beginTag("content")
-                        .attribute("type", typeOf(it, data))
-                        .text(writeText(it, prefix, data))
-                        .endTag()
+                attribute("type", typeOf(it, data))
+                text(writeText(it, prefix, data))
+                endTag()
             }
             chapter.forEachIndexed { i, chapter ->
                 writeChapter(chapter, "$suffix-${i + 1}", data)
@@ -105,9 +105,9 @@ internal object PmabMaker : VDMMaker {
             beginTag("head")
             for ((key, value) in values) {
                 beginTag("meta")
-                        .attribute("name", key?.toString() ?: "")
-                        .attribute("value", value?.toString() ?: "")
-                        .endTag()
+                attribute("name", key?.toString() ?: "")
+                attribute("value", value?.toString() ?: "")
+                endTag()
             }
             endTag()
         }
@@ -127,37 +127,47 @@ internal object PmabMaker : VDMMaker {
 
     private fun writeItem(name: String, value: Any, prefix: String, data: Local) {
         with(data.render) {
-            beginTag("item").attribute("name", name)
-            var type = TypeManager.getType(value) ?: TypeManager.STRING
-            val text = when (type) {
-                TypeManager.TEXT -> (value as Text).let {
-                    type = typeOf(it, data)
-                    writeText(it, prefix + name, data)
+            beginTag("item")
+            attribute("name", name)
+            var type: String = TypeManager.STRING
+            val text = when (value) {
+                is Text -> {
+                    type = typeOf(value, data)
+                    writeText(value, prefix + name, data)
                 }
-                TypeManager.FLOB -> (value as Flob).let {
-                    type = it.mimeType
-                    writeFlob(it, prefix + name, data)
+                is Flob -> {
+                    type = value.mimeType
+                    writeFlob(value, prefix + name, data)
                 }
-                TypeManager.DATE -> (data.getConfig("dateFormat") ?: DATE_FORMAT).let {
-                    type += ";format=" + it
-                    (value as LocalDate).format(DateTimeFormatter.ofPattern(it))
+                is CharSequence -> {
+                    type = TypeManager.STRING
+                    value.toString()
                 }
-                TypeManager.TIME -> (data.getConfig("timeFormat") ?: TIME_FORMAT).let {
-                    type += ";format=" + it
-                    (value as LocalTime).format(DateTimeFormatter.ofPattern(it))
+                is LocalDate -> (data.getConfig("dateFormat") ?: DATE_FORMAT).let {
+                    type = "${TypeManager.DATE};format=$it"
+                    value.format(DateTimeFormatter.ofPattern(it))
                 }
-                TypeManager.DATETIME -> (data.getConfig("datetimeFormat") ?: DATE_TIME_FORMAT).let {
-                    type += ";format=" + it
-                    (value as LocalDateTime).format(DateTimeFormatter.ofPattern(it))
+                is LocalTime -> (data.getConfig("timeFormat") ?: TIME_FORMAT).let {
+                    type = "${TypeManager.TIME};format=$it"
+                    value.format(DateTimeFormatter.ofPattern(it))
                 }
-                else -> ConverterManager.render(value)
+                is LocalDateTime -> (data.getConfig("datetimeFormat") ?: DATE_TIME_FORMAT).let {
+                    type = "${TypeManager.DATETIME};format=$it"
+                    value.format(DateTimeFormatter.ofPattern(it))
+                }
+                else -> {
+                    type = TypeManager.getType(value) ?: TypeManager.STRING
+                    ConverterManager.render(value) ?: value.toString()
+                }
             }
-            attribute("type", type).text(text ?: value.toString()).endTag()
+            attribute("type", type)
+            text(text ?: value.toString())
+            endTag()
         }
     }
 
     private fun writeFlob(flob: Flob, name: String, data: Local): String {
-        val path = "resources/$name.${extName(flob.name).takeIf(String::isNotEmpty) ?: "dat"}"
+        val path = "resources/$name.${extName(flob.name).takeIf { it.isNotEmpty() } ?: "dat"}"
         data.writer.write(path, flob)
         return path
     }
@@ -173,18 +183,19 @@ internal object PmabMaker : VDMMaker {
     private data class Local(val book: Book, val writer: VdmWriter, val arguments: Settings?) {
         val render = XmlRender(arguments)
 
-        val charset: Charset = getConfig("encoding")?.let {
-            Charset.forName(it)
-        } ?: Charset.defaultCharset()
+        val charset: Charset =
+                getConfig("encoding")?.let { Charset.forName(it) } ?: Charset.defaultCharset()
 
         fun getConfig(key: String) = arguments?.getString("maker.pmab.$key")
 
-        fun beginXml(root: String, version: String, xmlns: String) = ByteArrayOutputStream().apply {
-            render.output(this)
-                    .beginXml()
-                    .beginTag(root)
-                    .attribute("version", version)
-                    .xmlns(xmlns)
+        fun beginXml(root: String, version: String, xmlns: String) = ByteArrayOutputStream().also {
+            with(render) {
+                output(it)
+                beginXml()
+                beginTag(root)
+                attribute("version", version)
+                xmlns(xmlns)
+            }
         }
 
         fun endXml(buffer: ByteArrayOutputStream, path: String) {

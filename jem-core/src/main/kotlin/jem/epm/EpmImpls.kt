@@ -26,7 +26,6 @@ import jclp.vdm.*
 import jem.Book
 import jem.M
 import java.io.Closeable
-import java.io.IOException
 import java.nio.file.Paths
 
 const val PMAB_NAME = "pmab"
@@ -44,13 +43,15 @@ interface CommonParser<I : Closeable> : Parser {
 
     fun parse(input: I, arguments: Settings?): Book
 
-    override fun parse(input: String, arguments: Settings?) = open(input, arguments).let { source ->
-        try {
-            parse(source, arguments)
-        } catch (e: Exception) {
-            throw e
-        } finally {
-            source.release()
+    override fun parse(input: String, arguments: Settings?): Book {
+        with(open(input, arguments)) {
+            try {
+                return parse(this, arguments)
+            } catch (e: Exception) {
+                throw e
+            } finally {
+                release()
+            }
         }
     }
 }
@@ -65,21 +66,22 @@ interface CommonMaker<O : Closeable> : Maker {
     }
 }
 
-interface VDMParser : CommonParser<VdmReader>, FileParser {
-    override fun open(input: String, arguments: Settings?): VdmReader = arguments?.getString(PARSER_VDM_TYPE_KEY)?.let {
-        VdmManager.openReader(it, input) ?: throw IOException(M.tr("err.vdm.unsupported", it))
-    } ?: detectReader(Paths.get(input))
+interface VdmParser : CommonParser<VdmReader>, FileParser {
+    override fun open(input: String, arguments: Settings?): VdmReader =
+            arguments?.getString(PARSER_VDM_TYPE_KEY)?.let {
+                VdmManager.openReader(it, input) ?: throw ParserException(M.tr("err.vdm.unsupported", it))
+            } ?: detectReader(Paths.get(input))
 }
 
-interface VDMMaker : CommonMaker<VdmWriter> {
+interface VdmMaker : CommonMaker<VdmWriter> {
     override fun open(output: String, arguments: Settings?): VdmWriter {
         val props = hashMapOf<String, Any>()
         arguments?.getInt(MAKER_VDM_ZIP_LEVEL_KEY)?.let { props["level"] = it }
         arguments?.getInt(MAKER_VDM_ZIP_METHOD_KEY)?.let { props["method"] = it }
         return (arguments?.getString(MAKER_VDM_TYPE_KEY) ?: VDM_ZIP).let {
-            VdmManager.openWriter(it, output, props) ?: throw IOException(M.tr("err.vdm.unsupported", it))
+            VdmManager.openWriter(it, output, props) ?: throw MakerException(M.tr("err.vdm.unsupported", it))
         }.apply {
-            arguments?.getString(MAKER_VDM_COMMENT_KEY)?.takeIf(String::isNotEmpty)?.let { setComment(it) }
+            arguments?.getString(MAKER_VDM_COMMENT_KEY)?.takeIf { it.isNotEmpty() }?.let { setComment(it) }
         }
     }
 }

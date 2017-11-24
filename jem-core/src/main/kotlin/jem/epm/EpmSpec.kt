@@ -26,8 +26,9 @@ import jclp.setting.getString
 import jclp.vdm.VDM_DIRECTORY
 import jem.Book
 import jem.title
-import java.io.File
 import java.nio.file.FileAlreadyExistsException
+import java.nio.file.Files
+import java.nio.file.Paths
 
 const val MAKER_OVERWRITE_KEY = "maker.file.overwrite"
 
@@ -62,12 +63,12 @@ object EpmManager : ServiceManager<EpmFactory>(EpmFactory::class.java) {
     fun writeBook(param: MakerParam): String? {
         val epmName = param.epmName.takeIf(String::isNotEmpty) ?: throw IllegalArgumentException("Not found epm format")
         val maker = getMaker(epmName) ?: return null
-        var file = File(param.path)
-        if (file.isDirectory && (maker !is VDMMaker || param.arguments?.getString(MAKER_VDM_TYPE_KEY) != VDM_DIRECTORY)) {
-            file = File(file, "${param.book.title}.$epmName")
+        var path = Paths.get(param.path)
+        if (Files.isDirectory(path) && (maker !is VdmMaker || param.arguments?.getString(MAKER_VDM_TYPE_KEY) != VDM_DIRECTORY)) {
+            path = path.resolve("${param.book.title}.$epmName")
         }
-        val output = file.path
-        if (file.exists() && param.arguments?.getBoolean(MAKER_OVERWRITE_KEY) != true) {
+        val output = path.toString()
+        if (Files.exists(path) && param.arguments?.getBoolean(MAKER_OVERWRITE_KEY) != true) {
             throw FileAlreadyExistsException(output)
         }
         param.actualPath = output

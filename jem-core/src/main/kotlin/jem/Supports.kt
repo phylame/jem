@@ -23,7 +23,7 @@ import jclp.Linguist
 object Build {
     const val NAME = "Jem"
     const val FULL_NAME = "PW's book toolkit for Java"
-    const val VERSION = "5.0.SNAPSHOT"
+    const val VERSION = "5.1.0.SNAPSHOT"
     const val AUTHOR_EMAIL = "phylame@163.com"
     const val VENDOR = "Peng Wan, PW"
     const val LICENSE = "Apache License, Version 2.0"

@@ -22,7 +22,7 @@ import jclp.VariantMap
 import jclp.actualValue
 import jclp.log.Log
 import jclp.objectType
-import jclp.putAll
+import jclp.update
 import jclp.text.ConverterManager
 import java.io.Reader
 import java.io.Writer
@@ -50,8 +50,8 @@ abstract class AbstractSettings : Settings {
 
     protected abstract fun <T : Any> convertValue(value: Any, type: Class<T>): T
 
-    override fun isEnable(key: String): Boolean = definitions[key]?.dependencies?.all {
-        isEnable(it.key) && it.condition?.invoke(get(it.key)) != false
+    override fun isEnable(key: String): Boolean = definitions[key]?.dependencies?.all { dep ->
+        isEnable(dep.key) && dep.condition?.invoke(get(dep.key)) != false
     } != false
 
     fun getDefinition(key: String) = definitions[key]
@@ -79,7 +79,7 @@ abstract class AbstractSettings : Settings {
                 throw IllegalArgumentException("'$key' require type of '${it.type}'")
             }
             if (it.constraint?.invoke(value) == false) {
-                throw IllegalArgumentException("Illegal '$value' for '$key'")
+                throw IllegalArgumentException("Illegal value '$value' for '$key'")
             }
         }
         return handleSet(key, value)
@@ -118,7 +118,7 @@ open class MapSettings(map: VariantMap? = null, definitions: Map<String, Definit
     fun load(reader: Reader) {
         val props = Properties().apply { load(reader) }
         if (props.isNotEmpty()) {
-            values.putAll(props)
+            values.update(props)
             initValues()
         }
     }

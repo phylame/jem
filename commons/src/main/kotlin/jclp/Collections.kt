@@ -37,7 +37,7 @@ inline fun <K, V> MutableMap<K, V>.getOrPut(key: K, default: (K) -> V?): V? {
     return value
 }
 
-fun MutableMap<in String, in String>.putAll(from: Properties) {
+fun MutableMap<in String, in String>.update(from: Properties) {
     for ((key, value) in from) {
         put(key.toString(), value.toString())
     }

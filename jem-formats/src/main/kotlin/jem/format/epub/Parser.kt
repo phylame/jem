@@ -23,16 +23,16 @@ import jclp.vdm.VdmEntry
 import jclp.vdm.VdmReader
 import jclp.vdm.readText
 import jem.Book
-import jem.epm.VDMParser
-import jem.format.util.fail
+import jem.epm.VdmParser
+import jem.format.util.failParser
 import jem.format.util.xmlAttribute
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.InputStream
 
-internal object EpubParser : VDMParser {
+internal object EpubParser : VdmParser {
     override fun parse(input: VdmReader, arguments: Settings?) = if (input.readText(EPUB.MIME_PATH) != EPUB.MIME_EPUB) {
-        fail("epub.parse.badMime", EPUB.MIME_PATH, EPUB.MIME_EPUB)
+        failParser("epub.parse.badMime", EPUB.MIME_PATH, EPUB.MIME_EPUB)
     } else Book().apply {
         val data = Local(this, input, arguments)
         try {
@@ -67,7 +67,7 @@ internal object EpubParser : VDMParser {
         }
 
         fun openStream(path: String): InputStream {
-            entry = reader.getEntry(path) ?: fail("epub.parse.notFoundFile", path, reader.name)
+            entry = reader.getEntry(path) ?: failParser("epub.parse.notFoundFile", path, reader.name)
             return reader.getInputStream(entry)
         }
     }

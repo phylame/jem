@@ -20,6 +20,7 @@ package jclp
 
 import jclp.io.defaultClassLoader
 import jclp.io.openResource
+import jclp.text.or
 import java.io.File
 import java.text.MessageFormat
 import java.util.*
@@ -33,16 +34,15 @@ interface Translator {
     fun tr(key: String): String
 
     fun optTr(key: String) = try {
-        tr(key).takeIf(String::isNotEmpty)
+        tr(key)
     } catch (e: MissingResourceException) {
         null
     }
 
     fun tr(key: String, vararg args: Any?): String = MessageFormat.format(tr(key), *args)
 
-    fun optTr(key: String, fallback: String, vararg args: Any?): String = (optTr(key) ?: fallback).let {
-        MessageFormat.format(it, *args)
-    }
+    fun optTr(key: String, fallback: String, vararg args: Any?): String =
+            (optTr(key) or fallback).let { MessageFormat.format(it, *args) }
 
     fun attach(translators: Collection<Translator>) {
         throw UnsupportedOperationException()

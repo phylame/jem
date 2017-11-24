@@ -32,7 +32,7 @@ import jclp.vdm.VdmEntry
 import jclp.vdm.VdmReader
 import jclp.vdm.readText
 import jem.*
-import jem.epm.VDMParser
+import jem.epm.VdmParser
 import jem.format.util.*
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
@@ -40,17 +40,19 @@ import java.io.InputStream
 import java.nio.charset.Charset
 import java.util.*
 
-internal object PmabParser : VDMParser {
+internal object PmabParser : VdmParser {
     override fun parse(input: VdmReader, arguments: Settings?) = if (input.readText(PMAB.MIME_PATH) != PMAB.MIME_PMAB) {
-        fail("pmab.parse.badMime", PMAB.MIME_PATH, PMAB.MIME_PMAB)
-    } else Book().apply {
-        val data = Local(this, input, arguments)
-        try {
-            parsePBM(data)
-            parsePBC(data)
-        } catch (e: Exception) {
-            cleanup()
-            throw e
+        failParser("pmab.parse.badMime", PMAB.MIME_PATH, PMAB.MIME_PMAB)
+    } else {
+        Book().apply {
+            val data = Local(this, input, arguments)
+            try {
+                parsePBM(data)
+                parsePBC(data)
+            } catch (e: Exception) {
+                cleanup()
+                throw e
+            }
         }
     }
 
@@ -59,7 +61,7 @@ internal object PmabParser : VDMParser {
         val xpp = data.newXpp()
         data.openStream(PMAB.PBM_PATH).use {
             xpp.setInput(it, null)
-            useXml(xpp, PMAB.PBM_PATH) { begin, sb ->
+            withXml(xpp, PMAB.PBM_PATH) { begin, sb ->
                 if (begin) {
                     var hasText = false
                     when {
@@ -83,7 +85,7 @@ internal object PmabParser : VDMParser {
         val xpp = data.newXpp()
         data.openStream(PMAB.PBC_PATH).use {
             xpp.setInput(it, null)
-            useXml(xpp, PMAB.PBC_PATH) { start, sb ->
+            withXml(xpp, PMAB.PBC_PATH) { start, sb ->
                 if (start) {
                     var hasText = false
                     when {
@@ -217,7 +219,7 @@ internal object PmabParser : VDMParser {
         when (it) {
             "3.0" -> 3
             "2.0" -> 2
-            else -> fail(key, it, xpp.lineNumber, data.entry)
+            else -> failParser(key, it, xpp.lineNumber, data.entry)
         }
     }
 
@@ -250,7 +252,7 @@ internal object PmabParser : VDMParser {
         fun xmlPosition() = "${xpp.lineNumber}:${xpp.columnNumber - 2}@$entry"
 
         fun openStream(path: String): InputStream {
-            entry = reader.getEntry(path) ?: fail("pmab.parse.notFoundFile", path, reader.name)
+            entry = reader.getEntry(path) ?: failParser("pmab.parse.notFoundFile", path, reader.name)
             return reader.getInputStream(entry)
         }
 

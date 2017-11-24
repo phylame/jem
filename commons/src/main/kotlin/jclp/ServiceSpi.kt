@@ -55,11 +55,11 @@ open class ServiceManager<T : ServiceProvider>(type: Class<T>, loader: ClassLoad
     }
 
     private fun initServices() {
-        val iter = serviceLoader.iterator()
+        val it = serviceLoader.iterator()
         try {
-            while (iter.hasNext()) {
+            while (it.hasNext()) {
                 try {
-                    serviceProviders += iter.next()
+                    serviceProviders += it.next()
                 } catch (e: ServiceConfigurationError) {
                     Log.e(javaClass.simpleName, e) { "providers.next()" }
                 }

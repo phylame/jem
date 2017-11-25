@@ -17,16 +17,15 @@
  */
 
 plugins {
-    id 'java-library'
     id 'org.jetbrains.kotlin.jvm' version '1.1.61'
 }
 
 description = 'Implementations for EPM'
 
 dependencies {
-    api project(':jem-core')
-    api "xpp3:xpp3:$xppVersion"
-    api "org.apache.velocity:velocity-engine-core:$velocityVersion"
+    compile project(':jem-core')
+    compile "xpp3:xpp3:$xppVersion"
+    compile "org.apache.velocity:velocity-engine-core:$velocityVersion"
 }
 
 compileKotlin {

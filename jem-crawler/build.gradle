@@ -17,16 +17,15 @@
  */
 
 plugins {
-    id 'java-library'
     id 'org.jetbrains.kotlin.jvm' version '1.1.61'
 }
 
 description = 'Web Book Crawler'
 
 dependencies {
-    api project(':jem-core')
-    api "org.json:json:$jsonVersion"
-    api "org.jsoup:jsoup:$jsoupVersion"
+    compile project(':jem-core')
+    compile "org.json:json:$jsonVersion"
+    compile "org.jsoup:jsoup:$jsoupVersion"
 }
 
 compileKotlin {

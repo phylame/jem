@@ -36,6 +36,7 @@ import org.apache.commons.cli.DefaultParser
 import org.apache.commons.cli.HelpFormatter
 import org.apache.commons.cli.Option
 import org.apache.commons.cli.OptionGroup
+import java.lang.System.getProperty
 import java.time.LocalDate
 
 fun main(args: Array<String>) {
@@ -45,9 +46,9 @@ fun main(args: Array<String>) {
 object SCI : CDelegate(DefaultParser()) {
     private const val TAG = "SCI"
 
-    override val version = Build.VERSION
-
     override val name = "scj"
+
+    override val version = Build.VERSION
 
     @Suppress("UNCHECKED_CAST")
     val inArguments
@@ -70,9 +71,9 @@ object SCI : CDelegate(DefaultParser()) {
     val output get() = context["o"]?.toString() ?: "."
 
     override fun onStart() {
-        initApp()
-        initJem()
-        initOptions()
+        restoreState(SCISettings)
+        appOptions()
+        jemOptions()
     }
 
     override fun onStop() {
@@ -80,13 +81,13 @@ object SCI : CDelegate(DefaultParser()) {
     }
 
     fun processInputs(processor: InputProcessor): Int {
+        Log.d(TAG) { "app context: $context" }
+        Log.d(TAG) { "app inputs: $inputs" }
         if (inputs.isEmpty()) {
             App.error(tr("err.input.empty"))
             return -1
         }
         var code = 0
-        Log.d(TAG) { "app context: $context" }
-        Log.d(TAG) { "app inputs: $inputs" }
         for (input in inputs) {
             val format = context["f"]?.toString() ?: extName(input)
             code = if (checkInputFormat(format, input)) {
@@ -98,26 +99,14 @@ object SCI : CDelegate(DefaultParser()) {
         return code
     }
 
-    private fun initApp() {
-        restoreState(SCISettings)
-    }
-
-    private fun initJem() {
-    }
-
-    private fun initOptions() {
-        appOptions()
-        jemOptions()
-    }
-
     private fun appOptions() {
         newOption("h", "help").command {
             with(HelpFormatter()) {
                 descPadding = 4
-                syntaxPrefix = ""
+                syntaxPrefix = tr("opt.syntaxPrefix")
                 printHelp(SCISettings.termWidth,
                         tr("opt.syntax", name),
-                        tr("opt.header"),
+                        tr("opt.header", Build.VERSION),
                         options,
                         tr("opt.footer", Build.AUTHOR_EMAIL))
                 App.exit(0)
@@ -125,7 +114,8 @@ object SCI : CDelegate(DefaultParser()) {
         }
 
         newOption("v", "version").command {
-            println("SCI for Jem v${Build.VERSION} on ${System.getProperty("os.name")}")
+            println(tr("opt.v.appInfo", Build.VERSION, getProperty("os.name")))
+            println(tr("opt.v.javaInfo", getProperty("java.version"), getProperty("os.arch"), getProperty("java.vendor")))
             println("(C) 2014-${LocalDate.now().year} ${Build.VENDOR}")
             App.exit(0)
         }
@@ -199,14 +189,14 @@ object SCI : CDelegate(DefaultParser()) {
 
         valueOption("o", "output")
 
+        newOption("F", "force")
+                .action(ValueSwitcher("F"))
+
         val group = OptionGroup()
 
-        newOption("j").action(JoinBook()).group(group)
-
-        Option.builder()
-                .longOpt("force")
-                .desc(tr("opt.force.desc"))
-                .action(ValueSwitcher("force"))
+        newOption("j")
+                .action(JoinBook())
+                .group(group)
 
         Option.builder("c")
                 .desc(tr("opt.c.desc", "-t", "-o"))

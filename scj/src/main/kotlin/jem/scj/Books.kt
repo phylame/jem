@@ -30,6 +30,7 @@ import jem.epm.ParserParam
 import mala.App
 import mala.App.tr
 import java.io.FileNotFoundException
+import java.nio.file.FileAlreadyExistsException
 
 fun checkInputFormat(format: String, path: String = "") = when {
     format.isEmpty() -> {
@@ -95,12 +96,12 @@ fun attachBook(book: Book, attaching: Boolean) {
 }
 
 fun saveBook(param: MakerParam) = try {
-    if (SCI["force"] == true) {
+    if (SCI["F"] == true) {
         param.arguments?.set(MAKER_OVERWRITE_KEY, true)
     }
     makeBook(param)
 } catch (e: FileAlreadyExistsException) {
-    App.error(tr("err.output.existedFile", e.file, "--force"))
+    App.error(tr("err.output.existedFile", e.file, "-F, --force"))
     null
 } catch (e: Exception) {
     App.error(tr("err.jem.saveFailed", param.path), e)

@@ -19,7 +19,6 @@
 package mala
 
 import jclp.TranslatorWrapper
-import jclp.actualInstance
 import jclp.log.Log
 import jclp.text.or
 import java.util.*
@@ -185,22 +184,6 @@ object App : TranslatorWrapper() {
             plugins.destroy()
             delegate.onStop()
             cleanups.forEach(Cleanup::invoke)
-        }
-    }
-}
-
-object Launcher {
-    @JvmStatic
-    fun main(args: Array<String>) {
-        if (args.isEmpty()) {
-            throw RuntimeException("The first argument must the class path of delegate")
-        }
-        try {
-            Class.forName(args.first()).takeIf { AppDelegate::class.java.isInstance(it) }?.let {
-                App.run(it.actualInstance() as AppDelegate, args.copyOfRange(1, args.size + 1))
-            } ?: throw RuntimeException("No instance of AppDelegate: ${args.first()}")
-        } catch (e: Exception) {
-            throw RuntimeException("Cannot load delegate class", e)
         }
     }
 }

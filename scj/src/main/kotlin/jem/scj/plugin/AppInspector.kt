@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package jem.scj.addon
+package jem.scj.plugin
 
 import jclp.VariantMap
 import jem.scj.SCI
@@ -34,8 +34,6 @@ class AppInspector : SCJAddon() {
     override val description = tr("addon.inspector.desc")
 
     override fun init() {
-        attachTranslator()
-
         val itemIndent = SCISettings["addon.inspector.itemIndent"] ?: " "
 
         Option.builder()

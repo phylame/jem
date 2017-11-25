@@ -24,8 +24,6 @@ import jclp.log.Log
 import jclp.text.or
 import java.util.*
 
-private typealias Cleanup = () -> Unit
-
 enum class AppState {
     DEFAULT,
     STARTING,
@@ -69,6 +67,8 @@ interface AppDelegate : Runnable {
     }
 }
 
+private typealias Cleanup = () -> Unit
+
 object App : TranslatorWrapper() {
     var code: Int = 0
         private set
@@ -85,7 +85,7 @@ object App : TranslatorWrapper() {
     lateinit var arguments: Array<String>
         private set
 
-    lateinit var mainThread: Thread
+    lateinit var thread: Thread
         private set
 
     val home by lazy {
@@ -103,7 +103,7 @@ object App : TranslatorWrapper() {
     }
 
     fun run(delegate: AppDelegate, args: Array<String>) {
-        mainThread = Thread.currentThread()
+        thread = Thread.currentThread()
         this.delegate = delegate
         arguments = args
         onStart()
@@ -170,11 +170,11 @@ object App : TranslatorWrapper() {
         delegate.onStart()
         plugins.init()
         state = AppState.RUNNING
-        Runtime.getRuntime().addShutdownHook(Thread({
+        Runtime.getRuntime().addShutdownHook(Thread {
             if (state != AppState.STOPPING) {
                 onQuit(-1)
             }
-        }))
+        })
         delegate.run()
     }
 

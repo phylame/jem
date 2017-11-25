@@ -61,9 +61,8 @@ class PluginManager(private val path: String, private val loader: ClassLoader? =
         }
     }
 
-    operator fun <T : Plugin> get(type: Class<T>): List<T> {
-        return plugins.filter(type::isInstance).map(type::cast)
-    }
+    operator fun <T : Plugin> get(type: Class<T>): List<T> =
+            plugins.filterIsInstance(type)
 
     operator fun iterator() = plugins.iterator()
 

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package jem.scj.addon
+package jem.scj.plugin
 
 import jclp.log.Log
 import jem.Book
@@ -42,7 +42,6 @@ class ScriptRunner : SCJAddon(), SCJPlugin {
     override val description = tr("addon.runner.desc")
 
     override fun init() {
-        attachTranslator()
         newOption("R", "run-script")
                 .hasArg()
                 .argName(tr("opt.R.arg"))

@@ -81,12 +81,16 @@ inline fun <R> VdmWriter.useStream(name: String, block: (OutputStream) -> R): R 
     }
 }
 
-fun VdmWriter.write(name: String, flob: Flob) = useStream(name) {
+fun VdmWriter.writeBytes(name: String, data: ByteArray) = useStream(name) {
+    it.write(data)
+}
+
+fun VdmWriter.writeFlob(name: String, flob: Flob) = useStream(name) {
     flob.writeTo(it)
     it.flush()
 }
 
-fun VdmWriter.write(name: String, text: Text, charset: Charset = Charsets.UTF_8) = useStream(name) {
+fun VdmWriter.writeText(name: String, text: Text, charset: Charset = Charsets.UTF_8) = useStream(name) {
     with(it.writer(charset)) {
         text.writeTo(this)
         flush()

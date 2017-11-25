@@ -31,6 +31,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 const val MAKER_OVERWRITE_KEY = "maker.file.overwrite"
+const val EXTENSION_FILE_INFO = "jem.ext.fileInfo"
 
 interface Parser {
     fun parse(input: String, arguments: Settings?): Book

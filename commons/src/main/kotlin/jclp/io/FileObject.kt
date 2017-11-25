@@ -43,7 +43,7 @@ interface Flob {
     }
 }
 
-open class FlobWrapper(val flob: Flob) : Flob {
+open class FlobWrapper(protected val flob: Flob) : Flob {
     override val name = flob.name
 
     override val mimeType = flob.mimeType
@@ -59,20 +59,20 @@ open class FlobWrapper(val flob: Flob) : Flob {
     override fun toString() = flob.toString()
 }
 
-private class URLFlob(val url: URL, mime: String) : Flob {
-    override val name = fullName(url.path)
+private class URLFlob(val url: URL, name: String, mime: String) : Flob {
+    override val name = name or { fullName(url.path) }
 
-    override val mimeType = mime or { mimeType(name) }
+    override val mimeType = mime or { mimeType(this.name) }
 
     override fun openStream(): InputStream = url.openStream()
 
     override fun toString() = "$url;mime=$mimeType"
 }
 
-fun flobOf(url: URL, mime: String = ""): Flob = URLFlob(url, mime)
+fun flobOf(url: URL, name: String = "", mime: String = ""): Flob = URLFlob(url, name, mime)
 
-fun flobOf(path: String, loader: ClassLoader? = null, mime: String = ""): Flob =
-        getResource(path, loader)?.let { flobOf(it, mime) } ?: throw IOException("No such resource for $path")
+fun flobOf(path: String, loader: ClassLoader? = null, name: String = "", mime: String = ""): Flob =
+        getResource(path, loader)?.let { flobOf(it, name, mime) } ?: throw IOException("No such resource for $path")
 
 private class FileFlob(val path: Path, mime: String) : Flob {
     override val name = path.fileName.toString()
@@ -100,9 +100,9 @@ private class ByteFlob(val data: ByteArray, override val name: String, mime: Str
     override fun toString() = "byte://$name;mime=$mimeType"
 }
 
-fun flobOf(name: String, data: ByteArray, mime: String): Flob = ByteFlob(data, name, mime)
+fun flobOf(data: ByteArray, name: String, mime: String): Flob = ByteFlob(data, name, mime)
 
-fun emptyFlob(name: String = "_empty_", mime: String = "") = flobOf(name, ByteArray(0), mime)
+fun emptyFlob(name: String = "_empty_", mime: String = "") = flobOf(ByteArray(0), name, mime)
 
 private class VdmFlob(val reader: VdmReader, val entry: VdmEntry, mime: String) : DisposableSupport(), Flob {
     init {

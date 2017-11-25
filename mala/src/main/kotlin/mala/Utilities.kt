@@ -46,7 +46,7 @@ open class MalaSettings(name: String, load: Boolean = true, sync: Boolean = true
             Files.newBufferedReader(file).use { load(it) }
         }
         if (sync) {
-            App.registerCleanup({
+            App.registerCleanup {
                 if (Files.notExists(file.parent)) {
                     try {
                         Files.createDirectories(file.parent)
@@ -57,7 +57,7 @@ open class MalaSettings(name: String, load: Boolean = true, sync: Boolean = true
                 } else {
                     Files.newBufferedWriter(file).use { sync(it) }
                 }
-            })
+            }
         }
     }
 
@@ -81,7 +81,7 @@ open class AppSettings(name: String = "config/general.ini") : MalaSettings(name)
     private val blacklist = Paths.get(App.home, "config/blacklist.txt")
 
     init {
-        App.registerCleanup({
+        App.registerCleanup {
             if (Files.notExists(blacklist.parent)) {
                 try {
                     Files.createDirectories(blacklist.parent)
@@ -92,7 +92,7 @@ open class AppSettings(name: String = "config/general.ini") : MalaSettings(name)
             } else {
                 Files.write(blacklist, pluginBlacklist)
             }
-        })
+        }
     }
 
     var logLevel by delegate(Log.level, "app.log.level")

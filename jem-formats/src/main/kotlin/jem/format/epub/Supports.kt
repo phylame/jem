@@ -18,13 +18,14 @@
 
 package jem.format.epub
 
+import jclp.io.slashify
 import jem.epm.EpmFactory
 import jem.epm.Maker
 import jem.epm.Parser
 import java.nio.file.Path
 
 internal val Path.vdmPath
-    get() = normalize().toString().replace('\\', '/')
+    get() = normalize().toString().slashify()
 
 internal object EPUB {
     const val MIME_PATH = "mimetype"

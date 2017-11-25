@@ -34,18 +34,20 @@ import org.jsoup.select.Elements
 
 internal object M : Linguist("!jem/crawler/messages")
 
-fun fetchSoup(url: String, method: String, settings: Settings?): Document = connectLoop(url, settings) {
-    Jsoup.connect(url)
-            .userAgent(settings.userAgent)
-            .timeout(settings.connectTimeout)
-            .header("Accept-Encoding", "gzip,deflate").let {
-        if (method.equals("get", true)) it.get() else it.post()
-    }
-}
+fun fetchSoup(url: String, method: String, settings: Settings?): Document =
+        connectLoop(url, settings) {
+            with(Jsoup.connect(url)) {
+                userAgent(settings.userAgent)
+                timeout(settings.connectTimeout)
+                header("Accept-Encoding", "gzip,deflate")
+                if (method.equals("get", true)) get() else post()
+            }
+        }
 
-fun fetchJson(url: String, method: String, settings: Settings?) = openConnection(url, method, settings).let {
-    JSONObject(it.openReader(settings).use { it.readText() })
-}
+fun fetchJson(url: String, method: String, settings: Settings?) =
+        openConnection(url, method, settings).let { conn ->
+            JSONObject(conn.openReader(settings).use { it.readText() })
+        }
 
 class CrawlerFlob(
         private val url: String, private val method: String, private val settings: Settings?, mime: String = ""
@@ -68,20 +70,23 @@ fun Elements.selectImage(query: String) = select(query).firstOrNull()?.absUrl("s
 fun Element.subText(index: Int): String {
     var i = 0
     return childNodes()
+            .asSequence()
             .filterIsInstance<TextNode>()
             .map { it.text().htmlTrim() }
             .firstOrNull { it.isNotEmpty() && index == i++ }
             ?: ""
 }
 
-fun Element.joinText(separator: String) = childNodes().map {
-    when (it) {
-        is TextNode -> it.text().htmlTrim()
-        is Element -> it.text().htmlTrim()
-        else -> ""
-    }
-}.filter(String::isNotEmpty).joinToString(separator)
+fun Element.joinText(separator: String) =
+        childNodes().asSequence().map {
+            when (it) {
+                is TextNode -> it.text().htmlTrim()
+                is Element -> it.text().htmlTrim()
+                else -> ""
+            }
+        }.filter {
+            it.isNotEmpty()
+        }.joinToString(separator)
 
-fun Elements.joinText(separator: String) = map {
-    it.joinText(separator)
-}.joinToString(separator)
+fun Elements.joinText(separator: String) =
+        asSequence().map { it.joinText(separator) }.joinToString(separator)

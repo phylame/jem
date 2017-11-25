@@ -32,13 +32,12 @@ fun String.quote(encoding: String = "UTF-8"): String = URLEncoder.encode(this, e
 fun Map<String, String>.joinToQuery(encoding: String = "UTF-8"): String =
         entries.joinToString("&") { "${it.key.quote(encoding)}=${it.value.quote(encoding)}" }
 
-fun URLConnection.actualStream(): InputStream {
-    return if (getHeaderField("Content-Encoding")?.contains("gzip", true) == true) {
-        GZIPInputStream(getInputStream())
-    } else {
-        getInputStream()
-    }
-}
+fun URLConnection.actualStream(): InputStream =
+        if (getHeaderField("Content-Encoding")?.contains("gzip", true) == true) {
+            GZIPInputStream(getInputStream())
+        } else {
+            getInputStream()
+        }
 
 data class HttpRequest(private val url: String, private val method: String = "GET") {
     var encoding = "UTF-8"

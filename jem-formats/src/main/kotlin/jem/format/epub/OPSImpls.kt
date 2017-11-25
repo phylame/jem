@@ -22,7 +22,7 @@ import jclp.io.Flob
 import jclp.setting.Settings
 import jclp.vdm.VdmWriter
 import jclp.vdm.useStream
-import jclp.vdm.write
+import jclp.vdm.writeFlob
 import jem.format.util.XmlRender
 
 private const val CONTAINER_PATH = "META-INF/container.xml"
@@ -64,6 +64,6 @@ private fun classifyPath(name: String, mime: String) = when {
 
 fun VdmWriter.writeToOps(flob: Flob, name: String): String {
     val path = classifyPath(name, flob.mimeType)
-    write(opsPathOf(path), flob)
+    writeFlob(opsPathOf(path), flob)
     return path
 }

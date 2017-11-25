@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package jem.scj.addon
+package jem.scj.plugin
 
 //
 //class CrawlerPlus : SCJPlugin, CrawlerListener {

@@ -20,6 +20,7 @@ package jem.crawler.ext
 
 import jclp.io.Flob
 import jclp.io.flobOf
+import jclp.log.Log
 import jclp.setting.Settings
 import jclp.text.*
 import jdk.nashorn.api.scripting.ScriptObjectMirror
@@ -39,7 +40,9 @@ import javax.script.ScriptEngineManager
 
 private val charset = Charset.forName("GBK")
 
-class ZXCHMParser : EpmFactory, Parser {
+class ZxChmParser : EpmFactory, Parser {
+    private val tagId = javaClass.simpleName
+
     override val keys = setOf("zxchm")
 
     override val name = "ZhiXuan CHM"
@@ -47,6 +50,7 @@ class ZXCHMParser : EpmFactory, Parser {
     override val parser = this
 
     private val engine by lazy {
+        Log.t(tagId) { "find script engine for JavaScript..." }
         ScriptEngineManager().getEngineByExtension("js")
     }
 
@@ -76,6 +80,7 @@ class ZXCHMParser : EpmFactory, Parser {
             throw NoSuchFileException(path.toString())
         }
         Files.newBufferedReader(path, charset).use {
+            Log.t(tagId) { "eval 'page.js'..." }
             engine.eval(it)
             val pages = engine.get("pages")
             if (pages !is ScriptObjectMirror || !pages.isArray) {

@@ -20,8 +20,8 @@ package jem.crawler
 
 import jclp.chooseAny
 import jclp.io.HttpRequest
-import jclp.io.openResource
 import jclp.io.actualStream
+import jclp.io.openResource
 import jclp.setting.Settings
 import jclp.setting.getInt
 import jclp.setting.getString
@@ -43,9 +43,7 @@ val Settings?.charset inline get() = this?.getString("crawler.net.charset") ?: "
 
 inline fun <R> connectLoop(url: String, settings: Settings?, block: () -> R): R {
     for (i in 1..settings.connectTimes) {
-        if (Thread.interrupted()) {
-            throw InterruptedIOException()
-        }
+        if (Thread.interrupted()) throw InterruptedIOException()
         try {
             return block()
         } catch (ignored: SocketTimeoutException) {
@@ -60,9 +58,7 @@ fun openConnection(url: String, method: String, settings: Settings?): URLConnect
         properties["Accept-Encoding"] = "gzip,deflate"
         connectTimeout = settings.connectTimeout
     }
-    return connectLoop(url, settings) {
-        request.connect()
-    }
+    return connectLoop(url, settings) { request.connect() }
 }
 
 fun URLConnection.openReader(settings: Settings?): Reader {

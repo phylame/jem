@@ -1,13 +1,13 @@
 # list class path of plugin here
 
 # View app information
-jem.scj.addon.AppInspector
+jem.scj.plugin.AppInspector
 
 # Run script file in SCJ context
-jem.scj.addon.ScriptRunner
+jem.scj.plugin.ScriptRunner
 
 # Create new book
-jem.scj.addon.BookCreator
+jem.scj.plugin.BookCreator
 
 # Crawler Plus
-#jem.scj.addon.CrawlerPlus
+#jem.scj.plugin.CrawlerPlus

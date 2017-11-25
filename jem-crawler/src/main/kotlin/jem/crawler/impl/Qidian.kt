@@ -25,7 +25,6 @@ import jem.crawler.*
 import org.jsoup.nodes.Document
 import jem.crawler.M as T
 
-
 class Qidian : AbstractCrawler() {
     override val name = T.tr("qidian.com");
 

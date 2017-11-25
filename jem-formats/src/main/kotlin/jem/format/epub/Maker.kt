@@ -30,6 +30,7 @@ import jclp.text.Text
 import jclp.text.TextWrapper
 import jclp.vdm.VdmWriter
 import jclp.vdm.useStream
+import jclp.vdm.writeBytes
 import jem.*
 import jem.epm.VdmMaker
 import jem.format.util.M
@@ -50,7 +51,7 @@ internal object EpubMaker : VdmMaker {
     }
 
     private fun writeEPUBv2(book: Book, writer: VdmWriter, settings: Settings?) {
-        writer.useStream(EPUB.MIME_PATH) { it.write(EPUB.MIME_EPUB.toByteArray()) }
+        writer.writeBytes(EPUB.MIME_PATH, EPUB.MIME_EPUB.toByteArray())
 
         val opf = OPFBuilder(book, writer, settings)
         val ncx = NCXBuilder(book, writer, settings, opf)
@@ -58,9 +59,8 @@ internal object EpubMaker : VdmMaker {
 
         toc.make()
         ncx.make()
-        val path = opf.make().vdmPath
 
-        writeContainer(writer, settings, mapOf(path to EPUB.MIME_OPF))
+        writeContainer(writer, settings, mapOf(opf.make().vdmPath to EPUB.MIME_OPF))
     }
 }
 

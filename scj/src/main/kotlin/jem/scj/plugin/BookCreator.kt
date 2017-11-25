@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package jem.scj.addon
+package jem.scj.plugin
 
 import jem.scj.newBook
 import jem.scj.outParam

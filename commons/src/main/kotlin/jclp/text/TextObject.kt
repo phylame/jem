@@ -43,7 +43,7 @@ interface Text : Iterable<String> {
     }
 }
 
-open class TextWrapper(val text: Text) : Text {
+open class TextWrapper(protected val text: Text) : Text {
     override val type = text.type
 
     override fun toString() = text.toString()

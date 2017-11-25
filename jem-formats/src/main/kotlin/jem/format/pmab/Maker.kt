@@ -26,11 +26,10 @@ import jclp.setting.getString
 import jclp.text.ConverterManager
 import jclp.text.TEXT_PLAIN
 import jclp.text.Text
-import jclp.vdm.VdmWriter
-import jclp.vdm.useStream
-import jclp.vdm.write
+import jclp.vdm.*
 import jem.Book
 import jem.Chapter
+import jem.epm.EXTENSION_FILE_INFO
 import jem.epm.VdmMaker
 import jem.format.util.XmlRender
 import jem.format.util.failMaker
@@ -52,24 +51,22 @@ internal object PmabMaker : VdmMaker {
     }
 
     private fun writePMABv3(data: Local) {
-        data.writer.useStream(PMAB.MIME_PATH) {
-            it.write(PMAB.MIME_PMAB.toByteArray())
-        }
+        data.writer.writeBytes(PMAB.MIME_PATH, PMAB.MIME_PMAB.toByteArray())
         writePBMv3(data)
         writePBCv3(data)
     }
 
     private fun writePBMv3(data: Local) {
-        data.beginXml("pbm", "3.0", PMAB.PBM_XMLNS).let {
+        data.beginXml("pbm", "3.0", PMAB.PBM_XMLNS).let { out ->
             writeMetadata(data)
             writeItems(data.book.attributes, "attributes", "m-", data)
             writeItems(data.book.extensions, "extensions", "x-", data)
-            data.endXml(it, PMAB.PBM_PATH)
+            data.endXml(out, PMAB.PBM_PATH)
         }
     }
 
     private fun writePBCv3(data: Local) {
-        data.beginXml("pbc", "3.0", PMAB.PBC_XMLNS).let {
+        data.beginXml("pbc", "3.0", PMAB.PBC_XMLNS).let { out ->
             with(data.render) {
                 beginTag("nav")
                 data.book.forEachIndexed { i, chapter ->
@@ -77,7 +74,7 @@ internal object PmabMaker : VdmMaker {
                 }
                 endTag()
             }
-            data.endXml(it, PMAB.PBC_PATH)
+            data.endXml(out, PMAB.PBC_PATH)
         }
     }
 
@@ -88,7 +85,7 @@ internal object PmabMaker : VdmMaker {
             writeItems(chapter.attributes, "attributes", prefix + "-", data)
             chapter.text?.let {
                 beginTag("content")
-                attribute("type", typeOf(it, data))
+                attribute("type", textType(it, data))
                 text(writeText(it, prefix, data))
                 endTag()
             }
@@ -117,7 +114,7 @@ internal object PmabMaker : VdmMaker {
         with(data.render) {
             beginTag(tag)
             for ((name, value) in map) {
-                if (!name.startsWith("!--")) {
+                if (!name.startsWith("!--") && name != EXTENSION_FILE_INFO) {
                     writeItem(name, value, prefix, data)
                 }
             }
@@ -132,7 +129,7 @@ internal object PmabMaker : VdmMaker {
             var type: String = TypeManager.STRING
             val text = when (value) {
                 is Text -> {
-                    type = typeOf(value, data)
+                    type = textType(value, data)
                     writeText(value, prefix + name, data)
                 }
                 is Flob -> {
@@ -168,15 +165,15 @@ internal object PmabMaker : VdmMaker {
 
     private fun writeFlob(flob: Flob, name: String, data: Local): String {
         val path = "resources/$name.${extName(flob.name).takeIf { it.isNotEmpty() } ?: "dat"}"
-        data.writer.write(path, flob)
+        data.writer.writeFlob(path, flob)
         return path
     }
 
-    private fun typeOf(text: Text, data: Local) = "text/${text.type};encoding=${data.charset}"
+    private fun textType(text: Text, data: Local) = "text/${text.type};encoding=${data.charset}"
 
     private fun writeText(text: Text, name: String, data: Local): String {
         val path = "text/$name.${if (text.type == TEXT_PLAIN) "txt" else text.type}"
-        data.writer.write(path, text, data.charset)
+        data.writer.writeText(path, text, data.charset)
         return path
     }
 
@@ -200,7 +197,7 @@ internal object PmabMaker : VdmMaker {
 
         fun endXml(buffer: ByteArrayOutputStream, path: String) {
             render.endTag().endXml()
-            writer.useStream(path, buffer::writeTo)
+            writer.useStream(path) { buffer.writeTo(it) }
         }
     }
 }

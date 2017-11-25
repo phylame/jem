@@ -76,16 +76,16 @@ inline fun parseTime(text: String, format: String, error: () -> String): LocalTi
 fun xmlAttribute(xpp: XmlPullParser, name: String, where: Any, namespace: String? = null): String =
         xpp.getAttributeValue(namespace, name) ?: failParser("err.parser.noAttribute", name, xpp.name, where, xpp.lineNumber)
 
-inline fun withXml(xpp: XmlPullParser, where: Any, action: (Boolean, StringBuilder) -> Boolean) {
+inline fun useXmlLoop(xpp: XmlPullParser, where: Any, action: (Boolean, StringBuilder) -> Boolean) {
     var hasText = false
-    val b = StringBuilder()
+    val buf = StringBuilder()
     try {
         var event = xpp.eventType
         do {
             when (event) {
-                XmlPullParser.START_TAG -> hasText = action(true, b)
-                XmlPullParser.END_TAG -> b.let { action(false, it); it.setLength(0) }
-                XmlPullParser.TEXT -> if (hasText) b.append(xpp.text)
+                XmlPullParser.START_TAG -> hasText = action(true, buf)
+                XmlPullParser.END_TAG -> buf.let { action(false, it); it.setLength(0) }
+                XmlPullParser.TEXT -> if (hasText) buf.append(xpp.text)
             }
             event = xpp.next()
         } while (event != XmlPullParser.END_DOCUMENT)

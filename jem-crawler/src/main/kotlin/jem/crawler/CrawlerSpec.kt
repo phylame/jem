@@ -34,7 +34,7 @@ interface Crawler {
     fun getBook(url: String, settings: Settings?): Book
 
     fun getText(url: String, settings: Settings?): String {
-        TODO()
+        throw NotImplementedError()
     }
 }
 
@@ -52,14 +52,12 @@ abstract class AbstractCrawler : Crawler, CrawlerFactory {
     override fun getCrawler(): Crawler = this
 
     protected open fun fetchPage(page: Int, arg: Any): Int {
-        throw UnsupportedOperationException("Not Implemented")
+        throw NotImplementedError()
     }
 
     protected fun fetchToc(arg: Any) {
         for (i in 2 until fetchPage(1, arg)) {
-            if (Thread.interrupted()) {
-                throw InterruptedIOException()
-            }
+            if (Thread.interrupted()) throw InterruptedIOException()
             fetchPage(i, arg)
         }
     }
@@ -69,6 +67,8 @@ class CrawlerParser : EpmFactory, Parser {
     override val name = "Book Crawler"
 
     override val keys = setOf("crawler")
+
+    override val hasParser = true
 
     override val parser = this
 

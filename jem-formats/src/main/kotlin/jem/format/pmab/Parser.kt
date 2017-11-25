@@ -32,6 +32,7 @@ import jclp.vdm.VdmEntry
 import jclp.vdm.VdmReader
 import jclp.vdm.readText
 import jem.*
+import jem.epm.EXTENSION_FILE_INFO
 import jem.epm.VdmParser
 import jem.format.util.*
 import org.xmlpull.v1.XmlPullParser
@@ -53,6 +54,7 @@ internal object PmabParser : VdmParser {
                 cleanup()
                 throw e
             }
+            extensions[EXTENSION_FILE_INFO] = data.meta
         }
     }
 
@@ -61,7 +63,7 @@ internal object PmabParser : VdmParser {
         val xpp = data.newXpp()
         data.openStream(PMAB.PBM_PATH).use {
             xpp.setInput(it, null)
-            withXml(xpp, PMAB.PBM_PATH) { begin, sb ->
+            useXmlLoop(xpp, PMAB.PBM_PATH) { begin, buf ->
                 if (begin) {
                     var hasText = false
                     when {
@@ -72,7 +74,7 @@ internal object PmabParser : VdmParser {
                     hasText
                 } else {
                     when (version) {
-                        3 -> endPBMv3(xpp.name, sb, data)
+                        3 -> endPBMv3(xpp.name, buf, data)
                     }
                     false
                 }
@@ -85,7 +87,7 @@ internal object PmabParser : VdmParser {
         val xpp = data.newXpp()
         data.openStream(PMAB.PBC_PATH).use {
             xpp.setInput(it, null)
-            withXml(xpp, PMAB.PBC_PATH) { start, sb ->
+            useXmlLoop(xpp, PMAB.PBC_PATH) { start, buf ->
                 if (start) {
                     var hasText = false
                     when {
@@ -96,7 +98,7 @@ internal object PmabParser : VdmParser {
                     hasText
                 } else {
                     when (version) {
-                        3 -> endPBCv3(xpp.name, sb, data)
+                        3 -> endPBCv3(xpp.name, buf, data)
                     }
                     false
                 }
@@ -104,10 +106,10 @@ internal object PmabParser : VdmParser {
         }
     }
 
-    private fun beginPBMv3(tag: String, data: Local): Boolean {
+    private fun beginPBMv3(tagName: String, data: Local): Boolean {
         val xpp = data.xpp
         var hasText = false
-        when (tag) {
+        when (tagName) {
             "item" -> {
                 data.itemName = data.xmlAttribute("name")
                 data.itemType = xpp.getAttributeValue(null, "type")
@@ -116,24 +118,23 @@ internal object PmabParser : VdmParser {
             "attributes" -> data.values = data.book.attributes
             "extensions" -> data.values = data.book.extensions
             "meta" -> data.meta[data.xmlAttribute("name")] = data.xmlAttribute("value")
-            "head" -> data.meta = hashMapOf()
         }
         return hasText
     }
 
-    private fun endPBMv3(tag: String, sb: StringBuilder, data: Local) {
-        if (tag == "item") {
-            parseItem(sb.toString().trim(), data).also {
+    private fun endPBMv3(tagName: String, buf: StringBuilder, data: Local) {
+        if (tagName == "item") {
+            parseItem(buf.toString().trim(), data).let {
                 data.values[data.itemName] = it
                 it.release()
             }
         }
     }
 
-    private fun beginPBCv3(tag: String, data: Local): Boolean {
+    private fun beginPBCv3(tagName: String, data: Local): Boolean {
         val xpp = data.xpp
         var hasText = false
-        when (tag) {
+        when (tagName) {
             "item" -> {
                 data.itemName = data.xmlAttribute("name")
                 data.itemType = xpp.getAttributeValue(null, "type")
@@ -148,14 +149,14 @@ internal object PmabParser : VdmParser {
         return hasText
     }
 
-    private fun endPBCv3(tag: String, sb: StringBuilder, data: Local) {
-        when (tag) {
+    private fun endPBCv3(tagName: String, buf: StringBuilder, data: Local) {
+        when (tagName) {
             "chapter" -> data.chapter = data.chapter.parent!!
-            "item" -> parseItem(sb.toString().trim(), data).also {
+            "item" -> parseItem(buf.toString().trim(), data).let {
                 data.chapter[data.itemName] = it
                 it.release()
             }
-            "content" -> (parseItem(sb.toString().trim(), data) as Text).also {
+            "content" -> (parseItem(buf.toString().trim(), data) as Text).let {
                 data.chapter.text = it
                 it.release()
             }
@@ -182,7 +183,7 @@ internal object PmabParser : VdmParser {
             TypeManager.STRING, "" -> text
             TypeManager.REAL -> parseDouble(text) { data.xmlPosition() }
             TypeManager.BOOLEAN -> text.toBoolean()
-            TypeManager.INTEGER, "unit" -> parseInt(text) { data.xmlPosition() }
+            TypeManager.INTEGER, "uint" -> parseInt(text) { data.xmlPosition() }
             TypeManager.LOCALE -> Locale.forLanguageTag(text.replace('_', '-'))
             TypeManager.DATETIME -> {
                 val format = data.getConfig("datetimeFormat") ?: itemType.valueFor("format") ?: ""
@@ -215,11 +216,12 @@ internal object PmabParser : VdmParser {
         }
     }
 
-    private fun getVersion(xpp: XmlPullParser, key: String, data: Local) = data.xmlAttribute("version").let {
+    private fun getVersion(xpp: XmlPullParser, error: String, data: Local) = data.xmlAttribute("version").let {
+        data.meta["version"] = it
         when (it) {
             "3.0" -> 3
             "2.0" -> 2
-            else -> failParser(key, it, xpp.lineNumber, data.entry)
+            else -> failParser(error, it, xpp.lineNumber, data.entry)
         }
     }
 
@@ -232,7 +234,7 @@ internal object PmabParser : VdmParser {
 
         lateinit var values: ValueMap
 
-        lateinit var meta: MutableMap<String, String>
+        val meta = hashMapOf<String, String>()
 
         lateinit var xpp: XmlPullParser
 

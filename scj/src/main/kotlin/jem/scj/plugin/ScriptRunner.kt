@@ -37,6 +37,7 @@ import javax.script.ScriptEngineManager
 import javax.script.ScriptException
 
 class ScriptRunner : SCJAddon(), SCJPlugin {
+
     override val name = "Script Runner"
 
     override val description = tr("addon.runner.desc")

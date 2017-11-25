@@ -32,8 +32,8 @@ startScripts {
 
 dependencies {
     compile project(':jem-core')
-    runtime project(':jem-crawler')
-    runtime project(':jem-formats')
+    compile project(':jem-crawler')
+    compile project(':jem-formats')
     compile project(':mala')
 }
 

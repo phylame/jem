@@ -28,7 +28,8 @@ import jem.epm.ParserException
 import java.io.InterruptedIOException
 import java.net.URL
 
-class CrawlerBook : Book()
+const val ATTR_SOURCE_URL = "source"
+const val ATTR_LAST_UPDATE = "update"
 
 interface Crawler {
     fun getBook(url: String, settings: Settings?): Book
@@ -74,7 +75,7 @@ class CrawlerParser : EpmFactory, Parser {
 
     override fun parse(input: String, arguments: Settings?): Book {
         return CrawlerManager.fetchBook(input, arguments)?.apply {
-            set("source", input)
+            set(ATTR_SOURCE_URL, input)
         } ?: throw ParserException(M.tr("err.crawler.unsupported", input))
     }
 }

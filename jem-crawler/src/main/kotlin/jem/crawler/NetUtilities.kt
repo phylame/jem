@@ -54,6 +54,7 @@ inline fun <R> connectLoop(url: String, settings: Settings?, block: () -> R): R 
 
 fun openConnection(url: String, method: String, settings: Settings?): URLConnection {
     val request = HttpRequest(url, method).apply {
+        isDoInput = true
         properties["User-Agent"] = settings.userAgent
         properties["Accept-Encoding"] = "gzip,deflate"
         connectTimeout = settings.connectTimeout

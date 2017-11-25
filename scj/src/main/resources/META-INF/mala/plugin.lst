@@ -10,4 +10,4 @@ jem.scj.plugin.ScriptRunner
 jem.scj.plugin.BookCreator
 
 # Crawler Plus
-#jem.scj.plugin.CrawlerPlus
+jem.scj.plugin.CrawlerPlus

@@ -18,67 +18,100 @@
 
 package jem.scj.plugin
 
-//
-//class CrawlerPlus : SCJPlugin, CrawlerListener {
-//    private val threadPool = lazy {
-//        val threads = SCISettings.get("crawler.maxThread", Int::class.java) as? Int
-//        Executors.newFixedThreadPool(threads ?: Runtime.getRuntime().availableProcessors() * 8)
-//    }
-//
-//    private val printCenter = lazy {
-//        Executors.newSingleThreadExecutor()
-//    }
-//
-//    private var totals: AtomicInteger = AtomicInteger()
-//
-//    private var current: AtomicInteger = AtomicInteger()
-//
-//    override val meta = mapOf("name" to "Crawler Plus")
-//
-//    init {
-//        Supports.attachTranslator()
-//        Option.builder()
-//                .longOpt("list-crawlers")
-//                .desc(tr("opt.listCrawlers.desc"))
-//                .action { _ ->
-//                    println(tr("listCrawlers.legend"))
-//                    SCI.crawlerManager.services.forEach {
-//                        println(tr("listCrawlers.name", it.name))
-//                        println(tr("listCrawlers.hosts", it.names.joinToString(", ")))
-//                        println("-" * 64)
-//                    }
-//                    App.exit(0)
-//                }
-//    }
-//
-//    override fun onOpenBook(param: ParserParam) {
-//        if (param.format == "crawler") {
-//            param.arguments?.set("crawler.listener", this)
-//            param.arguments?.set("crawler.crawlerManager", SCI.crawlerManager)
-//        }
-//    }
-//
-//    override fun onSaveBook(param: MakerParam) {
-//        val book = param.book
-//        if (book is CrawlerBook) {
-//            current.set(1)
-//            book.schedule(threadPool.value)
-//            totals.set(book.totals)
-//        }
-//    }
-//
-//    override fun destroy() {
-//        if (threadPool.isInitialized()) {
-//            threadPool.value.shutdown()
-//        }
-//        if (printCenter.isInitialized()) {
-//            printCenter.value.shutdown()
-//        }
-//    }
-//
-//    override fun textFetched(chapter: Chapter, url: String) {
-//        printCenter.value.submit {
-//            println("${current.getAndIncrement()}/${totals.get()}: ${chapter.title}")
-//        }
-//    }
-//}
+import jclp.setting.getInt
+import jem.Chapter
+import jem.crawler.CRAWLER_LISTENER_KEY
+import jem.crawler.CrawlerManager
+import jem.crawler.CrawlerText
+import jem.crawler.TextListener
+import jem.epm.MakerParam
+import jem.epm.ParserParam
+import jem.scj.SCI
+import jem.scj.SCISettings
+import jem.scj.SCJPlugin
+import jem.title
+import mala.App
+import mala.App.tr
+import mala.cli.ValueSwitcher
+import mala.cli.action
+import mala.cli.command
+import org.apache.commons.cli.Option
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
+
+class CrawlerPlus : SCJAddon(), SCJPlugin, TextListener {
+    override val name = "CrawlerPlus"
+
+    override val description = "Utilities for Jem Crawler"
+
+    override fun init() {
+        Option.builder()
+                .longOpt("list-crawlers")
+                .desc(tr("opt.listCrawlers.desc"))
+                .command {
+                    println(tr("listCrawlers.legend"))
+                    CrawlerManager.services.forEach {
+                        println(tr("listCrawlers.name", it.name))
+                        println(tr("listCrawlers.hosts", it.keys.joinToString(", ")))
+                        println("-".repeat(64))
+                    }
+                    0
+                }
+
+        Option.builder()
+                .longOpt("parallel")
+                .desc(tr("opt.parallel.desc"))
+                .action(ValueSwitcher("parallel"))
+    }
+
+    private val threadPool = lazy {
+        val threads = SCISettings.getInt("crawler.maxThread") ?: Runtime.getRuntime().availableProcessors() * 8
+        Executors.newFixedThreadPool(threads)
+    }
+
+    private val printCenter = lazy { Executors.newSingleThreadExecutor() }
+
+    override fun onOpenBook(param: ParserParam) {
+        if (SCI.context["parallel"] == true && param.epmName == "crawler") {
+            param.arguments?.set(CRAWLER_LISTENER_KEY, this)
+        }
+    }
+
+    override fun onSaveBook(param: MakerParam) {
+        schedule(param.book, Local())
+    }
+
+    private fun schedule(chapter: Chapter, data: Local) {
+        (chapter.text as? CrawlerText)?.let {
+            it.schedule(threadPool.value)
+            data.totals.incrementAndGet()
+            chapter.tag = data
+        }
+        for (stub in chapter) {
+            schedule(stub, data)
+        }
+    }
+
+    override fun onSuccess(url: String, chapter: Chapter) {
+        printCenter.value.submit {
+            val data = chapter.tag as Local
+            App.echo("${data.current.getAndIncrement()}/${data.totals.get()}: ${chapter.title}")
+            chapter.tag = null
+        }
+    }
+
+    override fun destroy() {
+        if (threadPool.isInitialized()) {
+            threadPool.value.shutdown()
+        }
+        if (printCenter.isInitialized()) {
+            printCenter.value.shutdown()
+        }
+    }
+
+    private class Local {
+        val totals = AtomicInteger()
+
+        var current = AtomicInteger(1)
+    }
+}

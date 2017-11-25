@@ -21,12 +21,49 @@ package jclp
 import java.io.CharArrayWriter
 import java.io.PrintWriter
 import java.util.*
+import java.util.concurrent.Callable
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Future
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 val Throwable.dumpToText: String
     get() = with(CharArrayWriter()) {
         printStackTrace(PrintWriter(this))
         toString()
     }
+
+abstract class AsyncTask<out V : Any> {
+    private val lock = Any()
+    private lateinit var value: V
+    private val isDone = AtomicBoolean()
+    private val future = AtomicReference<Future<V>>()
+    private val action = Callable {
+        if (!isDone.get()) {
+            synchronized(lock) {
+                if (!isDone.get()) {
+                    value = handleGet()
+                    isDone.set(true)
+                    future.set(null)
+                }
+            }
+        }
+        value
+    }
+
+    abstract fun handleGet(): V
+
+    // thread safe
+    fun get(): V = if (isDone.get()) value else future.get()?.get() ?: action.call()
+
+    // Non thread safe
+    fun schedule(executor: ExecutorService) {
+        check(future.get() == null) { "Task is already submitted in some executor" }
+        future.set(executor.submit(action))
+    }
+
+    fun reset() = isDone.set(false)
+}
 
 typealias EventAction<T> = (T) -> Unit
 

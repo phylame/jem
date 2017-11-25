@@ -18,19 +18,27 @@
 
 package jem.crawler
 
+import jclp.AsyncTask
 import jclp.Linguist
 import jclp.io.Flob
 import jclp.io.actualStream
 import jclp.io.htmlTrim
 import jclp.io.mimeType
+import jclp.log.Log
 import jclp.setting.Settings
+import jclp.text.TEXT_PLAIN
+import jclp.text.Text
 import jclp.text.or
+import jem.Chapter
 import org.json.JSONObject
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.TextNode
 import org.jsoup.select.Elements
+import java.util.concurrent.ExecutorService
+
+const val CRAWLER_LISTENER_KEY = "crawler.listener"
 
 internal object M : Linguist("!jem/crawler/messages")
 
@@ -50,13 +58,48 @@ fun fetchJson(url: String, method: String, settings: Settings?) =
         }
 
 class CrawlerFlob(
-        private val url: String, private val method: String, private val settings: Settings?, mime: String = ""
+        private val url: String, private val method: String, private val settings: Settings?, name: String = "", mime: String = ""
 ) : Flob {
-    override val name = url
+    override val name = name or url
 
-    override val mimeType = mime or { mimeType(name) }
+    override val mimeType = mime or { mimeType(this.name) }
 
     override fun openStream() = openConnection(url, method, settings).actualStream()
+
+    override fun toString(): String = "$url;mime=$mimeType"
+}
+
+interface TextListener {
+    fun onStart(url: String, chapter: Chapter) {}
+
+    fun onSuccess(url: String, chapter: Chapter) {}
+
+    fun onError(t: Throwable, url: String, chapter: Chapter) {}
+}
+
+class CrawlerText(val url: String, val chapter: Chapter, val crawler: Crawler, val settings: Settings?) : Text {
+    override val type = TEXT_PLAIN
+
+    override fun toString() = task.get()
+
+    fun schedule(executor: ExecutorService) {
+        task.schedule(executor)
+    }
+
+    private val listener = settings?.get(CRAWLER_LISTENER_KEY) as? TextListener
+
+    private val task = object : AsyncTask<String>() {
+        override fun handleGet(): String {
+            listener?.onStart(url, chapter)
+            return try {
+                crawler.getText(url, settings).also { listener?.onSuccess(url, chapter) }
+            } catch (e: Exception) {
+                Log.e("CrawlerText", e) { "Cannot fetch text from $url" }
+                listener?.onError(e, url, chapter)
+                ""
+            }
+        }
+    }
 }
 
 fun Element.selectText(query: String, separator: String = "") = select(query).joinText(separator)
@@ -69,16 +112,14 @@ fun Elements.selectImage(query: String) = select(query).firstOrNull()?.absUrl("s
 
 fun Element.subText(index: Int): String {
     var i = 0
-    return childNodes()
-            .asSequence()
-            .filterIsInstance<TextNode>()
+    return textNodes()
             .map { it.text().htmlTrim() }
             .firstOrNull { it.isNotEmpty() && index == i++ }
             ?: ""
 }
 
 fun Element.joinText(separator: String) =
-        childNodes().asSequence().map {
+        childNodes().map {
             when (it) {
                 is TextNode -> it.text().htmlTrim()
                 is Element -> it.text().htmlTrim()
@@ -89,4 +130,4 @@ fun Element.joinText(separator: String) =
         }.joinToString(separator)
 
 fun Elements.joinText(separator: String) =
-        asSequence().map { it.joinText(separator) }.joinToString(separator)
+        map { it.joinText(separator) }.joinToString(separator)

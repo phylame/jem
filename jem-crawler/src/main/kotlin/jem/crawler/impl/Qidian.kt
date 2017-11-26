@@ -18,16 +18,23 @@
 
 package jem.crawler.impl
 
+import jclp.io.baseName
 import jclp.setting.Settings
 import jclp.text.remove
 import jclp.text.textOf
+import jclp.toLocalDateTime
+import jclp.toLocalTime
 import jem.*
 import jem.crawler.*
+import org.json.JSONArray
+import org.json.JSONObject
 import org.jsoup.nodes.Document
+import java.time.LocalDate
+import java.time.LocalDateTime
 import jem.crawler.M as T
 
 class Qidian : AbstractCrawler() {
-    override val name = T.tr("qidian.com");
+    override val name = T.tr("qidian.com")
 
     override val keys = setOf("book.qidian.com", "m.qidian.com")
 
@@ -38,31 +45,39 @@ class Qidian : AbstractCrawler() {
             url.replace("#Catalog", "")
         }
         val book = Book()
+        val extensions = book.extensions
+        extensions[EXT_CRAWLER_SOURCE_SITE] = "qidian"
+
+        val bookId = baseName(url)
+        extensions[EXT_CRAWLER_BOOK_ID] = bookId
+
         val soup = fetchSoup(path, "get", settings)
 
-        var stub = soup.select("div.book-information")
-
+        var stub = soup.selectFirst("div.book-information")
         stub.selectImage("img")?.replace("180", "600")?.let { src ->
             book.cover = CrawlerFlob(src, "get", settings, "cover.jpg", "image/jpeg")
         }
-        stub = stub.select("div.book-info")
-        book.title = stub.select("h1 em").text()
-        book.author = stub.select("h1 a").text()
-        book.state = stub.select("p.tag span:eq(0)").text()
+        stub = stub.selectFirst("div.book-info")
+        book.title = stub.selectFirst("h1 em").text()
+        book.author = stub.selectFirst("h1 a").text()
+        book.state = stub.selectFirst("p.tag span:eq(0)").text()
         book.genre = stub.selectText("p.tag a", "/")
-        book["brief"] = stub.select("p.intro").text()
+        book["brief"] = stub.selectFirst("p.intro").text()
         book.words = stub.select("p em:eq(0), p cite:eq(1)").text().remove(" ")
         book.intro = textOf(soup.selectText("div.book-intro p", System.lineSeparator()))
         book[KEYWORDS] = soup.selectText("p.tag-wrap a", Attributes.VALUE_SEPARATOR)
-        book[ATTR_LAST_UPDATE] = (soup.select("li.update a").text())
-        getContents(book, soup, settings)
+
+        extensions[EXT_CRAWLER_LAST_CHAPTER] = soup.selectFirst("li.update a").text()
+        extensions[EXT_CRAWLER_UPDATE_TIME] = parseTime(soup.selectFirst("li.update em").text())
+
+        getContents(book, soup, bookId, settings)
         return book
     }
 
-    private fun getContents(book: Book, soup: Document, settings: Settings?) {
+    private fun getContents(book: Book, soup: Document, bookId: String, settings: Settings?) {
         val toc = soup.select("div.volume-wrap div.volume")
         if (toc.isEmpty()) {
-//            getMobileContents(book, soup.baseUri().substring(soup.baseUri().lastIndexOf("/")), settings)
+            getMobileContents(book, bookId, settings)
             return
         }
         for (div in toc) {
@@ -71,18 +86,43 @@ class Qidian : AbstractCrawler() {
             for (a in div.select("li a")) {
                 val chapter = section.newChapter(a.text())
                 a.attr("title").let {
-                    chapter["updateTime"] = (it.substring(5, 24))
+                    chapter[ATTR_CHAPTER_UPDATE_TIME] = (it.substring(5, 24))
                     chapter.words = it.substring(30)
                 }
                 val url = a.absUrl("href")
                 chapter.text = CrawlerText(url, chapter, this, settings)
-                chapter[ATTR_SOURCE_URL] = url
+                chapter[ATTR_CHAPTER_SOURCE_URL] = url
             }
         }
     }
 
     private fun getMobileContents(book: Book, bookId: String, settings: Settings?) {
+        val baseUrl = "https://m.qidian.com/book/$bookId"
+        val data = fetchString("$baseUrl/catalog", "get", settings)
+        val start = data.indexOf("[{", data.indexOf("g_data.volumes"))
+        for (obj in JSONArray(data.substring(start, data.lastIndexOf("}];") + 2))) {
+            if (obj !is JSONObject) continue
+            val section = book.newChapter(obj.getString("vN"))
+            for (ch in obj.getJSONArray("cs")) {
+                if (ch !is JSONObject) continue
+                val chapter = section.newChapter(ch.getString("cN"))
+                chapter[ATTR_CHAPTER_UPDATE_TIME] = ch.getString("uT")
+                chapter[WORDS] = ch.getInt("cnt").toString()
+                val url = "$baseUrl/${ch.getLong("id")}"
+                chapter.text = CrawlerText(url, chapter, this, settings)
+                chapter[ATTR_CHAPTER_SOURCE_URL] = url
+            }
+        }
+    }
 
+    private fun parseTime(str: String): LocalDateTime {
+        if ('-' in str) {
+            return str.toLocalDateTime()
+        } else if (str.startsWith("今天")) {
+            return LocalDateTime.of(LocalDate.now(), "${str.substring(2, 7)}:00".toLocalTime())
+        } else {
+            return LocalDateTime.of(LocalDate.now().minusDays(1), "${str.substring(2, 7)}:00".toLocalTime())
+        }
     }
 
     override fun getText(url: String, settings: Settings?) = fetchSoup(url, "get", settings).let {

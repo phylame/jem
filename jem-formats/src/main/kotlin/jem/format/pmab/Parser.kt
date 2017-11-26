@@ -32,7 +32,7 @@ import jclp.vdm.VdmEntry
 import jclp.vdm.VdmReader
 import jclp.vdm.readText
 import jem.*
-import jem.epm.EXTENSION_FILE_INFO
+import jem.epm.EXT_EPM_FILE_INFO
 import jem.epm.VdmParser
 import jem.format.util.*
 import org.xmlpull.v1.XmlPullParser
@@ -54,7 +54,7 @@ internal object PmabParser : VdmParser {
                 cleanup()
                 throw e
             }
-            extensions[EXTENSION_FILE_INFO] = data.meta
+            extensions[EXT_EPM_FILE_INFO] = data.meta
         }
     }
 

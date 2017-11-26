@@ -29,7 +29,7 @@ import jclp.text.Text
 import jclp.vdm.*
 import jem.Book
 import jem.Chapter
-import jem.epm.EXTENSION_FILE_INFO
+import jem.epm.EXT_EPM_FILE_INFO
 import jem.epm.VdmMaker
 import jem.format.util.XmlRender
 import jem.format.util.failMaker
@@ -97,7 +97,7 @@ internal object PmabMaker : VdmMaker {
     }
 
     private fun writeMetadata(data: Local) {
-        val values = data.arguments?.get("maker.pmab.meta") as? Map<*, *> ?: return
+        val values = (data.arguments?.get("maker.pmab.meta") ?: data.book.extensions[EXT_EPM_FILE_INFO])as? Map<*, *> ?: return
         with(data.render) {
             beginTag("head")
             for ((key, value) in values) {
@@ -114,7 +114,7 @@ internal object PmabMaker : VdmMaker {
         with(data.render) {
             beginTag(tag)
             for ((name, value) in map) {
-                if (!name.startsWith("!--") && name != EXTENSION_FILE_INFO) {
+                if (!name.startsWith("!--") && name != EXT_EPM_FILE_INFO) {
                     writeItem(name, value, prefix, data)
                 }
             }

@@ -20,15 +20,16 @@ package jem.crawler
 
 import jclp.AsyncTask
 import jclp.Linguist
-import jclp.io.Flob
-import jclp.io.actualStream
-import jclp.io.htmlTrim
-import jclp.io.mimeType
+import jclp.chooseAny
+import jclp.io.*
 import jclp.log.Log
 import jclp.setting.Settings
+import jclp.setting.getInt
+import jclp.setting.getString
 import jclp.text.TEXT_PLAIN
 import jclp.text.Text
 import jclp.text.or
+import jclp.text.valueFor
 import jem.Chapter
 import org.json.JSONObject
 import org.jsoup.Jsoup
@@ -36,11 +37,52 @@ import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.TextNode
 import org.jsoup.select.Elements
+import java.io.InterruptedIOException
+import java.io.Reader
+import java.net.SocketTimeoutException
+import java.net.URLConnection
+import java.nio.charset.Charset
 import java.util.concurrent.ExecutorService
 
 const val CRAWLER_LISTENER_KEY = "crawler.listener"
 
 internal object M : Linguist("!jem/crawler/messages")
+
+val userAgents by lazy {
+    openResource("!jem/crawler/agents.txt")?.reader()?.useLines(Sequence<String>::toList) ?: emptyList()
+}
+
+val Settings?.connectTimes inline get() = this?.getInt("crawler.net.tryTimes") ?: 3
+val Settings?.connectTimeout inline get() = this?.getInt("crawler.net.timeout") ?: 5000
+val Settings?.userAgent inline get() = this?.getString("crawler.net.userAgent") ?: userAgents.chooseAny()
+val Settings?.charset inline get() = this?.getString("crawler.net.charset") ?: "UTF-8"
+
+inline fun <R> connectLoop(url: String, settings: Settings?, block: () -> R): R {
+    for (i in 1..settings.connectTimes) {
+        if (Thread.interrupted()) throw InterruptedIOException()
+        try {
+            return block()
+        } catch (ignored: SocketTimeoutException) {
+        }
+        Log.t("connectLoop") { "try reconnect to $url: ${i + 1}" }
+    }
+    throw SocketTimeoutException("Timeout for $url")
+}
+
+fun openConnection(url: String, method: String, settings: Settings?): URLConnection {
+    val request = HttpRequest(url, method).apply {
+        isDoInput = true
+        properties["User-Agent"] = settings.userAgent
+        properties["Accept-Encoding"] = "gzip,deflate"
+        connectTimeout = settings.connectTimeout
+    }
+    return connectLoop(url, settings) { request.connect() }
+}
+
+fun URLConnection.openReader(settings: Settings?): Reader {
+    val encoding = contentType?.valueFor("charset", ";") ?: settings.charset
+    return actualStream().reader(Charset.forName(encoding))
+}
 
 fun fetchSoup(url: String, method: String, settings: Settings?): Document =
         connectLoop(url, settings) {
@@ -53,9 +95,10 @@ fun fetchSoup(url: String, method: String, settings: Settings?): Document =
         }
 
 fun fetchJson(url: String, method: String, settings: Settings?) =
-        openConnection(url, method, settings).let { conn ->
-            JSONObject(conn.openReader(settings).use { it.readText() })
-        }
+        openConnection(url, method, settings).openReader(settings).use { JSONObject(it.readText()) }
+
+fun fetchString(url: String, method: String, settings: Settings?) =
+        openConnection(url, method, settings).openReader(settings).use { it.readText() }
 
 class CrawlerFlob(
         private val url: String, private val method: String, private val settings: Settings?, name: String = "", mime: String = ""
@@ -102,13 +145,13 @@ class CrawlerText(val url: String, val chapter: Chapter, val crawler: Crawler, v
     }
 }
 
-fun Element.selectText(query: String, separator: String = "") = select(query).joinText(separator)
-
 fun Elements.selectText(query: String, separator: String = "") = select(query).joinText(separator)
 
-fun Element.selectImage(query: String) = select(query).firstOrNull()?.absUrl("src")
+fun Element.selectText(query: String, separator: String = "") = select(query).joinText(separator)
 
 fun Elements.selectImage(query: String) = select(query).firstOrNull()?.absUrl("src")
+
+fun Element.selectImage(query: String) = selectFirst(query)?.absUrl("src")
 
 fun Element.subText(index: Int): String {
     var i = 0

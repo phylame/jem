@@ -49,8 +49,8 @@ fun locateChapter(chapter: Chapter, indices: Collection<Int>) = try {
 fun viewBook(book: Book, names: Collection<String>, settings: ViewSettings) {
     for (name in names) {
         when {
-            name.matches("^#([\\-\\d.]+)(\\$.*)?".toRegex()) -> viewChapter(book, name.substring(1), settings)
-            name.matches("\\+.*".toRegex()) -> viewExtensions(book, listOf(name.substring(1) or { "all" }), settings)
+            name.startsWith("#") -> viewChapter(book, name.substring(1), settings)
+            name.startsWith("+") -> viewExtensions(book, listOf(name.substring(1) or { "all" }), settings)
             else -> viewAttributes(book, listOf(name), settings, false)
         }
     }
@@ -108,7 +108,7 @@ fun viewExtensions(book: Book, names: Collection<String>, settings: ViewSettings
                 values += if (value == null) {
                     tr("view.extPattern", name, "", "")
                 } else {
-                    tr("view.extPattern", name, TypeManager.getType(value) ?: "", TypeManager.printable(value) ?: value.toString())
+                    tr("view.extPattern", name, TypeManager.getType(value) ?: value.javaClass.name, TypeManager.printable(value) ?: value.toString())
                 }
             }
         }

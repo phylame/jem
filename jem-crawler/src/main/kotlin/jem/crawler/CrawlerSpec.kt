@@ -28,8 +28,14 @@ import jem.epm.ParserException
 import java.io.InterruptedIOException
 import java.net.URL
 
-const val ATTR_SOURCE_URL = "source"
-const val ATTR_LAST_UPDATE = "update"
+const val ATTR_CHAPTER_UPDATE_TIME = "updateTime"
+const val ATTR_CHAPTER_SOURCE_URL = "sourceUrl"
+
+const val EXT_CRAWLER_BOOK_ID = "jem.ext.crawler.bookId"
+const val EXT_CRAWLER_SOURCE_URL = "jem.ext.crawler.sourceUrl"
+const val EXT_CRAWLER_SOURCE_SITE = "jem.ext.crawler.sourceSite"
+const val EXT_CRAWLER_LAST_CHAPTER = "jem.ext.crawler.lastChapter"
+const val EXT_CRAWLER_UPDATE_TIME = "jem.ext.crawler.updateTime"
 
 interface Crawler {
     fun getBook(url: String, settings: Settings?): Book
@@ -75,7 +81,7 @@ class CrawlerParser : EpmFactory, Parser {
 
     override fun parse(input: String, arguments: Settings?): Book {
         return CrawlerManager.fetchBook(input, arguments)?.apply {
-            set(ATTR_SOURCE_URL, input)
+            extensions[EXT_CRAWLER_SOURCE_URL] = input
         } ?: throw ParserException(M.tr("err.crawler.unsupported", input))
     }
 }

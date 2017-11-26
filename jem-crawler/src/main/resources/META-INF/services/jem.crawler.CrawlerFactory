@@ -17,3 +17,5 @@
 #
 
 jem.crawler.impl.Qidian
+jem.crawler.impl.Zongheng
+jem.crawler.impl.Motie

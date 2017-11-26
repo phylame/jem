@@ -20,6 +20,9 @@ package jclp
 
 import java.text.ParseException
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 
@@ -55,4 +58,14 @@ fun parseDate(text: String, vararg patterns: String): Date? {
 
 fun Date.format(pattern: String): String = SimpleDateFormat(pattern).format(this)
 
-fun detectDate(text: String) = parseDate(text, DATE_TIME_FORMAT, DATE_FORMAT, TIME_FORMAT)
+fun detectDate(text: String): Date? =
+        parseDate(text, DATE_TIME_FORMAT, DATE_FORMAT, TIME_FORMAT)
+
+fun String.toLocalDate(formatter: DateTimeFormatter = looseISODate): LocalDate =
+        LocalDate.parse(this, formatter)
+
+fun String.toLocalTime(formatter: DateTimeFormatter = looseISOTime): LocalTime =
+        LocalTime.parse(this, formatter)
+
+fun String.toLocalDateTime(formatter: DateTimeFormatter = looseISODateTime): LocalDateTime =
+        LocalDateTime.parse(this, formatter)

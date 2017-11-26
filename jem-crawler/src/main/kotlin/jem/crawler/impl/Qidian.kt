@@ -46,6 +46,7 @@ class Qidian : AbstractCrawler() {
         }
         val book = Book()
         val extensions = book.extensions
+        extensions[EXT_CRAWLER_SOURCE_URL] = path
         extensions[EXT_CRAWLER_SOURCE_SITE] = "qidian"
 
         val bookId = baseName(url)

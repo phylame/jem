@@ -80,8 +80,6 @@ class CrawlerParser : EpmFactory, Parser {
     override val parser = this
 
     override fun parse(input: String, arguments: Settings?): Book {
-        return CrawlerManager.fetchBook(input, arguments)?.apply {
-            extensions[EXT_CRAWLER_SOURCE_URL] = input
-        } ?: throw ParserException(M.tr("err.crawler.unsupported", input))
+        return CrawlerManager.fetchBook(input, arguments) ?: throw ParserException(M.tr("err.crawler.unsupported", input))
     }
 }

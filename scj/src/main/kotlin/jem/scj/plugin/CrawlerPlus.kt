@@ -18,6 +18,7 @@
 
 package jem.scj.plugin
 
+import jclp.log.Log
 import jclp.setting.getInt
 import jem.Chapter
 import jem.crawler.CRAWLER_LISTENER_KEY
@@ -78,7 +79,10 @@ class CrawlerPlus : SCJAddon(), SCJPlugin, TextListener {
     }
 
     override fun onSaveBook(param: MakerParam) {
-        schedule(param.book, Local())
+        if (SCI.context["parallel"] == true) {
+            Log.t("CrawlerPlus") { "parallel mode is enabled" }
+            schedule(param.book, Local())
+        }
     }
 
     private fun schedule(chapter: Chapter, data: Local) {

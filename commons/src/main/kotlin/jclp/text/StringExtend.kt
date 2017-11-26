@@ -24,6 +24,8 @@ infix fun CharSequence?.or(default: CharSequence) = if (!isNullOrEmpty()) toStri
 
 infix inline fun CharSequence?.or(default: () -> CharSequence) = if (!isNullOrEmpty()) toString() else default().toString()
 
+fun String.count(ch: Char) = count { it == ch }
+
 fun String.remove(text: CharSequence) = if (text.isEmpty()) this else replaceFirst(text.toString(), "")
 
 fun String.valueFor(name: String, partSeparator: String = ";", valueSeparator: String = "="): String? {

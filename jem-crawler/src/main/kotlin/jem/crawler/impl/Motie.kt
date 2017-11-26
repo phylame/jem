@@ -20,6 +20,7 @@ package jem.crawler.impl
 
 import jclp.io.baseName
 import jclp.setting.Settings
+import jclp.text.count
 import jclp.text.remove
 import jclp.text.textOf
 import jclp.toLocalDateTime
@@ -41,6 +42,7 @@ class Motie : AbstractCrawler() {
 
         val book = Book()
         val extensions = book.extensions
+        extensions[EXT_CRAWLER_SOURCE_URL] = path
         extensions[EXT_CRAWLER_SOURCE_SITE] = "motie"
 
         val bookId = baseName(path)
@@ -89,11 +91,12 @@ class Motie : AbstractCrawler() {
     }
 
     private fun parseTime(str: String): LocalDateTime {
-        val count = str.count { it == '-' }
+        val count = str.count('-')
         return when {
             count == 2 -> "$str:00".toLocalDateTime()
             count == 1 -> "${LocalDate.now().year}-$str:00".toLocalDateTime()
             str.startsWith("昨天") -> LocalDateTime.of(LocalDate.now().minusDays(1), "${str.substring(2)}:00".toLocalTime())
+            "分钟" in str -> LocalDateTime.now().minusMinutes(str.remove("分钟前").toLong())
             else -> LocalDateTime.of(LocalDate.now(), "${str.substring(2)}:00".toLocalTime())
         }
     }

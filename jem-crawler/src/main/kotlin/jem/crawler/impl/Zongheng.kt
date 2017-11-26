@@ -31,13 +31,14 @@ import jem.crawler.M as T
 class Zongheng : AbstractCrawler() {
     override val name = T.tr("zongheng.com")
 
-    override val keys = setOf("book.zongheng.com", "m.zongheng.com")
+    override val keys = setOf("book.zongheng.com")
 
     override fun getBook(url: String, settings: Settings?): Book {
         val path = url.replace("showchapter", "book")
 
         val book = Book()
         val extensions = book.extensions
+        extensions[EXT_CRAWLER_SOURCE_URL] = path
         extensions[EXT_CRAWLER_SOURCE_SITE] = "zongheng"
 
         val bookId = baseName(path)

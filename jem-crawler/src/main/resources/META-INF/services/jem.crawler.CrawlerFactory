@@ -19,3 +19,5 @@
 jem.crawler.impl.Qidian
 jem.crawler.impl.Zongheng
 jem.crawler.impl.Motie
+jem.crawler.impl.XsSogou
+jem.crawler.impl.Heiyan

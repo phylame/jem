@@ -29,7 +29,7 @@ import java.io.Closeable
 import java.nio.file.Paths
 
 const val PMAB_NAME = "pmab"
-const val PARSER_VDM_TYPE_KEY = "maker.vdm.type"
+const val PARSER_VDM_TYPE_KEY = "parser.vdm.type"
 
 const val MAKER_VDM_TYPE_KEY = "maker.vdm.type"
 const val MAKER_VDM_COMMENT_KEY = "maker.vdm.comment"

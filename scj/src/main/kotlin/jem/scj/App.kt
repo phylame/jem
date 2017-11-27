@@ -77,7 +77,6 @@ object SCI : CDelegate(DefaultParser()) {
     }
 
     override fun onStop() {
-        saveState(SCISettings)
     }
 
     fun processInputs(processor: InputProcessor): Int {

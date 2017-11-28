@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package jem.imabw.editor
+package jem.imabw.ui
 
 import javafx.application.Platform
 import javafx.beans.binding.Bindings
@@ -32,7 +32,6 @@ import jclp.text.textOf
 import jclp.toRoot
 import jem.Chapter
 import jem.imabw.*
-import jem.imabw.ui.Editable
 import jem.title
 import mala.App
 import mala.ixin.CommandHandler
@@ -40,8 +39,8 @@ import mala.ixin.IxIn
 import mala.ixin.resetDisable
 import mala.ixin.toContextMenu
 import org.fxmisc.richtext.LineNumberFactory
+import org.fxmisc.richtext.NavigationActions
 import org.fxmisc.richtext.StyleClassedTextArea
-import org.fxmisc.richtext.model.NavigationActions
 import java.io.File
 import java.util.concurrent.Callable
 

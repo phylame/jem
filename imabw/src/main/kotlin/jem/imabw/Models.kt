@@ -33,7 +33,7 @@ import jem.Book
 import jem.Chapter
 import jem.asBook
 import jem.epm.*
-import jem.imabw.editor.EditorPane
+import jem.imabw.ui.EditorPane
 import jem.imabw.ui.*
 import jem.title
 import mala.App

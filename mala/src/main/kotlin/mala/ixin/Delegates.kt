@@ -33,7 +33,6 @@ import mala.App
 import mala.AppDelegate
 import mala.Plugin
 
-
 interface IPlugin : Plugin {
     fun ready() {}
 }

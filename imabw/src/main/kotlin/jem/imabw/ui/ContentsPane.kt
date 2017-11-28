@@ -35,7 +35,6 @@ import jem.Book
 import jem.Chapter
 import jem.epm.ParserParam
 import jem.imabw.*
-import jem.imabw.editor.EditorPane
 import jem.intro
 import jem.title
 import mala.App

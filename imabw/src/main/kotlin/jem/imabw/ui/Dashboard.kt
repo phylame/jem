@@ -38,8 +38,6 @@ import jem.imabw.Imabw
 import jem.imabw.UISettings
 import jem.imabw.Workbench
 import jem.imabw.WorkflowEvent
-import jem.imabw.editor.ChapterTab
-import jem.imabw.editor.EditorPane
 import jem.title
 import mala.App
 import mala.ixin.*
@@ -220,16 +218,16 @@ object Indicator : HBox() {
             }
             if (new is ChapterTab) {
                 new.editor.also { text ->
-                    InvalidationListener {
-                        updateCaret(text.currentParagraph + 1, text.caretColumn + 1, text.selection.length)
-                    }.let { listener ->
-                        text.properties[this] = listener
-                        text.caretPositionProperty().addListener(listener)
-                        text.selectionProperty().addListener(listener)
-                    }
+//                    InvalidationListener {
+//                        updateCaret(text.currentParagraph + 1, text.caretColumn + 1, text.selection.length)
+//                    }.let { listener ->
+//                        text.properties[this] = listener
+//                        text.caretPositionProperty().addListener(listener)
+//                        text.selectionProperty().addListener(listener)
+//                    }
                     words.isVisible = true
                     words.textProperty().bind(Bindings.convert(text.lengthProperty()))
-                    updateCaret(text.currentParagraph + 1, text.caretColumn + 1, text.selection.length)
+//                    updateCaret(text.currentParagraph + 1, text.caretColumn + 1, text.selection.length)
                 }
                 updateMime(new.chapter.text?.type?.toUpperCase() ?: TEXT_PLAIN.toUpperCase())
             } else {

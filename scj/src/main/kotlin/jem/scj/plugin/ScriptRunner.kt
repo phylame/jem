@@ -128,6 +128,7 @@ class ScriptRunner : SCJAddon(), SCJPlugin {
         engine.put("sci", SCI)
         engine.put("epm", EpmManager)
         engine.put("settings", SCISettings)
+        engine.put(ScriptEngine.FILENAME, file.path)
         App.plugins.with<ScriptPlugin> {
             initEngine(engine)
         }

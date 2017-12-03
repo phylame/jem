@@ -179,6 +179,13 @@ class CrawlerText(val url: String, val chapter: Chapter, val crawler: Crawler, v
     }
 }
 
+fun getOgMeta(head: Element, property: String = "", name: String = ""): String =
+        if (property.isNotEmpty()) {
+            head.selectFirst("meta[property=og:$property]").attr("content")
+        } else {
+            head.selectFirst("meta[name=og:$name]").attr("content")
+        }
+
 fun Elements.selectText(query: String, separator: String = "") = select(query).joinText(separator)
 
 fun Element.selectText(query: String, separator: String = "") = select(query).joinText(separator)
@@ -199,7 +206,7 @@ fun Element.joinText(separator: String) =
         childNodes().map {
             when (it) {
                 is TextNode -> it.text().htmlTrim()
-                is Element -> it.text().htmlTrim()
+                is Element -> it.ownText().htmlTrim()
                 else -> ""
             }
         }.filter {
@@ -207,4 +214,4 @@ fun Element.joinText(separator: String) =
         }.joinToString(separator)
 
 fun Elements.joinText(separator: String) =
-        map { it.joinText(separator) }.joinToString(separator)
+        joinToString(separator) { it.joinText(separator) }

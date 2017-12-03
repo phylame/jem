@@ -18,11 +18,10 @@
 
 package jclp.io
 
+import java.io.File
 import java.io.InputStream
 import java.net.MalformedURLException
 import java.net.URL
-import java.nio.file.Files
-import java.nio.file.Paths
 import java.util.*
 
 fun defaultClassLoader(): ClassLoader =
@@ -31,7 +30,7 @@ fun defaultClassLoader(): ClassLoader =
 fun getResource(path: String, loader: ClassLoader? = null): URL? = when {
     path.isEmpty() -> throw IllegalArgumentException("'path' cannot be empty")
     path.startsWith('!') -> (loader ?: defaultClassLoader()).getResource(path.substring(1))
-    else -> Paths.get(path).takeIf { Files.exists(it) }?.toUri()?.toURL() ?: try {
+    else -> File(path).takeIf { it.exists() }?.toURI()?.toURL() ?: try {
         URL(path)
     } catch (e: MalformedURLException) {
         null

@@ -96,7 +96,7 @@ class ScriptRunner : SCJAddon(), SCJPlugin {
 
     private inline fun runScript(file: File, action: ScriptEngine.() -> Unit): Int {
         val engine = getScriptEngine(file) ?: return -1
-        Log.d(javaClass.simpleName) { "engine $engine detected" }
+        Log.t(javaClass.simpleName) { "engine ${engine.factory.engineName} is detected" }
         action(engine)
         try {
             file.reader().use(engine::eval)

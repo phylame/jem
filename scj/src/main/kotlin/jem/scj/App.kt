@@ -18,10 +18,14 @@
 
 package jem.scj
 
+import jclp.io.Flob
 import jclp.io.extName
+import jclp.io.flobOf
 import jclp.log.Log
 import jclp.log.LogLevel
 import jclp.setting.MapSettings
+import jclp.text.Converter
+import jclp.text.ConverterManager
 import jem.Book
 import jem.Build
 import jem.epm.EpmManager
@@ -72,6 +76,7 @@ object SCI : CDelegate(DefaultParser()) {
 
     override fun onStart() {
         restoreState(SCISettings)
+        initJem()
         appOptions()
         jemOptions()
     }
@@ -80,8 +85,8 @@ object SCI : CDelegate(DefaultParser()) {
     }
 
     fun processInputs(processor: InputProcessor): Int {
-        Log.d(TAG) { "app context: $context" }
-        Log.d(TAG) { "app inputs: $inputs" }
+        Log.t(TAG) { "app context: $context" }
+        Log.t(TAG) { "app inputs: $inputs" }
         if (inputs.isEmpty()) {
             App.error(tr("err.input.empty"))
             return -1
@@ -96,6 +101,16 @@ object SCI : CDelegate(DefaultParser()) {
             }
         }
         return code
+    }
+
+    private fun initJem() {
+        ConverterManager[Flob::class.java] = object : Converter<Flob> {
+            override fun render(value: Flob) = value.toString()
+
+            override fun parse(text: String): Flob {
+                return flobOf(text, App.javaClass.classLoader)
+            }
+        }
     }
 
     private fun appOptions() {

@@ -21,3 +21,5 @@ jem.crawler.impl.Zongheng
 jem.crawler.impl.Motie
 jem.crawler.impl.XsSogou
 jem.crawler.impl.Heiyan
+jem.crawler.impl.Duxia
+jem.crawler.impl.Ybdu

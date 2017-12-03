@@ -25,7 +25,6 @@ import jclp.text.textOf
 import jclp.toLocalDate
 import jem.*
 import jem.crawler.*
-import org.jsoup.nodes.Element
 import jem.crawler.M as T
 
 class Zongheng : AbstractCrawler() {
@@ -46,12 +45,12 @@ class Zongheng : AbstractCrawler() {
         val soup = fetchSoup(path, "get", settings)
 
         val head = soup.head()
-        book.title = getMeta(head, "title")
-        book.author = getMeta(head, name = "novel:author")
-        book.state = getMeta(head, name = "novel:status")
-        book.intro = textOf(getMeta(head, "description").replace("(\\s|\u3000)+".toRegex(), System.lineSeparator()))
-        book.cover = CrawlerFlob(getMeta(head, "image"), "get", settings)
-        book.updateTime = getMeta(head, name = "novel:update_time").toLocalDate()
+        book.title = getOgMeta(head, "title")
+        book.author = getOgMeta(head, name = "novel:author")
+        book.state = getOgMeta(head, name = "novel:status")
+        book.intro = textOf(getOgMeta(head, "description").replace("(\\s|\u3000)+".toRegex(), System.lineSeparator()))
+        book.cover = CrawlerFlob(getOgMeta(head, "image"), "get", settings)
+        book.updateTime = getOgMeta(head, name = "novel:update_time").toLocalDate()
 
         val body = soup.body()
         book.genre = body.attr("categoryName") + (body.attr("childCategoryName")?.let { "/$it" } ?: "")
@@ -84,11 +83,5 @@ class Zongheng : AbstractCrawler() {
                 chapter[ATTR_CHAPTER_SOURCE_URL] = u
             }
         }
-    }
-
-    private fun getMeta(head: Element, property: String = "", name: String = ""): String = if (property.isNotEmpty()) {
-        head.selectFirst("meta[property=og:$property]").attr("content")
-    } else {
-        head.selectFirst("meta[name=og:$name]").attr("content")
     }
 }

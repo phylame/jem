@@ -7,7 +7,6 @@ import jclp.text.textOf
 import jclp.toLocalDateTime
 import jem.*
 import jem.crawler.*
-import org.jsoup.nodes.Element
 import java.time.LocalDate
 import jem.crawler.M as T
 
@@ -29,15 +28,15 @@ class Heiyan : AbstractCrawler() {
         val soup = fetchSoup(path, "get", settings)
 
         val head = soup.head()
-        book.title = getMeta(head, "title")
-        book.author = getMeta(head, "novel:author")
-        book.state = getMeta(head, "novel:status")
-        book.genre = getMeta(head, "novel:category")
-        book.cover = CrawlerFlob(getMeta(head, "image").let { it.substring(0, it.indexOf('@')) }, "get", settings)
-        book.updateTime = getMeta(head, "novel:update_time").let {
+        book.title = getOgMeta(head, "title")
+        book.author = getOgMeta(head, "novel:author")
+        book.state = getOgMeta(head, "novel:status")
+        book.genre = getOgMeta(head, "novel:category")
+        book.cover = CrawlerFlob(getOgMeta(head, "image").let { it.substring(0, it.indexOf('@')) }, "get", settings)
+        book.updateTime = getOgMeta(head, "novel:update_time").let {
             (if (it.count('-') == 2) "$it:00" else "${LocalDate.now().year}-$it:00").toLocalDateTime()
         }
-        book.lastChapter = getMeta(head, "novel:latest_chapter_name")
+        book.lastChapter = getOgMeta(head, "novel:latest_chapter_name")
 
         val stub = soup.selectFirst("div.pattern-cover-detail")
         book.words = stub.selectFirst("span.words").text().removeSuffix("字")
@@ -68,9 +67,5 @@ class Heiyan : AbstractCrawler() {
                 }
             }
         }
-    }
-
-    private fun getMeta(head: Element, name: String): String {
-        return head.selectFirst("meta[property=og:$name]").attr("content")
     }
 }

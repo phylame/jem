@@ -40,13 +40,12 @@ class Motie : AbstractCrawler() {
     override fun getBook(url: String, settings: Settings?): Book {
         val path = url.removeSuffix("#catalog").removeSuffix("#brief")
 
-        val book = Book()
-        val extensions = book.extensions
-        extensions[EXT_CRAWLER_SOURCE_URL] = path
-        extensions[EXT_CRAWLER_SOURCE_SITE] = "motie"
+        val book = CrawlerBook()
+        book.sourceUrl = path
+        book.sourceSite = "motie"
 
         val bookId = baseName(path)
-        extensions[EXT_CRAWLER_BOOK_ID] = bookId
+        book.bookId = bookId
 
         val soup = fetchSoup(path, "get", settings)
         book.genre = soup.selectFirst("div.path a:eq(2)").text()
@@ -61,9 +60,9 @@ class Motie : AbstractCrawler() {
 
         book.intro = textOf(soup.selectFirst("p.summary1").text())
 
-        extensions[EXT_CRAWLER_LAST_CHAPTER] = soup.selectFirst("div.newchapter span.chaptername a").text()
+        book.lastChapter = soup.selectFirst("div.newchapter span.chaptername a").text()
         val str = soup.selectFirst("div.newchapter span.updatetime").text().remove("更新时间 : ")
-        extensions[EXT_CRAWLER_UPDATE_TIME] = parseTime(str)
+        book.updateTime = parseTime(str)
 
         getContents(book, soup, settings)
         return book

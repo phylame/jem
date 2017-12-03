@@ -36,13 +36,12 @@ class Zongheng : AbstractCrawler() {
     override fun getBook(url: String, settings: Settings?): Book {
         val path = url.replace("showchapter", "book")
 
-        val book = Book()
-        val extensions = book.extensions
-        extensions[EXT_CRAWLER_SOURCE_URL] = path
-        extensions[EXT_CRAWLER_SOURCE_SITE] = "zongheng"
+        val book = CrawlerBook()
+        book.sourceUrl = path
+        book.sourceSite = "zongheng"
 
         val bookId = baseName(path)
-        extensions[EXT_CRAWLER_BOOK_ID] = bookId
+        book.bookId = bookId
 
         val soup = fetchSoup(path, "get", settings)
 
@@ -52,7 +51,7 @@ class Zongheng : AbstractCrawler() {
         book.state = getMeta(head, name = "novel:status")
         book.intro = textOf(getMeta(head, "description").replace("(\\s|\u3000)+".toRegex(), System.lineSeparator()))
         book.cover = CrawlerFlob(getMeta(head, "image"), "get", settings)
-        extensions[EXT_CRAWLER_UPDATE_TIME] = getMeta(head, name = "novel:update_time").toLocalDate()
+        book.updateTime = getMeta(head, name = "novel:update_time").toLocalDate()
 
         val body = soup.body()
         book.genre = body.attr("categoryName") + (body.attr("childCategoryName")?.let { "/$it" } ?: "")
@@ -61,7 +60,7 @@ class Zongheng : AbstractCrawler() {
         book.words = stub.selectFirst("span").text()
         book[KEYWORDS] = (stub.selectText("div.keyword a", Attributes.VALUE_SEPARATOR))
 
-        extensions[EXT_CRAWLER_LAST_CHAPTER] = soup.selectFirst("a.chap").ownText().remove("正文：")
+        book.lastChapter = soup.selectFirst("a.chap").ownText().remove("正文：")
 
         getContents(book, bookId, settings)
         return book

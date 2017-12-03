@@ -323,7 +323,7 @@ object Workbench : CommandHandler {
             "openFile" -> openFile("")
             "saveFile" -> saveFile()
             "saveAsFile" -> exportBook(work!!.book)
-            "fileDetails"->{
+            "fileDetails" -> {
                 println(work?.book?.extensions?.get(EXT_EPM_FILE_INFO))
             }
             "clearHistory" -> History.clear()

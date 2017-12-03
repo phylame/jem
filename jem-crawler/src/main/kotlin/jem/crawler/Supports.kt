@@ -102,33 +102,36 @@ fun fetchString(url: String, method: String, settings: Settings?) =
         openConnection(url, method, settings).openReader(settings).use { it.readText() }
 
 class CrawlerBook() : Book() {
-   var sourceUrl
-      inline get() = extensions[EXT_CRAWLER_SOURCE_URL] ?: ""
-      inline set(value) {
-        extensions[EXT_CRAWLER_SOURCE_URL] = value
-      }
+    var sourceUrl
+        inline get() = extensions[EXT_CRAWLER_SOURCE_URL] ?: ""
+        inline set(value) {
+            extensions[EXT_CRAWLER_SOURCE_URL] = value
+        }
 
-   var sourceSite
-      inline get() = extensions[EXT_CRAWLER_SOURCE_SITE] ?: ""
-      inline set(value) {
-        extensions[EXT_CRAWLER_SOURCE_SITE] = value
-      }
-   var bookId
-      inline get() = extensions[EXT_CRAWLER_BOOK_ID] ?: ""
-      inline set(value) {
-        extensions[EXT_CRAWLER_BOOK_ID] = value
-      }
-   var lastChapter
-      inline get() = extensions[EXT_CRAWLER_LAST_CHAPTER] ?: ""
-      inline set(value) {
-        extensions[EXT_CRAWLER_LAST_CHAPTER] = value
-      }
-   var updateTime
-      inline get() = extensions[EXT_CRAWLER_UPDATE_TIME]
-      inline set(value) {
-        extensions[EXT_CRAWLER_UPDATE_TIME] = value!!
-      }
-  
+    var sourceSite
+        inline get() = extensions[EXT_CRAWLER_SOURCE_SITE] ?: ""
+        inline set(value) {
+            extensions[EXT_CRAWLER_SOURCE_SITE] = value
+        }
+
+    var bookId
+        inline get() = extensions[EXT_CRAWLER_BOOK_ID] ?: ""
+        inline set(value) {
+            extensions[EXT_CRAWLER_BOOK_ID] = value
+        }
+
+    var lastChapter
+        inline get() = extensions[EXT_CRAWLER_LAST_CHAPTER] ?: ""
+        inline set(value) {
+            extensions[EXT_CRAWLER_LAST_CHAPTER] = value
+        }
+
+    var updateTime
+        inline get() = extensions[EXT_CRAWLER_UPDATE_TIME]
+        inline set(value) {
+            extensions[EXT_CRAWLER_UPDATE_TIME] = value!!
+        }
+
 }
 
 class CrawlerFlob(

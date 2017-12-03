@@ -33,13 +33,12 @@ class XsSogou : AbstractCrawler() {
     override fun getBook(url: String, settings: Settings?): Book {
         val path = url.replaceFirst("list", "book")
 
-        val book = Book()
-        val extensions = book.extensions
-        extensions[EXT_CRAWLER_SOURCE_URL] = path
-        extensions[EXT_CRAWLER_SOURCE_SITE] = "xssogou"
+        val book = CrawlerBook()
+        book.sourceUrl = path
+        book.sourceSite = "xssogou"
 
         val bookId = baseName(path)
-        extensions[EXT_CRAWLER_BOOK_ID] = bookId
+        book.bookId = bookId
 
         val soup = fetchSoup(path, "get", settings)
 

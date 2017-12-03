@@ -19,13 +19,12 @@ class Heiyan : AbstractCrawler() {
     override fun getBook(url: String, settings: Settings?): Book {
         val path = url.removeSuffix("/chapter")
 
-        val book = Book()
-        val extensions = book.extensions
-        extensions[EXT_CRAWLER_SOURCE_URL] = path
-        extensions[EXT_CRAWLER_SOURCE_SITE] = "heiyan"
+        val book = CrawlerBook()
+        book.sourceUrl = path
+        book.sourceSite = "heiyan"
 
         val bookId = baseName(path)
-        extensions[EXT_CRAWLER_BOOK_ID] = bookId
+        book.bookId = bookId
 
         val soup = fetchSoup(path, "get", settings)
 
@@ -35,10 +34,10 @@ class Heiyan : AbstractCrawler() {
         book.state = getMeta(head, "novel:status")
         book.genre = getMeta(head, "novel:category")
         book.cover = CrawlerFlob(getMeta(head, "image").let { it.substring(0, it.indexOf('@')) }, "get", settings)
-        extensions[EXT_CRAWLER_UPDATE_TIME] = getMeta(head, "novel:update_time").let {
+        book.updateTime = getMeta(head, "novel:update_time").let {
             (if (it.count('-') == 2) "$it:00" else "${LocalDate.now().year}-$it:00").toLocalDateTime()
         }
-        extensions[EXT_CRAWLER_LAST_CHAPTER] = getMeta(head, "novel:latest_chapter_name")
+        book.lastChapter = getMeta(head, "novel:latest_chapter_name")
 
         val stub = soup.selectFirst("div.pattern-cover-detail")
         book.words = stub.selectFirst("span.words").text().removeSuffix("字")

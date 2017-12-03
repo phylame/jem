@@ -44,13 +44,11 @@ class Qidian : AbstractCrawler() {
         } else {
             url.replace("#Catalog", "")
         }
-        val book = Book()
-        val extensions = book.extensions
-        extensions[EXT_CRAWLER_SOURCE_URL] = path
-        extensions[EXT_CRAWLER_SOURCE_SITE] = "qidian"
+        val book = CrawlerBook()
+        book.sourceUrl = path
+        book.sourceSite = "qidian"
 
-        val bookId = baseName(url)
-        extensions[EXT_CRAWLER_BOOK_ID] = bookId
+        val bookId = baseName(url).apply { book.bookId = this }
 
         val soup = fetchSoup(path, "get", settings)
 
@@ -66,10 +64,12 @@ class Qidian : AbstractCrawler() {
         book["brief"] = stub.selectFirst("p.intro").text()
         book.words = stub.select("p em:eq(0), p cite:eq(1)").text().remove(" ")
         book.intro = textOf(soup.selectText("div.book-intro p", System.lineSeparator()))
-        book[KEYWORDS] = soup.selectText("p.tag-wrap a", Attributes.VALUE_SEPARATOR)
+        soup.selectText("p.tag-wrap a", Attributes.VALUE_SEPARATOR).takeIf { it.isNotEmpty() }?.let {
+            book[jem.KEYWORDS] = it
+        }
 
-        extensions[EXT_CRAWLER_LAST_CHAPTER] = soup.selectFirst("li.update a").text()
-        extensions[EXT_CRAWLER_UPDATE_TIME] = parseTime(soup.selectFirst("li.update em").text())
+        book.lastChapter = soup.selectFirst("li.update a").text()
+        book.updateTime = parseTime(soup.selectFirst("li.update em").text())
 
         getContents(book, soup, bookId, settings)
         return book

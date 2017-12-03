@@ -87,8 +87,8 @@ class AttributePane(chapter: Chapter) : SplitPane() {
             AnchorPane.setLeftAnchor(this, 0.0)
             AnchorPane.setBottomAnchor(this, 0.0)
         }
-        coverPane = BorderPane(TitledPane("Cover",stackPane).apply {
-            this.border= Border.EMPTY
+        coverPane = BorderPane(TitledPane("Cover", stackPane).apply {
+            this.border = Border.EMPTY
         }).apply {
             bottom = HBox().apply {
                 alignment = Pos.CENTER

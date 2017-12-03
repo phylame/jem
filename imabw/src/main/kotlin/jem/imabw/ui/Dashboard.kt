@@ -218,7 +218,7 @@ object Indicator : HBox() {
             }
             if (new is ChapterTab) {
                 new.editor.also { text ->
-//                    InvalidationListener {
+                    //                    InvalidationListener {
 //                        updateCaret(text.currentParagraph + 1, text.caretColumn + 1, text.selection.length)
 //                    }.let { listener ->
 //                        text.properties[this] = listener

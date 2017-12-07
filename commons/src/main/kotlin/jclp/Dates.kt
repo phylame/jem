@@ -26,25 +26,27 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-const val ISO_FORMAT = "yyyy-MM-dd HH:mm:ss"
+const val ISO_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss"
 
-const val ANSIC_FORMAT = "EEE MMM d HH:mm:ss z yyyy"
+const val ANSIC_DATE_TIME_FORMAT = "EEE MMM d HH:mm:ss z yyyy"
 
-const val RFC1123_FORMAT = "EEE, dd MMM yyyy HH:mm:ss z"
+const val RFC1036_DATE_TIME_FORMAT = "EEEEEE, dd-MMM-yy HH:mm:ss z"
 
-const val RFC1036_FORMAT = "EEEEEE, dd-MMM-yy HH:mm:ss z"
+const val UTC_DATE_TIME_FORMAT = "$ISO_DATE_TIME_FORMAT'Z'"
 
-const val DATE_TIME_FORMAT = "yyyy-M-d H:m:s"
+const val LOOSE_DATE_TIME_FORMAT = "yyyy-M-d H:m:s"
 
-const val DATE_FORMAT = "yyyy-M-d"
+const val LOOSE_DATE_FORMAT = "yyyy-M-d"
 
-const val TIME_FORMAT = "H:m:s"
+const val LOOSE_TIME_FORMAT = "H:m:s"
 
-val looseISODate: DateTimeFormatter by lazy { DateTimeFormatter.ofPattern(DATE_FORMAT) }
+val looseISODate: DateTimeFormatter by lazy { DateTimeFormatter.ofPattern(LOOSE_DATE_FORMAT) }
 
-val looseISOTime: DateTimeFormatter by lazy { DateTimeFormatter.ofPattern(TIME_FORMAT) }
+val looseISOTime: DateTimeFormatter by lazy { DateTimeFormatter.ofPattern(LOOSE_TIME_FORMAT) }
 
-val looseISODateTime: DateTimeFormatter by lazy { DateTimeFormatter.ofPattern(DATE_TIME_FORMAT) }
+val looseISODateTime: DateTimeFormatter by lazy { DateTimeFormatter.ofPattern(LOOSE_DATE_TIME_FORMAT) }
+
+val utcISODateTime: DateTimeFormatter by lazy { DateTimeFormatter.ofPattern(UTC_DATE_TIME_FORMAT) }
 
 fun parseDate(text: String, vararg patterns: String): Date? {
     for (pattern in patterns) {
@@ -56,10 +58,10 @@ fun parseDate(text: String, vararg patterns: String): Date? {
     return null
 }
 
-fun Date.format(pattern: String): String = SimpleDateFormat(pattern).format(this)
-
 fun detectDate(text: String): Date? =
-        parseDate(text, DATE_TIME_FORMAT, DATE_FORMAT, TIME_FORMAT)
+        parseDate(text, LOOSE_DATE_TIME_FORMAT, LOOSE_DATE_FORMAT, LOOSE_TIME_FORMAT)
+
+fun Date.format(pattern: String): String = SimpleDateFormat(pattern).format(this)
 
 fun String.toLocalDate(formatter: DateTimeFormatter = looseISODate): LocalDate =
         LocalDate.parse(this, formatter)

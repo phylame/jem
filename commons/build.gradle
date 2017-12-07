@@ -27,6 +27,8 @@ description = 'Commons & Utilities for Java'
 dependencies {
     compile 'org.jetbrains.kotlin:kotlin-stdlib-jre8'
     compileOnly "org.slf4j:slf4j-api:$slf4jVersion"
+    compile "org.jooq:joor-java-8:$joorVersion"
+    compile "xpp3:xpp3:$xppVersion"
 }
 
 compileKotlin {

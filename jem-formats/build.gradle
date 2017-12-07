@@ -24,7 +24,6 @@ description = 'Implementations for EPM'
 
 dependencies {
     compile project(':jem-core')
-    compile "xpp3:xpp3:$xppVersion"
     compile "org.apache.velocity:velocity-engine-core:$velocityVersion"
 }
 

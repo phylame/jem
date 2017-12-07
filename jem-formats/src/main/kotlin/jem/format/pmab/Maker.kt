@@ -140,15 +140,15 @@ internal object PmabMaker : VdmMaker {
                     type = TypeManager.STRING
                     value.toString()
                 }
-                is LocalDate -> (data.getConfig("dateFormat") ?: DATE_FORMAT).let {
+                is LocalDate -> (data.getConfig("dateFormat") ?: LOOSE_DATE_FORMAT).let {
                     type = "${TypeManager.DATE};format=$it"
                     value.format(DateTimeFormatter.ofPattern(it))
                 }
-                is LocalTime -> (data.getConfig("timeFormat") ?: TIME_FORMAT).let {
+                is LocalTime -> (data.getConfig("timeFormat") ?: LOOSE_TIME_FORMAT).let {
                     type = "${TypeManager.TIME};format=$it"
                     value.format(DateTimeFormatter.ofPattern(it))
                 }
-                is LocalDateTime -> (data.getConfig("datetimeFormat") ?: DATE_TIME_FORMAT).let {
+                is LocalDateTime -> (data.getConfig("datetimeFormat") ?: LOOSE_DATE_TIME_FORMAT).let {
                     type = "${TypeManager.DATETIME};format=$it"
                     value.format(DateTimeFormatter.ofPattern(it))
                 }

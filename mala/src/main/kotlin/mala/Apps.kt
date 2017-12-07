@@ -19,7 +19,9 @@
 package mala
 
 import jclp.TranslatorWrapper
+import jclp.dumpToText
 import jclp.log.Log
+import jclp.text.colored
 import jclp.text.or
 import java.util.*
 
@@ -119,7 +121,7 @@ object App : TranslatorWrapper() {
     }
 
     fun error(msg: Any) {
-        System.err.println("${delegate.name}: $msg")
+        System.err.println("${delegate.name}: $msg".colored("red"))
     }
 
     fun error(msg: Any, e: Throwable) {
@@ -148,8 +150,8 @@ object App : TranslatorWrapper() {
 
     fun traceback(e: Throwable, level: AppVerbose) {
         when (level) {
-            AppVerbose.ECHO -> System.err.println("\t${e.message}")
-            AppVerbose.TRACE -> e.printStackTrace()
+            AppVerbose.ECHO -> System.err.println("\t${e.message}".colored("green"))
+            AppVerbose.TRACE -> println(e.dumpToText.colored("green"))
             else -> Unit
         }
     }

@@ -18,8 +18,7 @@
 
 package jclp.log
 
-import org.joor.Reflect
-import org.joor.Reflect.on
+import jclp.text.colored
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.logging.Level
@@ -35,18 +34,14 @@ object SimpleFacade : LogFacade {
         t.printStackTrace()
     }
 
-    private fun makeColor(reflect: Reflect, text: String, color: String): String =
-            reflect.call("render", "@|$color $text|@").get()
-
     private fun print(tag: String, level: LogLevel, msg: String) {
         val text = "[${LocalDateTime.now()}] [${Thread.currentThread().name}] ${level.name[0]}/$tag: $msg"
-        val reflect = on("org.fusesource.jansi.Ansi").call("ansi")
         when (level) {
             LogLevel.TRACE -> println(text)
-            LogLevel.DEBUG -> println(makeColor(reflect, text, "green"))
-            LogLevel.INFO -> println(makeColor(reflect, text, "yellow"))
-            LogLevel.WARN -> println(makeColor(reflect, text, "magenta"))
-            LogLevel.ERROR -> System.err.println(makeColor(reflect, text, "red"))
+            LogLevel.DEBUG -> println(text.colored("green"))
+            LogLevel.INFO -> println(text.colored("yellow"))
+            LogLevel.WARN -> println(text.colored("magenta"))
+            LogLevel.ERROR -> System.err.println(text.colored("red"))
         }
     }
 }

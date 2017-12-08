@@ -27,17 +27,32 @@ import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
-val Throwable.dumpToText: String
+val Throwable.traceText: String
     get() = with(CharArrayWriter()) {
         printStackTrace(PrintWriter(this))
         toString()
     }
 
+fun <T : CharSequence> requireNotEmpty(cs: T?): T {
+    return requireNotEmpty(cs) { "Require value was empty" }
+}
+
+inline fun <T : CharSequence> requireNotEmpty(cs: T?, lazyMessage: () -> Any): T {
+    if (cs == null || cs.isEmpty()) {
+        throw IllegalArgumentException(lazyMessage().toString())
+    }
+    return cs
+}
+
 abstract class AsyncTask<out V : Any> {
     private val lock = Any()
+
     private lateinit var value: V
+
     private val isDone = AtomicBoolean()
+
     private val future = AtomicReference<Future<V>>()
+
     private val action = Callable {
         if (!isDone.get()) {
             synchronized(lock) {
@@ -56,7 +71,7 @@ abstract class AsyncTask<out V : Any> {
     // thread safe
     fun get(): V = if (isDone.get()) value else future.get()?.get() ?: action.call()
 
-    // Non thread safe
+    // non thread safe
     fun schedule(executor: ExecutorService) {
         check(future.get() == null) { "Task is already submitted in some executor" }
         future.set(executor.submit(action))
@@ -104,6 +119,8 @@ object EventBus {
             for (observer in observers[type.objectType] ?: return) {
                 if ((event as? Consumable)?.isConsumed != true) {
                     (observer as EventAction<T>)(event)
+                } else {
+                    break
                 }
             }
         }

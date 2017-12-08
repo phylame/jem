@@ -48,7 +48,7 @@ class AttributePane(chapter: Chapter) : SplitPane() {
 
         override fun getDefaultValue(key: String) = Attributes.getDefault(key) ?: ""
 
-        override fun getItemName(key: String) = Attributes.getName(key) ?: key.capitalize()
+        override fun getItemName(key: String) = Attributes.getTitle(key) ?: key.capitalize()
 
         override fun newDialogTitle() = App.tr("d.newAttribute.title")
     }

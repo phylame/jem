@@ -21,7 +21,7 @@ package mala.ixin
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
 import jclp.io.extName
-import jclp.setting.delegate
+import jclp.setting.settingsWith
 import jclp.text.or
 import mala.App
 import mala.AssetManager
@@ -54,17 +54,17 @@ object IxIn {
 }
 
 open class IxInSettings(name: String = "config/ui.ini") : MalaSettings(name) {
-    var stageX by delegate(-1.0, "form.location.x")
-    var stageY by delegate(-1.0, "form.location.y")
+    var stageX by settingsWith(-1.0, "form.location.x")
+    var stageY by settingsWith(-1.0, "form.location.y")
 
-    var stageAlwaysOnTop by delegate(false, "form.alwaysOnTop")
+    var stageAlwaysOnTop by settingsWith(false, "form.alwaysOnTop")
 
-    var stageWidth by delegate(-1.0, "form.size.width")
-    var stageHeight by delegate(-1.0, "form.size.height")
-    var stageResizable by delegate(true, "form.size.resizable")
-    var stageMaximized by delegate(false, "form.size.maximized")
-    var stageFullScreen by delegate(false, "form.size.fullScreen")
+    var stageWidth by settingsWith(-1.0, "form.size.width")
+    var stageHeight by settingsWith(-1.0, "form.size.height")
+    var stageResizable by settingsWith(true, "form.size.resizable")
+    var stageMaximized by settingsWith(false, "form.size.maximized")
+    var stageFullScreen by settingsWith(false, "form.size.fullScreen")
 
-    var toolBarVisible by delegate(true, "form.toolBar.visible")
-    var statusBarVisible by delegate(true, "form.statusBar.visible")
+    var toolBarVisible by settingsWith(true, "form.toolBar.visible")
+    var statusBarVisible by settingsWith(true, "form.statusBar.visible")
 }

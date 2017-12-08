@@ -21,6 +21,7 @@ package jem.format.pmab
 import jclp.TypeManager
 import jclp.ValueMap
 import jclp.io.flobOf
+import jclp.managed
 import jclp.release
 import jclp.setting.Settings
 import jclp.setting.getString
@@ -31,6 +32,7 @@ import jclp.text.valueFor
 import jclp.vdm.VdmEntry
 import jclp.vdm.VdmReader
 import jclp.vdm.readText
+import jclp.xml.getAttribute
 import jem.*
 import jem.epm.EXT_EPM_FILE_INFO
 import jem.epm.VdmParser
@@ -112,7 +114,7 @@ internal object PmabParser : VdmParser {
         when (tagName) {
             "item" -> {
                 data.itemName = data.xmlAttribute("name")
-                data.itemType = xpp.getAttributeValue(null, "type")
+                data.itemType = xpp.getAttribute("type")
                 hasText = true
             }
             "attributes" -> data.values = data.book.attributes
@@ -137,12 +139,12 @@ internal object PmabParser : VdmParser {
         when (tagName) {
             "item" -> {
                 data.itemName = data.xmlAttribute("name")
-                data.itemType = xpp.getAttributeValue(null, "type")
+                data.itemType = xpp.getAttribute("type")
                 hasText = true
             }
             "chapter" -> data.newChapter()
             "content" -> {
-                data.itemType = xpp.getAttributeValue(null, "type")
+                data.itemType = xpp.getAttribute("type")
                 hasText = true
             }
         }
@@ -207,8 +209,9 @@ internal object PmabParser : VdmParser {
             else -> when {
                 type.startsWith("text/") -> {
                     val encoding = data.getConfig("encoding") ?: itemType.valueFor("encoding")
-                    val flob = flobOf(data.reader, text, type)
-                    textOf(flob, encoding?.let { Charset.forName(it) }, type.substring(5)).also { flob.release() }
+                    managed(flobOf(data.reader, text, type)) {
+                        textOf(it, encoding?.let { Charset.forName(it) }, type.substring(5))
+                    }
                 }
                 type.matches("[\\w]+/.+".toRegex()) -> flobOf(data.reader, text, type)
                 else -> TypeManager.getClass(type)?.let { ConverterManager.parse(text, it) } ?: text

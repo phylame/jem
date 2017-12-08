@@ -97,7 +97,7 @@ object TypeManager {
         }?.key
     }
 
-    fun getName(name: String) =
+    fun getTitle(name: String) =
             if (name.isNotEmpty()) M.optTr("type.$name") else null
 
     fun setDefault(name: String, value: Any) {

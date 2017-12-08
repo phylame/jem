@@ -18,8 +18,8 @@
 
 package jclp.vdm
 
+import jclp.KeyedService
 import jclp.ServiceManager
-import jclp.ServiceProvider
 import jclp.VariantMap
 import jclp.io.Flob
 import jclp.text.Text
@@ -97,7 +97,7 @@ fun VdmWriter.writeText(name: String, text: Text, charset: Charset = Charsets.UT
     }
 }
 
-interface VdmFactory : ServiceProvider {
+interface VdmFactory : KeyedService {
     fun getReader(input: Any, props: VariantMap): VdmReader
 
     fun getWriter(output: Any, props: VariantMap): VdmWriter

@@ -24,8 +24,9 @@ import javafx.collections.ListChangeListener
 import javafx.scene.control.Dialog
 import javafx.scene.control.MenuItem
 import javafx.scene.control.SeparatorMenuItem
-import jclp.setting.delegate
+import jclp.io.exists
 import jclp.setting.getDouble
+import jclp.setting.settingsWith
 import mala.App
 import mala.AppSettings
 import mala.MalaSettings
@@ -35,15 +36,15 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 object GeneralSettings : AppSettings() {
-    var enableHistory by delegate(true, "app.history.enable")
+    var enableHistory by settingsWith(true, "app.history.enable")
 
-    var historyLimit by delegate(24, "app.history.limit")
+    var historyLimit by settingsWith(24, "app.history.limit")
 }
 
 object UISettings : IxInSettings() {
-    var stylesheetUri by delegate("", "ui.stylesheet.uri")
+    var stylesheetUri by settingsWith("", "ui.stylesheet.uri")
 
-    var navigationBarVisible by delegate(true, "form.navigationBar.visible")
+    var navigationBarVisible by settingsWith(true, "form.navigationBar.visible")
 
     fun restore(dialog: Dialog<*>, tag: String) {
         dialog.dialogPane.apply {
@@ -63,9 +64,9 @@ object UISettings : IxInSettings() {
 }
 
 object EditorSettings : MalaSettings("config/editor.ini") {
-    var wrapText by delegate(false, "editor.wrapText")
+    var wrapText by settingsWith(false, "editor.wrapText")
 
-    var showLineNumber by delegate(true, "editor.showLineNumber")
+    var showLineNumber by settingsWith(true, "editor.showLineNumber")
 }
 
 object History {
@@ -132,7 +133,7 @@ object History {
 
     fun load() {
         if (GeneralSettings.enableHistory) {
-            if (Files.exists(file)) {
+            if (file.exists) {
                 with(ReadLineTask(file)) {
                     setOnSucceeded {
                         paths += value

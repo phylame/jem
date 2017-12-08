@@ -22,7 +22,7 @@ import jclp.TypeManager
 import jclp.locate
 import jclp.text.or
 import jclp.walk
-import jem.Attributes.getName
+import jem.Attributes.getTitle
 import jem.Book
 import jem.Chapter
 import jem.title
@@ -82,7 +82,7 @@ fun viewAttributes(chapter: Chapter, names: Collection<String>, settings: ViewSe
                 val value: Any? = chapter[name]
                 val str = if (value != null) TypeManager.printable(value) ?: value.toString() else ""
                 if (str.isNotEmpty() || !settings.skipEmpty) {
-                    values += tr("view.attrPattern", getName(name) ?: name, str)
+                    values += tr("view.attrPattern", getTitle(name) ?: name, str)
                 }
             }
         }

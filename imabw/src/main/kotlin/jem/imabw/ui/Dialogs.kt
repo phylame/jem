@@ -28,7 +28,7 @@ import javafx.stage.FileChooser
 import javafx.stage.Modality
 import javafx.stage.Window
 import jclp.ValueMap
-import jclp.dumpToText
+import jclp.traceText
 import jem.Chapter
 import jem.epm.EpmManager
 import jem.epm.PMAB_NAME
@@ -81,7 +81,7 @@ fun traceback(title: String, content: String, throwable: Throwable, owner: Windo
         dialogPane.buttonTypes += ButtonType.CLOSE
         graphic = App.assets.graphicFor("dialog/bug")
         dialogPane.expandedProperty().addListener { _ ->
-            if (textArea.text.isEmpty()) textArea.text = throwable.dumpToText
+            if (textArea.text.isEmpty()) textArea.text = throwable.traceText
         }
         showAndWait()
     }

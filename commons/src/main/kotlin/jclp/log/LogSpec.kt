@@ -18,8 +18,6 @@
 
 package jclp.log
 
-private typealias LazyMessage = () -> String
-
 enum class LogLevel(val code: Int) {
     ALL(6),
     TRACE(5),
@@ -31,27 +29,25 @@ enum class LogLevel(val code: Int) {
 }
 
 interface LogFacade {
+    var level: LogLevel
+
     fun log(tag: String, level: LogLevel, msg: String)
 
     fun log(tag: String, level: LogLevel, msg: String, t: Throwable)
-
-    fun setLevel(level: LogLevel) {}
 }
 
+private typealias LazyMessage = () -> String
+
 object Log {
-    var level: LogLevel = LogLevel.INFO
-        set(value) {
-            field = value
-            facade.setLevel(value)
-        }
-
     var facade: LogFacade = SimpleFacade
-        set(value) {
-            field = value
-            facade.setLevel(level)
+
+    var level: LogLevel
+        inline get() = facade.level
+        inline set(value) {
+            facade.level = value
         }
 
-    fun isEnable(level: LogLevel) = level.code <= this.level.code
+    fun isEnable(level: LogLevel) = level.code <= facade.level.code
 
     inline fun t(tag: String, msg: LazyMessage) {
         if (isEnable(LogLevel.TRACE)) {

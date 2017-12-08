@@ -18,7 +18,6 @@
 
 package jclp.text
 
-import org.joor.Reflect
 import java.util.*
 
 infix fun CharSequence?.or(default: CharSequence) = if (!isNullOrEmpty()) toString() else default.toString()
@@ -26,6 +25,8 @@ infix fun CharSequence?.or(default: CharSequence) = if (!isNullOrEmpty()) toStri
 infix inline fun CharSequence?.or(default: () -> CharSequence) = if (!isNullOrEmpty()) toString() else default().toString()
 
 fun String.count(ch: Char) = count { it == ch }
+
+fun String.colored(color: String): String = this
 
 fun String.remove(text: CharSequence) = if (text.isEmpty()) this else replaceFirst(text.toString(), "")
 
@@ -38,9 +39,6 @@ fun String.valueFor(name: String, partSeparator: String = ";", valueSeparator: S
     }
     return null
 }
-
-fun String.colored(color: String): Any =
-        Reflect.on("org.fusesource.jansi.Ansi").call("ansi").call("render", "@|$color $this|@").get()
 
 class LineSplitter(private val text: String) : Iterator<String> {
     private val length = text.length
@@ -77,9 +75,9 @@ class LineSplitter(private val text: String) : Iterator<String> {
         return start != -1
     }
 
-    override fun next() = if (!hasNext()) {
-        throw NoSuchElementException()
-    } else {
+    override fun next() = if (hasNext()) {
         text.substring(start, end).also { start = -1 }
+    } else {
+        throw NoSuchElementException()
     }
 }

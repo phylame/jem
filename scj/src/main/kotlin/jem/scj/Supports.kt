@@ -18,22 +18,22 @@
 
 package jem.scj
 
-import jclp.setting.delegate
+import jclp.setting.settingsWith
 import jem.COVER
 import jem.TITLE
 import jem.epm.PMAB_NAME
 import mala.AppSettings
 
 object SCISettings : AppSettings() {
-    var termWidth by delegate(80, "app.termWidth")
+    var termWidth by settingsWith(80, "app.termWidth")
 
-    var outputFormat by delegate(PMAB_NAME, "jem.out.format")
+    var outputFormat by settingsWith(PMAB_NAME, "jem.out.format")
 
-    var separator by delegate("\n", "sci.view.separator")
+    var separator by settingsWith("\n", "sci.view.separator")
 
-    var skipEmpty by delegate(true, "sci.view.skipEmpty")
+    var skipEmpty by settingsWith(true, "sci.view.skipEmpty")
 
-    var tocIndent by delegate("  ", "sci.view.tocIndent")
+    var tocIndent by settingsWith("  ", "sci.view.tocIndent")
 
     var tocNames
         inline get() = (get("sci.view.tocNames") as? String)?.split(",") ?: listOf(TITLE, COVER)

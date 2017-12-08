@@ -18,8 +18,11 @@
 
 package jem.epm
 
+import jclp.KeyedService
 import jclp.ServiceManager
-import jclp.ServiceProvider
+import jclp.io.exists
+import jclp.io.isDirectory
+import jclp.requireNotEmpty
 import jclp.setting.Settings
 import jclp.setting.getBoolean
 import jclp.setting.getString
@@ -27,12 +30,10 @@ import jclp.vdm.VDM_DIRECTORY
 import jem.Book
 import jem.title
 import java.nio.file.FileAlreadyExistsException
-import java.nio.file.Files
 import java.nio.file.Paths
 
-const val MAKER_OVERWRITE_KEY = "maker.file.overwrite"
-
 const val EXT_EPM_FILE_INFO = "jem.ext.meta"
+const val MAKER_OVERWRITE_KEY = "maker.file.overwrite"
 
 interface Parser {
     fun parse(input: String, arguments: Settings?): Book
@@ -42,7 +43,7 @@ interface Maker {
     fun make(book: Book, output: String, arguments: Settings?)
 }
 
-interface EpmFactory : ServiceProvider {
+interface EpmFactory : KeyedService {
     val hasMaker get() = maker != null
 
     val maker: Maker? get() = null
@@ -57,20 +58,18 @@ object EpmManager : ServiceManager<EpmFactory>(EpmFactory::class.java) {
 
     fun getParser(name: String) = get(name)?.parser
 
-    fun readBook(param: ParserParam): Book? {
-        val epmName = param.epmName.takeIf(String::isNotEmpty) ?: throw IllegalArgumentException("Not found epm format")
-        return getParser(epmName)?.parse(param.path, param.arguments)
-    }
+    fun readBook(param: ParserParam): Book? =
+            getParser(requireNotEmpty(param.epmName) { "Not found epm format" })?.parse(param.path, param.arguments)
 
     fun writeBook(param: MakerParam): String? {
-        val epmName = param.epmName.takeIf(String::isNotEmpty) ?: throw IllegalArgumentException("Not found epm format")
+        val epmName = requireNotEmpty(param.epmName) { "Not found epm format" }
         val maker = getMaker(epmName) ?: return null
         var path = Paths.get(param.path)
-        if (Files.isDirectory(path) && (maker !is VdmMaker || param.arguments?.getString(MAKER_VDM_TYPE_KEY) != VDM_DIRECTORY)) {
+        if (path.isDirectory && (maker !is VdmMaker || param.arguments?.getString(MAKER_VDM_TYPE_KEY) != VDM_DIRECTORY)) {
             path = path.resolve("${param.book.title}.$epmName")
         }
         val output = path.toString()
-        if (Files.exists(path) && param.arguments?.getBoolean(MAKER_OVERWRITE_KEY) != true) {
+        if (path.exists && param.arguments?.getBoolean(MAKER_OVERWRITE_KEY) != true) {
             throw FileAlreadyExistsException(output)
         }
         param.actualPath = output

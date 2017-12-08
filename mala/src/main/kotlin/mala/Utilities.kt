@@ -18,10 +18,11 @@
 
 package mala
 
+import jclp.io.exists
 import jclp.log.Log
 import jclp.log.LogLevel
 import jclp.setting.MapSettings
-import jclp.setting.delegate
+import jclp.setting.settingsWith
 import jclp.text.Converter
 import jclp.text.ConverterManager
 import java.nio.file.Files
@@ -42,7 +43,7 @@ open class MalaSettings(name: String, load: Boolean = true, sync: Boolean = true
     val file = Paths.get(App.home, name)
 
     init {
-        if (load && Files.exists(file)) {
+        if (load && file.exists) {
             Files.newBufferedReader(file).use { load(it) }
         }
         if (sync) {
@@ -95,13 +96,13 @@ open class AppSettings(name: String = "config/general.ini") : MalaSettings(name)
         }
     }
 
-    var logLevel by delegate(Log.level, "app.log.level")
+    var logLevel by settingsWith(Log.level, "app.log.level")
 
-    var appVerbose by delegate(App.verbose, "app.verbose")
+    var appVerbose by settingsWith(App.verbose, "app.verbose")
 
-    var appLocale by delegate(Locale.getDefault(), "app.locale")
+    var appLocale by settingsWith(Locale.getDefault(), "app.locale")
 
-    var enablePlugin by delegate(true, "app.plugin.enable")
+    var enablePlugin by settingsWith(true, "app.plugin.enable")
 
     val pluginBlacklist by lazy {
         hashSetOf<String>().apply {

@@ -34,6 +34,12 @@ fun <T> T.release() = apply {
     (this as? AutoDisposable)?.release()
 }
 
+inline fun <T, R> managed(obj: T, block: (T) -> R): R = try {
+    block(obj)
+} finally {
+    obj.release()
+}
+
 class DisposedException : IllegalStateException()
 
 abstract class DisposableSupport : AutoDisposable {

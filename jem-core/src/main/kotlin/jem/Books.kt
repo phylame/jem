@@ -56,7 +56,8 @@ open class Chapter(
     }
 
     constructor(chapter: Chapter, deepCopy: Boolean) : this() {
-        chapter.dumpTo(this, deepCopy)
+        @Suppress("LeakingThis")
+        chapter.copyTo(this, deepCopy)
     }
 
     operator fun get(name: String) = attributes[name]
@@ -76,10 +77,10 @@ open class Chapter(
     }
 
     public override fun clone() = (super.clone() as Chapter).also {
-        dumpTo(it, true)
+        copyTo(it, true)
     }
 
-    protected open fun dumpTo(chapter: Chapter, deepCopy: Boolean) {
+    protected open fun copyTo(chapter: Chapter, deepCopy: Boolean) {
         chapter.tag = tag
         chapter.text = text
         chapter.parent = null
@@ -107,7 +108,7 @@ open class Chapter(
 
     protected fun finalize() {
         if (!isCleaned) {
-            Log.w("Chapter") { "$title is not cleaned" }
+            Log.w("Chapter") { "$title@${hashCode()} is not cleaned" }
         }
     }
 
@@ -146,8 +147,8 @@ open class Book : Chapter {
         extensions.clear()
     }
 
-    override fun dumpTo(chapter: Chapter, deepCopy: Boolean) {
-        super.dumpTo(chapter, deepCopy)
+    override fun copyTo(chapter: Chapter, deepCopy: Boolean) {
+        super.copyTo(chapter, deepCopy)
         if (chapter is Book) {
             chapter.extensions = if (deepCopy) extensions.clone() else extensions
         }

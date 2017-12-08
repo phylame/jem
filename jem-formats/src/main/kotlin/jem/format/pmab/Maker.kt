@@ -27,12 +27,17 @@ import jclp.text.ConverterManager
 import jclp.text.TEXT_PLAIN
 import jclp.text.Text
 import jclp.vdm.*
+import jclp.xml.*
 import jem.Book
 import jem.Chapter
 import jem.epm.EXT_EPM_FILE_INFO
 import jem.epm.VdmMaker
-import jem.format.util.XmlRender
 import jem.format.util.failMaker
+import jem.format.util.xmlEncoding
+import jem.format.util.xmlIndent
+import jem.format.util.xmlSeparator
+import org.xmlpull.v1.XmlPullParserFactory
+import org.xmlpull.v1.XmlSerializer
 import java.io.ByteArrayOutputStream
 import java.nio.charset.Charset
 import java.time.LocalDate
@@ -68,7 +73,7 @@ internal object PmabMaker : VdmMaker {
     private fun writePBCv3(data: Local) {
         data.beginXml("pbc", "3.0", PMAB.PBC_XMLNS).let { out ->
             with(data.render) {
-                beginTag("nav")
+                startTag("nav")
                 data.book.forEachIndexed { i, chapter ->
                     writeChapter(chapter, (i + 1).toString(), data)
                 }
@@ -80,11 +85,11 @@ internal object PmabMaker : VdmMaker {
 
     private fun writeChapter(chapter: Chapter, suffix: String, data: Local) {
         with(data.render) {
-            beginTag("chapter")
+            startTag("chapter")
             val prefix = "chapter-$suffix"
             writeItems(chapter.attributes, "attributes", prefix + "-", data)
             chapter.text?.let {
-                beginTag("content")
+                startTag("content")
                 attribute("type", textType(it, data))
                 text(writeText(it, prefix, data))
                 endTag()
@@ -99,9 +104,9 @@ internal object PmabMaker : VdmMaker {
     private fun writeMetadata(data: Local) {
         val values = (data.arguments?.get("maker.pmab.meta") ?: data.book.extensions[EXT_EPM_FILE_INFO])as? Map<*, *> ?: return
         with(data.render) {
-            beginTag("head")
+            startTag("head")
             for ((key, value) in values) {
-                beginTag("meta")
+                startTag("meta")
                 attribute("name", key?.toString() ?: "")
                 attribute("value", value?.toString() ?: "")
                 endTag()
@@ -112,7 +117,7 @@ internal object PmabMaker : VdmMaker {
 
     private fun writeItems(map: ValueMap, tag: String, prefix: String, data: Local) {
         with(data.render) {
-            beginTag(tag)
+            startTag(tag)
             for ((name, value) in map) {
                 if (!name.startsWith("!--") && name != EXT_EPM_FILE_INFO) {
                     writeItem(name, value, prefix, data)
@@ -124,7 +129,7 @@ internal object PmabMaker : VdmMaker {
 
     private fun writeItem(name: String, value: Any, prefix: String, data: Local) {
         with(data.render) {
-            beginTag("item")
+            startTag("item")
             attribute("name", name)
             var type: String = TypeManager.STRING
             val text = when (value) {
@@ -178,7 +183,7 @@ internal object PmabMaker : VdmMaker {
     }
 
     private data class Local(val book: Book, val writer: VdmWriter, val arguments: Settings?) {
-        val render = XmlRender(arguments)
+        val render: XmlSerializer = XmlPullParserFactory.newInstance().newSerializer()
 
         val charset: Charset =
                 getConfig("encoding")?.let { Charset.forName(it) } ?: Charset.defaultCharset()
@@ -187,16 +192,15 @@ internal object PmabMaker : VdmMaker {
 
         fun beginXml(root: String, version: String, xmlns: String) = ByteArrayOutputStream().also {
             with(render) {
-                output(it)
-                beginXml()
-                beginTag(root)
+                init(it, arguments.xmlEncoding, arguments.xmlIndent, arguments.xmlSeparator)
+                startDocument(arguments.xmlEncoding)
+                startTag("", xmlns, root)
                 attribute("version", version)
-                xmlns(xmlns)
             }
         }
 
         fun endXml(buffer: ByteArrayOutputStream, path: String) {
-            render.endTag().endXml()
+            render.endDocument()
             writer.useStream(path) { buffer.writeTo(it) }
         }
     }

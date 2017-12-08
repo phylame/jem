@@ -16,23 +16,11 @@
  * limitations under the License.
  */
 
-package jem
+package jclp.io
 
-import jclp.Linguist
+import java.nio.file.Files
+import java.nio.file.Path
 
-object Build {
-    const val NAME = "Jem"
-    const val FULL_NAME = "PW's book toolkit for Java"
-    const val VERSION = "5.1.0"
-    const val AUTHOR_EMAIL = "phylame@163.com"
-    const val VENDOR = "Peng Wan, PW"
-    const val LICENSE = "Apache License, Version 2.0"
-    const val SOURCE = "https://github.com/phylame/jem"
-}
+val Path.exists: Boolean inline get() = Files.exists(this)
 
-open class JemException : Exception {
-    constructor(message: String) : super(message)
-    constructor(message: String, cause: Throwable) : super(message, cause)
-}
-
-internal object M : Linguist("!jem/messages")
+val Path.isDirectory: Boolean inline get() = Files.isDirectory(this)

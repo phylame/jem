@@ -78,5 +78,5 @@ class SettingsDelegate<T : Any>(private val type: Class<T>, private val default:
     }
 }
 
-inline fun <reified T : Any> Settings.delegate(default: T, key: String = "") =
+inline fun <reified T : Any> settingsWith(default: T, key: String = "") =
         SettingsDelegate(T::class.java, default, key)

@@ -18,7 +18,7 @@
 
 package jem.epm
 
-import jclp.release
+import jclp.managed
 import jclp.setting.Settings
 import jclp.setting.getInt
 import jclp.setting.getString
@@ -43,16 +43,8 @@ interface CommonParser<I : Closeable> : Parser {
 
     fun parse(input: I, arguments: Settings?): Book
 
-    override fun parse(input: String, arguments: Settings?): Book {
-        with(open(input, arguments)) {
-            try {
-                return parse(this, arguments)
-            } catch (e: Exception) {
-                throw e
-            } finally {
-                release()
-            }
-        }
+    override fun parse(input: String, arguments: Settings?): Book = managed(open(input, arguments)) {
+        parse(it, arguments)
     }
 }
 

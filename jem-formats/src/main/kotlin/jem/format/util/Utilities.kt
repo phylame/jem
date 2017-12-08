@@ -96,6 +96,12 @@ inline fun useXmlLoop(xpp: XmlPullParser, where: Any, action: (Boolean, StringBu
 
 fun failMaker(key: String, vararg args: Any): Nothing = throw MakerException(M.tr(key, *args))
 
+val Settings?.xmlEncoding get() = this?.getString("maker.xml.encoding") ?: "UTF-8"
+
+val Settings?.xmlSeparator get() = this?.getString("maker.xml.separator") ?: "\n"
+
+val Settings?.xmlIndent get() = this?.getString("maker.xml.indent") ?: "\t"
+
 class XmlRender(settings: Settings?) {
     private var depth: Int = 0
 

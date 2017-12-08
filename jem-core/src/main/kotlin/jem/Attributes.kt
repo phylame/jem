@@ -23,8 +23,8 @@ import jclp.ValueMap
 import jclp.ValueValidator
 import jclp.io.Flob
 import jclp.io.getProperties
-import jclp.update
 import jclp.text.Text
+import jclp.update
 import java.time.LocalDate
 import java.util.*
 import kotlin.reflect.KProperty
@@ -62,7 +62,7 @@ object Attributes : ValueValidator {
 
     fun mapType(name: String, type: String) = types.put(name, type)
 
-    fun getName(name: String) = if (name.isNotEmpty()) M.optTr("attribute.$name") else null
+    fun getTitle(name: String) = if (name.isNotEmpty()) M.optTr("attribute.$name") else null
 
     fun getDefault(name: String) = getType(name)?.let { TypeManager.getDefault(it) }
 

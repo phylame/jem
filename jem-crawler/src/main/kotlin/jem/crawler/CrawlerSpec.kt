@@ -19,7 +19,7 @@
 package jem.crawler
 
 import jclp.ServiceManager
-import jclp.ServiceProvider
+import jclp.KeyedService
 import jclp.setting.Settings
 import jem.Book
 import jem.epm.EpmFactory
@@ -45,7 +45,7 @@ interface Crawler {
     }
 }
 
-interface CrawlerFactory : ServiceProvider {
+interface CrawlerFactory : KeyedService {
     fun getCrawler(): Crawler
 }
 

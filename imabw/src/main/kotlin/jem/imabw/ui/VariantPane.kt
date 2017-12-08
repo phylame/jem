@@ -76,7 +76,7 @@ class VariantItem(key: String, value: Any) {
             unbind(typeProperty)
         }
 
-        override fun computeValue() = TypeManager.getName(typeProperty.value)
+        override fun computeValue() = TypeManager.getTitle(typeProperty.value)
     }
 
     var key by keyProperty
@@ -251,7 +251,7 @@ open class VariantPane(val map: ValueMap, showName: Boolean = true) : BorderPane
             }
             val typeCombo = ComboBox<KeyAndName>().apply {
                 prefWidth = minOf(400.0, this@VariantPane.width * 0.5)
-                items.addAll(TypeManager.allTypes.map { KeyAndName(it, TypeManager.getName(it) ?: it.capitalize()) })
+                items.addAll(TypeManager.allTypes.map { KeyAndName(it, TypeManager.getTitle(it) ?: it.capitalize()) })
                 selectionModel.select(0)
             }
             dialogPane.content = GridPane().apply {

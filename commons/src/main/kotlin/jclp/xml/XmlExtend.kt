@@ -18,6 +18,7 @@
 
 package jclp.xml
 
+import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import org.xmlpull.v1.XmlSerializer
 import java.io.OutputStream
@@ -33,6 +34,18 @@ var XmlSerializer.indentation: String?
 var XmlSerializer.lineSeparator: String?
     inline get() = getProperty(SERIALIZER_LINE_SEPARATOR_KEY) as? String
     inline set(value) = setProperty(SERIALIZER_LINE_SEPARATOR_KEY, value)
+
+fun XmlSerializer.init(output: Writer, indent: String = "  ", newLine: String = System.lineSeparator()) {
+    setOutput(output)
+    lineSeparator = newLine
+    indentation = indent
+}
+
+fun XmlSerializer.init(output: OutputStream, encoding: String = "UTF-8", indent: String = "  ", newLine: String = System.lineSeparator()) {
+    setOutput(output, encoding)
+    lineSeparator = newLine
+    indentation = indent
+}
 
 fun XmlSerializer.startDocument(encoding: String = "UTF-8") {
     startDocument(encoding, true)
@@ -81,15 +94,9 @@ fun XmlSerializer.endTag() {
 }
 
 fun newSerializer(output: Writer, indent: String = "  ", newLine: String = System.lineSeparator()): XmlSerializer =
-        XmlPullParserFactory.newInstance().newSerializer().apply {
-            setOutput(output)
-            indentation = indent
-            lineSeparator = newLine
-        }
+        XmlPullParserFactory.newInstance().newSerializer().apply { init(output, indent, newLine) }
 
 fun newSerializer(output: OutputStream, encoding: String = "UTF-8", indent: String = "  ", newLine: String = System.lineSeparator()): XmlSerializer =
-        XmlPullParserFactory.newInstance().newSerializer().apply {
-            setOutput(output, encoding)
-            indentation = indent
-            lineSeparator = newLine
-        }
+        XmlPullParserFactory.newInstance().newSerializer().apply { init(output, encoding, indent, newLine) }
+
+fun XmlPullParser.getAttribute(name: String): String = getAttributeValue(null, name)

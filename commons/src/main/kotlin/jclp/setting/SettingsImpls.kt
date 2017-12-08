@@ -22,8 +22,8 @@ import jclp.VariantMap
 import jclp.actualValue
 import jclp.log.Log
 import jclp.objectType
-import jclp.update
 import jclp.text.ConverterManager
+import jclp.update
 import java.io.Reader
 import java.io.Writer
 import java.util.*

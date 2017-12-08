@@ -22,16 +22,18 @@ import jclp.io.defaultClassLoader
 import jclp.log.Log
 import java.util.*
 
-interface ServiceProvider {
+interface KeyedService {
     val keys: Set<String>
 
     val name: String get() = ""
 }
 
-open class ServiceManager<T : ServiceProvider>(type: Class<T>, loader: ClassLoader? = null) {
+open class ServiceManager<S : KeyedService>(type: Class<S>, loader: ClassLoader? = null) {
     private val serviceLoader = ServiceLoader.load(type, loader ?: defaultClassLoader())
-    private val localRegistry = hashMapOf<String, T>()
-    private val serviceProviders = hashSetOf<T>()
+
+    private val localRegistry = hashMapOf<String, S>()
+
+    private val serviceProviders = hashSetOf<S>()
 
     init {
         initServices()
@@ -50,7 +52,7 @@ open class ServiceManager<T : ServiceProvider>(type: Class<T>, loader: ClassLoad
         serviceProviders.firstOrNull { key in it.keys }
     }
 
-    operator fun set(name: String, factory: T) {
+    operator fun set(name: String, factory: S) {
         localRegistry.put(name, factory)
     }
 
@@ -61,11 +63,11 @@ open class ServiceManager<T : ServiceProvider>(type: Class<T>, loader: ClassLoad
                 try {
                     serviceProviders += it.next()
                 } catch (e: ServiceConfigurationError) {
-                    Log.e(javaClass.simpleName, e) { "providers.next()" }
+                    Log.e(javaClass.simpleName, e) { "in providers.next()" }
                 }
             }
         } catch (e: ServiceConfigurationError) {
-            Log.e(javaClass.simpleName, e) { "providers.hasNext()" }
+            Log.e(javaClass.simpleName, e) { "in providers.hasNext()" }
         }
     }
 }

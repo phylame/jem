@@ -18,13 +18,13 @@
 
 package jclp.log
 
-import jclp.text.colored
-import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.util.logging.Level
 import java.util.logging.Logger
 
 object SimpleFacade : LogFacade {
+    override var level: LogLevel = LogLevel.INFO
+
     override fun log(tag: String, level: LogLevel, msg: String) {
         print(tag, level, msg)
     }
@@ -36,27 +36,27 @@ object SimpleFacade : LogFacade {
 
     private fun print(tag: String, level: LogLevel, msg: String) {
         val text = "[${LocalDateTime.now()}] [${Thread.currentThread().name}] ${level.name[0]}/$tag: $msg"
-        when (level) {
-            LogLevel.TRACE -> println(text)
-            LogLevel.DEBUG -> println(text.colored("green"))
-            LogLevel.INFO -> println(text.colored("yellow"))
-            LogLevel.WARN -> println(text.colored("magenta"))
-            LogLevel.ERROR -> System.err.println(text.colored("red"))
+        if (level == LogLevel.ERROR) {
+            System.err.println(text)
+        } else {
+            println(text)
         }
     }
 }
 
 object JDKFacade : LogFacade {
+    override var level: LogLevel = LogLevel.INFO
+
     override fun log(tag: String, level: LogLevel, msg: String) {
         Logger.getLogger(tag).let {
-            it.level = mapLevel(Log.level)
+            it.level = mapLevel(level)
             it.log(mapLevel(level), msg)
         }
     }
 
     override fun log(tag: String, level: LogLevel, msg: String, t: Throwable) {
         Logger.getLogger(tag).let {
-            it.level = mapLevel(Log.level)
+            it.level = mapLevel(level)
             it.log(mapLevel(level), msg, t)
         }
     }
@@ -69,31 +69,5 @@ object JDKFacade : LogFacade {
         LogLevel.WARN -> Level.WARNING
         LogLevel.ERROR -> Level.SEVERE
         LogLevel.OFF -> Level.OFF
-    }
-}
-
-object SLF4JFacade : LogFacade {
-    override fun log(tag: String, level: LogLevel, msg: String) {
-        val logger = LoggerFactory.getLogger(tag)
-        when (level) {
-            LogLevel.DEBUG -> logger.debug(msg)
-            LogLevel.TRACE -> logger.trace(msg)
-            LogLevel.ERROR -> logger.error(msg)
-            LogLevel.INFO -> logger.info(msg)
-            LogLevel.WARN -> logger.warn(msg)
-            else -> Unit
-        }
-    }
-
-    override fun log(tag: String, level: LogLevel, msg: String, t: Throwable) {
-        val logger = LoggerFactory.getLogger(tag)
-        when (level) {
-            LogLevel.DEBUG -> logger.debug(msg, t)
-            LogLevel.TRACE -> logger.trace(msg, t)
-            LogLevel.ERROR -> logger.error(msg, t)
-            LogLevel.INFO -> logger.info(msg, t)
-            LogLevel.WARN -> logger.warn(msg, t)
-            else -> Unit
-        }
     }
 }

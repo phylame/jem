@@ -35,8 +35,6 @@ dependencies {
     compile project(':jem-crawler')
     compile project(':jem-formats')
     compile project(':mala')
-    compile group: 'org.fusesource.jansi', name: 'jansi', version: '1.16'
-
 }
 
 compileKotlin {

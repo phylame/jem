@@ -19,7 +19,7 @@ class Heiyan : ReusableCrawler() {
         val path = url.removeSuffix("/chapter")
 
         val book = CrawlerBook(path, "heiyan")
-        val bookId = baseName(path).apply { book.bookId = this }
+        book.bookId = baseName(path)
 
         val soup = fetchSoup(path, "get", settings)
 

@@ -52,7 +52,7 @@
     -fx-background-color: -fx-shadow-highlight-color, -fx-outer-border, -fx-inner-border, -fx-body-color;
 }
 
-.split-pane, .tree-view, .table-view, .list-view, .styled-text-area {
+.split-pane, .tree-view, .table-view, .list-view {
     -fx-padding: 0;
     -fx-background-insets: 0;
     -fx-background-color: -fx-control-inner-background;
@@ -115,14 +115,12 @@
     -fx-border-radius: 0;
 }
 
-.intro-tooltip {
-    -fx-font-size: 1em;
+#editor-pane .text-area {
+    -fx-font-size: 1.1em;
 }
 
-.lineno {
-    -fx-alignment: top-right;
-    -fx-background-color: -fx-text-box-border;
-    -fx-text-fill: -fx-text-background-color;
+.intro-tooltip {
+    -fx-font-size: 1em;
 }
 
 .app-status-bar {

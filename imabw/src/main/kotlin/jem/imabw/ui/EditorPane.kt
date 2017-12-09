@@ -38,11 +38,7 @@ import mala.ixin.CommandHandler
 import mala.ixin.IxIn
 import mala.ixin.resetDisable
 import mala.ixin.toContextMenu
-import org.fxmisc.richtext.LineNumberFactory
-import org.fxmisc.richtext.NavigationActions
-import org.fxmisc.richtext.StyleClassedTextArea
 import java.io.File
-import java.util.concurrent.Callable
 
 object EditorPane : TabPane(), CommandHandler, Editable {
     private val tabMenu: ContextMenu?
@@ -153,7 +149,7 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
 
     private var isReady = false
 
-    val isModified get() = !editor.undoManager.isAtMarkedPosition
+    val isModified get() = false//!editor.undoManager.isAtMarkedPosition
 
     val editor = TextEditor()
 
@@ -165,15 +161,15 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
         chapter.toRoot().let { it.subList(1, it.size) }.takeIf { it.isNotEmpty() }?.let {
             tooltip = Tooltip(it.joinToString(" > ") { it.title })
         }
-        editor.undoManager.atMarkedPositionProperty().addListener { _, _, isMarked ->
-            if (isReady) {
-                if (isMarked) {
-                    EventBus.post(ModificationEvent(chapter, ModificationType.TEXT_MODIFIED, -1))
-                } else {
-                    EventBus.post(ModificationEvent(chapter, ModificationType.TEXT_MODIFIED))
-                }
-            }
-        }
+//        editor.undoManager.atMarkedPositionProperty().addListener { _, _, isMarked ->
+//            if (isReady) {
+//                if (isMarked) {
+//                    EventBus.post(ModificationEvent(chapter, ModificationType.TEXT_MODIFIED, -1))
+//                } else {
+//                    EventBus.post(ModificationEvent(chapter, ModificationType.TEXT_MODIFIED))
+//                }
+//            }
+//        }
         loadText()
     }
 
@@ -186,10 +182,11 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
                 updateProgress(App.tr("jem.loadText.hint", chapter.title))
             }
             setOnSucceeded {
-                editor.replaceText(value)
+                editor.text=value
+//                editor.replaceText(value)
                 editor.selectRange(0, 0)
-                editor.undoManager.forgetHistory()
-                editor.undoManager.mark()
+//                editor.undoManager.forgetHistory()
+//                editor.undoManager.mark()
                 hideProgress()
                 isReady = true
             }
@@ -199,14 +196,15 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
 
     fun cacheText() {
         Log.t(tagId) { "cache text for '${chapter.title}'" }
-        if (editor.document.length() <= 1024) {
-            chapter.text = textOf(editor.text)
-            return
-        }
+//        if (editor.document.length() <= 1024) {
+//            chapter.text = textOf(editor.text)
+//            return
+//        }
         File.createTempFile("imabw-text-", ".txt").let {
             try {
                 it.bufferedWriter().use {
-                    it.writeLines(editor.paragraphs.asSequence().map { it.text }.iterator())
+//                    it.writeLines(editor.paragraphs.asSequence().map { it.text }.iterator())
+                    it.writeLines(editor.paragraphs.iterator())
                 }
                 chapter.text = textOf(flobOf(it.toPath(), "text/plain"), Charsets.UTF_8)
             } catch (e: Exception) {
@@ -230,7 +228,7 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
     }
 
     fun resetModification() {
-        editor.undoManager.mark()
+//        editor.undoManager.mark()
     }
 
     fun dispose() {
@@ -241,12 +239,12 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
     }
 }
 
-class TextEditor : StyleClassedTextArea(false), Editable {
+class TextEditor : TextArea(), Editable {
     init {
         isWrapText = EditorSettings.wrapText
-        if (EditorSettings.showLineNumber) {
-            paragraphGraphicFactory = LineNumberFactory.get(this)
-        }
+//        if (EditorSettings.showLineNumber) {
+//            paragraphGraphicFactory = LineNumberFactory.get(this)
+//        }
         focusedProperty().addListener { _, _, focused ->
             if (focused) {
                 initActions()
@@ -266,14 +264,14 @@ class TextEditor : StyleClassedTextArea(false), Editable {
         actionMap["copy"]?.resetDisable()
         actionMap["paste"]?.disableProperty?.bind(notEditable)
         actionMap["delete"]?.disableProperty?.bind(notEditable)
-        val notUndo = Bindings.createBooleanBinding(Callable {
-            !undoManager.isUndoAvailable
-        }, undoManager.undoAvailableProperty())
-        actionMap["undo"]?.disableProperty?.bind(notEditable.or(notUndo))
-        val notRedo = Bindings.createBooleanBinding(Callable {
-            !undoManager.isRedoAvailable
-        }, undoManager.redoAvailableProperty())
-        actionMap["redo"]?.disableProperty?.bind(notEditable.or(notRedo))
+//        val notUndo = Bindings.createBooleanBinding(Callable {
+//            !undoManager.isUndoAvailable
+//        }, undoManager.undoAvailableProperty())
+//        actionMap["undo"]?.disableProperty?.bind(notEditable.or(notUndo))
+//        val notRedo = Bindings.createBooleanBinding(Callable {
+//            !undoManager.isRedoAvailable
+//        }, undoManager.redoAvailableProperty())
+//        actionMap["redo"]?.disableProperty?.bind(notEditable.or(notRedo))
         actionMap["find"]?.resetDisable()
         actionMap["findNext"]?.resetDisable()
         actionMap["findPrevious"]?.resetDisable()
@@ -313,8 +311,8 @@ class TextEditor : StyleClassedTextArea(false), Editable {
         var oldSelection: IndexRange? = null
         if (selectedText.isEmpty()) {
             oldSelection = selection
-            selectLine()
-            nextChar(NavigationActions.SelectionPolicy.ADJUST)
+//            selectLine()
+//            nextChar(NavigationActions.SelectionPolicy.ADJUST)
         }
         return oldSelection
     }

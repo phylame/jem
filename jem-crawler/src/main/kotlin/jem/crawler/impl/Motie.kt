@@ -41,7 +41,7 @@ class Motie : ReusableCrawler() {
         val path = url.removeSuffix("#catalog").removeSuffix("#brief")
 
         val book = CrawlerBook(path, "motie")
-        val bookId = baseName(path).apply { book.bookId = this }
+        book.bookId = baseName(path)
 
         val soup = fetchSoup(path, "get", settings)
         book.genre = soup.selectFirst("div.path a:eq(2)").text()

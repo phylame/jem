@@ -83,6 +83,12 @@ object EditorSettings : MalaSettings("config/editor.ini") {
     var showLineNumber by settingsWith(true, "editor.showLineNumber")
 }
 
+object JemSettings : MalaSettings("config/jem.ini") {
+    var genres by settingsWith("", "jem.values.genres")
+
+    var states by settingsWith(App.tr("jem.value.states"), "jem.values.states")
+}
+
 object History {
     private val file = Paths.get(App.home, "config/history.txt")
 

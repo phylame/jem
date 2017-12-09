@@ -34,7 +34,7 @@ class XsSogou : ReusableCrawler() {
         val path = url.replaceFirst("list", "book")
 
         val book = CrawlerBook(path, "xssogou")
-        val bookId = baseName(path).apply { book.bookId = this }
+        book.bookId = baseName(path)
 
         val soup = fetchSoup(path, "get", settings)
 

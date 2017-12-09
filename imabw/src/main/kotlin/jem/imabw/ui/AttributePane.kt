@@ -29,6 +29,7 @@ import jclp.io.Flob
 import jclp.io.subMime
 import jem.*
 import jem.imabw.Imabw
+import jem.imabw.JemSettings
 import jem.imabw.LoadTextTask
 import jem.imabw.saveFlob
 import mala.App
@@ -49,6 +50,14 @@ class AttributePane(val chapter: Chapter) : AnchorPane() {
         override fun getDefaultValue(key: String) = Attributes.getDefault(key) ?: ""
 
         override fun getItemTitle(key: String) = Attributes.getTitle(key) ?: key.capitalize()
+
+        override fun getAvailableValues(key: String): List<String> {
+            return when (key) {
+                STATE -> JemSettings.states.split(';').dropWhile { it.isEmpty() }
+                GENRE -> JemSettings.genres.split(';').dropWhile { it.isEmpty() }
+                else -> emptyList()
+            }
+        }
 
         override fun dialogNewTitle() = App.tr("d.newAttribute.title")
     }

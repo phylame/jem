@@ -26,6 +26,7 @@ import javafx.geometry.Pos
 import javafx.scene.control.*
 import javafx.scene.image.ImageView
 import javafx.scene.input.MouseButton
+import javafx.scene.input.MouseEvent
 import javafx.scene.layout.BorderPane
 import javafx.util.Callback
 import jclp.EventBus
@@ -41,9 +42,6 @@ import jem.title
 import mala.App
 import mala.App.tr
 import mala.ixin.*
-import org.fxmisc.wellbehaved.event.EventPattern.mouseClicked
-import org.fxmisc.wellbehaved.event.InputMap.consume
-import org.fxmisc.wellbehaved.event.Nodes
 import java.util.concurrent.Callable
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -86,11 +84,13 @@ object NavPane : BorderPane(), CommandHandler {
         Imabw.dashboard.designer.items["navContext"]?.let {
             tree.contextMenu = it.toContextMenu(Imabw, App, App.assets, IxIn.actionMap, null)
         }
-        Nodes.addInputMap(tree, consume(mouseClicked().onlyIf { it.clickCount == 2 && it.button == MouseButton.PRIMARY }, {
-            selectedNode?.takeIf { it.isLeaf && it.isNotRoot }?.let {
-                EditorPane.openTab(it.value, CellFactory.getIcon(it))
+        tree.addEventHandler(MouseEvent.MOUSE_CLICKED) {
+            if (it.clickCount == 2 && it.button == MouseButton.PRIMARY) {
+                selectedNode?.takeIf { it.isLeaf && it.isNotRoot }?.let {
+                    EditorPane.openTab(it.value, CellFactory.getIcon(it))
+                }
             }
-        }))
+        }
     }
 
     private fun initActions() {

@@ -26,6 +26,7 @@ import javafx.geometry.Orientation
 import javafx.scene.Node
 import javafx.scene.control.*
 import javafx.scene.input.KeyCode
+import javafx.scene.input.KeyEvent
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.GridPane
 import javafx.scene.layout.Region
@@ -46,9 +47,6 @@ import mala.ixin.initAsForm
 import mala.ixin.selectNextOrFirst
 import mala.ixin.selectPreviousOrLast
 import org.controlsfx.control.ListSelectionView
-import org.fxmisc.wellbehaved.event.EventPattern
-import org.fxmisc.wellbehaved.event.InputMap
-import org.fxmisc.wellbehaved.event.Nodes
 import java.time.LocalDate
 import java.util.*
 import java.util.concurrent.Callable
@@ -129,6 +127,8 @@ open class VariantPane(val map: ValueMap, val tag: String, showName: Boolean = t
 
     protected open fun getDefaultValue(key: String): Any = ""
 
+    protected open fun getAvailableValues(key: String): List<String> = emptyList()
+
     protected open fun availableKeys(): Collection<String> = emptyList()
 
     protected open fun ignoredKeys(): Collection<String> = emptyList()
@@ -140,12 +140,16 @@ open class VariantPane(val map: ValueMap, val tag: String, showName: Boolean = t
             isEditable = true
             selectionModel.selectionMode = SelectionMode.MULTIPLE
             columnResizePolicy = TableView.CONSTRAINED_RESIZE_POLICY
-            Nodes.addInputMap(this, InputMap.consume(EventPattern.keyPressed(KeyCode.DELETE), {
-                removeItem(selectedItems, true)
-            }))
-            Nodes.addInputMap(this, InputMap.consume(EventPattern.keyPressed(KeyCode.INSERT), {
-                newItem()
-            }))
+            addEventHandler(KeyEvent.KEY_PRESSED) {
+                if (it.code == KeyCode.DELETE) {
+                    removeItem(selectedItems, true)
+                }
+            }
+            addEventHandler(KeyEvent.KEY_PRESSED) {
+                if (it.code == KeyCode.INSERT) {
+                    newItem()
+                }
+            }
             columns += TableColumn<VariantItem, String>(tr("com.variant.id")).apply {
                 setCellValueFactory { it.value.keyProperty }
             }
@@ -252,12 +256,16 @@ open class VariantPane(val map: ValueMap, val tag: String, showName: Boolean = t
                 selectionModel.select(0)
             }
             val nameField = TextField().apply {
-                Nodes.addInputMap(this, InputMap.consume(EventPattern.keyPressed(KeyCode.UP), {
-                    typeCombo.selectPreviousOrLast()
-                }))
-                Nodes.addInputMap(this, InputMap.consume(EventPattern.keyPressed(KeyCode.DOWN), {
-                    typeCombo.selectNextOrFirst()
-                }))
+                addEventHandler(KeyEvent.KEY_PRESSED) {
+                    if (it.code == KeyCode.UP) {
+                        typeCombo.selectPreviousOrLast()
+                    }
+                }
+                addEventHandler(KeyEvent.KEY_PRESSED) {
+                    if (it.code == KeyCode.DOWN) {
+                        typeCombo.selectNextOrFirst()
+                    }
+                }
                 textProperty().addListener { _, _, text ->
                     okButton.isDisable = text.isEmpty() || text in invalidKeys
                 }
@@ -375,7 +383,14 @@ open class VariantPane(val map: ValueMap, val tag: String, showName: Boolean = t
                     cancelEdit()
                 }
                 else -> {
-                    graphic = TextField(formatItemData(variant.data)).apply {
+                    graphic = getAvailableValues(variant.key).takeIf { it.isNotEmpty() }?.let {
+                        ComboBox<String>().apply {
+                            items.setAll(it)
+                            isEditable = true
+                            editor.text = item.toString()
+                            setOnAction { commitEdit(selectionModel.selectedItem as T) }
+                        }
+                    } ?: TextField(formatItemData(variant.data)).apply {
                         setOnAction { commitEdit(text as T) }
                     }
                 }

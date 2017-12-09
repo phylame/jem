@@ -19,6 +19,7 @@
 package mala
 
 import jclp.io.exists
+import jclp.io.notExists
 import jclp.log.Log
 import jclp.log.LogLevel
 import jclp.setting.MapSettings
@@ -48,7 +49,7 @@ open class MalaSettings(name: String, load: Boolean = true, sync: Boolean = true
         }
         if (sync) {
             App.registerCleanup {
-                if (Files.notExists(file.parent)) {
+                if (file.parent.notExists) {
                     try {
                         Files.createDirectories(file.parent)
                         Files.newBufferedWriter(file).use { sync(it) }
@@ -83,7 +84,7 @@ open class AppSettings(name: String = "config/general.ini") : MalaSettings(name)
 
     init {
         App.registerCleanup {
-            if (Files.notExists(blacklist.parent)) {
+            if (blacklist.parent.notExists) {
                 try {
                     Files.createDirectories(blacklist.parent)
                     Files.write(blacklist, pluginBlacklist)

@@ -45,7 +45,7 @@ import java.net.URLConnection
 import java.nio.charset.Charset
 import java.util.concurrent.ExecutorService
 
-const val CRAWLER_LISTENER_KEY = "crawler.listener"
+const val CRAWLER_LISTENER_KEY = "crawler.misc.listener"
 
 internal object M : Linguist("!jem/crawler/messages")
 
@@ -54,8 +54,11 @@ val userAgents by lazy {
 }
 
 val Settings?.connectTimes inline get() = this?.getInt("crawler.net.tryTimes") ?: 3
+
 val Settings?.connectTimeout inline get() = this?.getInt("crawler.net.timeout") ?: 5000
+
 val Settings?.userAgent inline get() = this?.getString("crawler.net.userAgent") ?: userAgents.chooseAny()
+
 val Settings?.charset inline get() = this?.getString("crawler.net.charset") ?: "UTF-8"
 
 inline fun <R> connectLoop(url: String, settings: Settings?, block: () -> R): R {
@@ -101,7 +104,7 @@ fun fetchJson(url: String, method: String, settings: Settings?) =
 fun fetchString(url: String, method: String, settings: Settings?) =
         openConnection(url, method, settings).openReader(settings).use { it.readText() }
 
-class CrawlerBook() : Book() {
+class CrawlerBook(url: String, site: String) : Book() {
     var sourceUrl
         inline get() = extensions[EXT_CRAWLER_SOURCE_URL] ?: ""
         inline set(value) {
@@ -132,6 +135,10 @@ class CrawlerBook() : Book() {
             extensions[EXT_CRAWLER_UPDATE_TIME] = value!!
         }
 
+    init {
+        sourceUrl = url
+        sourceSite = site
+    }
 }
 
 class CrawlerFlob(

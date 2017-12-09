@@ -18,6 +18,7 @@
 
 package jclp.io
 
+import jclp.text.removeAll
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
@@ -25,7 +26,7 @@ import java.net.URLConnection
 import java.net.URLEncoder
 import java.util.zip.GZIPInputStream
 
-fun String.htmlTrim() = trim().replace("\u00A0", "")
+fun String.htmlTrim() = trim().removeAll("\u00A0")
 
 fun String.quote(encoding: String = "UTF-8"): String = URLEncoder.encode(this, encoding)
 

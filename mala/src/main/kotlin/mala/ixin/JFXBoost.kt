@@ -27,15 +27,45 @@ import javafx.geometry.HPos
 import javafx.geometry.VPos
 import javafx.scene.Group
 import javafx.scene.Node
+import javafx.scene.control.ComboBox
 import javafx.scene.control.Tooltip
 import javafx.scene.control.TreeItem
 import javafx.scene.control.TreeView
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
+import javafx.scene.layout.AnchorPane
 import javafx.scene.layout.GridPane
 import javafx.scene.layout.Pane
+import javafx.scene.layout.Priority
 import jclp.HierarchySupport
 import kotlin.reflect.KProperty
+
+fun ComboBox<*>.selectPreviousOrLast() {
+    with(selectionModel) {
+        if (selectedIndex == 0) {
+            selectLast()
+        } else {
+            selectPrevious()
+        }
+    }
+}
+
+fun ComboBox<*>.selectNextOrFirst() {
+    with(selectionModel) {
+        if (selectedIndex == items.lastIndex) {
+            selectFirst()
+        } else {
+            selectNext()
+        }
+    }
+}
+
+fun Node.clearAnchorConstraints(top: Double = 0.0, right: Double = 0.0, bottom: Double = 0.0, left: Double = 0.0) {
+    AnchorPane.setTopAnchor(this, top)
+    AnchorPane.setRightAnchor(this, right)
+    AnchorPane.setBottomAnchor(this, bottom)
+    AnchorPane.setLeftAnchor(this, left)
+}
 
 operator fun Pane.plusAssign(node: Node) {
     children.add(node)
@@ -53,7 +83,9 @@ operator fun Group.plusAssign(elements: Collection<Node>) {
     children.addAll(elements)
 }
 
-fun GridPane.init(labels: Collection<Node>, fields: Collection<Node>, firstRow: Int = 0, vPos: VPos = VPos.CENTER) {
+fun GridPane.initAsForm(labels: Collection<Node>, fields: Collection<Node>, firstRow: Int = 0, vPos: VPos = VPos.CENTER) {
+    vgap = 8.0
+    hgap = 8.0
     val nodes = ArrayList<Node>(fields.size)
     labels.forEachIndexed { index, node ->
         nodes += node
@@ -66,6 +98,7 @@ fun GridPane.init(labels: Collection<Node>, fields: Collection<Node>, firstRow: 
         node.styleClass += "form-field"
         GridPane.setValignment(node, vPos)
         GridPane.setHalignment(node, HPos.LEFT)
+        GridPane.setHgrow(node, Priority.ALWAYS)
         add(node, 1, firstRow + index)
     }
 }

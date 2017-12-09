@@ -32,7 +32,7 @@ import jem.title
 import java.nio.file.FileAlreadyExistsException
 import java.nio.file.Paths
 
-const val EXT_EPM_FILE_INFO = "jem.ext.meta"
+const val EXT_EPM_METADATA = "jem.ext.meta"
 const val MAKER_OVERWRITE_KEY = "maker.file.overwrite"
 
 interface Parser {

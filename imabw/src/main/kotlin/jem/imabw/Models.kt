@@ -26,6 +26,7 @@ import javafx.scene.control.Label
 import javafx.scene.layout.GridPane
 import jclp.EventAction
 import jclp.EventBus
+import jclp.io.exists
 import jclp.log.Log
 import jclp.text.or
 import jclp.text.remove
@@ -33,14 +34,13 @@ import jem.Book
 import jem.Chapter
 import jem.asBook
 import jem.epm.*
-import jem.imabw.ui.EditorPane
 import jem.imabw.ui.*
 import jem.title
 import mala.App
 import mala.App.tr
 import mala.ixin.CommandHandler
 import mala.ixin.IxIn
-import mala.ixin.init
+import mala.ixin.initAsForm
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -184,7 +184,7 @@ object Workbench : CommandHandler {
     }
 
     fun exportBook(chapter: Chapter) {
-        val (file, format) = saveBookFile(chapter.title) ?: return
+        val (file, format) = saveBookFile(chapter.title, Imabw.topWindow) ?: return
         work?.path?.let {
             if (File(it) == file) {
                 error(tr("d.saveBook.title"), tr("err.file.opened", file))
@@ -202,7 +202,7 @@ object Workbench : CommandHandler {
             exportBook(chapters.first())
             return
         }
-        val dir = selectDirectory(tr("d.exportBook.title")) ?: return
+        val dir = selectDirectory(tr("d.exportBook.title"), Imabw.topWindow) ?: return
         val fxApp = Imabw.fxApp.apply { showProgress() }
         val ignored = ArrayList<String>(4)
         val succeed = Vector<String>(chapters.size)
@@ -266,10 +266,10 @@ object Workbench : CommandHandler {
     internal fun openFile(path: String) {
         ensureSaved(tr("d.openBook.title")) {
             if (path.isEmpty()) {
-                openBookFile()?.let { openBook(ParserParam(it.path)) }
+                openBookFile(Imabw.topWindow)?.let { openBook(ParserParam(it.path)) }
             } else {
                 val file = Paths.get(path).toAbsolutePath()
-                openBook(ParserParam(if (Files.exists(file)) file.normalize().toString() else path))
+                openBook(ParserParam(if (file.exists) file.normalize().toString() else path))
             }
         }
     }
@@ -281,7 +281,7 @@ object Workbench : CommandHandler {
         if (outParam == null) {
             val inParam = work.inParam
             val output = if (inParam?.epmName != PMAB_NAME) {
-                saveBookFile(work.book.title, PMAB_NAME)?.first?.path ?: return
+                saveBookFile(work.book.title, PMAB_NAME, Imabw.topWindow)?.first?.path ?: return
             } else { // save pmab to temp file
                 inParam.path + SWAP_SUFFIX
             }
@@ -291,14 +291,14 @@ object Workbench : CommandHandler {
     }
 
     private fun showExportResult(succeed: List<String>, ignored: List<String>, failed: List<String>) {
-        with(info(tr("d.exportBook.title"), "")) {
+        with(alert(Alert.AlertType.INFORMATION, tr("d.exportBook.title"), "")) {
             width = owner.width * 0.5
             dialogPane.content = GridPane().apply {
                 val legend = Label(tr("d.exportBook.result")).apply {
                     style = "-fx-font-weight: bold;"
                 }
                 add(legend, 0, 0, 2, 1)
-                init(listOf(
+                initAsForm(listOf(
                         Label(tr("d.exportBook.succeed")),
                         Label(tr("d.exportBook.ignored")),
                         Label(tr("d.exportBook.failed"))
@@ -324,7 +324,7 @@ object Workbench : CommandHandler {
             "saveFile" -> saveFile()
             "saveAsFile" -> exportBook(work!!.book)
             "fileDetails" -> {
-                println(work?.book?.extensions?.get(EXT_EPM_FILE_INFO))
+                println(work?.book?.extensions?.get(EXT_EPM_METADATA))
             }
             "clearHistory" -> History.clear()
             else -> return false

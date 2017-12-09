@@ -113,6 +113,8 @@ object TypeManager {
     fun printable(value: Any) = when (value) {
         is Locale -> value.displayName
         is Boolean -> M.tr("value.$value")
+        is LocalTime -> value.format(looseISOTime)
+        is LocalDateTime -> value.format(looseISODateTime)
         is Date -> value.format(LOOSE_DATE_TIME_FORMAT)
         is Number, is CharSequence, is Temporal, is Text, is Flob -> value.toString()
         else -> null

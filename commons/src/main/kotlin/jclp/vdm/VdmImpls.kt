@@ -20,7 +20,7 @@ package jclp.vdm
 
 import jclp.DisposableSupport
 import jclp.VariantMap
-import jclp.io.slashify
+import jclp.io.*
 import java.io.*
 import java.nio.charset.Charset
 import java.nio.file.Files
@@ -41,10 +41,10 @@ private class FileVdmEntry(
 ) : VdmEntry {
     override val comment = null
 
-    override val isDirectory = Files.isDirectory(path)
+    override val isDirectory = path.isDirectory
 
     override val lastModified
-        get() = if (Files.exists(path)) Files.getLastModifiedTime(path).toMillis() else -1
+        get() = if (path.exists) Files.getLastModifiedTime(path).toMillis() else -1
 
     override val name: String = name + if (isDirectory) "/" else ""
 
@@ -115,7 +115,7 @@ private class FileVdmWriter(val root: Path) : VdmWriter {
                 throw IllegalArgumentException("Entry is already opened")
             } else {
                 val path = entry.path
-                if (Files.notExists(path.parent)) {
+                if (path.parent.notExists) {
                     Files.createDirectories(path.parent)
                 }
                 with(Files.newOutputStream(path)) {
@@ -172,8 +172,8 @@ class FileVdmFactory : VdmFactory {
             else -> throw IllegalArgumentException(arg.toString())
         }
         if (reading) {
-            if (Files.notExists(dir)) throw FileNotFoundException(dir.toString())
-            if (!Files.isDirectory(dir)) throw NotDirectoryException(dir.toString())
+            if (dir.notExists) throw FileNotFoundException(dir.toString())
+            if (dir.isNotDirectory) throw NotDirectoryException(dir.toString())
         }
         return dir
     }
@@ -284,7 +284,7 @@ class ZipVdmFactory : VdmFactory {
     override fun toString() = name
 }
 
-fun detectReader(path: Path): VdmReader = if (!Files.isDirectory(path)) {
+fun detectReader(path: Path): VdmReader = if (path.isNotDirectory) {
     ZipVdmReader(ZipFile(path.toFile()))
 } else {
     FileVdmReader(path)

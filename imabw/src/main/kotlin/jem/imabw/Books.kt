@@ -18,13 +18,14 @@
 
 package jem.imabw
 
+import javafx.stage.Window
 import jclp.log.Log
 import jclp.setting.MapSettings
 import jclp.text.Text
 import jem.Book
 import jem.JemException
 import jem.epm.*
-import jem.imabw.ui.traceback
+import jem.imabw.ui.debug
 import jem.title
 import mala.App
 import mala.App.tr
@@ -40,7 +41,7 @@ fun makeBook(param: MakerParam) = EpmManager.writeBook(param) ?: throw UnknownEp
 
 class UnknownEpmException : JemException("")
 
-open class LoadBookTask(val param: ParserParam) : ProgressTask<Book>() {
+open class LoadBookTask(val param: ParserParam, private val window: Window = Imabw.topWindow) : ProgressTask<Book>() {
     init {
         setOnRunning {
             updateProgress(tr("jem.loadBook.hint", param.path))
@@ -52,14 +53,14 @@ open class LoadBookTask(val param: ParserParam) : ProgressTask<Book>() {
         setOnFailed {
             hideProgress()
             Log.d("LoadBookTask", exception) { "failed to load book: ${param.path}" }
-            traceback(tr("d.openBook.title"), tr("jem.openBook.failure", param.path), exception)
+            debug(tr("d.openBook.title"), tr("jem.openBook.failure", param.path), exception, window)
         }
     }
 
     override fun call() = loadBook(param)
 }
 
-open class MakeBookTask(val param: MakerParam) : ProgressTask<String>() {
+open class MakeBookTask(val param: MakerParam, private val window: Window = Imabw.topWindow) : ProgressTask<String>() {
     init {
         setOnRunning {
             updateProgress(tr("jem.makeBook.hint", param.book.title, param.actualPath))
@@ -71,7 +72,7 @@ open class MakeBookTask(val param: MakerParam) : ProgressTask<String>() {
         setOnFailed {
             hideProgress()
             Log.d("MakeBookTask", exception) { "failed to make book: ${param.path}" }
-            traceback(tr("d.saveBook.title"), tr("jem.saveBook.failure", param.actualPath), exception)
+            debug(tr("d.saveBook.title"), tr("jem.saveBook.failure", param.actualPath), exception, window)
         }
     }
 

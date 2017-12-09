@@ -76,42 +76,44 @@ inline fun parseTime(text: String, format: String, error: () -> String): LocalTi
 fun xmlAttribute(xpp: XmlPullParser, name: String, where: Any, namespace: String? = null): String =
         xpp.getAttributeValue(namespace, name) ?: failParser("err.parser.noAttribute", name, xpp.name, where, xpp.lineNumber)
 
-inline fun useXmlLoop(xpp: XmlPullParser, where: Any, action: (Boolean, StringBuilder) -> Boolean) {
-    var hasText = false
-    val buf = StringBuilder()
+inline fun useXmlLoop(xpp: XmlPullParser, errorTag: Any, block: (Boolean, StringBuilder) -> Boolean) {
+    var requireText = false
+    val buffer = StringBuilder()
     try {
         var event = xpp.eventType
         do {
             when (event) {
-                XmlPullParser.START_TAG -> hasText = action(true, buf)
-                XmlPullParser.END_TAG -> buf.let { action(false, it); it.setLength(0) }
-                XmlPullParser.TEXT -> if (hasText) buf.append(xpp.text)
+                XmlPullParser.START_TAG -> requireText = block(true, buffer)
+                XmlPullParser.END_TAG -> buffer.let { block(false, it); it.setLength(0) }
+                XmlPullParser.TEXT -> if (requireText) buffer.append(xpp.text)
             }
             event = xpp.next()
         } while (event != XmlPullParser.END_DOCUMENT)
     } catch (e: XmlPullParserException) {
-        failParser(e, "err.parser.badXml", where)
+        failParser(e, "err.parser.badXml", errorTag)
     }
 }
 
 fun failMaker(key: String, vararg args: Any): Nothing = throw MakerException(M.tr(key, *args))
 
-val Settings?.xmlEncoding get() = this?.getString("maker.xml.encoding") ?: "UTF-8"
+fun failMaker(e: Throwable, key: String, vararg args: Any): Nothing = throw MakerException(M.tr(key, *args), e)
 
-val Settings?.xmlSeparator get() = this?.getString("maker.xml.separator") ?: "\n"
+val Settings?.xmlEncoding inline get() = this?.getString("maker.xml.encoding") ?: "UTF-8"
 
-val Settings?.xmlIndent get() = this?.getString("maker.xml.indent") ?: "\t"
+val Settings?.xmlSeparator inline get() = this?.getString("maker.xml.separator") ?: "\n"
+
+val Settings?.xmlIndent inline get() = this?.getString("maker.xml.indent") ?: "\t"
 
 class XmlRender(settings: Settings?) {
     private var depth: Int = 0
 
     private val tags = LinkedList<Tag>()
 
-    private val indent = settings?.getString("maker.xml.indent") ?: "\t"
+    private val indent = settings.xmlIndent
 
-    private val encoding = settings?.getString("maker.xml.encoding") ?: "UTF-8"
+    private val encoding = settings.xmlEncoding
 
-    private val separator = settings?.getString("maker.xml.separator") ?: "\n"
+    private val separator = settings.xmlSeparator
 
     private val serializer = XmlPullParserFactory.newInstance().newSerializer()
 

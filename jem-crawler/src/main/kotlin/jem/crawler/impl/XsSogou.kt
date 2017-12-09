@@ -25,7 +25,7 @@ import jem.*
 import jem.crawler.*
 import jem.crawler.M as T
 
-class XsSogou : AbstractCrawler() {
+class XsSogou : ReusableCrawler() {
     override val name = T.tr("xs.sogou.com")
 
     override val keys = setOf("xs.sogou.com")
@@ -33,12 +33,8 @@ class XsSogou : AbstractCrawler() {
     override fun getBook(url: String, settings: Settings?): Book {
         val path = url.replaceFirst("list", "book")
 
-        val book = CrawlerBook()
-        book.sourceUrl = path
-        book.sourceSite = "xssogou"
-
-        val bookId = baseName(path)
-        book.bookId = bookId
+        val book = CrawlerBook(path, "xssogou")
+        val bookId = baseName(path).apply { book.bookId = this }
 
         val soup = fetchSoup(path, "get", settings)
 
@@ -68,9 +64,7 @@ class XsSogou : AbstractCrawler() {
             if ("chapter-box" in className) {
                 for (a in div.select("a")) {
                     val chapter = (section ?: book).newChapter(a.text())
-                    val u = a.absUrl("href")
-                    chapter.text = CrawlerText(u, chapter, this, settings)
-                    chapter[ATTR_CHAPTER_SOURCE_URL] = u
+                    chapter.setText(a.absUrl("href"), settings)
                 }
             } else if ("volume" in className) {
                 section = book.newChapter(div.selectFirst("span").text())

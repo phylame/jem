@@ -52,7 +52,7 @@ object SCI : CDelegate(DefaultParser()) {
 
     override val name = "scj"
 
-    override val version = Build.VERSION
+    override val version get() = Build.VERSION
 
     @Suppress("UNCHECKED_CAST")
     val inArguments

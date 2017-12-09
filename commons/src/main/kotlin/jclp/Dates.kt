@@ -51,7 +51,7 @@ val utcISODateTime: DateTimeFormatter by lazy { DateTimeFormatter.ofPattern(UTC_
 fun parseDate(text: String, vararg patterns: String): Date? {
     for (pattern in patterns) {
         try {
-            SimpleDateFormat(pattern).parse(text)
+            return SimpleDateFormat(pattern).parse(text)
         } catch (ignored: ParseException) {
         }
     }

@@ -20,6 +20,7 @@ package jem.crawler.ext
 
 import jclp.io.Flob
 import jclp.io.flobOf
+import jclp.io.notExists
 import jclp.log.Log
 import jclp.setting.Settings
 import jclp.text.*
@@ -40,16 +41,18 @@ import javax.script.ScriptEngineManager
 
 private val charset = Charset.forName("GBK")
 
-class ZxChmParser : EpmFactory, Parser {
+class ZxChmParser : Parser, EpmFactory {
     private val tagId = javaClass.simpleName
 
     override val keys = setOf("zxchm")
 
     override val name = "ZhiXuan CHM"
 
+    override val hasParser = true
+
     override val parser = this
 
-    private val engine by lazy {
+    private val jsEngine by lazy {
         Log.t(tagId) { "find script engine for JavaScript..." }
         ScriptEngineManager().getEngineByExtension("js")
     }
@@ -64,7 +67,7 @@ class ZxChmParser : EpmFactory, Parser {
 
     private fun loadInfo(book: Book, root: Path) {
         val path = root.resolve("index1/index.htm")
-        if (Files.notExists(path)) {
+        if (path.notExists) {
             throw NoSuchFileException(path.toString())
         }
         Files.newInputStream(path).use {
@@ -76,13 +79,13 @@ class ZxChmParser : EpmFactory, Parser {
 
     private fun loadPages(book: Book, root: Path) {
         val path = root.resolve("js/page.js")
-        if (Files.notExists(path)) {
+        if (path.notExists) {
             throw NoSuchFileException(path.toString())
         }
         Files.newBufferedReader(path, charset).use {
             Log.t(tagId) { "eval 'page.js'..." }
-            engine.eval(it)
-            val pages = engine.get("pages")
+            jsEngine.eval(it)
+            val pages = jsEngine.get("pages")
             if (pages !is ScriptObjectMirror || !pages.isArray) {
                 throw ParserException("Not found 'pages' variant")
             }
@@ -120,7 +123,7 @@ class ZxChmParser : EpmFactory, Parser {
                     }
                 }
             }
-            val meta = engine.get("hangxing")
+            val meta = jsEngine.get("hangxing")
             if (meta is ScriptObjectMirror && meta.isArray) {
                 val value = meta["0"]
                 if (value is ScriptObjectMirror) {

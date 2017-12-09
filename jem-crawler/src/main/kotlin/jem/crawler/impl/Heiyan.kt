@@ -10,7 +10,7 @@ import jem.crawler.*
 import java.time.LocalDate
 import jem.crawler.M as T
 
-class Heiyan : AbstractCrawler() {
+class Heiyan : ReusableCrawler() {
     override val name = T.tr("heiyan.com")
 
     override val keys = setOf("www.heiyan.com")
@@ -18,12 +18,8 @@ class Heiyan : AbstractCrawler() {
     override fun getBook(url: String, settings: Settings?): Book {
         val path = url.removeSuffix("/chapter")
 
-        val book = CrawlerBook()
-        book.sourceUrl = path
-        book.sourceSite = "heiyan"
-
-        val bookId = baseName(path)
-        book.bookId = bookId
+        val book = CrawlerBook(path, "heiyan")
+        val bookId = baseName(path).apply { book.bookId = this }
 
         val soup = fetchSoup(path, "get", settings)
 
@@ -50,7 +46,7 @@ class Heiyan : AbstractCrawler() {
         return fetchSoup(url, "get", settings).selectText("div.page-content p", System.lineSeparator())
     }
 
-    protected fun getContents(book: Book, url: String, settings: Settings?) {
+    private fun getContents(book: Book, url: String, settings: Settings?) {
         val soup = fetchSoup(url, "get", settings)
         var section: Chapter? = null
         for (div in soup.select("div.chapter-list > div")) {
@@ -61,9 +57,7 @@ class Heiyan : AbstractCrawler() {
                     val a = li.selectFirst("a")
                     val chapter = (section ?: book).newChapter(a.text())
                     chapter[ATTR_CHAPTER_UPDATE_TIME] = li.attr("createdate")
-                    val u = a.absUrl("href").replace("www", "w")
-                    chapter.text = CrawlerText(u, chapter, this, settings)
-                    chapter[ATTR_CHAPTER_SOURCE_URL] = u
+                    chapter.setText(a.absUrl("href").replace("www", "w"), settings)
                 }
             }
         }

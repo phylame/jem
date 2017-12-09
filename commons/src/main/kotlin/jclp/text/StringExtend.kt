@@ -30,6 +30,8 @@ fun String.colored(color: String): String = this
 
 fun String.remove(text: CharSequence) = if (text.isEmpty()) this else replaceFirst(text.toString(), "")
 
+fun String.removeAll(text: CharSequence) = if (text.isEmpty()) this else replace(text.toString(), "")
+
 fun String.valueFor(name: String, partSeparator: String = ";", valueSeparator: String = "="): String? {
     split(partSeparator).forEach {
         val parts = it.trim().split(valueSeparator)

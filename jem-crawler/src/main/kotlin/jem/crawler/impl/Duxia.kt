@@ -26,7 +26,7 @@ import jem.*
 import jem.crawler.*
 import jem.crawler.M as T
 
-class Duxia : AbstractCrawler() {
+class Duxia : ReusableCrawler() {
     override val name = T.tr("duxia.org")
 
     override val keys = setOf("www.duxia.org")
@@ -34,10 +34,9 @@ class Duxia : AbstractCrawler() {
     override fun getBook(url: String, settings: Settings?): Book {
         val path = url.replace("du/[\\d]+/([\\d]+)/".toRegex(), "book/$1.html")
 
-        val book = CrawlerBook()
-        book.sourceUrl = path
-        book.sourceSite = "duxia"
+        val book = CrawlerBook(path, "duxia")
         book.bookId = baseName(path)
+
         val soup = fetchSoup(path, "get", settings)
 
         val head = soup.head()
@@ -60,9 +59,7 @@ class Duxia : AbstractCrawler() {
         val soup = fetchSoup(url, "get", settings)
         for (a in soup.select("div.readerListShow a")) {
             val chapter = book.newChapter(a.text())
-            val u = a.absUrl("href")
-            chapter.text = CrawlerText(u, chapter, this, settings)
-            chapter[ATTR_CHAPTER_SOURCE_URL] = u
+            chapter.setText(a.absUrl("href"), settings)
         }
     }
 

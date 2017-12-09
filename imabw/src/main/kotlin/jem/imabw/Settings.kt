@@ -24,7 +24,9 @@ import javafx.collections.ListChangeListener
 import javafx.scene.control.Dialog
 import javafx.scene.control.MenuItem
 import javafx.scene.control.SeparatorMenuItem
+import javafx.scene.control.TableView
 import jclp.io.exists
+import jclp.io.notExists
 import jclp.setting.getDouble
 import jclp.setting.settingsWith
 import mala.App
@@ -60,6 +62,18 @@ object UISettings : IxInSettings() {
         set("dialog.$tag.height", dialog.dialogPane.height)
         set("dialog.$tag.x", dialog.x)
         set("dialog.$tag.y", dialog.y)
+    }
+
+    fun restore(table: TableView<*>, tag: String) {
+        table.columns.forEachIndexed { index, column ->
+            getDouble("table.$tag.column.$index")?.let { column.prefWidth = it }
+        }
+    }
+
+    fun store(table: TableView<*>, tag: String) {
+        table.columns.forEachIndexed { index, column ->
+            set("table.$tag.column.$index", column.width)
+        }
     }
 }
 
@@ -147,7 +161,7 @@ object History {
 
     fun sync() {
         if (GeneralSettings.enableHistory && isModified) {
-            if (Files.notExists(file)) {
+            if (file.notExists) {
                 try {
                     Files.createDirectories(file.parent)
                 } catch (e: Exception) {

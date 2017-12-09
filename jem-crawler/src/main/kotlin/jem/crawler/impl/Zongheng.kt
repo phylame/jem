@@ -27,7 +27,7 @@ import jem.*
 import jem.crawler.*
 import jem.crawler.M as T
 
-class Zongheng : AbstractCrawler() {
+class Zongheng : ReusableCrawler() {
     override val name = T.tr("zongheng.com")
 
     override val keys = setOf("book.zongheng.com")
@@ -35,12 +35,8 @@ class Zongheng : AbstractCrawler() {
     override fun getBook(url: String, settings: Settings?): Book {
         val path = url.replace("showchapter", "book")
 
-        val book = CrawlerBook()
-        book.sourceUrl = path
-        book.sourceSite = "zongheng"
-
-        val bookId = baseName(path)
-        book.bookId = bookId
+        val book = CrawlerBook(path, "zongheng")
+        val bookId = baseName(path).apply { book.bookId = this }
 
         val soup = fetchSoup(path, "get", settings)
 
@@ -78,9 +74,7 @@ class Zongheng : AbstractCrawler() {
                 val chapter = section.newChapter(td.attr("chaptername"))
                 chapter.words = td.attr("wordnum")
                 chapter[ATTR_CHAPTER_UPDATE_TIME] = td.attr("updatetime")
-                val u = "http://book.zongheng.com/chapter/$bookId/${td.attr("chapterid")}.html"
-                chapter.text = CrawlerText(u, chapter, this, settings)
-                chapter[ATTR_CHAPTER_SOURCE_URL] = u
+                chapter.setText("http://book.zongheng.com/chapter/$bookId/${td.attr("chapterid")}.html", settings)
             }
         }
     }

@@ -18,10 +18,11 @@
 
 package jem.crawler
 
-import jclp.ServiceManager
 import jclp.KeyedService
+import jclp.ServiceManager
 import jclp.setting.Settings
 import jem.Book
+import jem.Chapter
 import jem.epm.EpmFactory
 import jem.epm.Parser
 import jem.epm.ParserException
@@ -55,14 +56,19 @@ object CrawlerManager : ServiceManager<CrawlerFactory>(CrawlerFactory::class.jav
     fun fetchBook(url: String, settings: Settings?) = getCrawler(URL(url).host)?.getBook(url, settings)
 }
 
-abstract class AbstractCrawler : Crawler, CrawlerFactory {
+abstract class ReusableCrawler : Crawler, CrawlerFactory {
     override fun getCrawler(): Crawler = this
+
+    protected fun Chapter.setText(url: String, settings: Settings?) {
+        text = CrawlerText(url, this, this@ReusableCrawler, settings)
+        this[ATTR_CHAPTER_SOURCE_URL] = url
+    }
 
     protected open fun fetchPage(page: Int, arg: Any): Int {
         throw NotImplementedError()
     }
 
-    protected fun fetchToc(arg: Any) {
+    protected fun fetchContents(arg: Any) {
         for (i in 2 until fetchPage(1, arg)) {
             if (Thread.interrupted()) throw InterruptedIOException()
             fetchPage(i, arg)
@@ -70,10 +76,10 @@ abstract class AbstractCrawler : Crawler, CrawlerFactory {
     }
 }
 
-class CrawlerParser : EpmFactory, Parser {
+class CrawlerParser : Parser, EpmFactory {
     override val name = "Book Crawler"
 
-    override val keys = setOf("crawler")
+    override val keys = setOf("crawler", "net")
 
     override val hasParser = true
 

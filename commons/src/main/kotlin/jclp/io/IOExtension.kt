@@ -23,4 +23,8 @@ import java.nio.file.Path
 
 val Path.exists: Boolean inline get() = Files.exists(this)
 
+val Path.notExists: Boolean inline get() = Files.notExists(this)
+
 val Path.isDirectory: Boolean inline get() = Files.isDirectory(this)
+
+val Path.isNotDirectory: Boolean inline get() = !Files.isDirectory(this)

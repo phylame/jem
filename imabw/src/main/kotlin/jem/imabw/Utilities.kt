@@ -20,12 +20,36 @@ package jem.imabw
 
 import javafx.concurrent.Task
 import javafx.scene.control.ComboBox
+import javafx.stage.Window
 import javafx.util.StringConverter
+import jclp.io.Flob
+import jclp.text.Text
+import jem.imabw.ui.debug
+import jem.imabw.ui.info
 import mala.App
+import java.io.File
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
+
+fun saveFlob(title: String, flob: Flob, file: File, window: Window) {
+    try {
+        file.outputStream().use { flob.writeTo(it) }
+        info(title, App.tr("d.saveFile.success", file), window)
+    } catch (e: Exception) {
+        debug(title, App.tr("d.saveFile.failed", file), e, window)
+    }
+}
+
+fun saveText(title: String, text: Text, file: File, window: Window) {
+    try {
+        file.bufferedWriter().use { text.writeTo(it) }
+        info(title, App.tr("d.saveFile.success", file), window)
+    } catch (e: Exception) {
+        debug(title, App.tr("d.saveFile.failed", file), e, window)
+    }
+}
 
 class KeyAndName(val key: String, val name: String) {
     override fun toString() = name

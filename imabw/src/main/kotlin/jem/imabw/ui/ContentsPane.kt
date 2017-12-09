@@ -33,6 +33,7 @@ import jclp.isRoot
 import jclp.log.Log
 import jem.Book
 import jem.Chapter
+import jem.epm.EXT_EPM_METADATA
 import jem.epm.ParserParam
 import jem.imabw.*
 import jem.intro
@@ -171,7 +172,7 @@ object NavPane : BorderPane(), CommandHandler {
 
     @Command
     fun importChapter() {
-        val files = openBookFiles() ?: return
+        val files = openBookFiles(Imabw.topWindow) ?: return
 
         val targets = currentNodes
         val fxApp = Imabw.fxApp.apply { showProgress() }
@@ -278,14 +279,14 @@ object NavPane : BorderPane(), CommandHandler {
                 insertNodes(listOf(it.toTreeItem()), currentNodes, InsertMode.BEFORE_ITEM)
             }
             "exportChapter" -> Workbench.exportBooks(selectedNodes.map { it.value })
-            "viewAttributes" -> if (editAttributes(selectedNode!!.value)) {
+            "viewAttributes" -> if (editAttributes(selectedNode!!.value, Imabw.topWindow)) {
                 EventBus.post(ModificationEvent(selectedNode!!.value, ModificationType.ATTRIBUTE_MODIFIED))
             }
-            "bookAttributes" -> if (editAttributes(Workbench.work!!.book)) {
+            "bookAttributes" -> if (editAttributes(Workbench.work!!.book, Imabw.topWindow)) {
                 EventBus.post(ModificationEvent(Workbench.work!!.book, ModificationType.ATTRIBUTE_MODIFIED))
             }
             "bookExtensions" -> Workbench.work!!.book.let {
-                if (editVariants(it.extensions, tr("d.editExtension.title", it.title))) {
+                if (editVariants(it.extensions, tr("d.editExtension.title", it.title), setOf(EXT_EPM_METADATA), Imabw.topWindow)) {
                     EventBus.post(ModificationEvent(it, ModificationType.EXTENSIONS_MODIFIED))
                 }
             }

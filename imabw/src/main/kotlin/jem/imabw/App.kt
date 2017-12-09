@@ -34,9 +34,11 @@ fun main(args: Array<String>) {
 object Imabw : IDelegate() {
     override val name = "imabw"
 
-    override val version = Build.VERSION
+    override val version get() = Build.VERSION
 
     val dashboard get() = fxApp as Dashboard
+
+    val topWindow get() = fxApp.stage.scene.window
 
     override fun onStart() {
         restoreState(GeneralSettings)

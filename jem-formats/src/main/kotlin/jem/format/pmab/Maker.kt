@@ -30,7 +30,7 @@ import jclp.vdm.*
 import jclp.xml.*
 import jem.Book
 import jem.Chapter
-import jem.epm.EXT_EPM_FILE_INFO
+import jem.epm.EXT_EPM_METADATA
 import jem.epm.VdmMaker
 import jem.format.util.failMaker
 import jem.format.util.xmlEncoding
@@ -64,8 +64,8 @@ internal object PmabMaker : VdmMaker {
     private fun writePBMv3(data: Local) {
         data.beginXml("pbm", "3.0", PMAB.PBM_XMLNS).let { out ->
             writeMetadata(data)
-            writeItems(data.book.attributes, "attributes", "m-", data)
-            writeItems(data.book.extensions, "extensions", "x-", data)
+            writeValueMap(data.book.attributes, "attributes", "m-", data)
+            writeValueMap(data.book.extensions, "extensions", "x-", data)
             data.endXml(out, PMAB.PBM_PATH)
         }
     }
@@ -87,7 +87,7 @@ internal object PmabMaker : VdmMaker {
         with(data.render) {
             startTag("chapter")
             val prefix = "chapter-$suffix"
-            writeItems(chapter.attributes, "attributes", prefix + "-", data)
+            writeValueMap(chapter.attributes, "attributes", prefix + "-", data)
             chapter.text?.let {
                 startTag("content")
                 attribute("type", textType(it, data))
@@ -102,7 +102,7 @@ internal object PmabMaker : VdmMaker {
     }
 
     private fun writeMetadata(data: Local) {
-        val values = (data.arguments?.get("maker.pmab.meta") ?: data.book.extensions[EXT_EPM_FILE_INFO])as? Map<*, *> ?: return
+        val values = (data.arguments?.get("maker.pmab.meta") ?: data.book.extensions[EXT_EPM_METADATA])as? Map<*, *> ?: return
         with(data.render) {
             startTag("head")
             for ((key, value) in values) {
@@ -115,11 +115,11 @@ internal object PmabMaker : VdmMaker {
         }
     }
 
-    private fun writeItems(map: ValueMap, tag: String, prefix: String, data: Local) {
+    private fun writeValueMap(map: ValueMap, tagName: String, prefix: String, data: Local) {
         with(data.render) {
-            startTag(tag)
+            startTag(tagName)
             for ((name, value) in map) {
-                if (!name.startsWith("!--") && name != EXT_EPM_FILE_INFO) {
+                if (!name.startsWith("!--") && name != EXT_EPM_METADATA) {
                     writeItem(name, value, prefix, data)
                 }
             }
@@ -185,8 +185,7 @@ internal object PmabMaker : VdmMaker {
     private data class Local(val book: Book, val writer: VdmWriter, val arguments: Settings?) {
         val render: XmlSerializer = XmlPullParserFactory.newInstance().newSerializer()
 
-        val charset: Charset =
-                getConfig("encoding")?.let { Charset.forName(it) } ?: Charset.defaultCharset()
+        val charset: Charset = getConfig("encoding")?.let { Charset.forName(it) } ?: Charsets.UTF_8
 
         fun getConfig(key: String) = arguments?.getString("maker.pmab.$key")
 

@@ -61,6 +61,8 @@ fun extName(path: String) = with(splitPath(path).second) {
 
 fun mimeType(path: String) = Files.probeContentType(Paths.get(fullName(path))) ?: UNKNOWN_MIME
 
+fun subMime(mime: String) = mime.split('/').last()
+
 class MapMimeDetector : FileTypeDetector() {
     private val mimes = getProperties("!jclp/io/mime.properties")!!
 

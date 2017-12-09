@@ -41,7 +41,7 @@ import mala.ixin.graphicFor
 import java.io.File
 import java.util.concurrent.Callable
 
-fun Dialog<*>.init(title: String, owner: Window, tag: String) {
+fun Dialog<*>.init(title: String, owner: Window, tag: String = "") {
     headerText = null
     this.title = title
     initModality(Modality.WINDOW_MODAL)
@@ -52,25 +52,25 @@ fun Dialog<*>.init(title: String, owner: Window, tag: String) {
     }
 }
 
-fun alert(type: Alert.AlertType, title: String, content: String, owner: Window = Imabw.fxApp.stage): Alert {
-    return Alert(type, content).apply { init(title, owner, "") }
+fun alert(type: Alert.AlertType, title: String, content: String, owner: Window = Imabw.topWindow): Alert {
+    return Alert(type, content).apply { init(title, owner) }
 }
 
-fun info(title: String, content: String, owner: Window = Imabw.fxApp.stage): Alert {
-    return alert(Alert.AlertType.INFORMATION, title, content, owner)
+fun info(title: String, content: String, owner: Window = Imabw.topWindow) {
+    alert(Alert.AlertType.INFORMATION, title, content, owner).showAndWait()
 }
 
-fun error(title: String, content: String, owner: Window = Imabw.fxApp.stage) {
+fun error(title: String, content: String, owner: Window = Imabw.topWindow) {
     alert(Alert.AlertType.ERROR, title, content, owner).showAndWait()
 }
 
-fun confirm(title: String, content: String, owner: Window = Imabw.fxApp.stage): Boolean {
+fun confirm(title: String, content: String, owner: Window = Imabw.topWindow): Boolean {
     return with(alert(Alert.AlertType.CONFIRMATION, title, content, owner)) {
         showAndWait().get() == ButtonType.OK
     }
 }
 
-fun traceback(title: String, content: String, throwable: Throwable, owner: Window = Imabw.fxApp.stage) {
+fun debug(title: String, content: String, throwable: Throwable, owner: Window) {
     with(alert(Alert.AlertType.NONE, title, content, owner)) {
         val textArea = TextArea().apply {
             isEditable = false
@@ -93,12 +93,13 @@ fun input(
         initial: String,
         canEmpty: Boolean = true,
         mustDiff: Boolean = false,
-        owner: Window = Imabw.fxApp.stage
+        owner: Window = Imabw.topWindow
 ): String? {
     return with(TextInputDialog(initial)) {
         graphic = null
-        init(title, owner, "")
+        init(title, owner)
         val textField = editor
+        textField.prefColumnCount = 20
         val okButton = dialogPane.lookupButton(ButtonType.OK)
         if (!canEmpty) {
             if (mustDiff) {
@@ -116,15 +117,15 @@ fun input(
     }
 }
 
-fun longText(
+fun text(
         title: String,
         initial: String,
         canEmpty: Boolean = true,
         mustDiff: Boolean = false,
-        owner: Window = Imabw.fxApp.stage
+        owner: Window = Imabw.topWindow
 ): String? {
     with(Dialog<ButtonType>()) {
-        init(title, owner, "longText")
+        init(title, owner, "text")
         val root = VBox().apply {
             dialogPane.content = this
         }
@@ -136,9 +137,7 @@ fun longText(
         }
         val openButton = ButtonType(App.tr("ui.button.open"), ButtonBar.ButtonData.LEFT)
         dialogPane.buttonTypes.addAll(ButtonType.OK, ButtonType.CANCEL, openButton)
-        dialogPane.lookupButton(openButton).setOnMousePressed {
-            it.consume()
-        }
+        dialogPane.lookupButton(openButton).isDisable = true
         val okButton = dialogPane.lookupButton(ButtonType.OK)
         if (!canEmpty) {
             if (mustDiff) {
@@ -168,12 +167,14 @@ private val fileChooser = FileChooser().apply {
 
 private val directoryChooser = DirectoryChooser()
 
+private val allExtensionFilter = FileChooser.ExtensionFilter(getExtensionName("any"), "*.*")
+
 private fun getExtensionName(ext: String): String {
     return App.optTr("misc.ext.$ext") ?: App.tr("misc.ext.common", ext.toUpperCase())
 }
 
 private fun setExtensionFilters(chooser: FileChooser, extensions: Collection<Collection<String>>, selected: String) {
-    val filters = chooser.extensionFilters.apply { clear() }
+    val filters = chooser.extensionFilters
     for (extension in extensions) {
         FileChooser.ExtensionFilter(getExtensionName(extension.first()), extension.map { "*.$it" }).apply {
             filters += this
@@ -184,15 +185,34 @@ private fun setExtensionFilters(chooser: FileChooser, extensions: Collection<Col
     }
 }
 
-fun selectFile(title: String, owner: Window = Imabw.fxApp.stage): File? {
+fun selectOpenFile(title: String, owner: Window): File? {
     fileChooser.title = title
     fileChooser.extensionFilters.clear()
     return fileChooser.showOpenDialog(owner)
 }
 
-fun selectDirectory(title: String, owner: Window = Imabw.fxApp.stage): File? {
+fun selectSaveFile(title: String, initName: String = "", owner: Window): File? {
+    fileChooser.title = title
+    fileChooser.extensionFilters.setAll(allExtensionFilter)
+    fileChooser.initialFileName = initName
+    return fileChooser.showSaveDialog(owner)
+}
+
+fun selectDirectory(title: String, owner: Window): File? {
     directoryChooser.title = title
     return directoryChooser.showDialog(owner)
+}
+
+fun selectOpenImage(title: String, owner: Window): File? {
+    fileChooser.title = title
+    fileChooser.extensionFilters.setAll(allExtensionFilter)
+    setExtensionFilters(fileChooser, setOf(
+            setOf("jpg", "jpeg"),
+            setOf("png"),
+            setOf("bmp"),
+            setOf("gif")
+    ), "")
+    return fileChooser.showOpenDialog(owner)
 }
 
 private fun parserExtensions(): List<Set<String>> {
@@ -212,13 +232,14 @@ private fun makeSaveResult(file: File, chooser: FileChooser): Pair<File, String>
     return file to extension
 }
 
-fun openBookFile(owner: Window = Imabw.fxApp.stage): File? {
+fun openBookFile(owner: Window): File? {
     fileChooser.title = App.tr("d.openBook.title")
+    fileChooser.extensionFilters.clear()
     setExtensionFilters(fileChooser, parserExtensions(), PMAB_NAME)
     return fileChooser.showOpenDialog(owner)?.also { fileChooser.initialDirectory = it.parentFile }
 }
 
-fun saveBookFile(name: String, format: String, owner: Window = Imabw.fxApp.stage): Pair<File, String>? {
+fun saveBookFile(name: String, format: String, owner: Window): Pair<File, String>? {
     fileChooser.initialFileName = name
     fileChooser.title = App.tr("d.saveBook.title")
     fileChooser.extensionFilters.setAll(FileChooser.ExtensionFilter(getExtensionName(format), "*.$format"))
@@ -228,9 +249,10 @@ fun saveBookFile(name: String, format: String, owner: Window = Imabw.fxApp.stage
     }
 }
 
-fun saveBookFile(name: String, owner: Window = Imabw.fxApp.stage): Pair<File, String>? {
+fun saveBookFile(name: String, owner: Window): Pair<File, String>? {
     fileChooser.initialFileName = name
     fileChooser.title = App.tr("d.saveBook.title")
+    fileChooser.extensionFilters.clear()
     setExtensionFilters(fileChooser, makerExtensions(), PMAB_NAME)
     return fileChooser.showSaveDialog(owner)?.let {
         fileChooser.initialDirectory = it.parentFile
@@ -238,33 +260,42 @@ fun saveBookFile(name: String, owner: Window = Imabw.fxApp.stage): Pair<File, St
     }
 }
 
-fun openBookFiles(owner: Window = Imabw.fxApp.stage): List<File>? {
+fun openBookFiles(owner: Window): List<File>? {
     fileChooser.title = App.tr("d.openBook.title")
+    fileChooser.extensionFilters.clear()
     setExtensionFilters(fileChooser, parserExtensions(), PMAB_NAME)
     return fileChooser.showOpenMultipleDialog(owner)?.also { fileChooser.initialDirectory = it.first().parentFile }
 }
 
-fun editAttributes(chapter: Chapter, owner: Window = Imabw.fxApp.stage): Boolean {
+fun editAttributes(chapter: Chapter, owner: Window): Boolean {
     with(Dialog<ButtonType>()) {
         isResizable = true
         init(App.tr("d.editAttribute.title", chapter.title), owner, "attributes")
         val pane = AttributePane(chapter).apply { dialogPane.content = BorderPane(this) }
         dialogPane.buttonTypes.setAll(ButtonType.OK, ButtonType.CANCEL)
-        return if (showAndWait().get() == ButtonType.OK && pane.isModified) {
+        dialogPane.content.style += "-fx-padding: 0"
+        val result = showAndWait().get()
+        pane.storeState()
+        return if (result == ButtonType.OK && pane.isModified) {
             pane.syncVariants()
             true
         } else false
     }
 }
 
-fun editVariants(map: ValueMap, title: String, owner: Window = Imabw.fxApp.stage): Boolean {
+fun editVariants(map: ValueMap, title: String, ignoredKeys: Set<String> = emptySet(), owner: Window): Boolean {
     with(Dialog<ButtonType>()) {
-        init(title, owner, "extensions")
         isResizable = true
-        val pane = VariantPane(map, false)
+        init(title, owner, "variants")
+        val pane = object : VariantPane(map, "variants", false) {
+            override fun ignoredKeys() = ignoredKeys
+        }
         dialogPane.content = pane
+        dialogPane.content.style += "-fx-padding: 0"
         dialogPane.buttonTypes.setAll(ButtonType.OK, ButtonType.CANCEL)
-        return if (showAndWait().get() == ButtonType.OK && pane.isModified) {
+        val result = showAndWait().get()
+        pane.storeState()
+        return if (result == ButtonType.OK && pane.isModified) {
             pane.syncVariants()
             true
         } else false

@@ -28,7 +28,7 @@ import jem.*
 import jem.crawler.*
 import jem.crawler.M as T
 
-class Ybdu : AbstractCrawler() {
+class Ybdu : ReusableCrawler() {
     override val name = T.tr("ybdu.com")
 
     override val keys = setOf("www.ybdu.com")
@@ -36,10 +36,9 @@ class Ybdu : AbstractCrawler() {
     override fun getBook(url: String, settings: Settings?): Book {
         val path = url.replaceFirst("xiaoshuo", "xiazai")
 
-        val book = CrawlerBook()
-        book.sourceUrl = path
-        book.sourceSite = "ybdu"
+        val book = CrawlerBook(path, "ybdu")
         book.bookId = baseName(path.removeSuffix("/"))
+
         val soup = fetchSoup(path, "get", settings)
 
         val stub = soup.selectFirst("div.ui_bg6")
@@ -60,9 +59,7 @@ class Ybdu : AbstractCrawler() {
         val soup = fetchSoup(url, "get", settings)
         for (a in soup.select("ul.mulu_list a")) {
             val chapter = book.newChapter(a.text().replaceFirst("\\d+\\.".toRegex(), ""))
-            val u = a.absUrl("href")
-            chapter.text = CrawlerText(u, chapter, this, settings)
-            chapter[ATTR_CHAPTER_SOURCE_URL] = u
+            chapter.setText(a.absUrl("href"), settings)
         }
     }
 

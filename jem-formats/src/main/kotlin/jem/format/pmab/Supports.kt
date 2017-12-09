@@ -38,7 +38,7 @@ internal object PMAB {
 }
 
 class PmabFactory : EpmFactory {
-    override val keys = setOf(PMAB_NAME)
+    override val keys = setOf(PMAB_NAME, "pem")
 
     override val name = "PMAB for Jem"
 

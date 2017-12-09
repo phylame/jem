@@ -33,7 +33,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import jem.crawler.M as T
 
-class Qidian : AbstractCrawler() {
+class Qidian : ReusableCrawler() {
     override val name = T.tr("qidian.com")
 
     override val keys = setOf("book.qidian.com", "m.qidian.com")
@@ -42,12 +42,9 @@ class Qidian : AbstractCrawler() {
         val path = if ("m.qidian.com" in url) {
             url.replace("m.qidian.com/book", "book.qidian.com/info")
         } else {
-            url.replace("#Catalog", "")
+            url.remove("#Catalog")
         }
-        val book = CrawlerBook()
-        book.sourceUrl = path
-        book.sourceSite = "qidian"
-
+        val book = CrawlerBook(path, "qidian")
         val bookId = baseName(url).apply { book.bookId = this }
 
         val soup = fetchSoup(path, "get", settings)
@@ -90,9 +87,7 @@ class Qidian : AbstractCrawler() {
                     chapter[ATTR_CHAPTER_UPDATE_TIME] = (it.substring(5, 24))
                     chapter.words = it.substring(30)
                 }
-                val url = a.absUrl("href")
-                chapter.text = CrawlerText(url, chapter, this, settings)
-                chapter[ATTR_CHAPTER_SOURCE_URL] = url
+                chapter.setText(a.absUrl("href"), settings)
             }
         }
     }
@@ -109,21 +104,15 @@ class Qidian : AbstractCrawler() {
                 val chapter = section.newChapter(ch.getString("cN"))
                 chapter[ATTR_CHAPTER_UPDATE_TIME] = ch.getString("uT")
                 chapter[WORDS] = ch.getInt("cnt").toString()
-                val url = "$baseUrl/${ch.getLong("id")}"
-                chapter.text = CrawlerText(url, chapter, this, settings)
-                chapter[ATTR_CHAPTER_SOURCE_URL] = url
+                chapter.setText("$baseUrl/${ch.getLong("id")}", settings)
             }
         }
     }
 
-    private fun parseTime(str: String): LocalDateTime {
-        if ('-' in str) {
-            return str.toLocalDateTime()
-        } else if (str.startsWith("今天")) {
-            return LocalDateTime.of(LocalDate.now(), "${str.substring(2, 7)}:00".toLocalTime())
-        } else {
-            return LocalDateTime.of(LocalDate.now().minusDays(1), "${str.substring(2, 7)}:00".toLocalTime())
-        }
+    private fun parseTime(str: String): LocalDateTime = when {
+        '-' in str -> str.toLocalDateTime()
+        str.startsWith("今天") -> LocalDateTime.of(LocalDate.now(), "${str.substring(2, 7)}:00".toLocalTime())
+        else -> LocalDateTime.of(LocalDate.now().minusDays(1), "${str.substring(2, 7)}:00".toLocalTime())
     }
 
     override fun getText(url: String, settings: Settings?) = fetchSoup(url, "get", settings).let {

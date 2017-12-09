@@ -32,7 +32,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import jem.crawler.M as T
 
-class Motie : AbstractCrawler() {
+class Motie : ReusableCrawler() {
     override val name = T.tr("motie.com")
 
     override val keys = setOf("www.motie.com")
@@ -40,12 +40,8 @@ class Motie : AbstractCrawler() {
     override fun getBook(url: String, settings: Settings?): Book {
         val path = url.removeSuffix("#catalog").removeSuffix("#brief")
 
-        val book = CrawlerBook()
-        book.sourceUrl = path
-        book.sourceSite = "motie"
-
-        val bookId = baseName(path)
-        book.bookId = bookId
+        val book = CrawlerBook(path, "motie")
+        val bookId = baseName(path).apply { book.bookId = this }
 
         val soup = fetchSoup(path, "get", settings)
         book.genre = soup.selectFirst("div.path a:eq(2)").text()
@@ -81,9 +77,7 @@ class Motie : AbstractCrawler() {
                 for (a in div.select("a")) {
                     val chapter = (section ?: book).newChapter(a.selectFirst("span").text())
                     chapter[ATTR_CHAPTER_UPDATE_TIME] = a.attr("data-time")
-                    val url = "http://m.motie.com/wechat${a.attr("href")}"
-                    chapter.text = CrawlerText(url, chapter, this, settings)
-                    chapter[ATTR_CHAPTER_SOURCE_URL] = url
+                    chapter.setText("http://m.motie.com/wechat${a.attr("href")}", settings)
                 }
             }
         }

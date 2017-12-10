@@ -26,6 +26,7 @@ import jclp.setting.getString
 import jclp.text.ConverterManager
 import jclp.text.TEXT_PLAIN
 import jclp.text.Text
+import jclp.text.or
 import jclp.vdm.*
 import jclp.xml.*
 import jem.Book
@@ -169,7 +170,7 @@ internal object PmabMaker : VdmMaker {
     }
 
     private fun writeFlob(flob: Flob, name: String, data: Local): String {
-        val path = "resources/$name.${extName(flob.name).takeIf { it.isNotEmpty() } ?: "dat"}"
+        val path = "resources/$name.${extName(flob.name) or "dat"}"
         data.writer.writeFlob(path, flob)
         return path
     }

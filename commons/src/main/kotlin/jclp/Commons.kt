@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
 val Throwable.traceText: String
-    get() = with(CharArrayWriter()) {
+    inline get() = with(CharArrayWriter()) {
         printStackTrace(PrintWriter(this))
         toString()
     }

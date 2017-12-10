@@ -64,28 +64,28 @@
     -fx-background-color: -fx-outer-border, -fx-inner-border;
 }
 
-#nav-header {
+#contents-header {
     -fx-padding: 1px 4px;
     -fx-background-color: -fx-outer-border, -fx-inner-border;
     -fx-background-insets: 0, 0 0 1 0;
 }
 
-#nav-label {
+#contents-title {
     -fx-font-size: 1em;
     -fx-font-weight: bold;
     -fx-padding: 0 1em 0 0;
 }
 
-#nav-tool-bar {
+#contents-tool-bar {
     -fx-background-color: transparent;
 }
 
-#nav-tree .tree-cell {
+#contents-tree .tree-cell {
     -fx-padding: 2px 0;
     -fx-font-size: 1em;
 }
 
-#nav-tree:focused .tree-cell:filled:selected {
+#contents-tree:focused .tree-cell:filled:selected {
     -fx-background-color: -fx-selection-bar;
 }
 
@@ -119,7 +119,7 @@
     -fx-font-size: 1.1em;
 }
 
-.intro-tooltip {
+.contents-intro-tooltip {
     -fx-font-size: 1em;
 }
 

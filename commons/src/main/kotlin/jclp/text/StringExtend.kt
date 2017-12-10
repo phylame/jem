@@ -24,6 +24,8 @@ infix fun CharSequence?.or(default: CharSequence) = if (!isNullOrEmpty()) toStri
 
 infix inline fun CharSequence?.or(default: () -> CharSequence) = if (!isNullOrEmpty()) toString() else default().toString()
 
+inline fun <S : CharSequence, R> S.ifNotEmpty(block: (S) -> R) = if (isNotEmpty()) block(this) else null
+
 fun String.count(ch: Char) = count { it == ch }
 
 fun String.colored(color: String): String = this

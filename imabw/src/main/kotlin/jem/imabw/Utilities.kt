@@ -23,15 +23,29 @@ import javafx.scene.control.ComboBox
 import javafx.stage.Window
 import javafx.util.StringConverter
 import jclp.io.Flob
+import jclp.log.Log
 import jclp.text.Text
 import jem.imabw.ui.debug
 import jem.imabw.ui.info
 import mala.App
 import java.io.File
+import java.io.IOException
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
+
+val tempFiles = mutableSetOf<Path>().apply {
+    App.registerCleanup {
+        for (path in this) {
+            try {
+                Files.deleteIfExists(path)
+            } catch (e: IOException) {
+                Log.e("tempFiles", e) { "cannot delete temp file '$path'" }
+            }
+        }
+    }
+}
 
 fun saveFlob(title: String, flob: Flob, file: File, window: Window) {
     try {

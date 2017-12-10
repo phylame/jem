@@ -20,21 +20,22 @@ package jem.epm
 
 import jclp.io.extName
 import jclp.setting.Settings
+import jclp.text.or
 import jem.Book
 import java.io.File
 
 data class ParserParam(val path: String, val format: String = "", val arguments: Settings? = null) {
-    val epmName get() = format.takeIf(String::isNotEmpty) ?: extName(File(path).canonicalPath)
+    val epmName inline get() = format or { extName(File(path).canonicalPath) }
 
     override fun toString(): String =
             "ParserParam(path='$path', format='$format', epmName='$epmName', arguments=$arguments)"
 }
 
 data class MakerParam(val book: Book, val path: String, val format: String = "", val arguments: Settings? = null) {
+    val epmName inline get() = format or { extName(File(path).canonicalPath) }
+
     var actualPath: String = path
         internal set
-
-    val epmName get() = format.takeIf(String::isNotEmpty) ?: extName(File(path).canonicalPath)
 
     override fun toString(): String =
             "MakerParam(book=$book, path='$path', format='$format', epmName='$epmName', arguments=$arguments)"

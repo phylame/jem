@@ -26,6 +26,10 @@ typealias VariantEntry = Map.Entry<String, Any>
 
 fun <E> List<E>.chooseAny() = get(ThreadLocalRandom.current().nextInt(0, size))
 
+inline fun <E, S : Collection<E>, R> S.ifNotEmpty(block: (S) -> R) = if (isNotEmpty()) block(this) else null
+
+inline fun <K, V, M : Map<K, V>, R> M.ifNotEmpty(block: (M) -> R) = if (isNotEmpty()) block(this) else null
+
 inline fun <K, V> MutableMap<K, V>.getOrPut(key: K, default: (K) -> V?): V? {
     var value = get(key)
     if (value == null && (key !in this)) {

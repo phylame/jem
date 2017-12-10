@@ -28,6 +28,7 @@ import jclp.setting.getString
 import jclp.text.TEXT_HTML
 import jclp.text.Text
 import jclp.text.TextWrapper
+import jclp.text.ifNotEmpty
 import jclp.vdm.VdmWriter
 import jclp.vdm.useStream
 import jclp.vdm.writeBytes
@@ -130,7 +131,7 @@ internal class TOCBuilder(
             opf.newSpine(item.id, properties = EPUB.DUOKAN_FULLSCREEN)
             opf.newGuide(item.href, "cover", "epub.make.coverGuide")
         }
-        book.intro?.toString()?.takeIf(String::isNotEmpty)?.let {
+        book.intro?.toString()?.ifNotEmpty {
             val context = newContext()
             context["intro"] = book.intro!!
             val (item, _) = renderPage("intro", context)
@@ -155,7 +156,7 @@ internal class TOCBuilder(
         }
 
         var hasIntro = false
-        chapter.intro?.toString()?.takeIf(String::isNotEmpty)?.let {
+        chapter.intro?.toString()?.ifNotEmpty {
             hasIntro = true
             context["intro"] = chapter.intro!!
         }

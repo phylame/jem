@@ -22,6 +22,7 @@ import jclp.managed
 import jclp.setting.Settings
 import jclp.setting.getInt
 import jclp.setting.getString
+import jclp.text.ifNotEmpty
 import jclp.vdm.*
 import jem.Book
 import jem.M
@@ -73,7 +74,7 @@ interface VdmMaker : CommonMaker<VdmWriter> {
         return (arguments?.getString(MAKER_VDM_TYPE_KEY) ?: VDM_ZIP).let {
             VdmManager.openWriter(it, output, props) ?: throw MakerException(M.tr("err.vdm.unsupported", it))
         }.apply {
-            arguments?.getString(MAKER_VDM_COMMENT_KEY)?.takeIf { it.isNotEmpty() }?.let { setComment(it) }
+            arguments?.getString(MAKER_VDM_COMMENT_KEY)?.ifNotEmpty { setComment(it) }
         }
     }
 }

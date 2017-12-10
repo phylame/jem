@@ -51,33 +51,35 @@ object GeneralSettings : AppSettings() {
 object UISettings : IxInSettings() {
     var stylesheetUri by settingsWith("", "ui.stylesheet.uri")
 
-    var navigationBarVisible by settingsWith(true, "form.navigationBar.visible")
+    var navigationBarVisible by settingsWith(true, "main.contentsigationBar.visible")
 
-    fun restore(dialog: Dialog<*>, tag: String) {
-        dialog.dialogPane.apply {
-            getDouble("dialog.$tag.width")?.let { prefWidth = it }
-            getDouble("dialog.$tag.height")?.let { prefHeight = it }
-        }
-        getDouble("dialog.$tag.x")?.let { dialog.x = it }
-        getDouble("dialog.$tag.y")?.let { dialog.y = it }
-    }
-
-    fun store(dialog: Dialog<*>, tag: String) {
-        set("dialog.$tag.width", dialog.dialogPane.width)
-        set("dialog.$tag.height", dialog.dialogPane.height)
-        set("dialog.$tag.x", dialog.x)
-        set("dialog.$tag.y", dialog.y)
-    }
-
-    fun restore(table: TableView<*>, tag: String) {
-        table.columns.forEachIndexed { index, column ->
-            getDouble("table.$tag.column.$index")?.let { column.prefWidth = it }
+    fun restoreState(dialog: Dialog<*>, tagId: String) {
+        with(dialog) {
+            getDouble("dialog.$tagId.width")?.let { dialogPane.prefWidth = it }
+            getDouble("dialog.$tagId.height")?.let { dialogPane.prefHeight = it }
+            getDouble("dialog.$tagId.x")?.let { x = it }
+            getDouble("dialog.$tagId.y")?.let { y = it }
         }
     }
 
-    fun store(table: TableView<*>, tag: String) {
+    fun storeState(dialog: Dialog<*>, tagId: String) {
+        with(dialog) {
+            set("dialog.$tagId.width", dialogPane.width)
+            set("dialog.$tagId.height", dialogPane.height)
+            set("dialog.$tagId.x", x)
+            set("dialog.$tagId.y", y)
+        }
+    }
+
+    fun restoreState(table: TableView<*>, tagId: String) {
         table.columns.forEachIndexed { index, column ->
-            set("table.$tag.column.$index", column.width)
+            getDouble("table.$tagId.column.$index")?.let { column.prefWidth = it }
+        }
+    }
+
+    fun storeState(table: TableView<*>, tagId: String) {
+        table.columns.forEachIndexed { index, column ->
+            set("table.$tagId.column.$index", column.width)
         }
     }
 }

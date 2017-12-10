@@ -29,6 +29,7 @@ import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
 import javafx.stage.Screen
 import javafx.stage.Stage
+import javafx.stage.Window
 import mala.App
 import mala.AppDelegate
 import mala.Plugin
@@ -38,10 +39,12 @@ interface IPlugin : Plugin {
 }
 
 abstract class IDelegate : AppDelegate, CommandHandler {
-    val commandProxy = CommandDispatcher()
-
     lateinit var fxApp: IApplication
         internal set
+
+    val commandProxy = CommandDispatcher()
+
+    val topWindow: Window inline get() = fxApp.stage.scene.window
 
     override fun handle(command: String, source: Any): Boolean {
         if (!commandProxy.handle(command, source)) {
@@ -67,8 +70,8 @@ abstract class IApplication(val settings: IxInSettings) : Application() {
     val actionMap = hashMapOf<String, Action>()
 
     var statusText
-        get() = appPane.statusBar?.statusLabel?.text
-        set(value) {
+        inline get() = appPane.statusBar?.statusLabel?.text
+        inline set(value) {
             appPane.statusBar?.statusLabel?.text = value
         }
 

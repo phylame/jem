@@ -162,10 +162,7 @@ class AttributePane(val chapter: Chapter) : AnchorPane() {
 
     private fun loadIntro() {
         chapter.intro?.let { text ->
-            with(LoadTextTask(text)) {
-                setOnRunning {
-                    updateProgress(App.tr("jem.loadText.hint", chapter.title))
-                }
+            with(LoadTextTask(text, App.tr("jem.loadText.hint", chapter.title))) {
                 setOnSucceeded {
                     viewController.introEditor.text = value
                     isChanged = false

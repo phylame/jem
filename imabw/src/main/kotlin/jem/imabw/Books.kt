@@ -19,9 +19,9 @@
 package jem.imabw
 
 import javafx.stage.Window
-import jclp.log.Log
 import jclp.setting.MapSettings
 import jclp.text.Text
+import jclp.text.or
 import jem.Book
 import jem.JemException
 import jem.epm.*
@@ -52,7 +52,6 @@ open class LoadBookTask(val param: ParserParam, private val window: Window = Ima
         }
         setOnFailed {
             hideProgress()
-            Log.d("LoadBookTask", exception) { "failed to load book: ${param.path}" }
             debug(tr("d.openBook.title"), tr("jem.openBook.failure", param.path), exception, window)
         }
     }
@@ -71,7 +70,6 @@ open class MakeBookTask(val param: MakerParam, private val window: Window = Imab
         }
         setOnFailed {
             hideProgress()
-            Log.d("MakeBookTask", exception) { "failed to make book: ${param.path}" }
             debug(tr("d.saveBook.title"), tr("jem.saveBook.failure", param.actualPath), exception, window)
         }
     }
@@ -79,10 +77,10 @@ open class MakeBookTask(val param: MakerParam, private val window: Window = Imab
     override fun call() = makeBook(param)
 }
 
-open class LoadTextTask(private val text: Text) : ProgressTask<String>() {
+open class LoadTextTask(private val text: Text, private val hint: String = "") : ProgressTask<String>() {
     init {
         setOnRunning {
-            updateProgress(tr("misc.progress.hint"))
+            updateProgress(hint or { tr("misc.progress.hint") })
         }
         setOnFailed {
             hideProgress()

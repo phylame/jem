@@ -23,6 +23,7 @@ import javafx.scene.control.*
 import javafx.scene.control.Separator
 import javafx.scene.input.KeyCombination
 import jclp.Translator
+import jclp.text.ifNotEmpty
 import jclp.text.or
 import mala.AssetManager
 import org.json.JSONArray
@@ -59,7 +60,7 @@ fun loadAction(id: String, m: Translator, r: AssetManager) = Action(id).apply {
     largeIcon = r.imageFor("$iconId${IxIn.largeIconSuffix}")
     selectedIcon = r.imageFor("$iconId${IxIn.selectedIconSuffix}")
     toast = m.optTr("$id.toast")
-    m.optTr("$id.accelerator")?.takeIf { it.isNotEmpty() }?.let {
+    m.optTr("$id.accelerator")?.ifNotEmpty {
         accelerator = KeyCombination.valueOf(it)
     }
 }

@@ -28,6 +28,7 @@ import javafx.stage.FileChooser
 import javafx.stage.Modality
 import javafx.stage.Window
 import jclp.ValueMap
+import jclp.text.ifNotEmpty
 import jclp.traceText
 import jem.Chapter
 import jem.epm.EpmManager
@@ -46,8 +47,8 @@ fun Dialog<*>.init(title: String, owner: Window, tag: String = "") {
     initModality(Modality.WINDOW_MODAL)
     initOwner(owner)
     if (tag.isNotEmpty()) {
-        setOnShowing { UISettings.restore(this, tag) }
-        setOnHidden { UISettings.store(this, tag) }
+        setOnShowing { UISettings.restoreState(this, tag) }
+        setOnHidden { UISettings.storeState(this, tag) }
     }
 }
 
@@ -204,7 +205,7 @@ fun selectDirectory(title: String, owner: Window): File? {
 
 fun selectOpenImage(title: String, owner: Window): File? {
     fileChooser.title = title
-    GeneralSettings.lastImageDir.takeIf { it.isNotEmpty() }?.let { fileChooser.initialDirectory = File(it) }
+    GeneralSettings.lastImageDir.ifNotEmpty { fileChooser.initialDirectory = File(it) }
     fileChooser.extensionFilters.setAll(allExtensionFilter)
     setExtensionFilters(fileChooser, setOf(
             setOf("jpg", "jpeg"),
@@ -236,7 +237,7 @@ fun openBookFile(owner: Window): File? {
     fileChooser.title = App.tr("d.openBook.title")
     fileChooser.extensionFilters.clear()
     setExtensionFilters(fileChooser, parserExtensions(), PMAB_NAME)
-    GeneralSettings.lastBookDir.takeIf { it.isNotEmpty() }?.let { fileChooser.initialDirectory = File(it) }
+    GeneralSettings.lastBookDir.ifNotEmpty { fileChooser.initialDirectory = File(it) }
     return fileChooser.showOpenDialog(owner)?.also { GeneralSettings.lastBookDir = it.parent }
 }
 
@@ -244,7 +245,7 @@ fun saveBookFile(name: String, format: String, owner: Window): Pair<File, String
     fileChooser.initialFileName = name
     fileChooser.title = App.tr("d.saveBook.title")
     fileChooser.extensionFilters.setAll(FileChooser.ExtensionFilter(getExtensionName(format), "*.$format"))
-    GeneralSettings.lastBookDir.takeIf { it.isNotEmpty() }?.let { fileChooser.initialDirectory = File(it) }
+    GeneralSettings.lastBookDir.ifNotEmpty { fileChooser.initialDirectory = File(it) }
     return fileChooser.showSaveDialog(owner)?.let {
         GeneralSettings.lastBookDir = it.parent
         makeSaveResult(it, fileChooser)
@@ -256,7 +257,7 @@ fun saveBookFile(name: String, owner: Window): Pair<File, String>? {
     fileChooser.title = App.tr("d.saveBook.title")
     fileChooser.extensionFilters.clear()
     setExtensionFilters(fileChooser, makerExtensions(), PMAB_NAME)
-    GeneralSettings.lastBookDir.takeIf { it.isNotEmpty() }?.let { fileChooser.initialDirectory = File(it) }
+    GeneralSettings.lastBookDir.ifNotEmpty { fileChooser.initialDirectory = File(it) }
     return fileChooser.showSaveDialog(owner)?.let {
         GeneralSettings.lastBookDir = it.parent
         makeSaveResult(it, fileChooser)
@@ -267,7 +268,7 @@ fun openBookFiles(owner: Window): List<File>? {
     fileChooser.title = App.tr("d.openBook.title")
     fileChooser.extensionFilters.clear()
     setExtensionFilters(fileChooser, parserExtensions(), PMAB_NAME)
-    GeneralSettings.lastBookDir.takeIf { it.isNotEmpty() }?.let { fileChooser.initialDirectory = File(it) }
+    GeneralSettings.lastBookDir.ifNotEmpty { fileChooser.initialDirectory = File(it) }
     return fileChooser.showOpenMultipleDialog(owner)?.also { GeneralSettings.lastBookDir = it.first().parent }
 }
 

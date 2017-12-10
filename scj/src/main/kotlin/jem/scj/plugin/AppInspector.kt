@@ -19,6 +19,7 @@
 package jem.scj.plugin
 
 import jclp.VariantMap
+import jclp.ifNotEmpty
 import jclp.setting.getString
 import jem.scj.SCI
 import jem.scj.SCISettings
@@ -41,7 +42,7 @@ class AppInspector : SCJAddon() {
                 .longOpt("view-context")
                 .desc(tr("opt.viewContext.desc"))
                 .command {
-                    SCI.context.takeIf { it.isNotEmpty() }?.let {
+                    SCI.context.ifNotEmpty {
                         for ((k, v) in it) {
                             println("$itemIndent$k[${v.javaClass.name}]=$v")
                         }

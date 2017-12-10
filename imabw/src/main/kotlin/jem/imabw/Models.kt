@@ -26,8 +26,10 @@ import javafx.scene.control.Label
 import javafx.scene.layout.GridPane
 import jclp.EventAction
 import jclp.EventBus
-import jclp.io.exists
+import jclp.TypeManager
+import jclp.io.*
 import jclp.log.Log
+import jclp.looseISODateTime
 import jclp.text.or
 import jclp.text.remove
 import jem.Book
@@ -37,10 +39,9 @@ import jem.epm.*
 import jem.imabw.ui.*
 import jem.title
 import mala.App
+import mala.App.optTr
 import mala.App.tr
-import mala.ixin.CommandHandler
-import mala.ixin.IxIn
-import mala.ixin.initAsForm
+import mala.ixin.*
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -312,6 +313,61 @@ object Workbench : CommandHandler {
         }
     }
 
+    private fun showDetails() {
+        val work = requireNotNull(work) { "work is null" }
+        val epmName = work.outParam?.epmName ?: work.inParam?.epmName ?: return
+        val epmFactory = EpmManager[epmName]
+        val items = arrayListOf<Any>()
+        if (epmFactory is FileParser) {
+            val path = Paths.get(work.path)
+
+            items.add(tr("d.fileDetails.name"))
+            items.add(path.fileName)
+
+            items.add(tr("d.fileDetails.location"))
+            items.add(path.parent)
+
+            items.add(tr("d.fileDetails.size"))
+            items.add(printableSize(path.size))
+
+            items.add(tr("d.fileDetails.lastModified"))
+            items.add(path.lastModified.toLocalDateTime().format(looseISODateTime))
+
+            items.add(SEPARATOR_LABEL)
+            items.add(tr("d.fileDetails.format"))
+            items.add(epmName)
+
+            @Suppress("UNCHECKED_CAST")
+            (work.book.extensions[EXT_EPM_METADATA] as? Map<Any, Any>)?.let {
+                for (entry in it) {
+                    items.add(optTr("name.jem.meta.${entry.key}") or entry.key.toString().capitalize())
+                    items.add(TypeManager.printable(entry.value) ?: entry.value.toString())
+                }
+            }
+            var firstTime = true
+            for (entry in work.book.extensions) {
+                if (entry.key.startsWith("jem.ext.crawler.")) {
+                    if (firstTime) {
+                        items.add(SEPARATOR_LABEL)
+                        firstTime = false
+                    }
+                    val key = entry.key.removePrefix("jem.ext.crawler.")
+                    items.add(optTr("name.jem.crawler.$key") or key.capitalize())
+                    items.add(TypeManager.printable(entry.value) ?: entry.value.toString())
+                }
+            }
+            with(alert(Alert.AlertType.NONE, tr("d.fileDetails.title", work.book.title), "", Imabw.topWindow)) {
+                buttonTypes.setAll(ButtonType.CLOSE)
+                dialogPane.content = GridPane().apply {
+                    initAsInfo(items.iterator(), Imabw.dashboard)
+                }
+                showAndWait()
+            }
+        } else {
+
+        }
+    }
+
     override fun handle(command: String, source: Any): Boolean {
         when (command) {
             "exit" -> ensureSaved(tr("d.exit.title")) { App.exit() }
@@ -323,9 +379,7 @@ object Workbench : CommandHandler {
             "openFile" -> openFile("")
             "saveFile" -> saveFile()
             "saveAsFile" -> exportBook(work!!.book)
-            "fileDetails" -> {
-                println(work?.book?.extensions?.get(EXT_EPM_METADATA))
-            }
+            "fileDetails" -> showDetails()
             "clearHistory" -> History.clear()
             else -> return false
         }

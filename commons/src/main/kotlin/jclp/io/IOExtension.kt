@@ -20,11 +20,31 @@ package jclp.io
 
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.attribute.FileTime
+import java.text.NumberFormat
+import java.time.LocalDateTime
+import java.time.ZoneId
 
-val Path.exists: Boolean inline get() = Files.exists(this)
+val Path.exists inline get() = Files.exists(this)
 
-val Path.notExists: Boolean inline get() = Files.notExists(this)
+val Path.notExists inline get() = Files.notExists(this)
 
-val Path.isDirectory: Boolean inline get() = Files.isDirectory(this)
+val Path.isDirectory inline get() = Files.isDirectory(this)
 
-val Path.isNotDirectory: Boolean inline get() = !Files.isDirectory(this)
+val Path.isNotDirectory inline get() = !Files.isDirectory(this)
+
+val Path.lastModified: FileTime inline get() = Files.getLastModifiedTime(this)
+
+fun FileTime.toLocalDateTime(): LocalDateTime = LocalDateTime.ofInstant(toInstant(), ZoneId.systemDefault())
+
+val Path.size inline get() = Files.size(this)
+
+fun printableSize(size: Long): String {
+    val format = NumberFormat.getNumberInstance()
+    return when {
+        size > 0x4000_0000 -> "${format.format(size.toDouble() / 0x4000_0000)} GB"
+        size > 0x10_0000 -> "${format.format(size.toDouble() / 0x10_0000)} MB"
+        size > 0x400 -> "${format.format(size.toDouble() / 0x400)} KB"
+        else -> "$size B"
+    }
+}

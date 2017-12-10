@@ -20,6 +20,7 @@ package jem.crawler.impl
 
 import jclp.io.baseName
 import jclp.setting.Settings
+import jclp.text.ifNotEmpty
 import jclp.text.remove
 import jclp.text.textOf
 import jclp.toLocalDateTime
@@ -61,7 +62,7 @@ class Qidian : ReusableCrawler() {
         book["brief"] = stub.selectFirst("p.intro").text()
         book.words = stub.select("p em:eq(0), p cite:eq(1)").text().remove(" ")
         book.intro = textOf(soup.selectText("div.book-intro p", System.lineSeparator()))
-        soup.selectText("p.tag-wrap a", Attributes.VALUE_SEPARATOR).takeIf { it.isNotEmpty() }?.let {
+        soup.selectText("p.tag-wrap a", Attributes.VALUE_SEPARATOR).ifNotEmpty {
             book[jem.KEYWORDS] = it
         }
 

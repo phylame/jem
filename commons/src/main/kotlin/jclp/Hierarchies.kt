@@ -38,13 +38,13 @@ val Hierarchical<*>.depth: Int
         return depth + 1
     }
 
-val Hierarchical<*>.isEmpty get() = size == 0
+val Hierarchical<*>.isEmpty inline get() = size == 0
 
-val Hierarchical<*>.isNotEmpty get() = size != 0
+val Hierarchical<*>.isNotEmpty inline get() = size != 0
 
-val Hierarchical<*>.isRoot get() = parent == null
+val Hierarchical<*>.isRoot inline get() = parent == null
 
-val Hierarchical<*>.isNotRoot get() = parent != null
+val Hierarchical<*>.isNotRoot inline get() = parent != null
 
 fun <T : Hierarchical<T>> T.isAncestor(item: T): Boolean {
     var parent = item.parent
@@ -63,7 +63,7 @@ fun <T : Hierarchical<T>> T.belowOf(top: T? = null): T {
     return parent
 }
 
-val <T : Hierarchical<T>> T.root get() = belowOf(null)
+val <T : Hierarchical<T>> T.root inline get() = belowOf(null)
 
 fun <T : Hierarchical<T>> T.pathTo(top: T?): List<T> {
     val list = LinkedList<T>()

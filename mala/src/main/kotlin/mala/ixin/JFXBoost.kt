@@ -18,6 +18,7 @@
 
 package mala.ixin
 
+import javafx.application.Application
 import javafx.beans.binding.ObjectBinding
 import javafx.beans.value.ObservableValue
 import javafx.beans.value.WritableBooleanValue
@@ -27,18 +28,25 @@ import javafx.geometry.HPos
 import javafx.geometry.VPos
 import javafx.scene.Group
 import javafx.scene.Node
-import javafx.scene.control.ComboBox
-import javafx.scene.control.Tooltip
-import javafx.scene.control.TreeItem
-import javafx.scene.control.TreeView
+import javafx.scene.control.*
+import javafx.scene.control.Separator
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
+import javafx.scene.input.MouseButton
+import javafx.scene.input.MouseEvent
 import javafx.scene.layout.AnchorPane
 import javafx.scene.layout.GridPane
 import javafx.scene.layout.Pane
 import javafx.scene.layout.Priority
 import jclp.HierarchySupport
+import jclp.text.ifNotEmpty
 import kotlin.reflect.KProperty
+
+val MouseEvent.isPrimary
+    inline get() = button == MouseButton.PRIMARY
+
+val MouseEvent.isDoubleClick
+    inline get() = clickCount == 2
 
 fun ComboBox<*>.selectPreviousOrLast() {
     with(selectionModel) {
@@ -103,6 +111,44 @@ fun GridPane.initAsForm(labels: Collection<Node>, fields: Collection<Node>, firs
     }
 }
 
+const val SEPARATOR_LABEL = "-*----*-"
+
+fun GridPane.initAsInfo(items: Iterator<Any>, app: Application) {
+    vgap = 8.0
+    hgap = 16.0
+    var row = 0
+    var isLabel = true
+    while (items.hasNext()) {
+        val item = items.next()
+        when {
+            item == SEPARATOR_LABEL -> add(Separator(), 0, row++, 2, 1)
+            isLabel -> {
+                Label("$item:").let {
+                    GridPane.setValignment(it, VPos.CENTER)
+                    GridPane.setHalignment(it, HPos.RIGHT)
+                    add(it, 0, row)
+                }
+                isLabel = false
+            }
+            else -> {
+                val text = item.toString()
+                if (text.matches("\\w+://.*".toRegex())) {
+                    Hyperlink(text).apply {
+                        setOnAction { app.hostServices.showDocument(text) }
+                    }
+                } else {
+                    Label(text)
+                }.let {
+                    GridPane.setValignment(it, VPos.CENTER)
+                    GridPane.setHalignment(it, HPos.LEFT)
+                    add(it, 1, row++)
+                }
+                isLabel = true
+            }
+        }
+    }
+}
+
 fun <T : HierarchySupport<T>> T.toTreeItem(): TreeItem<T> = object : TreeItem<T>(this) {
     private var isFirstTime = true
 
@@ -116,6 +162,11 @@ fun <T : HierarchySupport<T>> T.toTreeItem(): TreeItem<T> = object : TreeItem<T>
         return super.getChildren()
     }
 }
+
+fun <T> TreeView<T>.resetSelection(): List<TreeItem<T>> =
+        with(selectionModel) {
+            selectedItems.toList().apply { clearSelection() }
+        }
 
 fun <T> TreeView<T>.selectAndScrollTo(item: TreeItem<T>) {
     with(selectionModel) {
@@ -133,9 +184,9 @@ fun <T> TreeItem<T>.mostBelow(top: TreeItem<T>? = null): TreeItem<T> {
     return parent
 }
 
-val TreeItem<*>.isRoot get() = parent == null
+val TreeItem<*>.isRoot inline get() = parent == null
 
-val TreeItem<*>.isNotRoot get() = parent != null
+val TreeItem<*>.isNotRoot inline get() = parent != null
 
 fun TreeItem<*>.refresh() {
     value.let {
@@ -184,6 +235,6 @@ fun ObservableValue<String?>.lazyTooltip() = object : ObjectBinding<Tooltip>() {
     }
 
     override fun computeValue(): Tooltip? {
-        return this@lazyTooltip.value?.takeIf { it.isNotEmpty() }?.let { Tooltip(it) }
+        return this@lazyTooltip.value?.ifNotEmpty { Tooltip(it) }
     }
 }

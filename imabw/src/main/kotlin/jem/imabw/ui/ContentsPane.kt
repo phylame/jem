@@ -25,13 +25,13 @@ import javafx.concurrent.Task
 import javafx.geometry.Pos
 import javafx.scene.control.*
 import javafx.scene.image.ImageView
-import javafx.scene.input.MouseButton
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.BorderPane
 import javafx.util.Callback
 import jclp.EventBus
 import jclp.isRoot
 import jclp.log.Log
+import jclp.text.ifNotEmpty
 import jem.Book
 import jem.Chapter
 import jem.epm.EXT_EPM_METADATA
@@ -47,10 +47,10 @@ import java.util.concurrent.atomic.AtomicInteger
 
 private typealias ChapterNode = TreeItem<Chapter>
 
-object NavPane : BorderPane(), CommandHandler {
-    private const val TAG = "NavPane"
+object ContentsPane : BorderPane(), CommandHandler {
+    private const val TAG = "ContentsPane"
 
-    private val tree = object : TreeView<Chapter>(), Editable {
+    private val treeView = object : TreeView<Chapter>(), EditAware {
         override fun onEdit(command: String) {
             handle(command, this)
         }
@@ -59,34 +59,34 @@ object NavPane : BorderPane(), CommandHandler {
     init {
         Imabw.register(this)
 
-        id = "nav-pane"
-        top = NavHeader
-        center = tree
+        id = "contents-pane"
+        top = ContentsHeader
+        center = treeView
 
-        initTree()
+        initTreeView()
         initActions()
 
-        EventBus.register<WorkflowEvent> {
-            if (it.what == WorkflowType.BOOK_CREATED || it.what == WorkflowType.BOOK_OPENED) {
-                tree.root = it.book.toTreeItem()
-                tree.selectionModel.select(0)
-                tree.root.isExpanded = true
-                tree.requestFocus()
+        EventBus.register<WorkflowEvent> { event ->
+            if (event.what == WorkflowType.BOOK_CREATED || event.what == WorkflowType.BOOK_OPENED) {
+                treeView.root = event.book.toTreeItem()
+                treeView.selectionModel.select(0)
+                treeView.root.isExpanded = true
+                treeView.requestFocus()
             }
         }
     }
 
-    private fun initTree() {
-        val tree = tree
-        tree.id = "nav-tree"
+    private fun initTreeView() {
+        val tree = treeView
+        tree.id = "contents-tree"
         tree.cellFactory = CellFactory
         tree.selectionModel.selectionMode = SelectionMode.MULTIPLE
-        Imabw.dashboard.designer.items["navContext"]?.let {
-            tree.contextMenu = it.toContextMenu(Imabw, App, App.assets, IxIn.actionMap, null)
+        Imabw.dashboard.designer.items["navContext"]?.let { items ->
+            tree.contextMenu = items.toContextMenu(Imabw, App, App.assets, IxIn.actionMap, null)
         }
-        tree.addEventHandler(MouseEvent.MOUSE_CLICKED) {
-            if (it.clickCount == 2 && it.button == MouseButton.PRIMARY) {
-                selectedNode?.takeIf { it.isLeaf && it.isNotRoot }?.let {
+        tree.addEventHandler(MouseEvent.MOUSE_CLICKED) { event ->
+            if (event.isDoubleClick && event.isPrimary) {
+                currentNode?.takeIf { it.isLeaf && it.isNotRoot }?.let {
                     EditorPane.openTab(it.value, CellFactory.getIcon(it))
                 }
             }
@@ -94,7 +94,7 @@ object NavPane : BorderPane(), CommandHandler {
     }
 
     private fun initActions() {
-        val selection = selectedNodes
+        val selection = currentNodes
         val hasBook = Bindings.createBooleanBinding(Callable { selection.any { it.isRoot } }, selection)
         val empty = Bindings.isEmpty(selection)
         val multiple = Bindings.size(selection).greaterThan(1)
@@ -116,10 +116,10 @@ object NavPane : BorderPane(), CommandHandler {
         actionMap["degradeChapter"]?.disableProperty?.bind(emptyOrBook)
         actionMap["viewAttributes"]?.disableProperty?.bind(emptyOrMultiple)
         actionMap["gotoChapter"]?.disableProperty?.bind(Bindings.createBooleanBinding(Callable {
-            EditorPane.selectedTab == null
+            EditorPane.selectionModel.selectedItem !is ChapterTab
         }, EditorPane.selectionModel.selectedItemProperty()))
 
-        tree.focusedProperty().addListener { _, _, focused ->
+        treeView.focusedProperty().addListener { _, _, focused ->
             if (focused) {
                 val actions = arrayOf("undo", "redo", "cut", "copy", "paste", "replace")
                 for (action in actions) {
@@ -133,36 +133,28 @@ object NavPane : BorderPane(), CommandHandler {
         }
     }
 
-    val currentNodes: List<ChapterNode>
-        get() = with(tree.selectionModel) {
-            val items = selectedItems.toList()
-            clearSelection()
-            items
-        }
+    val currentNode: ChapterNode? get() = treeView.selectionModel.selectedItem
 
-    val selectedNodes: ObservableList<ChapterNode> get() = tree.selectionModel.selectedItems
+    val currentNodes: ObservableList<ChapterNode> get() = treeView.selectionModel.selectedItems
 
-    val selectedNode get() = tree.selectionModel.selectedItem
-
-    fun createChapter(): Chapter? {
-        return input(tr("d.newChapter.title"), tr("d.newChapter.tip"), tr("jem.chapter.untitled"), canEmpty = false)?.let {
-            Chapter(it)
-        }
-    }
+    fun createChapter(): Chapter? =
+            input(tr("d.newChapter.title"), tr("d.newChapter.tip"), tr("jem.chapter.untitled"), canEmpty = false)?.let {
+                Chapter(it)
+            }
 
     fun locateChapter(chapter: Chapter) {
-        val node = locateNode(chapter, tree.root)
+        val node = locateNode(chapter, treeView.root)
         if (node == null) {
-            Log.d(TAG) { "Not found $chapter in nav" }
+            Log.d(TAG) { "not found $chapter in nav" }
         } else {
-            tree.selectAndScrollTo(node)
+            treeView.selectAndScrollTo(node)
         }
     }
 
     @Command
     fun renameChapter() {
-        val node = selectedNode
-        val chapter = node!!.value
+        val node = currentNode!!
+        val chapter = node.value
         input(tr("d.renameChapter.title"), tr("d.renameChapter.tip"), chapter.title, canEmpty = false, mustDiff = true)?.let {
             chapter.title = it
             node.refresh()
@@ -174,7 +166,7 @@ object NavPane : BorderPane(), CommandHandler {
     fun importChapter() {
         val files = openBookFiles(Imabw.topWindow) ?: return
 
-        val targets = currentNodes
+        val targets = treeView.resetSelection()
         val fxApp = Imabw.fxApp.apply { showProgress() }
 
         val succeed = AtomicInteger()
@@ -210,7 +202,7 @@ object NavPane : BorderPane(), CommandHandler {
     fun insertNodes(sources: Collection<ChapterNode>, targets: Collection<ChapterNode>, mode: InsertMode) {
         if (sources.isEmpty() || targets.isEmpty()) return
         require(sources.none { it in targets }) { "Cannot insert node to self" }
-        val dump = targets.takeIf { it !== selectedNodes } ?: targets.toList()
+        val dump = targets.takeIf { it !== currentNodes } ?: targets.toList()
         dump.forEachIndexed { index, target ->
             // clone chapter(s) except the first one
             val items = if (index == 0) sources else sources.map { it.value.clone().toTreeItem() }
@@ -224,7 +216,7 @@ object NavPane : BorderPane(), CommandHandler {
 
     fun insertNodes(sources: Collection<ChapterNode>, target: ChapterNode, index: Int) {
         if (sources.isEmpty()) return
-        val model = tree.selectionModel
+        val model = treeView.selectionModel
         val parent = target.value
         if (index < 0) {
             target.children += sources.onEach { parent += it.value }
@@ -233,27 +225,31 @@ object NavPane : BorderPane(), CommandHandler {
             sources.reversed().forEach { parent.insert(index, it.value) }
         }
         sources.forEach { model.select(it) }
-        Platform.runLater { tree.scrollTo(model.selectedIndices.last()) }
+        Platform.runLater { treeView.scrollTo(model.selectedIndices.last()) }
         EventBus.post(ModificationEvent(target.value, ModificationType.CONTENTS_MODIFIED))
     }
 
     fun removeNodes(nodes: Collection<ChapterNode>) {
-        nodes.reversed().forEach {
-            val chapter = it.value
-            val parentNode = it.parent
+        val chapters = ArrayList<Chapter>(nodes.size)
+        nodes.reversed().forEach { node ->
+            val chapter = node.value
+            val parentNode = node.parent
             val parentChapter = parentNode.value
-            parentNode.children.remove(it)
+            parentNode.children.remove(node)
             parentChapter.remove(chapter)
             EditorPane.removeTab(chapter)
-            Imabw.submit { chapter.cleanup() }
+            chapters.add(chapter)
             EventBus.post(ModificationEvent(parentChapter, ModificationType.CONTENTS_MODIFIED))
+        }
+        Imabw.submit {
+            for (chapter in chapters) {
+                chapter.cleanup()
+            }
         }
     }
 
     fun locateNode(chapter: Chapter, node: ChapterNode): ChapterNode? {
-        if (node.value === chapter) {
-            return node
-        }
+        if (node.value === chapter) return node
         for (item in node.children) {
             return locateNode(chapter, item) ?: continue
         }
@@ -269,18 +265,18 @@ object NavPane : BorderPane(), CommandHandler {
 
     override fun handle(command: String, source: Any): Boolean {
         when (command) {
-            "delete" -> removeNodes(selectedNodes)
-            "selectAll" -> tree.selectionModel.selectAll()
-            "editText" -> selectedNodes.forEach { EditorPane.openTab(it.value, CellFactory.getIcon(it)) }
+            "delete" -> removeNodes(currentNodes)
+            "selectAll" -> treeView.selectionModel.selectAll()
+            "editText" -> currentNodes.forEach { EditorPane.openTab(it.value, CellFactory.getIcon(it)) }
             "newChapter" -> createChapter()?.let {
-                insertNodes(listOf(it.toTreeItem()), currentNodes, InsertMode.TO_PARENT)
+                insertNodes(listOf(it.toTreeItem()), treeView.resetSelection(), InsertMode.TO_PARENT)
             }
             "insertChapter" -> createChapter()?.let {
-                insertNodes(listOf(it.toTreeItem()), currentNodes, InsertMode.BEFORE_ITEM)
+                insertNodes(listOf(it.toTreeItem()), treeView.resetSelection(), InsertMode.BEFORE_ITEM)
             }
-            "exportChapter" -> Workbench.exportBooks(selectedNodes.map { it.value })
-            "viewAttributes" -> if (editAttributes(selectedNode!!.value, Imabw.topWindow)) {
-                EventBus.post(ModificationEvent(selectedNode!!.value, ModificationType.ATTRIBUTE_MODIFIED))
+            "exportChapter" -> Workbench.exportBooks(currentNodes.map { it.value })
+            "viewAttributes" -> if (editAttributes(currentNode!!.value, Imabw.topWindow)) {
+                EventBus.post(ModificationEvent(currentNode!!.value, ModificationType.ATTRIBUTE_MODIFIED))
             }
             "bookAttributes" -> if (editAttributes(Workbench.work!!.book, Imabw.topWindow)) {
                 EventBus.post(ModificationEvent(Workbench.work!!.book, ModificationType.ATTRIBUTE_MODIFIED))
@@ -290,39 +286,39 @@ object NavPane : BorderPane(), CommandHandler {
                     EventBus.post(ModificationEvent(it, ModificationType.EXTENSIONS_MODIFIED))
                 }
             }
-            "gotoChapter" -> EditorPane.selectedTab?.chapter?.let {
+            "gotoChapter" -> EditorPane.currentTab?.chapter?.let {
                 locateChapter(it)
-                tree.requestFocus()
+                treeView.requestFocus()
             }
-            "collapseToc" -> collapseNode(tree.root)
+            "collapseToc" -> collapseNode(treeView.root)
             else -> return false
         }
         return true
     }
 }
 
-object NavHeader : BorderPane() {
+object ContentsHeader : BorderPane() {
     init {
-        id = "nav-header"
-        left = Label(tr("form.nav.title"), App.assets.graphicFor("tree/contents")).also {
-            it.id = "nav-label"
-            BorderPane.setAlignment(it, Pos.CENTER)
+        id = "contents-header"
+        left = Label(tr("main.contents.title"), App.assets.graphicFor("tree/contents")).also { label ->
+            label.id = "contents-title"
+            BorderPane.setAlignment(label, Pos.CENTER)
         }
 
-        right = ToolBar().also {
-            it.id = "nav-tool-bar"
+        right = ToolBar().also { toolBar ->
+            toolBar.id = "contents-tool-bar"
             Imabw.dashboard.designer.items["navTools"]?.let { items ->
-                it.init(items, Imabw, App, App.assets, IxIn.actionMap)
+                toolBar.init(items, Imabw, App, App.assets, IxIn.actionMap)
             }
-            BorderPane.setAlignment(it, Pos.CENTER)
+            BorderPane.setAlignment(toolBar, Pos.CENTER)
         }
     }
 }
 
-object CellFactory : Callback<TreeView<Chapter>, TreeCell<Chapter>> {
-    val bookIcon = App.assets.imageFor("tree/book")!!
-    val sectionIcon = App.assets.imageFor("tree/section")!!
-    val chapterIcon = App.assets.imageFor("tree/chapter")!!
+private object CellFactory : Callback<TreeView<Chapter>, TreeCell<Chapter>> {
+    private val bookIcon = App.assets.imageFor("tree/book")!!
+    private val sectionIcon = App.assets.imageFor("tree/section")!!
+    private val chapterIcon = App.assets.imageFor("tree/chapter")!!
 
     fun getIcon(node: ChapterNode) = ImageView(when {
         node.isRoot -> bookIcon
@@ -354,9 +350,7 @@ private class ChapterCell : TreeCell<Chapter>() {
             chapter.intro?.let {
                 with(LoadTextTask(it)) {
                     setOnSucceeded {
-                        value.takeIf { it.isNotEmpty() }?.let { text ->
-                            tooltip = createTooltip(text)
-                        }
+                        value.ifNotEmpty { tooltip = createTooltip(it) }
                         hideProgress()
                     }
                     Imabw.submit(this)
@@ -367,7 +361,7 @@ private class ChapterCell : TreeCell<Chapter>() {
 
     private fun createTooltip(text: String) = Tooltip(text).also {
         it.isWrapText = true
-        it.styleClass += "intro-tooltip"
+        it.styleClass += "contents-intro-tooltip"
         it.maxWidthProperty().bind(widthProperty().multiply(1.2))
     }
 }

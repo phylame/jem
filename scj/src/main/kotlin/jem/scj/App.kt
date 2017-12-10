@@ -56,23 +56,25 @@ object SCI : CDelegate(DefaultParser()) {
 
     @Suppress("UNCHECKED_CAST")
     val inArguments
-        get() = MapSettings(context["p"] as? MutableMap<String, Any>)
+        inline get() = MapSettings(context["p"] as? MutableMap<String, Any>)
 
     @Suppress("UNCHECKED_CAST")
     val outArguments
-        get() = MapSettings(context["m"] as? MutableMap<String, Any>)
+        inline get() = MapSettings(context["m"] as? MutableMap<String, Any>)
 
     @Suppress("UNCHECKED_CAST")
     val outAttributes
-        get() = context["a"] as? MutableMap<String, Any> ?: hashMapOf()
+        inline get() = context["a"] as? MutableMap<String, Any> ?: hashMapOf()
 
     @Suppress("UNCHECKED_CAST")
     val outExtensions
-        get() = context["e"] as? MutableMap<String, Any> ?: hashMapOf()
+        inline get() = context["e"] as? MutableMap<String, Any> ?: hashMapOf()
 
-    val outputFormat get() = context["t"]?.toString() ?: SCISettings.outputFormat
+    val outputFormat
+        inline get() = context["t"]?.toString() ?: SCISettings.outputFormat
 
-    val output get() = context["o"]?.toString() ?: "."
+    val output
+        inline get() = context["o"]?.toString() ?: "."
 
     override fun onStart() {
         restoreState(SCISettings)

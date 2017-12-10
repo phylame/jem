@@ -36,9 +36,9 @@ fun AssetManager.designerFor(name: String) = resourceFor(name)?.openStream()?.us
 object IxIn {
     val delegate = App.delegate as IDelegate
 
-    val menuMap get() = delegate.fxApp.menuMap
+    val menuMap inline get() = delegate.fxApp.menuMap
 
-    val actionMap get() = delegate.fxApp.actionMap
+    val actionMap inline get() = delegate.fxApp.actionMap
 
     fun newAction(id: String) = actionMap.getOrCreate(id, App, App.assets)
 

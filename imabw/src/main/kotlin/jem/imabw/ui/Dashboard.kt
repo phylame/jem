@@ -28,6 +28,7 @@ import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
 import jclp.EventBus
 import jclp.log.Log
+import jclp.text.ifNotEmpty
 import jclp.text.or
 import jem.Attributes
 import jem.author
@@ -42,7 +43,7 @@ import mala.ixin.*
 class Dashboard : IApplication(UISettings), CommandHandler {
     private val tagId = "Dashboard"
 
-    lateinit var splitPane: SplitPane
+    lateinit var contentPane: SplitPane
 
     lateinit var designer: AppDesigner
 
@@ -58,12 +59,12 @@ class Dashboard : IApplication(UISettings), CommandHandler {
         actionMap.updateAccelerators(App.assets.propertiesFor("ui/keys.properties")!!)
         appPane.statusBar?.right = Indicator
 
-        splitPane = SplitPane().also {
-            it.id = "main-split-pane"
-            it.items.addAll(NavPane, EditorPane)
-            it.setDividerPosition(0, 0.24)
-            SplitPane.setResizableWithParent(NavPane, false)
-            appPane.center = it
+        contentPane = SplitPane().also { split ->
+            split.id = "main-split-pane"
+            split.items.addAll(ContentsPane, EditorPane)
+            split.setDividerPosition(0, 0.24)
+            SplitPane.setResizableWithParent(ContentsPane, false)
+            appPane.center = split
         }
 
         initActions()
@@ -74,13 +75,13 @@ class Dashboard : IApplication(UISettings), CommandHandler {
 
     override fun restoreState() {
         super.restoreState()
-        NavPane.isVisible = UISettings.navigationBarVisible
-        if (!NavPane.isVisible) splitPane.items.remove(0, 1)
+        ContentsPane.isVisible = UISettings.navigationBarVisible
+        if (!ContentsPane.isVisible) contentPane.items.remove(0, 1)
     }
 
     override fun saveState() {
         super.saveState()
-        UISettings.navigationBarVisible = NavPane.isVisible
+        UISettings.navigationBarVisible = ContentsPane.isVisible
     }
 
     internal fun dispose() {
@@ -91,7 +92,7 @@ class Dashboard : IApplication(UISettings), CommandHandler {
     private fun initActions() {
         actionMap["showToolbar"]?.selectedProperty?.bindBidirectional(appPane.toolBar!!.visibleProperty())
         actionMap["showStatusBar"]?.selectedProperty?.bindBidirectional(appPane.statusBar!!.visibleProperty())
-        actionMap["showNavigateBar"]?.selectedProperty?.bindBidirectional(NavPane.visibleProperty())
+        actionMap["showNavigateBar"]?.selectedProperty?.bindBidirectional(ContentsPane.visibleProperty())
         actionMap["toggleFullScreen"]?.let { action ->
             stage.fullScreenProperty().addListener { _, _, value -> action.isSelected = value }
             action.selectedProperty.addListener { _, _, value -> stage.isFullScreen = value }
@@ -107,7 +108,7 @@ class Dashboard : IApplication(UISettings), CommandHandler {
             }
             append(book.title)
             append(" - ")
-            book.author.takeIf { it.isNotEmpty() }?.let {
+            book.author.ifNotEmpty {
                 append("[")
                 append(it.replace(Attributes.VALUE_SEPARATOR, " & "))
                 append("] - ")
@@ -126,15 +127,15 @@ class Dashboard : IApplication(UISettings), CommandHandler {
         when (command) {
             "showToolbar", "showStatusBar", "toggleFullScreen" -> Unit // bound with property
             "showNavigateBar" -> {
-                if (!NavPane.isVisible) {
-                    splitPane.items.remove(0, 1)
+                if (!ContentsPane.isVisible) {
+                    contentPane.items.remove(0, 1)
                 } else {
-                    splitPane.items.add(0, NavPane)
-                    splitPane.setDividerPosition(0, 0.24)
+                    contentPane.items.add(0, ContentsPane)
+                    contentPane.setDividerPosition(0, 0.24)
                 }
             }
             in editActions -> stage.scene.focusOwner.let {
-                (it as? Editable)?.onEdit(command) ?: Log.d(tagId) { "focused object is not editable: $it" }
+                (it as? EditAware)?.onEdit(command) ?: Log.d(tagId) { "focused object is not editable: $it" }
             }
             else -> return false
         }
@@ -209,6 +210,6 @@ private val editActions = arrayOf(
         "undo", "redo", "cut", "copy", "paste", "delete", "selectAll", "find", "findNext", "findPrevious"
 )
 
-interface Editable {
+interface EditAware {
     fun onEdit(command: String)
 }

@@ -1,5 +1,6 @@
 package jem.format.epub.v3
 
+import jclp.text.or
 import jclp.utcISODateTime
 import java.time.OffsetDateTime
 import java.util.*
@@ -10,7 +11,7 @@ sealed class Item(id: String) {
         private var counter = 0
     }
 
-    val id: String = id.takeIf { it.isNotEmpty() } ?: "e${++counter}"
+    val id: String = id or { "e${++counter}" }
 
     var textDirection: String = ""
 

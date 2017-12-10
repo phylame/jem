@@ -69,7 +69,7 @@ open class Chapter(
     operator fun set(name: String, values: Collection<Any>)
             = attributes.set(name, values.joinToString(VALUE_SEPARATOR))
 
-    val isSection get() = size != 0
+    val isSection inline get() = size != 0
 
     fun clear(cleanup: Boolean) {
         if (cleanup) forEach { it.cleanup() }

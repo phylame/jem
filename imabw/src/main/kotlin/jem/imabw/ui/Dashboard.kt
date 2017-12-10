@@ -18,8 +18,6 @@
 
 package jem.imabw.ui
 
-import javafx.beans.InvalidationListener
-import javafx.beans.binding.Bindings
 import javafx.geometry.Pos
 import javafx.scene.Scene
 import javafx.scene.control.Label
@@ -30,7 +28,6 @@ import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
 import jclp.EventBus
 import jclp.log.Log
-import jclp.text.TEXT_PLAIN
 import jclp.text.or
 import jem.Attributes
 import jem.author
@@ -146,11 +143,11 @@ class Dashboard : IApplication(UISettings), CommandHandler {
 }
 
 object Indicator : HBox() {
-    private val caret = Label().apply { tooltip = Tooltip(App.tr("status.caret.toast")) }
+    val caret = Label().apply { tooltip = Tooltip(App.tr("status.caret.toast")) }
 
-    private val words = Label().apply { tooltip = Tooltip(App.tr("status.words.toast")) }
+    val words = Label().apply { tooltip = Tooltip(App.tr("status.words.toast")) }
 
-    private val mime = Label().apply { tooltip = Tooltip(App.tr("status.mime.toast")) }
+    val mime = Label().apply { tooltip = Tooltip(App.tr("status.mime.toast")) }
 
     init {
         id = "indicator"
@@ -168,7 +165,6 @@ object Indicator : HBox() {
         IxIn.newAction("gc").toButton(Imabw, hideText = true).also { children += it }
 
         reset()
-        initRuler()
     }
 
     fun reset() {
@@ -205,35 +201,6 @@ object Indicator : HBox() {
         } else {
             mime.isVisible = true
             mime.text = type
-        }
-    }
-
-    private fun initRuler() {
-        EditorPane.selectionModel.selectedItemProperty().addListener { _, old, new ->
-            (old as? ChapterTab)?.editor?.let { text ->
-                (text.properties[this] as? InvalidationListener)?.let {
-                    text.caretPositionProperty().removeListener(it)
-                    text.selectionProperty().removeListener(it)
-                }
-            }
-            if (new is ChapterTab) {
-                new.editor.also { text ->
-                    //                    InvalidationListener {
-//                        updateCaret(text.currentParagraph + 1, text.caretColumn + 1, text.selection.length)
-//                    }.let { listener ->
-//                        text.properties[this] = listener
-//                        text.caretPositionProperty().addListener(listener)
-//                        text.selectionProperty().addListener(listener)
-//                    }
-                    words.isVisible = true
-                    words.textProperty().bind(Bindings.convert(text.lengthProperty()))
-//                    updateCaret(text.currentParagraph + 1, text.caretColumn + 1, text.selection.length)
-                }
-                updateMime(new.chapter.text?.type?.toUpperCase() ?: TEXT_PLAIN.toUpperCase())
-            } else {
-                words.textProperty().unbind()
-                reset()
-            }
         }
     }
 }

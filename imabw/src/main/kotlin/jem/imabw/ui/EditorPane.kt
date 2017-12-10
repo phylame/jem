@@ -28,6 +28,7 @@ import jclp.io.flobOf
 import jclp.io.writeLines
 import jclp.isAncestor
 import jclp.log.Log
+import jclp.text.TEXT_PLAIN
 import jclp.text.textOf
 import jclp.toRoot
 import jem.Chapter
@@ -60,15 +61,27 @@ object EditorPane : TabPane(), CommandHandler, Editable {
         tabMenu = designer.items["tabContext"]?.toContextMenu(Imabw, App, App.assets, IxIn.actionMap, null)
         textMenu = designer.items["textContext"]?.toContextMenu(Imabw, App, App.assets, IxIn.actionMap, null)
         selectionModel.selectedItemProperty().addListener { _, old, new ->
-            (old as? ChapterTab)?.let {
-                it.contextMenu = null
-                it.editor.contextMenu = null
+            Indicator.words.textProperty().unbind()
+            Indicator.reset()
+
+            old?.contextMenu = null
+            new?.contextMenu = tabMenu
+            new?.content?.let {
+                when (it) {
+                    is TextArea -> {
+                        Indicator.words.isVisible = true
+                        Indicator.words.textProperty().bind(it.lengthProperty().asString())
+                    }
+                }
             }
+
+            (old as? ChapterTab)?.editor?.contextMenu = null
             (new as? ChapterTab)?.let {
-                it.contextMenu = tabMenu
                 it.editor.contextMenu = textMenu
+                Indicator.updateMime(it.chapter.text?.type?.toUpperCase() ?: TEXT_PLAIN.toUpperCase())
                 Platform.runLater { it.content.requestFocus() }
             }
+
         }
         tabs.addListener(ListChangeListener {
             while (it.next()) {
@@ -147,9 +160,11 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
 
     private var cacheFile: File? = null
 
+    @Volatile
     private var isReady = false
 
-    val isModified get() = false//!editor.undoManager.isAtMarkedPosition
+    var isModified = false
+        private set
 
     val editor = TextEditor()
 
@@ -161,15 +176,12 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
         chapter.toRoot().let { it.subList(1, it.size) }.takeIf { it.isNotEmpty() }?.let {
             tooltip = Tooltip(it.joinToString(" > ") { it.title })
         }
-//        editor.undoManager.atMarkedPositionProperty().addListener { _, _, isMarked ->
-//            if (isReady) {
-//                if (isMarked) {
-//                    EventBus.post(ModificationEvent(chapter, ModificationType.TEXT_MODIFIED, -1))
-//                } else {
-//                    EventBus.post(ModificationEvent(chapter, ModificationType.TEXT_MODIFIED))
-//                }
-//            }
-//        }
+        editor.textProperty().addListener { _ ->
+            if (isReady) {
+                isModified = true
+                EventBus.post(ModificationEvent(chapter, ModificationType.TEXT_MODIFIED, 1))
+            }
+        }
         loadText()
     }
 
@@ -182,31 +194,25 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
                 updateProgress(App.tr("jem.loadText.hint", chapter.title))
             }
             setOnSucceeded {
-                editor.text=value
-//                editor.replaceText(value)
-                editor.selectRange(0, 0)
-//                editor.undoManager.forgetHistory()
-//                editor.undoManager.mark()
-                hideProgress()
+                editor.text = value
+                editor.positionCaret(0)
                 isReady = true
+                hideProgress()
             }
             Imabw.submit(this)
         }
     }
 
     fun cacheText() {
-        Log.t(tagId) { "cache text for '${chapter.title}'" }
-//        if (editor.document.length() <= 1024) {
-//            chapter.text = textOf(editor.text)
-//            return
-//        }
+        Log.d(tagId) { "cache text for '${chapter.title}'" }
+        if (editor.length <= 512) {
+            chapter.text = textOf(editor.text)
+            return
+        }
         File.createTempFile("imabw-text-", ".txt").let {
             try {
-                it.bufferedWriter().use {
-//                    it.writeLines(editor.paragraphs.asSequence().map { it.text }.iterator())
-                    it.writeLines(editor.paragraphs.iterator())
-                }
-                chapter.text = textOf(flobOf(it.toPath(), "text/plain"), Charsets.UTF_8)
+                it.bufferedWriter().use { it.writeLines(editor.paragraphs.iterator()) }
+                chapter.text = textOf(flobOf(it, "text/plain"), Charsets.UTF_8)
             } catch (e: Exception) {
                 Log.e(tagId, e) { "cannot cache text to '$it'" }
                 if (it.delete()) {
@@ -228,7 +234,7 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
     }
 
     fun resetModification() {
-//        editor.undoManager.mark()
+        isModified = false
     }
 
     fun dispose() {
@@ -242,9 +248,6 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
 class TextEditor : TextArea(), Editable {
     init {
         isWrapText = EditorSettings.wrapText
-//        if (EditorSettings.showLineNumber) {
-//            paragraphGraphicFactory = LineNumberFactory.get(this)
-//        }
         focusedProperty().addListener { _, _, focused ->
             if (focused) {
                 initActions()
@@ -264,14 +267,8 @@ class TextEditor : TextArea(), Editable {
         actionMap["copy"]?.resetDisable()
         actionMap["paste"]?.disableProperty?.bind(notEditable)
         actionMap["delete"]?.disableProperty?.bind(notEditable)
-//        val notUndo = Bindings.createBooleanBinding(Callable {
-//            !undoManager.isUndoAvailable
-//        }, undoManager.undoAvailableProperty())
-//        actionMap["undo"]?.disableProperty?.bind(notEditable.or(notUndo))
-//        val notRedo = Bindings.createBooleanBinding(Callable {
-//            !undoManager.isRedoAvailable
-//        }, undoManager.redoAvailableProperty())
-//        actionMap["redo"]?.disableProperty?.bind(notEditable.or(notRedo))
+        actionMap["undo"]?.disableProperty?.bind(undoableProperty().not())
+        actionMap["redo"]?.disableProperty?.bind(redoableProperty().not())
         actionMap["find"]?.resetDisable()
         actionMap["findNext"]?.resetDisable()
         actionMap["findPrevious"]?.resetDisable()
@@ -279,19 +276,6 @@ class TextEditor : TextArea(), Editable {
         actionMap["lock"]?.let {
             it.isSelected = !isEditable
             it.isDisable = false
-        }
-    }
-
-    override fun cut() {
-        selectLineIfEmpty()
-        super.cut()
-    }
-
-    override fun copy() {
-        val oldSelection = selectLineIfEmpty()
-        super.copy()
-        if (oldSelection != null) {
-            selectRange(oldSelection.start, oldSelection.end)
         }
     }
 
@@ -305,15 +289,5 @@ class TextEditor : TextArea(), Editable {
             "delete" -> replaceSelection("")
             "selectAll" -> selectAll()
         }
-    }
-
-    private fun selectLineIfEmpty(): IndexRange? {
-        var oldSelection: IndexRange? = null
-        if (selectedText.isEmpty()) {
-            oldSelection = selection
-//            selectLine()
-//            nextChar(NavigationActions.SelectionPolicy.ADJUST)
-        }
-        return oldSelection
     }
 }

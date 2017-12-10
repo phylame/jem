@@ -18,10 +18,7 @@
 
 package jem.format.pmab
 
-import jem.epm.EpmFactory
-import jem.epm.Maker
-import jem.epm.PMAB_NAME
-import jem.epm.Parser
+import jem.epm.*
 
 internal object PMAB {
     /////** MIME type for PMAB **\\\\\
@@ -37,7 +34,7 @@ internal object PMAB {
     const val PBC_XMLNS = "http://phylame.pw/format/pmab/pbc"
 }
 
-class PmabFactory : EpmFactory {
+class PmabFactory : EpmFactory, FileParser {
     override val keys = setOf(PMAB_NAME, "pem")
 
     override val name = "PMAB for Jem"

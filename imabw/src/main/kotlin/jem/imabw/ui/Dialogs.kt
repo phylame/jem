@@ -31,6 +31,7 @@ import jclp.ValueMap
 import jclp.traceText
 import jem.Chapter
 import jem.epm.EpmManager
+import jem.epm.FileParser
 import jem.epm.PMAB_NAME
 import jem.imabw.*
 import jem.title
@@ -215,7 +216,7 @@ fun selectOpenImage(title: String, owner: Window): File? {
 }
 
 private fun parserExtensions(): List<Set<String>> {
-    return EpmManager.services.filter { it.hasParser && "crawler" !in it.keys }.map { it.keys }
+    return EpmManager.services.filter { it.hasParser && it is FileParser }.map { it.keys }
 }
 
 private fun makerExtensions(): List<Set<String>> {

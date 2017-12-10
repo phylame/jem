@@ -20,6 +20,7 @@ package jem.format.epub
 
 import jclp.io.slashify
 import jem.epm.EpmFactory
+import jem.epm.FileParser
 import jem.epm.Maker
 import jem.epm.Parser
 import java.nio.file.Path
@@ -40,7 +41,7 @@ internal object EPUB {
     const val COVER_ID = "cover"
 }
 
-class EpubFactory : EpmFactory {
+class EpubFactory : EpmFactory, FileParser {
     override val keys = setOf("epub")
 
     override val name = "Epub for Jem"

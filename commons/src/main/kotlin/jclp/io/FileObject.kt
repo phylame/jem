@@ -24,6 +24,7 @@ import jclp.retain
 import jclp.text.or
 import jclp.vdm.VdmEntry
 import jclp.vdm.VdmReader
+import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -89,6 +90,8 @@ private class FileFlob(val path: Path, mime: String) : Flob {
 }
 
 fun flobOf(path: Path, mime: String = ""): Flob = FileFlob(path, mime)
+
+fun flobOf(file: File, mime: String = ""): Flob = flobOf(file.toPath(), mime)
 
 private class ByteFlob(val data: ByteArray, override val name: String, mime: String) : Flob {
     override val mimeType = mime or { mimeType(name) }

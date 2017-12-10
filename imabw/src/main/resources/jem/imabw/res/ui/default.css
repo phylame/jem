@@ -149,6 +149,10 @@
     -fx-focus-traversable: false;
 }
 
+.titled-pane > .title {
+    -fx-background-radius: 0;
+}
+
 .variant-pane .table-view {
     -fx-background-insets: 0;
     -fx-background-color: -fx-control-inner-background;

@@ -145,7 +145,7 @@ object NavPane : BorderPane(), CommandHandler {
     val selectedNode get() = tree.selectionModel.selectedItem
 
     fun createChapter(): Chapter? {
-        return input(tr("d.newChapter.title"), tr("d.newChapter.tip"), tr("jem.chapter.untitled"), false)?.let {
+        return input(tr("d.newChapter.title"), tr("d.newChapter.tip"), tr("jem.chapter.untitled"), canEmpty = false)?.let {
             Chapter(it)
         }
     }
@@ -163,7 +163,7 @@ object NavPane : BorderPane(), CommandHandler {
     fun renameChapter() {
         val node = selectedNode
         val chapter = node!!.value
-        input(tr("d.renameChapter.title"), tr("d.renameChapter.tip"), chapter.title, false, true)?.let {
+        input(tr("d.renameChapter.title"), tr("d.renameChapter.tip"), chapter.title, canEmpty = false, mustDiff = true)?.let {
             chapter.title = it
             node.refresh()
             EventBus.post(ModificationEvent(chapter, ModificationType.ATTRIBUTE_MODIFIED))

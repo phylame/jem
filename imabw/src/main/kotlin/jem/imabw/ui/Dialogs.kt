@@ -32,9 +32,7 @@ import jclp.traceText
 import jem.Chapter
 import jem.epm.EpmManager
 import jem.epm.PMAB_NAME
-import jem.imabw.History
-import jem.imabw.Imabw
-import jem.imabw.UISettings
+import jem.imabw.*
 import jem.title
 import mala.App
 import mala.ixin.graphicFor
@@ -110,7 +108,7 @@ fun input(
                 okButton.disableProperty().bind(Bindings.isEmpty(textField.textProperty()))
             }
         } else if (mustDiff) {
-            okButton.disableProperty().bind(Bindings.notEqual(textField.textProperty(), initial))
+            okButton.disableProperty().bind(Bindings.equal(textField.textProperty(), initial))
         }
         contentText = label
         showAndWait().let { if (it.isPresent) it.get() else null }
@@ -148,7 +146,7 @@ fun text(
                 okButton.disableProperty().bind(Bindings.isEmpty(textArea.textProperty()))
             }
         } else if (mustDiff) {
-            okButton.disableProperty().bind(Bindings.notEqual(textArea.textProperty(), initial))
+            okButton.disableProperty().bind(Bindings.equal(textArea.textProperty(), initial))
         }
         Platform.runLater { textArea.requestFocus() }
         return if (showAndWait().get() == ButtonType.OK) textArea.text else null
@@ -156,7 +154,7 @@ fun text(
 }
 
 private val fileChooser = FileChooser().apply {
-    History.latest?.let(::File)?.let {
+    (Workbench.work?.path ?: History.latest)?.let { File(it) }?.let {
         if (it.isDirectory) {
             initialDirectory = it
         } else if (it.exists()) {
@@ -205,6 +203,7 @@ fun selectDirectory(title: String, owner: Window): File? {
 
 fun selectOpenImage(title: String, owner: Window): File? {
     fileChooser.title = title
+    GeneralSettings.lastImageDir.takeIf { it.isNotEmpty() }?.let { fileChooser.initialDirectory = File(it) }
     fileChooser.extensionFilters.setAll(allExtensionFilter)
     setExtensionFilters(fileChooser, setOf(
             setOf("jpg", "jpeg"),
@@ -212,7 +211,7 @@ fun selectOpenImage(title: String, owner: Window): File? {
             setOf("bmp"),
             setOf("gif")
     ), "")
-    return fileChooser.showOpenDialog(owner)
+    return fileChooser.showOpenDialog(owner)?.apply { GeneralSettings.lastImageDir = parent }
 }
 
 private fun parserExtensions(): List<Set<String>> {
@@ -236,15 +235,17 @@ fun openBookFile(owner: Window): File? {
     fileChooser.title = App.tr("d.openBook.title")
     fileChooser.extensionFilters.clear()
     setExtensionFilters(fileChooser, parserExtensions(), PMAB_NAME)
-    return fileChooser.showOpenDialog(owner)?.also { fileChooser.initialDirectory = it.parentFile }
+    GeneralSettings.lastBookDir.takeIf { it.isNotEmpty() }?.let { fileChooser.initialDirectory = File(it) }
+    return fileChooser.showOpenDialog(owner)?.also { GeneralSettings.lastBookDir = it.parent }
 }
 
 fun saveBookFile(name: String, format: String, owner: Window): Pair<File, String>? {
     fileChooser.initialFileName = name
     fileChooser.title = App.tr("d.saveBook.title")
     fileChooser.extensionFilters.setAll(FileChooser.ExtensionFilter(getExtensionName(format), "*.$format"))
+    GeneralSettings.lastBookDir.takeIf { it.isNotEmpty() }?.let { fileChooser.initialDirectory = File(it) }
     return fileChooser.showSaveDialog(owner)?.let {
-        fileChooser.initialDirectory = it.parentFile
+        GeneralSettings.lastBookDir = it.parent
         makeSaveResult(it, fileChooser)
     }
 }
@@ -254,8 +255,9 @@ fun saveBookFile(name: String, owner: Window): Pair<File, String>? {
     fileChooser.title = App.tr("d.saveBook.title")
     fileChooser.extensionFilters.clear()
     setExtensionFilters(fileChooser, makerExtensions(), PMAB_NAME)
+    GeneralSettings.lastBookDir.takeIf { it.isNotEmpty() }?.let { fileChooser.initialDirectory = File(it) }
     return fileChooser.showSaveDialog(owner)?.let {
-        fileChooser.initialDirectory = it.parentFile
+        GeneralSettings.lastBookDir = it.parent
         makeSaveResult(it, fileChooser)
     }
 }
@@ -264,7 +266,8 @@ fun openBookFiles(owner: Window): List<File>? {
     fileChooser.title = App.tr("d.openBook.title")
     fileChooser.extensionFilters.clear()
     setExtensionFilters(fileChooser, parserExtensions(), PMAB_NAME)
-    return fileChooser.showOpenMultipleDialog(owner)?.also { fileChooser.initialDirectory = it.first().parentFile }
+    GeneralSettings.lastBookDir.takeIf { it.isNotEmpty() }?.let { fileChooser.initialDirectory = File(it) }
+    return fileChooser.showOpenMultipleDialog(owner)?.also { GeneralSettings.lastBookDir = it.first().parent }
 }
 
 fun editAttributes(chapter: Chapter, owner: Window): Boolean {

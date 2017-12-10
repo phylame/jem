@@ -88,7 +88,10 @@ object ConverterManager {
 
 private class DefaultConverter<T>(val type: Class<T>) : Converter<T> {
     override fun render(value: T): String = when (value) {
-        is Date -> value.format(ISO_DATE_TIME_FORMAT)
+        is Date -> value.format(LOOSE_DATE_TIME_FORMAT)
+        is LocalDateTime -> value.format(looseISODateTime)
+        is LocalDate -> value.format(looseISODate)
+        is LocalTime -> value.format(looseISOTime)
         else -> value.toString()
     }
 

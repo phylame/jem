@@ -36,9 +36,11 @@ import jclp.io.Flob
 import jclp.io.flobOf
 import jclp.release
 import jclp.retain
+import jclp.text.ConverterManager
 import jclp.text.Text
 import jclp.text.or
 import jclp.text.textOf
+import jem.Attributes
 import jem.imabw.*
 import mala.App
 import mala.App.tr
@@ -127,6 +129,8 @@ open class VariantPane(val map: ValueMap, val tag: String, showName: Boolean = t
 
     protected open fun getDefaultValue(key: String): Any = ""
 
+    protected open fun isMultiValues(key: String): Boolean = false
+
     protected open fun getAvailableValues(key: String): List<String> = emptyList()
 
     protected open fun availableKeys(): Collection<String> = emptyList()
@@ -139,7 +143,6 @@ open class VariantPane(val map: ValueMap, val tag: String, showName: Boolean = t
         with(table) {
             isEditable = true
             selectionModel.selectionMode = SelectionMode.MULTIPLE
-            columnResizePolicy = TableView.CONSTRAINED_RESIZE_POLICY
             addEventHandler(KeyEvent.KEY_PRESSED) {
                 if (it.code == KeyCode.DELETE) {
                     removeItem(selectedItems, true)
@@ -165,11 +168,15 @@ open class VariantPane(val map: ValueMap, val tag: String, showName: Boolean = t
                     Bindings.createStringBinding(Callable { getTypeTitle(it.value.type) }, it.value.typeProperty)
                 }
             }
-            columns += TableColumn<VariantItem, String>(tr("com.variant.value")).apply {
-                setCellFactory { EditableDataCell() }
-                setCellValueFactory {
-                    Bindings.createStringBinding(Callable { formatItemData(it.value.data) }, it.value.dataProperty)
+            columns += TableColumn<VariantItem, Any>(tr("com.variant.value")).apply {
+                setOnEditCommit {
+                    if (it.newValue != it.oldValue) {
+                        it.rowValue.data = it.newValue
+                        isModified = true
+                    }
                 }
+                setCellFactory { EditableDataCell() }
+                setCellValueFactory { it.value.dataProperty }
             }
             UISettings.restore(this, tag)
         }
@@ -325,105 +332,138 @@ open class VariantPane(val map: ValueMap, val tag: String, showName: Boolean = t
         }
     }
 
-    private inner class EditableDataCell<S, T : Any> : TableCell<S, T>() {
-        private var comp: Node? = null
+    private inner class EditableDataCell : TableCell<VariantItem, Any>() {
+        private var editor: Node? = null
 
-        override fun updateItem(item: T?, empty: Boolean) {
+        override fun updateItem(item: Any?, empty: Boolean) {
             super.updateItem(item, empty)
-            if (empty) {
-                text = null
-                graphic = null
-            } else {
-                if (isEditing) {
+            when {
+                empty -> {
                     text = null
-                    graphic = comp
-                } else {
-                    text = item?.toString() ?: ""
+                    graphic = null
+                }
+                isEditing -> {
+                    text = null
+                    graphic = editor?.apply { updateEditor(item!!) }
+                }
+                else -> {
+                    text = formatItemData(item!!)
                     graphic = null
                 }
             }
         }
 
-        @Suppress("UNCHECKED_CAST")
         override fun startEdit() {
             if (isEmpty) return
             super.startEdit()
-
-            val variant = selectedItem
-            when (variant.type) {
-                "" -> cancelEdit()
-                TypeManager.BOOLEAN -> {
-                    variant.data = !(variant.data as Boolean)
-                    isModified = true
-                    cancelEdit()
-                }
-                TypeManager.DATE -> {
-                    graphic = DatePicker(variant.data as LocalDate).apply {
-                        isShowWeekNumbers = true
-                        setOnAction { commitEdit(value as T) }
-                    }
-                }
-                TypeManager.LOCALE -> {
-                    graphic = LocalePicker(variant.data as Locale).apply {
-                        setOnAction { commitEdit(value as T) }
-                    }
-                }
-                TypeManager.TEXT -> {
-                    text(tr("d.editVariant.title", getItemTitle(variant.key)), variant.data.toString(), owner = scene.window)?.let {
-                        variant.data = textOf(it)
-                        isModified = true
-                    }
-                    cancelEdit()
-                }
-                TypeManager.FLOB -> {
-                    selectOpenFile(tr("d.selectFile.title"), scene.window)?.let {
-                        variant.data = flobOf(it.toPath())
-                        isModified = true
-                    }
-                    cancelEdit()
-                }
-                else -> {
-                    graphic = getAvailableValues(variant.key).takeIf { it.isNotEmpty() }?.let {
-                        ComboBox<String>().apply {
-                            items.setAll(it)
-                            isEditable = true
-                            editor.text = item.toString()
-                            setOnAction { commitEdit(selectionModel.selectedItem as T) }
-                        }
-                    } ?: TextField(formatItemData(variant.data)).apply {
-                        setOnAction { commitEdit(text as T) }
-                    }
-                }
-            }
-            graphic?.also {
-                comp = it
+            createEditor(item)
+            editor?.let {
                 text = null
+                graphic = it
                 (it as? Region)?.maxWidth = Double.MAX_VALUE
                 it.requestFocus()
             }
         }
 
-        override fun commitEdit(value: T) {
-            val variant = selectedItem
-            variant.data = if (value is String) {
-                try {
-                    TypeManager.parse(variant.type, value) ?: return
-                } catch (e: IllegalArgumentException) {
-                    return
-                }
-            } else {
-                value
-            }
-            isModified = true
-
-            super.commitEdit(value)
-            tableView.requestFocus()
-        }
-
         override fun cancelEdit() {
             super.cancelEdit()
-            text = item?.toString() ?: ""
+            text = formatItemData(item)
             graphic = null
+        }
+
+        private fun createEditor(data: Any) {
+            editor = null
+            val key = variants[index].key
+            when (data) {
+                is CharSequence -> {
+                    if (isMultiValues(key)) {
+                        val str = data.toString().replace(Attributes.VALUE_SEPARATOR, "\n")
+                        text(tr("d.editVariant.title", getItemTitle(key)), initial = str, mustDiff = true, owner = scene.window)?.let {
+                            commitEdit(it.split("\n").filter { it.isNotEmpty() }.joinToString(Attributes.VALUE_SEPARATOR))
+                        }
+                        cancelEdit()
+                        return
+                    }
+                    editor = getAvailableValues(key).takeIf { it.isNotEmpty() }?.let { values ->
+                        ComboBox<String>().apply {
+                            isEditable = true
+                            items.setAll(values)
+                            editor.text = data.toString()
+                            setOnAction { commitEdit(selectionModel.selectedItem) }
+                        }
+                    } ?: TextField(data.toString()).apply {
+                        setOnAction { commitEdit(text) }
+                        focusedProperty().addListener { _, _, focused ->
+                            if (!focused) commitEdit(text)
+                        }
+                    }
+                }
+                is LocalDate -> {
+                    editor = DatePicker(data).apply {
+                        isShowWeekNumbers = true
+                        setOnAction { commitEdit(value) }
+                        editor.focusedProperty().addListener { _, _, focused ->
+                            if (!focused) commitEdit(converter.fromString(editor.text))
+                        }
+                    }
+                }
+                is Locale -> {
+                    editor = LocalePicker(data).apply {
+                        setOnAction { commitEdit(value) }
+                    }
+                }
+                is Text -> {
+                    text(tr("d.editVariant.title", getItemTitle(key)), data.toString(), owner = scene.window)?.let {
+                        commitEdit(textOf(it))
+                    }
+                    cancelEdit()
+                }
+                is Flob -> {
+                    selectOpenFile(tr("d.selectFile.title"), scene.window)?.let {
+                        commitEdit(flobOf(it))
+                    }
+                    cancelEdit()
+                }
+                is Boolean -> {
+                    commitEdit(!data)
+                }
+                else -> {
+                    val type = data.javaClass
+                    if (type in ConverterManager) {
+                        editor = TextField(ConverterManager.render(data)).apply {
+                            setOnAction {
+                                try {
+                                    commitEdit(ConverterManager.parse(text, type))
+                                } catch (e: RuntimeException) {
+                                    App.error("invalid value", e)
+                                }
+                            }
+                            focusedProperty().addListener { _, _, focused ->
+                                if (!focused) {
+                                    try {
+                                        commitEdit(ConverterManager.parse(text, type))
+                                    } catch (e: RuntimeException) {
+                                        App.error("invalid value", e)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private fun updateEditor(data: Any) {
+            println("update editor for $data")
+            val comp = editor
+            when (comp) {
+                is TextArea -> {
+                    comp.text = data.toString()
+                }
+                is DatePicker -> {
+                    comp.value = data as LocalDate
+                }
+            }
         }
     }
 }

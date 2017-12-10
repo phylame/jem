@@ -28,6 +28,7 @@ import javafx.scene.control.TableView
 import jclp.io.exists
 import jclp.io.notExists
 import jclp.setting.getDouble
+import jclp.setting.getString
 import jclp.setting.settingsWith
 import mala.App
 import mala.AppSettings
@@ -41,6 +42,10 @@ object GeneralSettings : AppSettings() {
     var enableHistory by settingsWith(true, "app.history.enable")
 
     var historyLimit by settingsWith(24, "app.history.limit")
+
+    var lastBookDir by settingsWith("", "app.history.bookDir")
+
+    var lastImageDir by settingsWith("", "app.history.imageDir")
 }
 
 object UISettings : IxInSettings() {
@@ -87,6 +92,10 @@ object JemSettings : MalaSettings("config/jem.ini") {
     var genres by settingsWith("", "jem.values.genres")
 
     var states by settingsWith(App.tr("jem.value.states"), "jem.values.states")
+
+    var multipleAttrs by settingsWith("author;keywords;vendor;tag;subject;protagonist", "jem.values.multiple")
+
+    fun getValue(name: String) = getString("jem.values.$name")
 }
 
 object History {

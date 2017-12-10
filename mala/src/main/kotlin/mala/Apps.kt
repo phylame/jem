@@ -19,10 +19,10 @@
 package mala
 
 import jclp.TranslatorWrapper
-import jclp.traceText
 import jclp.log.Log
 import jclp.text.colored
 import jclp.text.or
+import jclp.traceText
 import java.util.*
 
 enum class AppState {
@@ -151,7 +151,7 @@ object App : TranslatorWrapper() {
     fun traceback(e: Throwable, level: AppVerbose) {
         when (level) {
             AppVerbose.ECHO -> System.err.println("\t${e.message}".colored("green"))
-            AppVerbose.TRACE -> println(e.traceText.colored("green"))
+            AppVerbose.TRACE -> System.err.println(e.traceText.colored("green"))
             else -> Unit
         }
     }

@@ -25,13 +25,12 @@ import javafx.scene.control.*
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
 import javafx.scene.layout.AnchorPane
-import jclp.io.Flob
+import jclp.io.flobOf
 import jclp.io.subMime
+import jclp.setting.getDouble
+import jclp.text.textOf
 import jem.*
-import jem.imabw.Imabw
-import jem.imabw.JemSettings
-import jem.imabw.LoadTextTask
-import jem.imabw.saveFlob
+import jem.imabw.*
 import mala.App
 import mala.App.tr
 import mala.ixin.clearAnchorConstraints
@@ -47,14 +46,20 @@ class AttributePane(val chapter: Chapter) : AnchorPane() {
 
         override fun getItemType(key: String) = Attributes.getType(key)
 
-        override fun getDefaultValue(key: String) = Attributes.getDefault(key) ?: ""
+        override fun getDefaultValue(key: String) =
+                JemSettings.getValue(key) ?: Attributes.getDefault(key) ?: ""
+
+        override fun isMultiValues(key: String): Boolean = when (key) {
+            in JemSettings.multipleAttrs.split(Attributes.VALUE_SEPARATOR) -> true
+            else -> false
+        }
 
         override fun getItemTitle(key: String) = Attributes.getTitle(key) ?: key.capitalize()
 
         override fun getAvailableValues(key: String): List<String> {
             return when (key) {
-                STATE -> JemSettings.states.split(';').dropWhile { it.isEmpty() }
-                GENRE -> JemSettings.genres.split(';').dropWhile { it.isEmpty() }
+                STATE -> JemSettings.states.split(';').filter { it.isNotEmpty() }
+                GENRE -> JemSettings.genres.split(';').filter { it.isNotEmpty() }
                 else -> emptyList()
             }
         }
@@ -62,28 +67,47 @@ class AttributePane(val chapter: Chapter) : AnchorPane() {
         override fun dialogNewTitle() = App.tr("d.newAttribute.title")
     }
 
+    private var cover = chapter.cover
+        set(value) {
+            isChanged = true
+            field = value
+        }
+
     private var isChanged: Boolean = false
 
     private val viewController: AttributeViewController
 
-    val isModified get() = isChanged || variantPane.isModified
+    val isModified: Boolean get() = isChanged || variantPane.isModified
 
     init {
         val loader = FXMLLoader(App.assets.resourceFor("ui/AttributePane.fxml"))
         val root = loader.load<SplitPane>().apply { clearAnchorConstraints() }
         viewController = loader.getController()
         initView()
-        loadCover(chapter.cover)
+        loadCover()
         loadIntro()
         this += root
     }
 
     fun syncVariants() {
         variantPane.syncVariants()
+        if (cover == null) {
+            chapter.attributes.remove(COVER)
+        } else {
+            chapter.cover = cover
+        }
+        viewController.introEditor.text.let {
+            if (it.isEmpty()) {
+                chapter.attributes.remove(INTRO)
+            } else {
+                chapter.intro = textOf(it)
+            }
+        }
     }
 
     fun storeState() {
         variantPane.storeState()
+        viewController.storeState()
     }
 
     private fun initView() {
@@ -96,31 +120,41 @@ class AttributePane(val chapter: Chapter) : AnchorPane() {
                 } else {
                     saveButton.isDisable = false
                     removeButton.isDisable = false
-                    val type = chapter.cover?.mimeType?.let { ", ${subMime(it).toUpperCase()}" } ?: ""
+                    val type = cover?.mimeType?.let { ", ${subMime(it).toUpperCase()}" } ?: ""
                     coverInfo.text = "${image.width.toInt()}x${image.height.toInt()}$type"
                 }
             }
             openButton.setOnAction {
-                selectOpenImage("", scene.window)
+                selectOpenImage(tr("d.selectCover.title"), scene.window)?.let { file ->
+                    file.inputStream().use { Image(it) }.let { img ->
+                        if (img.isError) {
+                            debug(tr("d.selectCover.title"), tr("d.openCover.error", file), img.exception, scene.window)
+                        } else {
+                            cover = flobOf(file)
+                            coverView.image = img
+                        }
+                    }
+                }
             }
             saveButton.setOnAction {
-                val cover = chapter.cover!!
+                val cover = cover!!
                 val title = tr("d.saveCover.title")
                 selectSaveFile(title, "cover.${subMime(cover.mimeType)}", scene.window)?.let {
                     saveFlob(title, cover, it, scene.window)
                 }
             }
             removeButton.setOnAction {
-                loadCover(null)
-                isChanged = true
+                cover = null
+                loadCover()
             }
             attributeTitle.content = variantPane
+            introEditor.textProperty().addListener { _ -> isChanged = true }
         }
     }
 
-    private fun loadCover(flob: Flob?) {
+    private fun loadCover() {
         with(viewController) {
-            coverView.image = flob?.let {
+            coverView.image = cover?.let {
                 it.openStream().use { Image(it) }
             }
         }
@@ -134,6 +168,7 @@ class AttributePane(val chapter: Chapter) : AnchorPane() {
                 }
                 setOnSucceeded {
                     viewController.introEditor.text = value
+                    isChanged = false
                     hideProgress()
                 }
                 Imabw.submit(this)
@@ -159,6 +194,9 @@ internal class AttributeViewController : Initializable {
     lateinit var coverInfo: Label
 
     @FXML
+    lateinit var makeButton: Button
+
+    @FXML
     lateinit var openButton: Button
 
     @FXML
@@ -166,6 +204,9 @@ internal class AttributeViewController : Initializable {
 
     @FXML
     lateinit var removeButton: Button
+
+    @FXML
+    lateinit var vSplit: SplitPane
 
     @FXML
     lateinit var attributeTitle: TitledPane
@@ -179,11 +220,28 @@ internal class AttributeViewController : Initializable {
     override fun initialize(location: URL?, resources: ResourceBundle?) {
         coverTitle.text = tr("d.editAttribute.cover.title")
         coverAlt.text = tr("d.editAttribute.cover.alt")
+        coverInfo.text = ""
+        makeButton.text = tr("ui.button.make")
+        makeButton.isDisable = true
         openButton.text = tr("ui.button.open")
         saveButton.text = tr("ui.button.save")
         removeButton.text = tr("ui.button.remove")
         attributeTitle.text = tr("d.editAttribute.attributes.title")
         introTitle.text = tr("d.editAttribute.intro.title")
         introEditor.promptText = tr("d.editAttribute.intro.hint")
+
+        val settings = UISettings
+        settings.getDouble("dialog.attributes.split.0.position")?.let {
+            root.setDividerPosition(0, it)
+        }
+        settings.getDouble("dialog.attributes.split.1.position")?.let {
+            vSplit.setDividerPosition(0, it)
+        }
+    }
+
+    fun storeState() {
+        val settings = UISettings
+        settings["dialog.attributes.split.0.position"] = root.dividerPositions.first()
+        settings["dialog.attributes.split.1.position"] = vSplit.dividerPositions.first()
     }
 }

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.*?>
-<?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <SplitPane xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1"
@@ -13,9 +12,7 @@
                 <center>
                     <StackPane>
                         <Label text="No Cover" fx:id="coverAlt"/>
-                        <ImageView fx:id="coverView" fitWidth="300" fitHeight="400">
-                            <Image url="@file:///E:/tmp/1/1/resources/m-cover.jpg"/>
-                        </ImageView>
+                        <ImageView fx:id="coverView" fitWidth="300" fitHeight="400" preserveRatio="true"/>
                     </StackPane>
                 </center>
                 <bottom>
@@ -23,7 +20,8 @@
                         <Label fx:id="coverInfo" text="600x800, PNG"/>
                         <Separator/>
                         <HBox alignment="CENTER" spacing="8">
-                            <Button fx:id="openButton" text="Open"/>
+                            <Button fx:id="makeButton" text="Make"/>
+                            <Button fx:id="openButton" defaultButton="true" text="Open"/>
                             <Button fx:id="saveButton" text="Save" disable="true"/>
                             <Button fx:id="removeButton" text="Remove" disable="true"/>
                         </HBox>
@@ -32,10 +30,13 @@
             </BorderPane>
         </TitledPane>
     </AnchorPane>
-    <SplitPane orientation="VERTICAL">
+    <SplitPane orientation="VERTICAL" fx:id="vSplit">
         <TitledPane collapsible="false" text="Attributes" fx:id="attributeTitle"/>
-        <TitledPane collapsible="false" text="Intro" fx:id="introTitle">
-            <TextArea wrapText="true" fx:id="introEditor"/>
-        </TitledPane>
+        <AnchorPane>
+            <TitledPane collapsible="false" text="Intro" fx:id="introTitle" AnchorPane.topAnchor="0"
+                        AnchorPane.rightAnchor="0" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0">
+                <TextArea wrapText="true" fx:id="introEditor"/>
+            </TitledPane>
+        </AnchorPane>
     </SplitPane>
 </SplitPane>

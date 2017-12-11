@@ -35,12 +35,14 @@ val Path.isNotDirectory inline get() = !Files.isDirectory(this)
 
 val Path.lastModified: FileTime inline get() = Files.getLastModifiedTime(this)
 
-fun FileTime.toLocalDateTime(): LocalDateTime = LocalDateTime.ofInstant(toInstant(), ZoneId.systemDefault())
-
 val Path.size inline get() = Files.size(this)
+
+fun FileTime.toLocalDateTime(): LocalDateTime =
+        LocalDateTime.ofInstant(toInstant(), ZoneId.systemDefault())
 
 fun printableSize(size: Long): String {
     val format = NumberFormat.getNumberInstance()
+    format.maximumFractionDigits = 2
     return when {
         size > 0x4000_0000 -> "${format.format(size.toDouble() / 0x4000_0000)} GB"
         size > 0x10_0000 -> "${format.format(size.toDouble() / 0x10_0000)} MB"

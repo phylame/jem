@@ -46,6 +46,9 @@ val Hierarchical<*>.isRoot inline get() = parent == null
 
 val Hierarchical<*>.isNotRoot inline get() = parent != null
 
+fun <T : Hierarchical<T>> T.isSelfOrAncestor(item: T): Boolean
+        = this === item || isAncestor(item)
+
 fun <T : Hierarchical<T>> T.isAncestor(item: T): Boolean {
     var parent = item.parent
     while (parent != null) {

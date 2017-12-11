@@ -75,9 +75,14 @@ fun ActionMap.updateAccelerators(keys: Map<String, *>) {
     }
 }
 
+val Any?.asKeyCombination: KeyCombination?
+    inline get() = this?.let { it as? KeyCombination ?: KeyCombination.valueOf(it.toString()) }
+
 fun ActionMap.updateAccelerators(keys: Properties) {
-    for ((key, value) in keys) {
-        get(key)?.accelerator = value as? KeyCombination ?: KeyCombination.valueOf(value.toString())
+    val entries = keys.iterator()
+    while (entries.hasNext()) {
+        val entry = entries.next()
+        get(entry.key)?.accelerator = entry.value.asKeyCombination?.also { entry.setValue(it) }
     }
 }
 

@@ -26,27 +26,32 @@ import javafx.beans.value.WritableValue
 import javafx.collections.ObservableList
 import javafx.geometry.HPos
 import javafx.geometry.VPos
-import javafx.scene.Group
 import javafx.scene.Node
 import javafx.scene.control.*
 import javafx.scene.control.Separator
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
+import javafx.scene.input.KeyEvent
 import javafx.scene.input.MouseButton
 import javafx.scene.input.MouseEvent
 import javafx.scene.layout.AnchorPane
 import javafx.scene.layout.GridPane
-import javafx.scene.layout.Pane
 import javafx.scene.layout.Priority
 import jclp.HierarchySupport
 import jclp.text.ifNotEmpty
 import kotlin.reflect.KProperty
 
+val MouseEvent.isDoubleClick
+    inline get() = clickCount == 2
+
 val MouseEvent.isPrimary
     inline get() = button == MouseButton.PRIMARY
 
-val MouseEvent.isDoubleClick
-    inline get() = clickCount == 2
+val MouseEvent.hasModifiers: Boolean
+    inline get() = isShortcutDown || isAltDown || isShiftDown
+
+val KeyEvent.hasModifiers: Boolean
+    inline get() = isShortcutDown || isAltDown || isShiftDown
 
 fun ComboBox<*>.selectPreviousOrLast() {
     with(selectionModel) {
@@ -75,22 +80,6 @@ fun Node.clearAnchorConstraints(top: Double = 0.0, right: Double = 0.0, bottom: 
     AnchorPane.setLeftAnchor(this, left)
 }
 
-operator fun Pane.plusAssign(node: Node) {
-    children.add(node)
-}
-
-operator fun Pane.plusAssign(elements: Collection<Node>) {
-    children.addAll(elements)
-}
-
-operator fun Group.plusAssign(node: Node) {
-    children.add(node)
-}
-
-operator fun Group.plusAssign(elements: Collection<Node>) {
-    children.addAll(elements)
-}
-
 fun GridPane.initAsForm(labels: Collection<Node>, fields: Collection<Node>, firstRow: Int = 0, vPos: VPos = VPos.CENTER) {
     vgap = 8.0
     hgap = 8.0
@@ -111,9 +100,7 @@ fun GridPane.initAsForm(labels: Collection<Node>, fields: Collection<Node>, firs
     }
 }
 
-const val SEPARATOR_LABEL = "-*----*-"
-
-fun GridPane.initAsInfo(items: Iterator<Any>, app: Application) {
+fun GridPane.initAsInfo(items: Iterator<Any?>, app: Application) {
     vgap = 8.0
     hgap = 16.0
     var row = 0
@@ -121,7 +108,7 @@ fun GridPane.initAsInfo(items: Iterator<Any>, app: Application) {
     while (items.hasNext()) {
         val item = items.next()
         when {
-            item == SEPARATOR_LABEL -> add(Separator(), 0, row++, 2, 1)
+            item == null -> add(Separator(), 0, row++, 2, 1)
             isLabel -> {
                 Label("$item:").let {
                     GridPane.setValignment(it, VPos.CENTER)

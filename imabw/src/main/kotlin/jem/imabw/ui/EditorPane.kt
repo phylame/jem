@@ -23,11 +23,13 @@ import javafx.beans.binding.Bindings
 import javafx.collections.ListChangeListener
 import javafx.scene.Node
 import javafx.scene.control.*
+import javafx.scene.input.KeyCombination
+import javafx.scene.layout.GridPane
 import jclp.EventBus
 import jclp.ifNotEmpty
 import jclp.io.flobOf
 import jclp.io.writeLines
-import jclp.isAncestor
+import jclp.isSelfOrAncestor
 import jclp.log.Log
 import jclp.text.TEXT_PLAIN
 import jclp.text.textOf
@@ -36,15 +38,15 @@ import jem.Chapter
 import jem.imabw.*
 import jem.title
 import mala.App
-import mala.ixin.CommandHandler
-import mala.ixin.IxIn
-import mala.ixin.resetDisable
-import mala.ixin.toContextMenu
+import mala.App.tr
+import mala.ixin.*
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 
 object EditorPane : TabPane(), CommandHandler, EditAware {
+    private const val TAG = "EditorPane"
+
     private val tabMenu: ContextMenu?
     private val textMenu: ContextMenu?
 
@@ -117,7 +119,7 @@ object EditorPane : TabPane(), CommandHandler, EditAware {
         tabs.iterator().apply {
             while (hasNext()) {
                 (next() as? ChapterTab)?.let { tab ->
-                    if (chapter === tab.chapter || chapter.isAncestor(tab.chapter)) {
+                    if (chapter.isSelfOrAncestor(tab.chapter)) {
                         tab.dispose()
                         remove()
                     }
@@ -126,9 +128,14 @@ object EditorPane : TabPane(), CommandHandler, EditAware {
         }
     }
 
-    fun cacheTabs() {
+    fun cacheTabs(chapter: Chapter? = null) {
+        Log.t(TAG) { "cache text in tabs" }
         for (tab in tabs) {
-            (tab as?ChapterTab)?.cacheIfNeed(false)
+            (tab as? ChapterTab)?.let {
+                if (chapter?.isSelfOrAncestor(it.chapter) != false) {
+                    it.cacheIfNeed(false)
+                }
+            }
         }
     }
 
@@ -200,7 +207,7 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
         if (text == null) {
             isReady = true
         } else {
-            with(LoadTextTask(text, App.tr("jem.loadText.hint", chapter.title))) {
+            with(LoadTextTask(text, tr("jem.loadText.hint", chapter.title))) {
                 setOnSucceeded {
                     editor.text = value
                     editor.positionCaret(0)
@@ -262,9 +269,14 @@ class ChapterTab(val chapter: Chapter) : Tab(chapter.title) {
 }
 
 class TextEditor : TextArea(), EditAware {
+    // find/replace fields
+    private var lastPosition: Int = 0
+    private var lastText: String = ""
+    private var lastReplace: String = ""
+
     init {
         isWrapText = EditorSettings.wrapText
-        promptText = App.tr("main.editor.prompt")
+        promptText = tr("main.editor.prompt")
         focusedProperty().addListener { _, _, focused ->
             if (focused) {
                 initActions()
@@ -275,24 +287,50 @@ class TextEditor : TextArea(), EditAware {
                 }
             }
         }
+        bindKeyActions()
     }
 
     private fun initActions() {
         val actionMap = IxIn.actionMap
         val notEditable = editableProperty().not()
+        val isEmpty = lengthProperty().isEqualTo(0)
         actionMap["cut"]?.disableProperty?.bind(notEditable)
         actionMap["copy"]?.resetDisable()
         actionMap["paste"]?.disableProperty?.bind(notEditable)
         actionMap["delete"]?.disableProperty?.bind(notEditable)
         actionMap["undo"]?.disableProperty?.bind(undoableProperty().not())
         actionMap["redo"]?.disableProperty?.bind(redoableProperty().not())
-        actionMap["find"]?.resetDisable()
-        actionMap["findNext"]?.resetDisable()
-        actionMap["findPrevious"]?.resetDisable()
-        actionMap["replace"]?.disableProperty?.bind(notEditable)
+        actionMap["find"]?.disableProperty?.bind(isEmpty)
+        actionMap["findNext"]?.disableProperty?.bind(isEmpty)
+        actionMap["findPrevious"]?.disableProperty?.bind(isEmpty)
+        actionMap["replace"]?.disableProperty?.bind(notEditable.or(isEmpty))
         actionMap["lock"]?.let {
             it.isSelected = !isEditable
             it.isDisable = false
+        }
+    }
+
+    // in text area, accelerator without no modifier does't work
+    private fun bindKeyActions() {
+        val map = hashMapOf<String, KeyCombination>()
+        for (entry in Imabw.dashboard.accelerators) {
+            entry.value.asKeyCombination?.let {
+                if (it.shortcut == KeyCombination.ModifierValue.UP
+                        && it.shift == KeyCombination.ModifierValue.UP
+                        && it.alt == KeyCombination.ModifierValue.UP) {
+                    map[entry.key.toString()] = it
+                }
+            }
+        }
+        map.remove("delete")
+        setOnKeyPressed { event ->
+            for (entry in map) {
+                if (entry.value.match(event)) {
+                    event.consume()
+                    Imabw.handle(entry.key, this)
+                    break
+                }
+            }
         }
     }
 
@@ -305,6 +343,54 @@ class TextEditor : TextArea(), EditAware {
             "paste" -> paste()
             "delete" -> replaceSelection("")
             "selectAll" -> selectAll()
+            "find" -> {
+                if (length != 0) {
+                    input(tr("d.findText.hint"), tr("d.findText.hint"), lastText, canEmpty = false)?.let { str ->
+                        findAndGo(str)
+                    }
+                }
+            }
+            "findNext" -> {
+                if (length != 0 && !lastText.isEmpty()) findAndGo(lastText)
+            }
+            "replace" -> replaceText()
+            else -> println("ignore edit action: $command")
+        }
+    }
+
+    private fun findAndGo(str: String) {
+        val position = text.indexOf(str, minOf(caretPosition, lastPosition))
+        if (position != -1) {
+            selectRange(position, position + str.length)
+            lastText = str
+            lastPosition = position + str.length
+        }
+    }
+
+    private fun replaceText() {
+        if (length == 0) return
+        with(alert(Alert.AlertType.NONE, "replace", "")) {
+            buttonTypes.setAll(ButtonType.OK, ButtonType.CANCEL)
+            val fromField = TextField(lastText).apply {
+                selectAll()
+                prefColumnCount = 20
+                dialogPane.lookupButton(ButtonType.OK).disableProperty().bind(lengthProperty().isEqualTo(0))
+            }
+            val toField = TextField(lastReplace).apply {
+                selectAll()
+                prefColumnCount = 20
+            }
+            dialogPane.content = GridPane().apply {
+                initAsForm(listOf(
+                        Label("Content:"), Label("To:")
+                ), listOf(
+                        fromField, toField
+                ))
+            }
+            fromField.requestFocus()
+            if (showAndWait().get() == ButtonType.OK) {
+
+            }
         }
     }
 }

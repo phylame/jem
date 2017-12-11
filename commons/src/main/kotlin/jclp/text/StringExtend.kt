@@ -47,40 +47,46 @@ fun String.valueFor(name: String, partSeparator: String = ";", valueSeparator: S
 class LineSplitter(private val text: String) : Iterator<String> {
     private val length = text.length
 
+    private var isFound = false
+
     private var from = 0
     private var start = -1
     private var end = 0
 
     override fun hasNext(): Boolean {
-        if (start == -1) {
+        if (!isFound) {
+            start = from
+            if (start != length) {
+                isFound = true
+            }
             var i = from
-            loop@ while (i < length) {
-                when (text[i]) {
-                    '\n' -> {
-                        end = i++
-                        start = from
-                        break@loop
+            var j = from
+            while (i < length) {
+                val c = text[i]
+                if (c == '\n') {
+                    j = i++
+                    break
+                } else if (c == '\r') {
+                    j = i
+                    if (i < length - 1 && text[i + 1] == '\n') {
+                        i += 2
+                    } else {
+                        i++
                     }
-                    '\r' -> {
-                        end = i
-                        start = from
-                        if (i < length - 1 && text[i + 1] == '\n') {
-                            i += 2
-                        } else {
-                            ++i
-                        }
-                        break@loop
-                    }
+                    break
+                } else {
+                    j = i + 1
                 }
                 ++i
             }
             from = i
+            end = j
         }
-        return start != -1
+        return isFound
     }
 
-    override fun next() = if (hasNext()) {
-        text.substring(start, end).also { start = -1 }
+    override fun next(): String = if (hasNext()) {
+        text.substring(start, end).apply { isFound = false }
     } else {
         throw NoSuchElementException()
     }

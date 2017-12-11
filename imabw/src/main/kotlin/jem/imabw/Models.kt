@@ -41,14 +41,17 @@ import jem.title
 import mala.App
 import mala.App.optTr
 import mala.App.tr
-import mala.ixin.*
+import mala.ixin.CommandHandler
+import mala.ixin.IxIn
+import mala.ixin.initAsForm
+import mala.ixin.initAsInfo
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
-private const val SWAP_SUFFIX = ".swp"
+private const val SWAP_SUFFIX = ".tmp"
 
 enum class ModificationType {
     ATTRIBUTE_MODIFIED,
@@ -164,7 +167,7 @@ object Workbench : CommandHandler {
         }
         val task = object : MakeBookTask(param) {
             override fun call(): String {
-                EditorPane.cacheTabs()
+                EditorPane.cacheTabs(this.param.book)
                 return makeBook(this.param)
             }
         }
@@ -192,9 +195,13 @@ object Workbench : CommandHandler {
                 return
             }
         }
-        with(MakeBookTask(MakerParam(chapter.asBook(), file.path, format, defaultMakerSettings()))) {
-            Imabw.submit(this)
+        val task = object : MakeBookTask(MakerParam(chapter.asBook(), file.path, format, defaultMakerSettings())) {
+            override fun call(): String {
+                EditorPane.cacheTabs(this.param.book)
+                return makeBook(this.param)
+            }
         }
+        Imabw.submit(task)
     }
 
     fun exportBooks(chapters: Collection<Chapter>) {
@@ -317,7 +324,7 @@ object Workbench : CommandHandler {
         val work = requireNotNull(work) { "work is null" }
         val epmName = work.outParam?.epmName ?: work.inParam?.epmName ?: return
         val epmFactory = EpmManager[epmName]
-        val items = arrayListOf<Any>()
+        val items = arrayListOf<Any?>()
         if (epmFactory is FileParser) {
             val path = Paths.get(work.path)
 
@@ -333,7 +340,7 @@ object Workbench : CommandHandler {
             items.add(tr("d.fileDetails.lastModified"))
             items.add(path.lastModified.toLocalDateTime().format(looseISODateTime))
 
-            items.add(SEPARATOR_LABEL)
+            items.add(null)
             items.add(tr("d.fileDetails.format"))
             items.add(epmName)
 
@@ -348,7 +355,7 @@ object Workbench : CommandHandler {
             for (entry in work.book.extensions) {
                 if (entry.key.startsWith("jem.ext.crawler.")) {
                     if (firstTime) {
-                        items.add(SEPARATOR_LABEL)
+                        items.add(null)
                         firstTime = false
                     }
                     val key = entry.key.removePrefix("jem.ext.crawler.")

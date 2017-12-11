@@ -23,7 +23,6 @@ import javafx.scene.Scene
 import javafx.scene.control.Label
 import javafx.scene.control.SplitPane
 import javafx.scene.control.Tooltip
-import javafx.scene.input.MouseEvent
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
 import jclp.EventBus
@@ -39,6 +38,7 @@ import jem.imabw.WorkflowEvent
 import jem.title
 import mala.App
 import mala.ixin.*
+import java.util.*
 
 class Dashboard : IApplication(UISettings), CommandHandler {
     private val tagId = "Dashboard"
@@ -46,6 +46,8 @@ class Dashboard : IApplication(UISettings), CommandHandler {
     lateinit var contentPane: SplitPane
 
     lateinit var designer: AppDesigner
+
+    lateinit var accelerators: Properties
 
     override fun init() {
         Imabw.register(this)
@@ -56,7 +58,8 @@ class Dashboard : IApplication(UISettings), CommandHandler {
         scene.stylesheets += UISettings.stylesheetUri or { App.assets.resourceFor("ui/default.css")!!.toExternalForm() }
 
         appPane.setup(designer, actionMap, menuMap)
-        actionMap.updateAccelerators(App.assets.propertiesFor("ui/keys.properties")!!)
+        accelerators = App.assets.propertiesFor("ui/keys.properties")!!
+        actionMap.updateAccelerators(accelerators)
         appPane.statusBar?.right = Indicator
 
         contentPane = SplitPane().also { split ->
@@ -155,12 +158,6 @@ object Indicator : HBox() {
         alignment = Pos.CENTER
         BorderPane.setAlignment(this, Pos.CENTER)
 
-        caret.addEventHandler(MouseEvent.MOUSE_PRESSED) {
-            if (it.clickCount == 1 && it.isPrimaryButtonDown) {
-                Imabw.handle("goto", it.source)
-            }
-        }
-
         children.addAll(caret, words, mime)
         IxIn.newAction("lock").toButton(Imabw, Style.TOGGLE, hideText = true).also { children += it }
         IxIn.newAction("gc").toButton(Imabw, hideText = true).also { children += it }
@@ -190,7 +187,6 @@ object Indicator : HBox() {
         if (count < 0) {
             words.isVisible = false
         } else {
-            println(count)
             words.isVisible = true
             words.text = count.toString()
         }
@@ -207,7 +203,7 @@ object Indicator : HBox() {
 }
 
 private val editActions = arrayOf(
-        "undo", "redo", "cut", "copy", "paste", "delete", "selectAll", "find", "findNext", "findPrevious"
+        "undo", "redo", "cut", "copy", "paste", "delete", "selectAll", "find", "replace", "findNext", "findPrevious"
 )
 
 interface EditAware {

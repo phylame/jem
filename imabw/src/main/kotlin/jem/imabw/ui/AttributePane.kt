@@ -34,7 +34,6 @@ import jem.imabw.*
 import mala.App
 import mala.App.tr
 import mala.ixin.clearAnchorConstraints
-import mala.ixin.plusAssign
 import java.net.URL
 import java.util.*
 
@@ -86,7 +85,7 @@ class AttributePane(val chapter: Chapter) : AnchorPane() {
         initView()
         loadCover()
         loadIntro()
-        this += root
+        children += root
     }
 
     fun syncVariants() {

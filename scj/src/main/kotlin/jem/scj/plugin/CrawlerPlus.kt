@@ -72,8 +72,10 @@ class CrawlerPlus : SCJAddon(), SCJPlugin, TextListener {
 
     private val printCenter = lazy { Executors.newSingleThreadExecutor() }
 
+    private val crawlerNames = arrayOf("crawler", "net")
+
     override fun onOpenBook(param: ParserParam) {
-        if (SCI.context["parallel"] == true && param.epmName == "crawler") {
+        if (SCI.context["parallel"] == true && param.epmName in crawlerNames) {
             param.arguments?.set(CRAWLER_LISTENER_KEY, this)
         }
     }

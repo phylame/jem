@@ -25,7 +25,7 @@ import javafx.concurrent.Task
 import javafx.geometry.Pos
 import javafx.scene.control.*
 import javafx.scene.image.ImageView
-import javafx.scene.input.MouseEvent
+import javafx.scene.input.KeyCode
 import javafx.scene.layout.BorderPane
 import javafx.util.Callback
 import jclp.EventBus
@@ -84,10 +84,24 @@ object ContentsPane : BorderPane(), CommandHandler {
         Imabw.dashboard.designer.items["navContext"]?.let { items ->
             tree.contextMenu = items.toContextMenu(Imabw, App, App.assets, IxIn.actionMap, null)
         }
-        tree.addEventHandler(MouseEvent.MOUSE_CLICKED) { event ->
+        tree.setOnMouseClicked { event ->
             if (event.isDoubleClick && event.isPrimary) {
                 currentNode?.takeIf { it.isLeaf && it.isNotRoot }?.let {
                     EditorPane.openTab(it.value, CellFactory.getIcon(it))
+                    event.consume()
+                }
+            }
+        }
+        tree.setOnKeyPressed { event ->
+            if (event.code == KeyCode.ENTER && !event.hasModifiers) {
+                currentNode?.let {
+                    if (!it.isLeaf) {
+                        it.isExpanded = !it.isExpanded
+                        event.consume()
+                    } else if (it.isNotRoot) {
+                        EditorPane.openTab(it.value, CellFactory.getIcon(it))
+                        event.consume()
+                    }
                 }
             }
         }
@@ -95,7 +109,8 @@ object ContentsPane : BorderPane(), CommandHandler {
 
     private fun initActions() {
         val selection = currentNodes
-        val hasBook = Bindings.createBooleanBinding(Callable { selection.any { it.isRoot } }, selection)
+        // FIXME why is null?
+        val hasBook = Bindings.createBooleanBinding(Callable { selection.any { it?.isRoot == true } }, selection)
         val empty = Bindings.isEmpty(selection)
         val multiple = Bindings.size(selection).greaterThan(1)
         val emptyOrBook = empty.or(hasBook)

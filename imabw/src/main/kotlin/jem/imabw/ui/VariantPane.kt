@@ -27,7 +27,6 @@ import javafx.geometry.Orientation
 import javafx.scene.Node
 import javafx.scene.control.*
 import javafx.scene.input.KeyCode
-import javafx.scene.input.KeyEvent
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.GridPane
 import javafx.scene.layout.Region
@@ -132,14 +131,16 @@ open class VariantPane(private val values: ValueMap, private val tagId: String, 
         with(table) {
             isEditable = true
             selectionModel.selectionMode = SelectionMode.MULTIPLE
-            addEventHandler(KeyEvent.KEY_PRESSED) { event ->
+            setOnKeyPressed { event ->
                 if (event.code == KeyCode.DELETE) {
                     removeItem(table.selectionModel.selectedItems, true)
+                    event.consume()
                 }
             }
-            addEventHandler(KeyEvent.KEY_PRESSED) { event ->
+            setOnKeyPressed { event ->
                 if (event.code == KeyCode.INSERT) {
                     newItem()
+                    event.consume()
                 }
             }
             columns += TableColumn<VariantItem, String>(tr("com.variant.id")).apply {
@@ -248,18 +249,25 @@ open class VariantPane(private val values: ValueMap, private val tagId: String, 
             val okButton = dialogPane.lookupButton(ButtonType.OK)
             val typeCombo = ComboBox<KeyAndName>().apply {
                 maxWidth = Double.MAX_VALUE
-                items.addAll(TypeManager.allTypes.map { KeyAndName(it, getTypeTitle(it)) })
-                selectionModel.select(0)
+                var defaultIndex = 0
+                items.addAll(TypeManager.allTypes.mapIndexed { index, type ->
+                    if (type == TypeManager.STRING) defaultIndex = index
+                    KeyAndName(type, getTypeTitle(type))
+                })
+                selectionModel.select(defaultIndex)
             }
             val nameField = TextField().apply {
-                addEventHandler(KeyEvent.KEY_PRESSED) {
-                    if (it.code == KeyCode.UP) {
-                        typeCombo.selectPreviousOrLast()
-                    }
-                }
-                addEventHandler(KeyEvent.KEY_PRESSED) {
-                    if (it.code == KeyCode.DOWN) {
-                        typeCombo.selectNextOrFirst()
+                setOnKeyPressed { event ->
+                    @Suppress("NON_EXHAUSTIVE_WHEN")
+                    when (event.code) {
+                        KeyCode.UP -> {
+                            typeCombo.selectPreviousOrLast()
+                            event.consume()
+                        }
+                        KeyCode.DOWN -> {
+                            typeCombo.selectNextOrFirst()
+                            event.consume()
+                        }
                     }
                 }
                 textProperty().addListener { _, _, text ->

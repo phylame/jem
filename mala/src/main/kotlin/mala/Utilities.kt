@@ -101,7 +101,7 @@ open class AppSettings(name: String = "config/general.ini") : MalaSettings(name)
 
     var appVerbose by settingsWith(App.verbose, "app.verbose")
 
-    var appLocale by settingsWith(Locale.getDefault(), "app.locale")
+    var appLocale: Locale by settingsWith(Locale.getDefault(), "app.locale")
 
     var enablePlugin by settingsWith(true, "app.plugin.enable")
 

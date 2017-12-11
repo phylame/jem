@@ -4,7 +4,8 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <SplitPane xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="jem.imabw.ui.AttributeViewController" dividerPositions="0.3" fx:id="root">
+           fx:controller="jem.imabw.ui.AttributeViewController" dividerPositions="0.3"
+           fx:id="root">
     <AnchorPane>
         <TitledPane collapsible="false" text="Cover" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0"
                     AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0" fx:id="coverTitle">
@@ -12,7 +13,7 @@
                 <center>
                     <StackPane>
                         <Label text="No Cover" fx:id="coverAlt"/>
-                        <ImageView fx:id="coverView" fitWidth="300" fitHeight="400" preserveRatio="true"/>
+                        <ImageView fx:id="coverView" preserveRatio="true"/>
                     </StackPane>
                 </center>
                 <bottom>

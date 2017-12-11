@@ -227,6 +227,10 @@ internal class AttributeViewController : Initializable {
         introTitle.text = tr("d.editAttribute.intro.title")
         introEditor.promptText = tr("d.editAttribute.intro.hint")
 
+        coverView.imageProperty().addListener { _, _, image ->
+            coverView.fitWidth = minOf(UISettings.minCoverWidth, image.width)
+        }
+
         val settings = UISettings
         settings.getDouble("dialog.attributes.split.0.position")?.let {
             root.setDividerPosition(0, it)

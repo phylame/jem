@@ -51,7 +51,9 @@ object GeneralSettings : AppSettings() {
 object UISettings : IxInSettings() {
     var stylesheetUri by settingsWith("", "ui.stylesheet.uri")
 
-    var navigationBarVisible by settingsWith(true, "main.contentsigationBar.visible")
+    var navigationBarVisible by settingsWith(true, "main.navigationBar.visible")
+
+    var minCoverWidth by settingsWith(300.0, "dialog.attributes.minCoverWidth")
 
     fun restoreState(dialog: Dialog<*>, tagId: String) {
         with(dialog) {

@@ -44,9 +44,9 @@ import java.util.*
 
 internal object EpubMaker : VdmMaker {
     override fun make(book: Book, output: VdmWriter, arguments: Settings?) {
-        val version = arguments?.getString("epub.make.version") ?: ""
+        val version = arguments?.getString("maker.epub.version") ?: ""
         when (version) {
-            "", "2.0" -> writeEPUBv2(book, output, arguments)
+            "", "2", "2.0" -> writeEPUBv2(book, output, arguments)
             else -> failMaker("epub.make.unsupportedVersion", version)
         }
     }
@@ -80,7 +80,7 @@ internal open class BuilderBase(val book: Book, val writer: VdmWriter, val setti
         }
     }
 
-    fun getConfig(name: String) = settings?.getString("epub.make.$name")
+    fun getConfig(name: String) = settings?.getString("maker.epub.$name")
 }
 
 internal class TOCBuilder(

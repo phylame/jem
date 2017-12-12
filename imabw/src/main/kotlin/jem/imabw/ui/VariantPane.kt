@@ -132,14 +132,11 @@ open class VariantPane(private val values: ValueMap, private val tagId: String, 
             isEditable = true
             selectionModel.selectionMode = SelectionMode.MULTIPLE
             setOnKeyPressed { event ->
-                if (event.code == KeyCode.DELETE) {
-                    removeItem(table.selectionModel.selectedItems, true)
-                    event.consume()
-                }
-            }
-            setOnKeyPressed { event ->
                 if (event.code == KeyCode.INSERT) {
                     newItem()
+                    event.consume()
+                } else if (event.code == KeyCode.DELETE) {
+                    removeItem(table.selectionModel.selectedItems, true)
                     event.consume()
                 }
             }

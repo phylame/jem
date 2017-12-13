@@ -16,15 +16,15 @@
  * limitations under the License.
  */
 
-package jem.scj.plugin
+package jem.sci.plugin
 
 import jclp.log.Log
 import jem.Book
 import jem.epm.EpmManager
 import jem.epm.ParserParam
-import jem.scj.SCI
-import jem.scj.SCISettings
-import jem.scj.SCJPlugin
+import jem.sci.SCI
+import jem.sci.SCISettings
+import jem.sci.SCJPlugin
 import mala.App
 import mala.App.tr
 import mala.Plugin

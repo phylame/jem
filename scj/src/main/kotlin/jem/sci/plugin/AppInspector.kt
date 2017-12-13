@@ -16,13 +16,13 @@
  * limitations under the License.
  */
 
-package jem.scj.plugin
+package jem.sci.plugin
 
 import jclp.VariantMap
 import jclp.ifNotEmpty
 import jclp.setting.getString
-import jem.scj.SCI
-import jem.scj.SCISettings
+import jem.sci.SCI
+import jem.sci.SCISettings
 import mala.App
 import mala.App.tr
 import mala.Describable

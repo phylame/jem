@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package jem.scj
+package jem.sci
 
 import jclp.io.Flob
 import jclp.io.extName

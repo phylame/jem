@@ -16,11 +16,11 @@
  * limitations under the License.
  */
 
-package jem.scj.plugin
+package jem.sci.plugin
 
-import jem.scj.newBook
-import jem.scj.outParam
-import jem.scj.saveBook
+import jem.sci.newBook
+import jem.sci.outParam
+import jem.sci.saveBook
 import jem.title
 import mala.App.echo
 import mala.App.tr

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package jem.scj.plugin
+package jem.sci.plugin
 
 import jem.Build
 import mala.Describable

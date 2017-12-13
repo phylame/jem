@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package jem.scj
+package jem.sci
 
 import jem.Book
 import jem.asBook

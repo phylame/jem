@@ -40,21 +40,29 @@ const val MAKER_VDM_ZIP_METHOD_KEY = "maker.vdm.zipMethod"
 interface FileParser
 
 interface CommonParser<I : Closeable> : Parser {
+    fun validate(input: String, arguments: Settings?) {}
+
     fun open(input: String, arguments: Settings?): I
 
     fun parse(input: I, arguments: Settings?): Book
 
-    override fun parse(input: String, arguments: Settings?): Book = managed(open(input, arguments)) {
-        parse(it, arguments)
+    override fun parse(input: String, arguments: Settings?): Book {
+        validate(input, arguments)
+        return managed(open(input, arguments)) {
+            parse(it, arguments)
+        }
     }
 }
 
 interface CommonMaker<O : Closeable> : Maker {
+    fun validate(book: Book, output: String, arguments: Settings?) {}
+
     fun open(output: String, arguments: Settings?): O
 
     fun make(book: Book, output: O, arguments: Settings?)
 
     override fun make(book: Book, output: String, arguments: Settings?) {
+        validate(book, output, arguments)
         open(output, arguments).use { make(book, it, arguments) }
     }
 }

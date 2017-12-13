@@ -43,6 +43,16 @@ import java.nio.file.Path
 import java.util.*
 
 internal object EpubMaker : VdmMaker {
+    private val versions = arrayOf("", "2", "2.0", "3", "3.0")
+
+    override fun validate(book: Book, output: String, arguments: Settings?) {
+        (arguments?.getString("maker.epub.version") ?: "").let {
+            if (it !in versions) {
+                failMaker("epub.make.unsupportedVersion", it)
+            }
+        }
+    }
+
     override fun make(book: Book, output: VdmWriter, arguments: Settings?) {
         val version = arguments?.getString("maker.epub.version") ?: ""
         when (version) {

@@ -23,7 +23,7 @@ plugins {
 
 description = 'SCJ for Jem'
 
-mainClassName = 'jem.scj.AppKt'
+mainClassName = 'jem.sci.AppKt'
 
 startScripts {
     unixStartScriptGenerator.template = resources.text.fromFile('src/scripts/unixStartScript.txt')

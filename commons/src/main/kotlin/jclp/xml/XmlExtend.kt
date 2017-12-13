@@ -21,6 +21,7 @@ package jclp.xml
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import org.xmlpull.v1.XmlSerializer
+import java.io.Flushable
 import java.io.OutputStream
 import java.io.Writer
 
@@ -100,3 +101,85 @@ fun newSerializer(output: OutputStream, encoding: String = "UTF-8", indent: Stri
         XmlPullParserFactory.newInstance().newSerializer().apply { init(output, encoding, indent, newLine) }
 
 fun XmlPullParser.getAttribute(name: String): String = getAttributeValue(null, name)
+
+class XML(val output: Appendable, val indent: String, val lineSeparator: String) {
+    fun doctype(root: String, scope: String = "", dtd: String = "", uri: String = "") {
+        with(output) {
+            append("<!DOCTYPE $root")
+            if (scope.isNotEmpty()) append(" $scope")
+            if (dtd.isNotEmpty()) append(" \"$dtd\"")
+            if (uri.isNotEmpty()) append(" \"$uri\"")
+            append(">").append(lineSeparator)
+        }
+    }
+
+    inline fun tag(name: String, block: Tag.() -> Unit) {
+        Tag(name).apply(block).renderTo(output, indent, lineSeparator)
+    }
+}
+
+class Tag(val name: String, text: String = "") {
+    var depth = 0
+
+    val attr = hashMapOf<String, String>()
+
+    val children = arrayListOf<Tag>()
+
+    val text = StringBuilder(text)
+
+    operator fun CharSequence.unaryPlus() {
+        text.append(this)
+    }
+
+    fun tag(name: String, text: String) {
+        children += Tag(name, text).also { it.depth = depth + 1 }
+    }
+
+    inline fun tag(name: String, block: Tag.() -> Unit) {
+        children += Tag(name).also { it.depth = depth + 1 }.apply(block)
+    }
+
+    fun renderTo(output: Appendable, indent: String, lineSeparator: String) {
+        with(output) {
+            val prefix = indent.repeat(depth)
+            append(prefix).append("<$name")
+            if (attr.isNotEmpty()) {
+                for (entry in attr) {
+                    append(' ').append("${entry.key}=\"${entry.value}\"")
+                }
+            }
+            var hasContent = false
+            if (text.isNotEmpty()) {
+                append('>').append(text)
+                hasContent = true
+            }
+            if (children.isNotEmpty()) {
+                append('>').append(lineSeparator)
+                for (tag in children) {
+                    tag.renderTo(this, indent, lineSeparator)
+                    append(lineSeparator)
+                }
+                append(prefix)
+                hasContent = true
+            }
+            if (hasContent) {
+                append("</$name>")
+            } else {
+                append(" />")
+            }
+        }
+    }
+}
+
+inline fun Appendable.xml(
+        indent: String = "",
+        lineSeparator: String = System.lineSeparator(),
+        encoding: String = "utf-8",
+        standalone: Boolean = true,
+        block: XML.() -> Unit) {
+    append("<?xml version=\"1.0\" encoding=\"$encoding\"")
+    if (!standalone) append(" standalone=\"no\"")
+    append("?>").append(lineSeparator)
+    XML(this, indent, lineSeparator).apply(block)
+    (this as? Flushable)?.flush()
+}

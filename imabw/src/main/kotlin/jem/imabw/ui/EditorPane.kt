@@ -345,7 +345,7 @@ class TextEditor : TextArea(), EditAware {
             "selectAll" -> selectAll()
             "find" -> {
                 if (length != 0) {
-                    input(tr("d.findText.hint"), tr("d.findText.hint"), lastText, canEmpty = false)?.let { str ->
+                    input(tr("d.findText.title"), tr("d.findText.hint"), lastText, canEmpty = false)?.let { str ->
                         findAndGo(str)
                     }
                 }

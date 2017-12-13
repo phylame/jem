@@ -47,6 +47,13 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 internal object PmabMaker : VdmMaker {
+    override fun validate(book: Book, output: String, arguments: Settings?) {
+        val version = arguments?.getString("epub.maker.version")
+        if (version != null && version != "3.0") {
+            failMaker("pmab.make.unsupportedVersion", version)
+        }
+    }
+
     override fun make(book: Book, output: VdmWriter, arguments: Settings?) {
         val data = Local(book, output, arguments)
         val version = data.getConfig("version")

@@ -164,6 +164,8 @@ interface TextListener {
 class CrawlerText(val url: String, val chapter: Chapter, val crawler: Crawler, val settings: Settings?) : Text {
     override val type = TEXT_PLAIN
 
+    override fun isEmpty() = task.get().isEmpty()
+
     override fun toString() = task.get()
 
     fun schedule(executor: ExecutorService) {

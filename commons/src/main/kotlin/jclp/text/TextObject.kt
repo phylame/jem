@@ -33,6 +33,8 @@ const val TEXT_PLAIN = "plain"
 interface Text : Iterable<String> {
     val type: String
 
+    fun isEmpty(): Boolean
+
     override fun toString(): String
 
     override fun iterator(): Iterator<String> =
@@ -43,8 +45,16 @@ interface Text : Iterable<String> {
     }
 }
 
+fun Text.isNotEmpty(): Boolean = !isEmpty()
+
+inline fun Text.ifNotEmpty(block: (Text) -> Unit) {
+    if (isNotEmpty()) block(this)
+}
+
 open class TextWrapper(protected val text: Text) : Text {
-    override val type = text.type
+    override val type get() = text.type
+
+    override fun isEmpty() = text.isEmpty()
 
     override fun toString() = text.toString()
 
@@ -58,6 +68,8 @@ open class TextWrapper(protected val text: Text) : Text {
 }
 
 private class StringText(val text: CharSequence, override val type: String) : Text {
+    override fun isEmpty() = text.isEmpty()
+
     override fun toString() = text.toString()
 }
 
@@ -72,6 +84,8 @@ abstract class IteratorText(final override val type: String) : Text {
     init {
         require(type.isNotEmpty()) { "'type' cannot be empty" }
     }
+
+    override fun isEmpty() = iterator().hasNext()
 
     abstract override fun iterator(): Iterator<String>
 
@@ -91,11 +105,19 @@ private class FlobText(val flob: Flob, val charset: Charset, override val type: 
         flob.retain()
     }
 
-    override fun toString() = openReader().use { it.readText() }
+    override fun isEmpty() = text.value.isEmpty()
 
-    override fun iterator() = LineIterator(openReader(), true)
+    override fun toString(): String = text.value
+
+    override fun iterator() = if (!text.isInitialized()) {
+        LineIterator(openReader(), true)
+    } else {
+        LineSplitter(text.value)
+    }
 
     private fun openReader() = flob.openStream().bufferedReader(charset)
+
+    private val text = lazy { openReader().use { it.readText() } }
 
     override fun writeTo(output: Writer) {
         openReader().use { it.copyTo(output) }

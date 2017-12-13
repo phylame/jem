@@ -45,9 +45,9 @@ interface Flob {
 }
 
 open class FlobWrapper(protected val flob: Flob) : Flob {
-    override val name = flob.name
+    override val name get() = flob.name
 
-    override val mimeType = flob.mimeType
+    override val mimeType get() = flob.mimeType
 
     override fun openStream() = flob.openStream()
 

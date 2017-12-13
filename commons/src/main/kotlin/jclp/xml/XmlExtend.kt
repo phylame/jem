@@ -131,6 +131,10 @@ class Tag(val name: String, text: String = "") {
         text.append(this)
     }
 
+    fun tag(name: String) {
+        children += Tag(name)
+    }
+
     fun tag(name: String, text: String) {
         children += Tag(name, text).also { it.depth = depth + 1 }
     }

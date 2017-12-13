@@ -102,7 +102,7 @@ val Settings?.xmlEncoding inline get() = this?.getString("maker.xml.encoding") ?
 
 val Settings?.xmlSeparator inline get() = this?.getString("maker.xml.separator") ?: "\n"
 
-val Settings?.xmlIndent inline get() = this?.getString("maker.xml.indent") ?: "\t"
+val Settings?.xmlIndent inline get() = this?.getString("maker.xml.indent") ?: ""
 
 class XmlRender(settings: Settings?) {
     private var depth: Int = 0

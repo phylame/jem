@@ -1,11 +1,5 @@
 package jem.format.epub.v3
 
-const val MEDIA_TYPE_CSS = "text/css"
-const val MEDIA_TYPE_XHTML = "application/xhtml+xml"
-
-const val XML_NAMESPACE_OPF = "http://www.idpf.org/2007/opf"
-const val XML_NAMESPACE_DCMES = "http://purl.org/dc/elements/1.1/"
-
 val titleTypes = setOf(
         "main", "subtitle", "short", "collection", "edition", "expanded"
 )

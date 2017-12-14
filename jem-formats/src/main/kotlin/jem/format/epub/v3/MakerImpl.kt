@@ -25,33 +25,21 @@ import jclp.setting.Settings
 import jclp.text.Text
 import jclp.text.ifNotEmpty
 import jclp.vdm.VdmWriter
-import jclp.vdm.useStream
 import jclp.vdm.writeFlob
 import jclp.xml.Tag
-import jclp.xml.newSerializer
-import jclp.xml.startDocument
-import jclp.xml.xml
 import jem.*
 import jem.format.epub.EPUB
 import jem.format.epub.writeContainer
-import jem.format.util.M
-import jem.format.util.xmlEncoding
-import jem.format.util.xmlIndent
-import jem.format.util.xmlSeparator
+import jem.format.util.*
 import java.io.InterruptedIOException
-import java.nio.charset.Charset
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.OffsetTime
-import java.time.ZoneOffset
 import java.util.*
+import jem.format.util.M as T
 
 private class Local(val book: Book, val writer: VdmWriter, val settings: Settings?) {
     val encoding = settings.xmlEncoding
-
-    val charset: Charset = Charset.forName(encoding)
-
-    val indent = settings.xmlIndent
 
     val lineSeparator = settings.xmlSeparator
 
@@ -65,12 +53,14 @@ private class Local(val book: Book, val writer: VdmWriter, val settings: Setting
 
     val textDir = getConfig("textDir") ?: "Text"
 
+    val useDuokanCover = getConfig("useDuokanCover") ?: true
+
     val lang: String =
             getConfig("language") ?: book.language?.toLanguageTag() ?: Locale.getDefault().toLanguageTag()
 
-    var css: String = ""
+    var cssHref: String = ""
 
-    var mask: String = ""
+    var maskHref: String = ""
 
     val pkg = Package()
 
@@ -92,22 +82,19 @@ private class Nav(val title: String, val href: String = "") {
 internal fun makeImpl(book: Book, writer: VdmWriter, settings: Settings?) {
     val data = Local(book, writer, settings)
 
-    renderMeta(data)
-    renderNav(data)
+    writeMetadata(data)
+
+    writeContents(data)
 
     val opfPath = "${data.opsDir}/package.opf"
-    writer.useStream(opfPath) {
-        newSerializer(it, data.encoding, data.indent, data.lineSeparator).apply {
-            startDocument(data.encoding)
-            data.pkg.renderTo(this)
-            flush()
-        }
+    writer.newSerializer(opfPath, settings) {
+        data.pkg.renderTo(this)
     }
 
     writeContainer(writer, settings, mapOf(opfPath to EPUB.MIME_OPF))
 }
 
-private fun renderMeta(data: Local) {
+private fun writeMetadata(data: Local) {
     val pkg = data.pkg
     val md = pkg.metadata
     val book = data.book
@@ -115,37 +102,56 @@ private fun renderMeta(data: Local) {
     pkg.language = data.lang
 
     book[ISBN]?.toString()?.ifNotEmpty {
-        md.addISBN("isbn", it)
+        md.addISBN("isbn", "urn:isbn:$it")
         pkg.uniqueIdentifier = "isbn"
     }
     book["uuid"]?.toString()?.ifNotEmpty {
-        md.addISBN("uuid", it)
-        pkg.uniqueIdentifier = "uuid"
+        md.addISBN("uuid", "urn:uuid:$it")
+        if (pkg.uniqueIdentifier.isEmpty()) {
+            pkg.uniqueIdentifier = "uuid"
+        }
     }
     if (pkg.uniqueIdentifier.isEmpty()) {
-        md.addUUID("uuid", UUID.randomUUID().toString())
+        md.addUUID("uuid", "urn:uuid:${UUID.randomUUID()}")
         pkg.uniqueIdentifier = "uuid"
     }
-    md.addModifiedTime(OffsetDateTime.now())
+
+    md.addModifiedTime(OffsetDateTime.now().toInstant())
 
     md.addTitle(book.title)
-    book.author.split(Attributes.VALUE_SEPARATOR).forEach {
-        md.addAuthor(it)
-    }
     md.addDCME("language", data.lang)
+
+    book.author.split(Attributes.VALUE_SEPARATOR).forEach {
+        if (it.isNotEmpty()) md.addAuthor(it)
+    }
+    book.vendor.split(Attributes.VALUE_SEPARATOR).forEach {
+        if (it.isNotEmpty()) md.addVendor(it)
+    }
+    book.intro?.ifNotEmpty {
+        md.addDCME("description", it.joinToString(separator = data.lineSeparator, transform = String::trim))
+    }
+    book[KEYWORDS]?.toString()?.split(Attributes.VALUE_SEPARATOR)?.forEach {
+        if (it.isNotEmpty()) md.addDCME("subject", it)
+    }
+    book.publisher.ifNotEmpty {
+        md.addDCME("publisher", it)
+    }
     (book[PUBDATE] as? LocalDate)?.let {
-        md.addPubdate(it.atTime(OffsetTime.of(0, 0, 0, 0, ZoneOffset.UTC)))
+        md.addPubdate(it.atTime(OffsetTime.MIN).toInstant())
+    }
+    book.rights.ifNotEmpty {
+        md.addDCME("rights", it)
     }
 }
 
-private fun renderNav(data: Local) {
+private fun writeContents(data: Local) {
     val book = data.book
 
     val cssPath = writeResource(data.getConfig("cssPath") ?: "!jem/format/epub/v3/main.css", "style", data, "")
-    data.css = "../$cssPath"
+    data.cssHref = "../$cssPath"
 
     val maskPath = writeResource(data.getConfig("maskPath") ?: "!jem/format/epub/v3/mask.png", "mask", data, "")
-    data.mask = "../$maskPath"
+    data.maskHref = "../$maskPath"
 
     book.cover?.let {
         renderCover(it, data)
@@ -156,16 +162,16 @@ private fun renderNav(data: Local) {
     }
 
     // nav
-    val title = M.tr("epub.make.navTitle")
+    val navTitle = T.tr("epub.make.navTitle")
     data.pkg.spine.addReference("nav", false)
-    data.nav.newNav(title, "nav.xhtml")
+    data.nav.newNav(navTitle, "nav.xhtml")
 
     renderText(book, "", data)
 
-    renderPage(title, "nav", data) {
+    renderPage(navTitle, "nav", false, data) {
         tag("div") {
             attr["class"] = "main toc"
-            tag("h1", title)
+            tag("h1", navTitle)
             tag("nav") {
                 attr["epub:type"] = "toc"
                 tag("ol") {
@@ -221,12 +227,12 @@ private fun renderText(chapter: Chapter, suffix: String, data: Local) {
 }
 
 private fun renderCover(cover: Flob, data: Local) {
-    renderImage(cover, EPUB.COVER_ID, M.tr("epub.make.coverTitle"), data.book.title, data)
+    renderImage(cover, "cover", T.tr("epub.make.coverTitle"), data.book.title, true, data)
 }
 
 private fun renderIntro(intro: Text, data: Local) {
-    val title = M.tr("epub.make.introTitle")
-    renderPage(title, "intro", data) {
+    val title = T.tr("epub.make.introTitle")
+    renderPage(title, "intro", true, data) {
         tag("div") {
             attr["class"] = "main intro"
             tag("h1", title)
@@ -245,22 +251,27 @@ private fun renderSection(id: String, section: Chapter, data: Local) {
         return
     }
 
-    val imageName = cover?.let {
+    if (intro?.isEmpty() != false) { // with cover, no intro
+        renderImage(cover!!, "$id-cover", section.title, section.title, true, data)
+        return
+    }
+
+    val coverHref = cover?.let {
         writeFlob(it, "$id-cover", data, "")
     }
 
-    renderPage(title, id, data) {
-        if (imageName != null) {
-            attr["style"] = "background-image: url(${"../${data.imageDir}/$imageName"});background-size: cover;"
-            intro?.ifNotEmpty {
-                tag("div") {
-                    attr["style"] = "background: url(${data.mask}) repeat;"
+    renderPage(title, id, true, data) {
+        if (coverHref != null) {
+            attr["style"] = "background-image: url(${"../$coverHref"});background-size: cover;"
+            tag("div") {
+                intro.ifNotEmpty {
+                    attr["style"] = "background: url(${data.maskHref}) repeat;"
                     attr["class"] = "main section"
-                    it.forEach { tag("p", it.trim()) }
+                    intro.forEach { tag("p", it.trim()) }
                 }
             }
         } else {
-            intro?.ifNotEmpty {
+            intro.ifNotEmpty {
                 tag("div") {
                     attr["class"] = "main section"
                     tag("h1", title)
@@ -278,7 +289,7 @@ private fun renderChapter(id: String, chapter: Chapter, data: Local) {
     val title = chapter.title
 
     if (cover != null) {
-        renderImage(cover, "$id-cover", title, title, data)
+        renderImage(cover, "$id-cover", title, title, false, data)
     }
 
     if (intro?.isEmpty() != false && text?.isEmpty() != false) {
@@ -286,7 +297,7 @@ private fun renderChapter(id: String, chapter: Chapter, data: Local) {
         return
     }
 
-    renderPage(title, id, data) {
+    renderPage(title, id, true, data) {
         tag("div") {
             attr["class"] = "main chapter"
             tag("h1", title)
@@ -307,49 +318,45 @@ private fun renderChapter(id: String, chapter: Chapter, data: Local) {
     }
 }
 
-private inline fun renderPage(title: String, id: String, data: Local, block: Tag.() -> Unit) {
+private inline fun renderPage(title: String, id: String, addToNav: Boolean, data: Local, block: Tag.() -> Unit) {
     with(data) {
         val opsPath = "$textDir/$id.xhtml"
-        writer.useStream("$opsDir/$opsPath") {
-            it.bufferedWriter(charset).xml(indent, lineSeparator, encoding) {
-                doctype("html")
-                tag("html") {
-                    attr["xmlns"] = "http://www.w3.org/1999/xhtml"
-                    attr["xmlns:epub"] = "http://www.idpf.org/2007/ops"
-                    attr["lang"] = lang
-                    tag("head") {
-                        tag("meta") {
-                            attr["charset"] = encoding
-                        }
-                        tag("title", title)
-                        tag("link") {
-                            attr["rel"] = "stylesheet"
-                            attr["type"] = "text/css"
-                            attr["href"] = css
-                        }
+        writer.xmlDsl("$opsDir/$opsPath", settings) {
+            doctype("html")
+            tag("html") {
+                attr["xmlns"] = EPUB.XMLNS_XHTML
+                attr["xmlns:epub"] = EPUB.XMLNS_OPS
+                attr["lang"] = lang
+                tag("head") {
+                    tag("meta") {
+                        attr["charset"] = encoding
                     }
-                    tag("body", block)
+                    tag("title", title)
+                    tag("link") {
+                        attr["rel"] = "stylesheet"
+                        attr["type"] = EPUB.MIME_CSS
+                        attr["href"] = cssHref
+                    }
                 }
+                tag("body", block)
             }
         }
-        nav.newNav(title, "$id.xhtml")
-        if (id == "nav") {
-            pkg.manifest.addNavigation("nav", opsPath)
-        } else {
-            pkg.manifest.addItem(Resource(id, opsPath, EPUB.MIME_XHTML))
+        if (addToNav) nav.newNav(title, "$id.xhtml")
+        pkg.manifest.addResource(id, opsPath, EPUB.MIME_XHTML, if (id == "nav") EPUB.MANIFEST_NAVIGATION else "")
+        if (id != "nav") { // nav is already added
+            pkg.spine.addReference(id, properties = if (useDuokanCover && "cover" in id) EPUB.SPINE_DUOKAN_FULLSCREEN else "")
         }
-        pkg.spine.addReference(id, properties = if ("cover" in id) EPUB.DUOKAN_FULLSCREEN else "")
     }
 }
 
-private fun renderImage(image: Flob, id: String, title: String, alt: String, data: Local) {
-    val opsPath = writeFlob(image, id, data, if (id == EPUB.COVER_ID) PROPERTIES_COVER_IMAGE else "")
-    renderPage(title, "$id-page", data) {
+private fun renderImage(image: Flob, id: String, title: String, altText: String, addToNav: Boolean, data: Local) {
+    val coverHref = writeFlob(image, id, data, if (id == "cover") EPUB.MANIFEST_COVER_IMAGE else "")
+    renderPage(title, "$id-page", addToNav, data) {
         tag("div") {
             attr["class"] = "main cover"
             tag("img") {
-                attr["src"] = "../$opsPath"
-                attr["alt"] = alt
+                attr["src"] = "../$coverHref"
+                attr["alt"] = altText
             }
         }
     }
@@ -360,21 +367,23 @@ private fun writeResource(path: String, id: String, data: Local, properties: Str
 }
 
 private fun writeFlob(flob: Flob, id: String, data: Local, properties: String): String {
-    val mimeType = flob.mimeType
-    val dir = when {
-        mimeType == "text/css" -> data.styleDir
-        mimeType.startsWith("image/") -> data.imageDir
-        mimeType.startsWith("text/") -> data.textDir
-        else -> data.extraDir
-    }
-    val suffix = mimeType.split('/').last().let {
-        when (it) {
-            "jpeg" -> "jpg"
-            else -> it
+    with(data) {
+        val mime = flob.mimeType
+        val dir = when {
+            mime == EPUB.MIME_CSS -> styleDir
+            mime.startsWith("image/") -> imageDir
+            "html" in mime || mime.startsWith("text/") -> textDir
+            else -> extraDir
         }
+        val ext = mime.split('/').last().let {
+            when (it) {
+                "jpeg" -> "jpg"
+                else -> it
+            }
+        }
+        val opsPath = "$dir/$id.$ext"
+        writer.writeFlob("$opsDir/$opsPath", flob)
+        pkg.manifest.addResource(id, opsPath, mime, properties)
+        return opsPath
     }
-    val opsPath = "$dir/$id.$suffix"
-    data.writer.writeFlob("${data.opsDir}/$opsPath", flob)
-    data.pkg.manifest.addItem(Resource(id, opsPath, mimeType, properties = properties))
-    return opsPath
 }

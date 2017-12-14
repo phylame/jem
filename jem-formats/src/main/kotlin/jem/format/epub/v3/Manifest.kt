@@ -1,7 +1,6 @@
 package jem.format.epub.v3
 
-const val PROPERTIES_NAVIGATION = "nav"
-const val PROPERTIES_COVER_IMAGE = "cover-image"
+import jem.format.epub.EPUB
 
 data class Resource(
         val id: String,
@@ -13,7 +12,7 @@ data class Resource(
 )
 
 class Manifest(val id: String = "") {
-    internal val items = LinkedHashMap<String, Resource>()
+    internal val items = linkedMapOf<String, Resource>()
 
     fun addItem(item: Resource) {
         items[item.id] = item
@@ -24,8 +23,12 @@ class Manifest(val id: String = "") {
     }
 }
 
+fun Manifest.addResource(id: String, href: String, mediaType: String, properties: String = "") =
+        Resource(id, href, mediaType, properties = properties).also { addItem(it) }
+
 fun Manifest.addNavigation(id: String, href: String): Resource =
-        Resource(id, href, MEDIA_TYPE_XHTML, properties = PROPERTIES_NAVIGATION).also { addItem(it) }
+        addResource(id, href, EPUB.MIME_XHTML, properties = EPUB.MANIFEST_NAVIGATION)
 
 fun Manifest.addCoverImage(id: String, href: String, mediaType: String): Resource =
-        Resource(id, href, mediaType, properties = PROPERTIES_COVER_IMAGE).also { addItem(it) }
+        addResource(id, href, mediaType, EPUB.MANIFEST_COVER_IMAGE)
+

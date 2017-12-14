@@ -1,10 +1,9 @@
 package jem.format.epub.v3
 
 import jclp.text.or
-import jclp.utcISODateTime
-import java.time.OffsetDateTime
+import java.time.Instant
+import java.time.temporal.ChronoField
 import java.util.*
-import kotlin.collections.LinkedHashMap
 
 sealed class Item(id: String) {
     companion object {
@@ -65,7 +64,7 @@ class Link(val rel: String, href: String, val refines: String = "", var mediaTyp
 }
 
 class Metadata {
-    internal val items = LinkedHashMap<String, Item>()
+    internal val items = linkedMapOf<String, Item>()
 
     fun addItem(item: Item) {
         items[item.id] = item
@@ -99,14 +98,18 @@ fun Metadata.addIdentifier(identifier: String, type: String = "", scheme: String
 fun Metadata.addDOI(id: String, doi: String): DCME
         = addIdentifier(doi, "06", "onix:codelist5", id)
 
-fun Metadata.addISBN(id: String, isbn: String): DCME
-        = addIdentifier(isbn, "15", "onix:codelist5", id)
+fun Metadata.addISBN(id: String, isbn: String): DCME =
+        if (isbn.length == 13) {
+            addIdentifier(isbn, "02", "onix:codelist5", id)
+        } else {
+            addIdentifier(isbn, "15", "onix:codelist5", id)
+        }
 
 fun Metadata.addUUID(id: String, uuid: String): DCME
         = addIdentifier(uuid, "uuid", "xsd:string", id)
 
-fun Metadata.addModifiedTime(time: OffsetDateTime, id: String = ""): Meta
-        = addMeta("dcterms:modified", time.format(utcISODateTime), id)
+fun Metadata.addModifiedTime(time: Instant, id: String = ""): Meta
+        = addMeta("dcterms:modified", time.with(ChronoField.MILLI_OF_SECOND, 0).toString(), id)
 
 fun Metadata.addTitle(title: String, type: String = "", displaySeq: Int = 0, groupPosition: Int = 0, id: String = ""): DCME {
     if (groupPosition > 0) {
@@ -136,11 +139,14 @@ fun Metadata.addCreator(name: String, role: String = "", scheme: String = "", di
 fun Metadata.addAuthor(author: String, displaySeq: Int = 0, id: String = ""): DCME
         = addCreator(author, "aut", "marc:relators", displaySeq, id)
 
+fun Metadata.addVendor(author: String, displaySeq: Int = 0, id: String = ""): DCME
+        = addCreator(author, "bkp", "marc:relators", displaySeq, id)
+
 fun Metadata.addLanguage(language: Locale): DCME
         = addDCME("language", language.toLanguageTag())
 
-fun Metadata.addPubdate(date: OffsetDateTime, id: String = ""): DCME
-        = addDCME("date", date.format(utcISODateTime), id)
+fun Metadata.addPubdate(date: Instant, id: String = ""): DCME
+        = addDCME("date", date.with(ChronoField.MILLI_OF_SECOND, 0).toString(), id)
 
 fun Metadata.addAuthority(refId: String, name: String, id: String = ""): Meta
         = addMeta("meta-auth", name, refines = "#$refId", id = id)

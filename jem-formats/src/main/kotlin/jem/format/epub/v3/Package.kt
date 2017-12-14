@@ -6,6 +6,7 @@ import jclp.xml.attribute
 import jclp.xml.endTag
 import jclp.xml.lang
 import jclp.xml.startTag
+import jem.format.epub.EPUB
 import org.xmlpull.v1.XmlSerializer
 
 class Package(val id: String = "", manifestId: String = "", spineId: String = "") {
@@ -29,7 +30,7 @@ class Package(val id: String = "", manifestId: String = "", spineId: String = ""
 fun Package.renderTo(xml: XmlSerializer) {
     with(xml) {
         // <package/>
-        startTag("", XML_NAMESPACE_OPF, "package")
+        startTag("", EPUB.XMLNS_OPF, "package")
         attribute("version", "3.0")
         attribute("unique-identifier", uniqueIdentifier)
         prefix.ifNotEmpty { attribute("prefix", it) }
@@ -38,7 +39,7 @@ fun Package.renderTo(xml: XmlSerializer) {
         language.ifNotEmpty { lang(it) }
 
         // <metadata/>
-        startTag("dc", XML_NAMESPACE_DCMES, "metadata")
+        startTag("dc", EPUB.XMLNS_DCME, "metadata")
         metadata.items.values.forEach {
             when (it) {
                 is DCME -> it.renderTo(this)
@@ -90,8 +91,8 @@ private fun Item.renderBase(xml: XmlSerializer) {
 
 private fun DCME.renderTo(xml: XmlSerializer) {
     with(xml) {
-        setPrefix("dc", XML_NAMESPACE_DCMES)
-        startTag(XML_NAMESPACE_DCMES, this@renderTo.name)
+        setPrefix("dc", EPUB.XMLNS_DCME)
+        startTag(EPUB.XMLNS_DCME, this@renderTo.name)
         renderBase(xml)
         text(text)
         endTag()

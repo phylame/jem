@@ -145,7 +145,7 @@ internal class TOCBuilder(
             context.put("coverHref", relativeToText(writeFlob(it, EPUB.COVER_ID).second))
             opf.newMeta("cover", EPUB.COVER_ID)
             val (item, _) = renderPage("cover-page", context, "cover")
-            opf.newSpine(item.id, properties = EPUB.DUOKAN_FULLSCREEN)
+            opf.newSpine(item.id, properties = EPUB.SPINE_DUOKAN_FULLSCREEN)
             opf.newGuide(item.href, "cover", "epub.make.coverGuide")
         }
         book.intro?.toString()?.ifNotEmpty {
@@ -185,13 +185,13 @@ internal class TOCBuilder(
                 opf.newSpine(id)
             } else if (hasCover) {
                 item = renderPage(id, context, "cover").first
-                opf.newSpine(id, properties = EPUB.DUOKAN_FULLSCREEN)
+                opf.newSpine(id, properties = EPUB.SPINE_DUOKAN_FULLSCREEN)
             }
         } else {
             if (hasCover) {
                 val pageId = "$id-cover-page"
                 renderPage(pageId, context, "cover").first
-                opf.newSpine(pageId, properties = EPUB.DUOKAN_FULLSCREEN)
+                opf.newSpine(pageId, properties = EPUB.SPINE_DUOKAN_FULLSCREEN)
             }
             chapter.text?.let {
                 if (it.type == TEXT_HTML) {

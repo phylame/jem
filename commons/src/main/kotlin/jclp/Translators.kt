@@ -25,7 +25,6 @@ import java.io.File
 import java.text.MessageFormat
 import java.util.*
 import java.util.Locale
-import kotlin.collections.LinkedHashMap
 
 fun parseLocale(tag: String): Locale =
         Locale.forLanguageTag(tag.replace('_', '-'))
@@ -152,7 +151,7 @@ open class Linguist(
 }
 
 class TranslatorHelper(private val path: String, private val filter: ((String) -> Boolean)? = null) : AbstractTranslator() {
-    private val values = LinkedHashMap<String, String>()
+    private val values = linkedMapOf<String, String>()
 
     override fun handleGet(key: String) = if (filter?.invoke(key) != false) values.getOrPut(key) { it -> it } else null
 

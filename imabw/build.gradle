@@ -18,7 +18,7 @@
 
 plugins {
     id 'application'
-    id 'org.jetbrains.kotlin.jvm' version '1.2.0'
+    id 'org.jetbrains.kotlin.jvm' version '1.2.10'
 }
 
 description = 'The Imabw ebook editor'

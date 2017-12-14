@@ -21,16 +21,11 @@ package jem.format.epub
 import jclp.io.slashify
 import jclp.setting.Settings
 import jclp.vdm.VdmWriter
-import jclp.vdm.useStream
-import jclp.xml.xml
 import jem.epm.EpmFactory
 import jem.epm.FileParser
 import jem.epm.Maker
 import jem.epm.Parser
-import jem.format.util.xmlEncoding
-import jem.format.util.xmlIndent
-import jem.format.util.xmlSeparator
-import java.nio.charset.Charset
+import jem.format.util.xmlDsl
 import java.nio.file.Path
 
 internal val Path.vdmPath
@@ -38,12 +33,22 @@ internal val Path.vdmPath
 
 internal object EPUB {
     const val MIME_PATH = "mimetype"
+
     const val MIME_EPUB = "application/epub+zip"
     const val MIME_NCX = "application/x-dtbncx+xml"
     const val MIME_OPF = "application/oebps-package+xml"
     const val MIME_XHTML = "application/xhtml+xml"
+    const val MIME_CSS = "text/css"
 
-    const val DUOKAN_FULLSCREEN = "duokan-page-fullscreen"
+    const val XMLNS_OPS = "http://www.idpf.org/2007/ops"
+    const val XMLNS_OPF = "http://www.idpf.org/2007/opf"
+    const val XMLNS_DCME = "http://purl.org/dc/elements/1.1/"
+    const val XMLNS_XHTML = "http://www.w3.org/1999/xhtml"
+
+    const val MANIFEST_NAVIGATION = "nav"
+    const val MANIFEST_COVER_IMAGE = "cover-image"
+
+    const val SPINE_DUOKAN_FULLSCREEN = "duokan-page-fullscreen"
 
     const val BOOK_ID = "book-id"
     const val COVER_ID = "cover"
@@ -66,17 +71,15 @@ class EpubFactory : EpmFactory, FileParser {
 private const val CONTAINER_PATH = "META-INF/container.xml"
 
 fun writeContainer(writer: VdmWriter, settings: Settings?, files: Map<String, String>) {
-    writer.useStream(CONTAINER_PATH) {
-        it.writer(Charset.forName(settings.xmlEncoding)).xml(settings.xmlIndent, settings.xmlSeparator, settings.xmlEncoding) {
-            tag("container") {
-                attr["version"] = "1.0"
-                attr["xmlns"] = "urn:oasis:names:tc:opendocument:xmlns:container"
-                tag("rootfiles") {
-                    for ((path, mime) in files) {
-                        tag("rootfile") {
-                            attr["full-path"] = path
-                            attr["media-type"] = mime
-                        }
+    writer.xmlDsl(CONTAINER_PATH, settings) {
+        tag("container") {
+            attr["version"] = "1.0"
+            attr["xmlns"] = "urn:oasis:names:tc:opendocument:xmlns:container"
+            tag("rootfiles") {
+                for ((path, mime) in files) {
+                    tag("rootfile") {
+                        attr["full-path"] = path
+                        attr["media-type"] = mime
                     }
                 }
             }

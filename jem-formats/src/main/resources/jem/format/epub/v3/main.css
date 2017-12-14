@@ -1,0 +1,253 @@
+@font-face {
+    font-family: "zw";
+    src: local("宋体"),
+  local("Songti"), local("Songti SC"), local("Songti TC"),
+  local("DK-SONGTI"),
+  url(../Fonts/zw.ttf),
+  url(res:///opt/sony/ebook/FONT/zw.ttf),
+  url(res:///Data/FONT/zw.ttf),
+  url(res:///opt/sony/ebook/FONT/tt0011m_.ttf),
+  url(res:///ebook/fonts/../../mnt/sdcard/fonts/zw.ttf),
+  url(res:///ebook/fonts/../../mnt/extsd/fonts/zw.ttf),
+  url(res:///ebook/fonts/zw.ttf),
+  url(res:///ebook/fonts/DroidSansFallback.ttf),
+  url(res:///fonts/ttf/zw.ttf),
+  url(res:///../../media/mmcblk0p1/fonts/zw.ttf),
+  url(file:///mnt/us/DK_System/system/fonts/zw.ttf),
+  url(file:///mnt/us/DK_System/xKindle/res/userfonts/zw.ttf),
+  url(res:///abook/fonts/zw.ttf),
+  url(res:///system/fonts/zw.ttf),
+  url(res:///system/media/sdcard/fonts/zw.ttf),
+  url(res:///media/fonts/zw.ttf),
+  url(res:///sdcard/fonts/zw.ttf),
+  url(res:///system/fonts/DroidSansFallback.ttf),
+  url(res:///mnt/MOVIFAT/font/zw.ttf),
+  url(res:///media/flash/fonts/zw.ttf),
+  url(res:///media/sd/fonts/zw.ttf),
+  url(res:///opt/onyx/arm/lib/fonts/AdobeHeitiStd-Regular.otf),
+  url(res:///../../fonts/zw.ttf),
+  url(res:///../fonts/zw.ttf),
+  url(res:///mnt/sdcard/fonts/zw.ttf),
+  url(res:///fonts/zw.ttf),
+  url(res:///../../../../Windows/fonts/zw.ttf);
+}
+
+@font-face {
+    font-family: "fs";
+    src: local("仿宋"),
+  local("Yuanti"), local("Yuanti SC"), local("Yuanti TC"),
+  local("DK-FANGSONG"),
+  url(../Fonts/fs.ttf),
+  url(res:///opt/sony/ebook/FONT/fs.ttf),
+  url(res:///Data/FONT/fs.ttf),
+  url(res:///opt/sony/ebook/FONT/tt0011m_.ttf),
+  url(res:///ebook/fonts/../../mnt/sdcard/fonts/fs.ttf),
+  url(res:///ebook/fonts/../../mnt/extsd/fonts/fs.ttf),
+  url(res:///ebook/fonts/fs.ttf),
+  url(res:///ebook/fonts/DroidSansFallback.ttf),
+  url(res:///fonts/ttf/fs.ttf),
+  url(res:///../../media/mmcblk0p1/fonts/fs.ttf),
+  url(file:///mnt/us/DK_System/system/fonts/fs.ttf),
+  url(file:///mnt/us/DK_System/xKindle/res/userfonts/fs.ttf),
+  url(res:///abook/fonts/fs.ttf),
+  url(res:///system/fonts/fs.ttf),
+  url(res:///system/media/sdcard/fonts/fs.ttf),
+  url(res:///media/fonts/fs.ttf),
+  url(res:///sdcard/fonts/fs.ttf),
+  url(res:///system/fonts/DroidSansFallback.ttf),
+  url(res:///mnt/MOVIFAT/font/fs.ttf),
+  url(res:///media/flash/fonts/fs.ttf),
+  url(res:///media/sd/fonts/fs.ttf),
+  url(res:///opt/onyx/arm/lib/fonts/AdobeHeitiStd-Regular.otf),
+  url(res:///../../fonts/fs.ttf),
+  url(res:///../fonts/fs.ttf),
+  url(res:///mnt/sdcard/fonts/fs.ttf),
+  url(res:///fonts/fs.ttf),
+  url(res:///../../../../Windows/fonts/fs.ttf);
+}
+
+@font-face {
+    font-family: "kt";
+    src: local("楷体"),
+  local("Kaiti"), local("Kaiti SC"), local("Kaiti TC"),
+  local("DK-KAITI"),
+  url(../Fonts/kt.ttf),
+  url(res:///opt/sony/ebook/FONT/kt.ttf),
+  url(res:///Data/FONT/kt.ttf),
+  url(res:///opt/sony/ebook/FONT/tt0011m_.ttf),
+  url(res:///ebook/fonts/../../mnt/sdcard/fonts/kt.ttf),
+  url(res:///ebook/fonts/../../mnt/extsd/fonts/kt.ttf),
+  url(res:///ebook/fonts/kt.ttf),
+  url(res:///ebook/fonts/DroidSansFallback.ttf),
+  url(res:///fonts/ttf/kt.ttf),
+  url(res:///../../media/mmcblk0p1/fonts/kt.ttf),
+  url(file:///mnt/us/DK_System/system/fonts/kt.ttf),
+  url(file:///mnt/us/DK_System/xKindle/res/userfonts/kt.ttf),
+  url(res:///abook/fonts/kt.ttf),
+  url(res:///system/fonts/kt.ttf),
+  url(res:///system/media/sdcard/fonts/kt.ttf),
+  url(res:///media/fonts/kt.ttf),
+  url(res:///sdcard/fonts/kt.ttf),
+  url(res:///system/fonts/DroidSansFallback.ttf),
+  url(res:///mnt/MOVIFAT/font/kt.ttf),
+  url(res:///media/flash/fonts/kt.ttf),
+  url(res:///media/sd/fonts/kt.ttf),
+  url(res:///opt/onyx/arm/lib/fonts/AdobeHeitiStd-Regular.otf),
+  url(res:///../../fonts/kt.ttf),
+  url(res:///../fonts/kt.ttf),
+  url(res:///mnt/sdcard/fonts/kt.ttf),
+  url(res:///fonts/kt.ttf),
+  url(res:///../../../../Windows/fonts/kt.ttf);
+}
+
+@font-face {
+    font-family: "ht";
+    src: local("黑体"),
+  local("Heiti"), local("Heiti SC"), local("Heiti TC"),
+  local("DK-HEITI"),
+  url(../Fonts/ht.ttf),
+  url(res:///opt/sony/ebook/FONT/ht.ttf),
+  url(res:///Data/FONT/ht.ttf),
+  url(res:///opt/sony/ebook/FONT/tt0011m_.ttf),
+  url(res:///ebook/fonts/../../mnt/sdcard/fonts/ht.ttf),
+  url(res:///ebook/fonts/../../mnt/extsd/fonts/ht.ttf),
+  url(res:///ebook/fonts/ht.ttf),
+  url(res:///ebook/fonts/DroidSansFallback.ttf),
+  url(res:///fonts/ttf/ht.ttf),
+  url(res:///../../media/mmcblk0p1/fonts/ht.ttf),
+  url(file:///mnt/us/DK_System/system/fonts/ht.ttf),
+  url(file:///mnt/us/DK_System/xKindle/res/userfonts/ht.ttf),
+  url(res:///abook/fonts/ht.ttf),
+  url(res:///system/fonts/ht.ttf),
+  url(res:///system/media/sdcard/fonts/ht.ttf),
+  url(res:///media/fonts/ht.ttf),
+  url(res:///sdcard/fonts/ht.ttf),
+  url(res:///system/fonts/DroidSansFallback.ttf),
+  url(res:///mnt/MOVIFAT/font/ht.ttf),
+  url(res:///media/flash/fonts/ht.ttf),
+  url(res:///media/sd/fonts/ht.ttf),
+  url(res:///opt/onyx/arm/lib/fonts/AdobeHeitiStd-Regular.otf),
+  url(res:///../../fonts/ht.ttf),
+  url(res:///../fonts/ht.ttf),
+  url(res:///mnt/sdcard/fonts/ht.ttf),
+  url(res:///fonts/ht.ttf),
+  url(res:///../../../../Windows/fonts/ht.ttf);
+}
+
+body {
+    margin: 0 1%;
+    padding: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+    padding: 0;
+    font-weight: bold;
+}
+
+p {
+    margin: 0.5em 0;
+    padding: 0;
+    text-align: justify;
+}
+
+p em {
+    font-weight: bold;
+}
+
+h1 {
+    margin: 1em 0;
+    font-family: "DK-XIHEITI", "ht", sans-serif;
+    font-size: 1.3em;
+    text-align: center;
+}
+
+h2 {
+    margin: 0.5em 0;
+    padding-left: 2px;
+    border-left: 2px solid #0092AA;
+    font-family: "DK-XIHEITI", "ht", sans-serif;
+    font-size: 1.1em;
+    text-align: start;
+}
+
+.main {
+    margin: 0 0.5%;
+}
+
+.cover {
+    text-align: center;
+}
+
+.intro h1 {
+    font-family: "DK-XIAOBIAOSONG", "kt", "zw", serif;
+    font-size: 1.4em;
+    text-shadow: 1px 1px 1px #006C6C;
+}
+
+.intro p {
+    line-height: 120%;
+    font-family: "fs", "kt", "zw", serif;
+    font-weight: bold;
+    text-indent: 2em;
+}
+
+.toc h1 {
+    color: #005A9C;
+}
+
+.toc ol {
+    margin: 0;
+    padding: 0 1em;
+}
+
+.toc li {
+    margin: 0.3em 0;
+    font-size: 0.97em;
+    list-style-type: none;
+}
+
+.toc li a {
+    text-decoration: none;
+}
+
+.toc li span {
+    color: #222;
+}
+
+.section {
+    margin: 8% 0;
+    padding: 0.5em 0.2em;
+    border-radius: 0.2em;
+}
+
+.section p {
+    line-height: 120%;
+    font-family: "fs", "kt", "zw", serif;
+    font-weight: bold;
+    text-indent: 2em;
+}
+
+.chapter h1 {
+    color: #CC3333;
+}
+
+.chapter .brief p {
+    line-height: 120%;
+    font-family: "kt", "zw", serif;
+    font-size: 0.9em;
+    text-indent: 2em;
+    color: #0092AA;
+}
+
+.chapter .brief hr {
+    border-style: dashed;
+    border-width: 0 0 1px 0;
+    border-color: #A2906A;
+}
+
+.chapter .text p {
+    line-height: 130%;
+    font-family: "zw", "kt", serif;
+    text-indent: 2em;
+}

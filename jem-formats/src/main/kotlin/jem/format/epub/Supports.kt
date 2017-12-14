@@ -19,10 +19,18 @@
 package jem.format.epub
 
 import jclp.io.slashify
+import jclp.setting.Settings
+import jclp.vdm.VdmWriter
+import jclp.vdm.useStream
+import jclp.xml.xml
 import jem.epm.EpmFactory
 import jem.epm.FileParser
 import jem.epm.Maker
 import jem.epm.Parser
+import jem.format.util.xmlEncoding
+import jem.format.util.xmlIndent
+import jem.format.util.xmlSeparator
+import java.nio.charset.Charset
 import java.nio.file.Path
 
 internal val Path.vdmPath
@@ -53,4 +61,25 @@ class EpubFactory : EpmFactory, FileParser {
     override val hasParser = true
 
     override val parser: Parser = EpubParser
+}
+
+private const val CONTAINER_PATH = "META-INF/container.xml"
+
+fun writeContainer(writer: VdmWriter, settings: Settings?, files: Map<String, String>) {
+    writer.useStream(CONTAINER_PATH) {
+        it.writer(Charset.forName(settings.xmlEncoding)).xml(settings.xmlIndent, settings.xmlSeparator, settings.xmlEncoding) {
+            tag("container") {
+                attr["version"] = "1.0"
+                attr["xmlns"] = "urn:oasis:names:tc:opendocument:xmlns:container"
+                tag("rootfiles") {
+                    for ((path, mime) in files) {
+                        tag("rootfile") {
+                            attr["full-path"] = path
+                            attr["media-type"] = mime
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

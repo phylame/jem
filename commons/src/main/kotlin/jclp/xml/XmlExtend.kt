@@ -59,7 +59,7 @@ fun XmlSerializer.doctype(root: String) {
 }
 
 fun XmlSerializer.docdecl(root: String, id: String, uri: String) {
-    docdecl(""" $root PUBLIC "$id" "$uri"""")
+    docdecl(" $root PUBLIC \"$id\" \"$uri\"")
     text(lineSeparator)
 }
 
@@ -121,7 +121,7 @@ class XML(val output: Appendable, val indent: String, val lineSeparator: String)
 class Tag(val name: String, text: String = "") {
     var depth = 0
 
-    val attr = hashMapOf<String, String>()
+    val attr = linkedMapOf<String, String>()
 
     val children = arrayListOf<Tag>()
 

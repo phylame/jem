@@ -19,39 +19,8 @@
 package jem.format.epub
 
 import jclp.io.Flob
-import jclp.setting.Settings
 import jclp.vdm.VdmWriter
-import jclp.vdm.useStream
 import jclp.vdm.writeFlob
-import jem.format.util.XmlRender
-
-private const val CONTAINER_PATH = "META-INF/container.xml"
-
-fun writeContainer(writer: VdmWriter, settings: Settings?, files: Map<String, String>) {
-    writer.useStream(CONTAINER_PATH) {
-        XmlRender(settings).apply {
-            output(it)
-            renderContainer(files)
-        }
-    }
-}
-
-private fun XmlRender.renderContainer(files: Map<String, String>) {
-    beginXml()
-    beginTag("container")
-    attribute("version", "1.0")
-    xmlns("urn:oasis:names:tc:opendocument:xmlns:container")
-    beginTag("rootfiles")
-    for ((path, mime) in files) {
-        beginTag("rootfile")
-        attribute("full-path", path)
-        attribute("media-type", mime)
-        endTag()
-    }
-    endTag()
-    endTag()
-    endXml()
-}
 
 fun opsPathOf(name: String) = "OEBPS/$name"
 

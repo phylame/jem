@@ -59,3 +59,7 @@ fun <E : Iterable<E>> E.walk(level: Int = 0, index: Int = 0, firstMode: Boolean 
         block(level, index)
     }
 }
+
+enum class WalkEvent {
+    NODE, PRE_SECTION, POST_SECTION
+}

@@ -79,7 +79,7 @@ private class Nav(val title: String, val href: String = "") {
     }
 }
 
-internal fun makeImpl(book: Book, writer: VdmWriter, settings: Settings?) {
+internal fun makeImpl30(book: Book, writer: VdmWriter, settings: Settings?) {
     val data = Local(book, writer, settings)
 
     writeMetadata(data)
@@ -318,6 +318,19 @@ private fun renderChapter(id: String, chapter: Chapter, data: Local) {
     }
 }
 
+private fun renderImage(image: Flob, id: String, title: String, altText: String, addToNav: Boolean, data: Local) {
+    val coverHref = writeFlob(image, id, data, if (id == "cover") EPUB.MANIFEST_COVER_IMAGE else "")
+    renderPage(title, "$id-page", addToNav, data) {
+        tag("div") {
+            attr["class"] = "main cover"
+            tag("img") {
+                attr["src"] = "../$coverHref"
+                attr["alt"] = altText
+            }
+        }
+    }
+}
+
 private inline fun renderPage(title: String, id: String, addToNav: Boolean, data: Local, block: Tag.() -> Unit) {
     with(data) {
         val opsPath = "$textDir/$id.xhtml"
@@ -345,19 +358,6 @@ private inline fun renderPage(title: String, id: String, addToNav: Boolean, data
         pkg.manifest.addResource(id, opsPath, EPUB.MIME_XHTML, if (id == "nav") EPUB.MANIFEST_NAVIGATION else "")
         if (id != "nav") { // nav is already added
             pkg.spine.addReference(id, properties = if (useDuokanCover && "cover" in id) EPUB.SPINE_DUOKAN_FULLSCREEN else "")
-        }
-    }
-}
-
-private fun renderImage(image: Flob, id: String, title: String, altText: String, addToNav: Boolean, data: Local) {
-    val coverHref = writeFlob(image, id, data, if (id == "cover") EPUB.MANIFEST_COVER_IMAGE else "")
-    renderPage(title, "$id-page", addToNav, data) {
-        tag("div") {
-            attr["class"] = "main cover"
-            tag("img") {
-                attr["src"] = "../$coverHref"
-                attr["alt"] = altText
-            }
         }
     }
 }

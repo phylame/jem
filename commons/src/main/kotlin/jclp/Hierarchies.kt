@@ -96,6 +96,39 @@ fun <T : Hierarchical<T>> T.locate(indices: Collection<Int>): T? {
     return item
 }
 
+inline fun <T : Hierarchical<T>> T.walkTree(block: (T, WalkEvent, Int, Int) -> Unit) {
+    if (isNotEmpty) {
+        block(this, WalkEvent.PRE_SECTION, 0, 0)
+    } else {
+        block(this, WalkEvent.NODE, 0, 0)
+        return
+    }
+    var depth = 1
+    var start = 0
+    var current = this
+    val status = LinkedList<Int>()
+    loop@ while (true) {
+        for (i in start until current.size) {
+            val node = current[i]
+            if (node.isNotEmpty) {
+                block(node, WalkEvent.PRE_SECTION, depth, i)
+                status.offerFirst(i + 1)
+                current = node
+                start = 0
+                ++depth
+                continue@loop
+            } else {
+                block(node, WalkEvent.NODE, depth, i)
+            }
+        }
+        start = status.pollFirst() ?: break
+        block(current, WalkEvent.POST_SECTION, depth - 1, start - 1)
+        current = current.parent!!
+        --depth
+    }
+    block(this, WalkEvent.POST_SECTION, 0, 0)
+}
+
 open class HierarchySupport<T : HierarchySupport<T>> : Hierarchical<T> {
     final override var parent: T? = null
         protected set

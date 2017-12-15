@@ -34,7 +34,7 @@ import jclp.vdm.useStream
 import jclp.vdm.writeBytes
 import jem.*
 import jem.epm.VdmMaker
-import jem.format.epub.v3.makeImpl
+import jem.format.epub.v3.makeImpl30
 import jem.format.util.M
 import jem.format.util.failMaker
 import org.apache.velocity.Template
@@ -57,13 +57,13 @@ internal object EpubMaker : VdmMaker {
     override fun make(book: Book, output: VdmWriter, arguments: Settings?) {
         val version = arguments?.getString("maker.epub.version") ?: ""
         when (version) {
-            "", "2", "2.0", "2.0.1" -> writeEPUBv2(book, output, arguments)
-            "3", "3.0" -> writeEPUBv3(book, output, arguments)
+            "", "2", "2.0", "2.0.1" -> makeEpub20(book, output, arguments)
+            "3", "3.0", "3.0.1" -> makeEpub30(book, output, arguments)
             else -> failMaker("epub.make.unsupportedVersion", version)
         }
     }
 
-    private fun writeEPUBv2(book: Book, writer: VdmWriter, settings: Settings?) {
+    private fun makeEpub20(book: Book, writer: VdmWriter, settings: Settings?) {
         writer.writeBytes(EPUB.MIME_PATH, EPUB.MIME_EPUB.toByteArray())
 
         val opf = OPFBuilder(book, writer, settings)
@@ -76,9 +76,9 @@ internal object EpubMaker : VdmMaker {
         writeContainer(writer, settings, mapOf(opf.make().vdmPath to EPUB.MIME_OPF))
     }
 
-    private fun writeEPUBv3(book: Book, writer: VdmWriter, settings: Settings?) {
+    private fun makeEpub30(book: Book, writer: VdmWriter, settings: Settings?) {
         writer.writeBytes(EPUB.MIME_PATH, EPUB.MIME_EPUB.toByteArray())
-        makeImpl(book, writer, settings)
+        makeImpl30(book, writer, settings)
     }
 }
 

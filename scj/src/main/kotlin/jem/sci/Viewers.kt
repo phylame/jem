@@ -19,9 +19,11 @@
 package jem.sci
 
 import jclp.TypeManager
+import jclp.WalkEvent
 import jclp.locate
+import jclp.text.ifNotEmpty
 import jclp.text.or
-import jclp.walk
+import jclp.walkTree
 import jem.Attributes.getTitle
 import jem.Book
 import jem.Chapter
@@ -29,6 +31,8 @@ import jem.title
 import mala.App
 import mala.App.tr
 import java.util.*
+import kotlin.text.isNotEmpty
+import kotlin.text.toInt
 
 data class ViewSettings(var separator: String, var skipEmpty: Boolean, var tocIndent: String, var tocNames: Collection<String>)
 
@@ -56,12 +60,12 @@ fun viewBook(book: Book, names: Collection<String>, settings: ViewSettings) {
     }
 }
 
-fun viewAttributes(chapter: Chapter, names: Collection<String>, settings: ViewSettings, showBracket: Boolean) {
+fun viewAttributes(chapter: Chapter, names: Collection<String>, settings: ViewSettings, showBracket: Boolean, separator: String = "") {
     val values = LinkedList<String>()
     for (name in names) {
         when (name) {
             "toc" -> viewToc(chapter, settings)
-            "all" -> viewAttributes(chapter, chapter.attributes.names, settings, showBracket)
+            "all" -> viewAttributes(chapter, chapter.attributes.names, settings, showBracket, separator)
             "text" -> values += tr("view.attrPattern", tr("view.chapterText"), chapter.text ?: "")
             "names" -> {
                 val keys = chapter.attributes.names.toMutableSet()
@@ -73,7 +77,7 @@ fun viewAttributes(chapter: Chapter, names: Collection<String>, settings: ViewSe
             }
             "size" -> {
                 if ("size" in chapter.attributes) {
-                    viewAttributes(chapter, listOf("size"), settings, showBracket)
+                    viewAttributes(chapter, listOf("size"), settings, showBracket, separator)
                 } else {
                     values += tr("view.attrPattern", tr("view.chapterSize"), chapter.size)
                 }
@@ -91,9 +95,9 @@ fun viewAttributes(chapter: Chapter, names: Collection<String>, settings: ViewSe
         return
     }
     if (showBracket) {
-        println(values.joinToString(settings.separator, "<", ">"))
+        println(values.joinToString(separator or { settings.separator }, "<", ">"))
     } else {
-        println(values.joinToString(settings.separator))
+        println(values.joinToString(separator or { settings.separator }))
     }
 }
 
@@ -127,18 +131,25 @@ fun viewChapter(chapter: Chapter, name: String, settings: ViewSettings) {
 
 fun viewToc(chapter: Chapter, settings: ViewSettings) {
     println(tr("view.tocLegend", chapter.title))
-    val separator = settings.separator
-    settings.separator = " "
-    chapter.walk { level, index ->
-        if (level != 0) {
-            val prefix = parent?.tag ?: ""
-            val fmt = "%${parent?.size.toString().length}d"
-            print("$prefix${fmt.format(index + 1)} ")
-            viewAttributes(this, settings.tocNames, settings, true)
-            if (isSection) {
-                tag = "$prefix${index + 1}${settings.tocIndent}"
+    val indent = settings.tocIndent
+    val tocNames = settings.tocNames
+    val prefixes = LinkedList<String>()
+    chapter.walkTree { stub, event, _, index ->
+        when (event) {
+            WalkEvent.NODE, WalkEvent.PRE_SECTION -> {
+                if (stub !== chapter) {
+                    val order = index + 1
+                    val fmt = "%0${stub.parent!!.size.toString().length}d"
+                    print("${prefixes.joinToString(indent).ifNotEmpty { it + indent } ?: ""}${fmt.format(order)} ")
+                    viewAttributes(stub, tocNames, settings, true, " ")
+                    if (event == WalkEvent.PRE_SECTION) {
+                        prefixes.offerLast(order.toString())
+                    }
+                }
+            }
+            WalkEvent.POST_SECTION -> {
+                prefixes.pollLast()
             }
         }
     }
-    settings.separator = separator
 }

@@ -18,10 +18,50 @@
 
 package jem.format.epub.opf
 
+import jclp.text.ifNotEmpty
+import jclp.xml.attribute
+import jclp.xml.endTag
+import jclp.xml.startTag
+import jem.format.epub.Taggable
+import org.xmlpull.v1.XmlSerializer
 import java.util.*
 
-open class ItemRef(val idref: String, var linear: Boolean, var properties: String)
+class ItemRef(val idref: String, var linear: Boolean, var properties: String, id: String = "") : Taggable(id) {
+    override fun renderTo(xml: XmlSerializer) {
+        with(xml) {
+            startTag("itemref")
+            attribute("idref", idref)
+            if (!linear) attribute("linear", "no")
+            properties.ifNotEmpty { attribute("properties", it) }
+            attr.forEach { attribute(it.key, it.value) }
+            id.ifNotEmpty { attribute("id", it) }
+            endTag()
+        }
+    }
+}
 
-open class Spine(val id: String, var toc: String) {
-    val refs = LinkedList<ItemRef>()
+class Spine(var toc: String = "", id: String = "") : Taggable(id) {
+    private val refs = LinkedList<ItemRef>()
+
+    operator fun plusAssign(ref: ItemRef) {
+        refs += ref
+    }
+
+    operator fun minusAssign(ref: ItemRef) {
+        refs -= ref
+    }
+
+    fun addRef(idref: String, linear: Boolean = true, properties: String = "", id: String = "") =
+            ItemRef(idref, linear, properties, id).also { refs += it }
+
+    override fun renderTo(xml: XmlSerializer) {
+        with(xml) {
+            startTag("spine")
+            toc.ifNotEmpty { attribute("toc", it) }
+            attr.forEach { attribute(it.key, it.value) }
+            id.ifNotEmpty { attribute("id", it) }
+            refs.forEach { it.renderTo(this) }
+            endTag()
+        }
+    }
 }

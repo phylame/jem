@@ -47,19 +47,6 @@ fun MutableMap<in String, in String>.update(from: Properties) {
     }
 }
 
-fun <E : Iterable<E>> E.walk(level: Int = 0, index: Int = 0, firstMode: Boolean = true, block: E.(Int, Int) -> Unit) {
-    if (firstMode) {
-        block(level, index)
-    }
-    val lv = level + 1
-    forEachIndexed { i, e ->
-        e.walk(lv, i, firstMode, block)
-    }
-    if (!firstMode) {
-        block(level, index)
-    }
-}
-
 enum class WalkEvent {
     NODE, PRE_SECTION, POST_SECTION
 }

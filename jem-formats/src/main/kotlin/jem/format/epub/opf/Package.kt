@@ -13,6 +13,8 @@ class Package(val version: String, var uniqueIdentifier: String = "", id: String
 
     val manifest = Manifest()
 
+    val spine = Spine()
+
     override fun renderTo(xml: XmlSerializer) {
         with(xml) {
             startTag("", EPUB.XMLNS_OPF, "package")
@@ -22,6 +24,7 @@ class Package(val version: String, var uniqueIdentifier: String = "", id: String
             attr.forEach { attribute(it.key, it.value) }
             metadata.renderTo(this)
             manifest.renderTo(this)
+            spine.renderTo(this)
             endTag()
         }
     }

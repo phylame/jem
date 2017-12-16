@@ -19,32 +19,22 @@
 package jem.format.epub
 
 import jclp.io.Flob
-import jclp.io.extName
 import jclp.io.flobOf
-import jclp.io.getProperties
-import jclp.log.Log
 import jclp.setting.Settings
 import jclp.setting.getString
-import jclp.text.TEXT_HTML
-import jclp.text.Text
-import jclp.text.TextWrapper
-import jclp.text.ifNotEmpty
 import jclp.vdm.VdmWriter
-import jclp.vdm.useStream
 import jclp.vdm.writeBytes
 import jclp.vdm.writeFlob
-import jem.*
+import jem.Book
 import jem.epm.VdmMaker
+import jem.format.epub.html.Nav
 import jem.format.epub.opf.Package
 import jem.format.epub.opf.Resource
-import jem.format.epub.v2.makeImpl20
-import jem.format.epub.v3.makeImpl30
+import jem.format.epub.v2.makeImpl201
+import jem.format.epub.v3.makeImpl301
 import jem.format.util.*
-import org.apache.velocity.Template
-import org.apache.velocity.VelocityContext
-import org.apache.velocity.app.Velocity
+import jem.language
 import org.xmlpull.v1.XmlSerializer
-import java.nio.file.Path
 import java.util.*
 import jem.format.util.M as T
 
@@ -60,213 +50,36 @@ internal object EpubMaker : VdmMaker {
     }
 
     override fun make(book: Book, output: VdmWriter, arguments: Settings?) {
+        output.writeBytes(EPUB.MIME_PATH, EPUB.MIME_EPUB.toByteArray())
         val version = arguments?.getString("maker.epub.version") ?: ""
-        when (version) {
-            "", "2", "2.0", "2.0.1" -> makeEpub20(book, output, arguments)
-            "3", "3.0", "3.0.1" -> makeEpub30(book, output, arguments)
-            else -> failMaker("epub.make.unsupportedVersion", version)
+        val data = when (version) {
+            "", "2", "2.0", "2.0.1" -> makeImpl201(book, output, arguments)
+            "3", "3.0", "3.0.1" -> makeImpl301(book, output, arguments)
+            else -> throw InternalError()
         }
-    }
-
-    private fun makeEpub20(book: Book, writer: VdmWriter, settings: Settings?) {
-        writer.writeBytes(EPUB.MIME_PATH, EPUB.MIME_EPUB.toByteArray())
-
-        val data = makeImpl20(book, writer, settings)
-
-        val opfPath = "${data.opsDir}/package.opf"
-        writer.xmlSerializer(opfPath, settings) {
-            data.pkg.renderTo(this)
-        }
-
-        writeContainer(writer, settings, mapOf(opfPath to EPUB.MIME_OPF))
-    }
-
-    private fun makeEpub30(book: Book, writer: VdmWriter, settings: Settings?) {
-        writer.writeBytes(EPUB.MIME_PATH, EPUB.MIME_EPUB.toByteArray())
-        makeImpl30(book, writer, settings)
+        val path = "${data.opsDir}/package.opf"
+        output.xmlSerializer(path, arguments) { data.pkg.renderTo(this) }
+        writeContainer(output, arguments, mapOf(path to EPUB.MIME_OPF))
     }
 }
 
-internal open class BuilderBase(val book: Book, val writer: VdmWriter, val settings: Settings?) {
-    val meta = linkedMapOf<String, Meta>()
+private const val CONTAINER_PATH = "META-INF/container.xml"
 
-    val lang: String = (book.language ?: Locale.getDefault()).toLanguageTag()
-
-    val uuid = book["uuid"]?.let { "urn:uuid:$it" } ?: book[ISBN]?.let { "urn:isbn:$it" } ?: "urn:uuid:${UUID.randomUUID()}"
-
-    fun newMeta(name: String, content: String, property: String = "") {
-        if (name !in meta) {
-            meta[name] = Meta(name, content, property)
-        } else {
-            Log.w(javaClass.simpleName) { "meta of name '$name' already exists" }
-        }
-    }
-
-    fun getConfig(name: String) = settings?.getString("maker.epub.$name")
-}
-
-internal class TOCBuilder(
-        book: Book,
-        writer: VdmWriter,
-        settings: Settings?,
-        private val ncx: NCXBuilder,
-        private val opf: OPFBuilder
-) : BuilderBase(book, writer, settings) {
-    private val styleDir = getConfig("styleDir") ?: "Styles/"
-    private val imageDir = getConfig("imageDir") ?: "Images/"
-    private val extraDir = getConfig("extraDir") ?: "Extras/"
-    private val textDir = getConfig("textDir") ?: "Text/"
-
-    private val textRoot: Path = opf.root.resolve(textDir)
-
-    private lateinit var cssHref: String
-
-    private lateinit var maskHref: String
-
-    private fun newContext() = VelocityContext().apply {
-        put("M", T)
-        put("book", book)
-        put("lang", lang)
-        put("cssHref", cssHref)
-        put("maskHref", maskHref)
-    }
-
-    private operator fun VelocityContext.set(name: String, text: Text) {
-        put(name, object : TextWrapper(text) {
-            var count = 0 // line counter
-
-            override fun iterator() = super.iterator().asSequence().map {
-                ++count
-                it.trim()
-            }.iterator()
-        })
-    }
-
-    fun make() {
-        cssHref = relativeToText(writeFlob(flobOf("!jem/format/epub/style.css"), "style").second)
-        maskHref = relativeToText(writeFlob(flobOf("!jem/format/epub/mask.png"), "mask").second)
-        book.cover?.let {
-            val context = newContext()
-            context.put("coverHref", relativeToText(writeFlob(it, EPUB.COVER_ID).second))
-            opf.newMeta("cover", EPUB.COVER_ID)
-            val (item, _) = renderPage("cover-page", context, "cover")
-            opf.newSpine(item.id, properties = EPUB.SPINE_DUOKAN_FULLSCREEN)
-            opf.newGuide(item.href, "cover", "epub.make.coverGuide")
-        }
-        book.intro?.toString()?.ifNotEmpty {
-            val context = newContext()
-            context["intro"] = book.intro!!
-            val (item, _) = renderPage("intro", context)
-            opf.newSpine(item.id)
-            ncx.newNav(item.id, T.tr("epub.make.introTitle"), item.href)
-            ncx.endNav()
-        }
-        book.forEachIndexed { i, chapter ->
-            renderToc(chapter, (i + 1).toString())
-        }
-    }
-
-    private fun renderToc(chapter: Chapter, suffix: String) {
-        val context = newContext()
-        context.put("chapter", chapter)
-        val id = "chapter-$suffix"
-
-        var hasCover = false
-        chapter.cover?.let {
-            hasCover = true
-            context.put("coverHref", relativeToText(writeFlob(it, "$id-cover").second))
-        }
-
-        var hasIntro = false
-        chapter.intro?.toString()?.ifNotEmpty {
-            hasIntro = true
-            context["intro"] = chapter.intro!!
-        }
-
-        var item: Item? = null
-        if (chapter.isSection) {
-            if (hasIntro) {
-                item = renderPage(id, context, "section").first
-                opf.newSpine(id)
-            } else if (hasCover) {
-                item = renderPage(id, context, "cover").first
-                opf.newSpine(id, properties = EPUB.SPINE_DUOKAN_FULLSCREEN)
-            }
-        } else {
-            if (hasCover) {
-                val pageId = "$id-cover-page"
-                renderPage(pageId, context, "cover").first
-                opf.newSpine(pageId, properties = EPUB.SPINE_DUOKAN_FULLSCREEN)
-            }
-            chapter.text?.let {
-                if (it.type == TEXT_HTML) {
-                    item = writeText(it, id, EPUB.MIME_XHTML).first
-                    opf.newSpine(id)
-                } else {
-                    context["text"] = it
-                    item = renderPage(id, context, "chapter").first
-                    opf.newSpine(id)
-                }
-            }
-        }
-        if (item != null && ncx.count == 1) { // first chapter
-            opf.newGuide(item!!.href, "text", "epub.make.textTitle")
-        }
-        ncx.newNav(id, chapter.title, item?.href ?: "")
-        chapter.forEachIndexed { i, stub ->
-            renderToc(stub, "$suffix-${i + 1}")
-        }
-        ncx.endNav()
-    }
-
-    private fun renderPage(id: String, context: VelocityContext, name: String? = null): Pair<Item, Path> {
-        return opf.newItem(id, "$textDir/$id.xhtml", EPUB.MIME_XHTML) {
-            writer.useStream(it.vdmPath) {
-                it.writer(Charsets.UTF_8).apply {
-                    Templates.getTemplate(name ?: id).merge(context, this)
-                    flush()
+fun writeContainer(writer: VdmWriter, settings: Settings?, files: Map<String, String>) {
+    writer.xmlDsl(CONTAINER_PATH, settings) {
+        tag("container") {
+            attr["version"] = "1.0"
+            attr["xmlns"] = "urn:oasis:names:tc:opendocument:xmlns:container"
+            tag("rootfiles") {
+                for ((path, mime) in files) {
+                    tag("rootfile") {
+                        attr["full-path"] = path
+                        attr["media-type"] = mime
+                    }
                 }
             }
         }
     }
-
-    private fun relativeToText(path: Path) = textRoot.relativize(path).vdmPath
-
-    private fun writeFlob(flob: Flob, id: String): Pair<Item, Path> {
-        val mime = flob.mimeType
-        return opf.newItem(id, "${classifyDir(mime)}$id.${extName(flob.name)}", mime) {
-            writer.useStream(it.vdmPath) {
-                flob.writeTo(it)
-            }
-        }
-    }
-
-    private fun writeText(text: Text, id: String, mime: String): Pair<Item, Path> {
-        val type = text.type
-        return opf.newItem(id, "$textDir/$id.$type", mime) {
-            writer.useStream(it.vdmPath) {
-                it.writer(Charsets.UTF_8).apply {
-                    text.writeTo(this)
-                    flush()
-                }
-            }
-        }
-    }
-
-    private fun classifyDir(mime: String) = when {
-        mime.endsWith("css") -> styleDir
-        mime.startsWith("text") -> textDir
-        mime.startsWith("image") -> imageDir
-        else -> extraDir
-    }
-}
-
-internal object Templates {
-    init {
-        Velocity.init(getProperties("!jem/format/epub/velocity.properties"))
-    }
-
-    fun getTemplate(name: String): Template = Velocity.getTemplate("jem/format/epub/$name.vm")
 }
 
 interface Renderable {
@@ -278,7 +91,17 @@ abstract class Taggable(var id: String) : Renderable {
 }
 
 internal open class DataHolder(version: String, val book: Book, val writer: VdmWriter, val settings: Settings?) {
+    var nav = Nav("")
+
     val pkg = Package(version)
+
+    var bookId = ""
+
+    var epubVersion = 4
+
+    var maskHref = ""
+
+    var cssHref = ""
 
     val encoding = settings.xmlEncoding
 
@@ -293,6 +116,12 @@ internal open class DataHolder(version: String, val book: Book, val writer: VdmW
     val imageDir = getConfig("imageDir") ?: "Images"
 
     val extraDir = getConfig("extraDir") ?: "Extras"
+
+    val useDuokanCover = getConfig("useDuokanCover") ?: true
+
+    val cssPath = getConfig("cssPath") ?: "!jem/format/epub/main.css"
+
+    val maskPath = getConfig("maskPath") ?: "!jem/format/epub/mask.png"
 
     val lang: String = getConfig("language") ?: (book.language ?: Locale.getDefault()).toLanguageTag()
 
@@ -316,6 +145,10 @@ internal open class DataHolder(version: String, val book: Book, val writer: VdmW
         }
         val opsPath = "$dir/$id.$ext"
         writer.writeFlob("$opsDir/$opsPath", flob)
-        return pkg.manifest.addResource(id, opsPath, mime)
+        return pkg.manifest.addResource(id, opsPath, mime).also {
+            if (epubVersion == 3 && id == "cover") {
+                it.attr["properties"] = EPUB.MANIFEST_COVER_IMAGE
+            }
+        }
     }
 }

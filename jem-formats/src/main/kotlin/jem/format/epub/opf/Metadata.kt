@@ -27,7 +27,7 @@ import jem.format.epub.Taggable
 import org.xmlpull.v1.XmlSerializer
 import java.util.*
 
-sealed class Item(id: String) : Taggable(id)
+abstract class Item(id: String) : Taggable(id)
 
 class DCME(val name: String, var text: String, id: String) : Item(id) {
     override fun renderTo(xml: XmlSerializer) {
@@ -56,8 +56,7 @@ class Metadata : Taggable("") {
         items -= item
     }
 
-    fun addDCME(name: String, text: String, id: String = "") =
-            DCME(name, text, id).also { items += it }
+    fun addDCME(name: String, text: String, id: String = "") = DCME(name, text, id).also { this += it }
 
     override fun renderTo(xml: XmlSerializer) {
         with(xml) {

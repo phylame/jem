@@ -50,8 +50,7 @@ class Manifest(id: String = "") : Taggable(id) {
         items -= item
     }
 
-    fun addResource(id: String, href: String, mediaType: String) =
-            Resource(id, href, mediaType).also { items += it }
+    fun addResource(id: String, href: String, mediaType: String) = Resource(id, href, mediaType).also { items += it }
 
     override fun renderTo(xml: XmlSerializer) {
         with(xml) {

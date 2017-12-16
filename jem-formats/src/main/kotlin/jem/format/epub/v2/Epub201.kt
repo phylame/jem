@@ -38,9 +38,8 @@ class Meta2(name: String, content: String, id: String = "") : Meta(name, content
     }
 }
 
-fun Metadata.addMeta(name: String, content: String, id: String = "") {
-    Meta2(name, content, id).also { this += it }
-}
+fun Metadata.addMeta(name: String, content: String, id: String = "") =
+        Meta2(name, content, id).also { this += it }
 
 fun Metadata.addDOI(id: String, doi: String) {
     addDCME("identifier", doi, id).apply {

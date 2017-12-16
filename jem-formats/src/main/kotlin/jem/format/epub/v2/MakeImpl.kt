@@ -6,23 +6,24 @@ import jclp.vdm.VdmWriter
 import jem.*
 import jem.format.epub.DataHolder
 import jem.format.epub.EPUB
+import jem.format.epub.html.renderCover
+import jem.format.epub.html.renderIntro
+import jem.format.epub.html.renderText
+import jem.format.util.M
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.OffsetTime
 import java.util.*
 
 private class Local(book: Book, writer: VdmWriter, settings: Settings?) : DataHolder("2.0", book, writer, settings) {
-    var cssHref = ""
-
-    var maskHref = ""
-
     var coverHref = ""
 }
 
-internal fun makeImpl20(book: Book, writer: VdmWriter, settings: Settings?): DataHolder {
+internal fun makeImpl201(book: Book, writer: VdmWriter, settings: Settings?): DataHolder {
     val data = Local(book, writer, settings)
     writeMetadata(data)
     writeContents(data)
+    makeNcx2005(data)
     return data
 }
 
@@ -34,17 +35,21 @@ private fun writeMetadata(data: Local) {
     md.attr["xmlns:opf"] = EPUB.XMLNS_OPF
 
     book[ISBN]?.toString()?.ifNotEmpty {
-        md.addISBN("isbn", "urn:isbn:$it")
+        data.bookId = "urn:isbn:$it"
+        md.addISBN("isbn", data.bookId)
         pkg.uniqueIdentifier = "isbn"
     }
     book["uuid"]?.toString()?.ifNotEmpty {
-        md.addUUID("uuid", "urn:uuid:$it")
+        val uid = "urn:uuid:$it"
+        md.addUUID("uuid", uid)
         if (pkg.uniqueIdentifier.isEmpty()) {
             pkg.uniqueIdentifier = "uuid"
+            data.bookId = uid
         }
     }
     if (pkg.uniqueIdentifier.isEmpty()) {
-        md.addUUID("uuid", "urn:uuid:${UUID.randomUUID()}")
+        data.bookId = "urn:uuid:${UUID.randomUUID()}"
+        md.addUUID("uuid", data.bookId)
         pkg.uniqueIdentifier = "uuid"
     }
 
@@ -78,17 +83,25 @@ private fun writeMetadata(data: Local) {
         md.addMeta("price", it)
     }
     book.cover?.let {
-        data.coverHref = "../${data.writeFlob(it, "cover").href}"
+        data.coverHref = data.writeFlob(it, "cover").href
         md.addMeta("cover", "cover")
     }
 }
 
 private fun writeContents(data: Local) {
-    val resource = data.writeResource(data.getConfig("cssPath") ?: "!jem/format/epub/main.css", "style")
-    data.cssHref = "../${resource.href}"
+    val book = data.book
+    val spine = data.pkg.spine
+    data.epubVersion = 2
 
-    val maskPath = data.writeResource(data.getConfig("maskPath") ?: "!jem/format/epub/mask.png", "mask")
-    data.maskHref = "../$maskPath"
+    data.cssHref = "../${data.writeResource(data.cssPath, "style").href}"
+    data.maskHref = "../${data.writeResource(data.maskPath, "mask").href}"
 
-
+    data.coverHref.ifNotEmpty {
+        renderCover(it, "cover-page", M.tr("epub.make.coverTitle"), book.title, data)
+    }
+    book.intro?.ifNotEmpty {
+        renderIntro(it, M.tr("epub.make.introTitle"), data)
+    }
+    spine.toc = "ncx"
+    renderText(book, "", data)
 }

@@ -18,12 +18,54 @@
 
 package jem.format.epub.opf
 
-sealed class Item
+import jclp.text.ifNotEmpty
+import jclp.xml.attribute
+import jclp.xml.endTag
+import jclp.xml.startTag
+import jem.format.epub.EPUB
+import jem.format.epub.Taggable
+import org.xmlpull.v1.XmlSerializer
+import java.util.*
 
-open class DCME(val name: String, var text: String) : Item()
+sealed class Item(id: String) : Taggable(id)
 
-open class Meta(val name: String, val text: String) : Item()
+class DCME(val name: String, var text: String, id: String) : Item(id) {
+    override fun renderTo(xml: XmlSerializer) {
+        with(xml) {
+            startTag("dc:${this@DCME.name}")
+            attr.forEach { attribute(it.key, it.value) }
+            id.ifNotEmpty { attribute("id", it) }
+            text(text)
+            endTag()
+        }
+    }
+}
 
-class Metadata {
-    val items = linkedMapOf<String, Item>()
+abstract class Meta(val key: String, val content: String, id: String) : Item(id)
+
+class Metadata : Taggable("") {
+    private val items = LinkedList<Item>()
+
+    operator fun plusAssign(item: Item) {
+        items += item.apply {
+            if (id == "-") id = "e${items.size + 1}"
+        }
+    }
+
+    operator fun minusAssign(item: Item) {
+        items -= item
+    }
+
+    fun addDCME(name: String, text: String, id: String = "") =
+            DCME(name, text, id).also { items += it }
+
+    override fun renderTo(xml: XmlSerializer) {
+        with(xml) {
+            startTag("dc", EPUB.XMLNS_DCME, "metadata")
+            attr.forEach { attribute(it.key, it.value) }
+            items.forEach { it.renderTo(this) }
+            endTag()
+        }
+    }
+
 }

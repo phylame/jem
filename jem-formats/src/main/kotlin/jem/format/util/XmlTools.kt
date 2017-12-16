@@ -22,23 +22,23 @@ import jclp.setting.Settings
 import jclp.vdm.VdmWriter
 import jclp.vdm.useStream
 import jclp.xml.XML
-import jclp.xml.newSerializer
 import jclp.xml.startDocument
 import jclp.xml.xml
+import jclp.xml.xmlSerializer
 import org.xmlpull.v1.XmlSerializer
 import java.io.OutputStream
 import java.io.Writer
 import java.nio.charset.Charset
 
-fun newSerializer(output: Writer, settings: Settings?): XmlSerializer =
-        newSerializer(output, settings.xmlIndent, settings.xmlSeparator)
+fun xmlSerializer(output: Writer, settings: Settings?): XmlSerializer =
+        xmlSerializer(output, settings.xmlIndent, settings.xmlSeparator)
 
-fun newSerializer(output: OutputStream, settings: Settings?): XmlSerializer =
-        newSerializer(output, settings.xmlEncoding, settings.xmlIndent, settings.xmlSeparator)
+fun xmlSerializer(output: OutputStream, settings: Settings?): XmlSerializer =
+        xmlSerializer(output, settings.xmlEncoding, settings.xmlIndent, settings.xmlSeparator)
 
-inline fun VdmWriter.newSerializer(entry: String, settings: Settings?, block: XmlSerializer.() -> Unit) {
+inline fun VdmWriter.xmlSerializer(entry: String, settings: Settings?, block: XmlSerializer.() -> Unit) {
     useStream(entry) {
-        with(newSerializer(it, settings)) {
+        with(xmlSerializer(it, settings)) {
             startDocument(settings.xmlEncoding)
             block.invoke(this)
             endDocument()

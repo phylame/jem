@@ -32,16 +32,21 @@ import jclp.text.ifNotEmpty
 import jclp.vdm.VdmWriter
 import jclp.vdm.useStream
 import jclp.vdm.writeBytes
+import jclp.vdm.writeFlob
 import jem.*
 import jem.epm.VdmMaker
+import jem.format.epub.opf.Package
+import jem.format.epub.opf.Resource
+import jem.format.epub.v2.makeImpl20
 import jem.format.epub.v3.makeImpl30
-import jem.format.util.M
-import jem.format.util.failMaker
+import jem.format.util.*
 import org.apache.velocity.Template
 import org.apache.velocity.VelocityContext
 import org.apache.velocity.app.Velocity
+import org.xmlpull.v1.XmlSerializer
 import java.nio.file.Path
 import java.util.*
+import jem.format.util.M as T
 
 internal object EpubMaker : VdmMaker {
     private val versions = arrayOf("", "2", "2.0", "2.0.1", "3", "3.0", "3.0.1")
@@ -66,14 +71,14 @@ internal object EpubMaker : VdmMaker {
     private fun makeEpub20(book: Book, writer: VdmWriter, settings: Settings?) {
         writer.writeBytes(EPUB.MIME_PATH, EPUB.MIME_EPUB.toByteArray())
 
-        val opf = OPFBuilder(book, writer, settings)
-        val ncx = NCXBuilder(book, writer, settings, opf)
-        val toc = TOCBuilder(book, writer, settings, ncx, opf)
+        val data = makeImpl20(book, writer, settings)
 
-        toc.make()
-        ncx.make()
+        val opfPath = "${data.opsDir}/package.opf"
+        writer.xmlSerializer(opfPath, settings) {
+            data.pkg.renderTo(this)
+        }
 
-        writeContainer(writer, settings, mapOf(opf.make().vdmPath to EPUB.MIME_OPF))
+        writeContainer(writer, settings, mapOf(opfPath to EPUB.MIME_OPF))
     }
 
     private fun makeEpub30(book: Book, writer: VdmWriter, settings: Settings?) {
@@ -119,7 +124,7 @@ internal class TOCBuilder(
     private lateinit var maskHref: String
 
     private fun newContext() = VelocityContext().apply {
-        put("M", M)
+        put("M", T)
         put("book", book)
         put("lang", lang)
         put("cssHref", cssHref)
@@ -153,7 +158,7 @@ internal class TOCBuilder(
             context["intro"] = book.intro!!
             val (item, _) = renderPage("intro", context)
             opf.newSpine(item.id)
-            ncx.newNav(item.id, M.tr("epub.make.introTitle"), item.href)
+            ncx.newNav(item.id, T.tr("epub.make.introTitle"), item.href)
             ncx.endNav()
         }
         book.forEachIndexed { i, chapter ->
@@ -262,4 +267,55 @@ internal object Templates {
     }
 
     fun getTemplate(name: String): Template = Velocity.getTemplate("jem/format/epub/$name.vm")
+}
+
+interface Renderable {
+    fun renderTo(xml: XmlSerializer)
+}
+
+abstract class Taggable(var id: String) : Renderable {
+    val attr = linkedMapOf<String, String>()
+}
+
+internal open class DataHolder(version: String, val book: Book, val writer: VdmWriter, val settings: Settings?) {
+    val pkg = Package(version)
+
+    val encoding = settings.xmlEncoding
+
+    val separator = settings.xmlSeparator
+
+    val opsDir = getConfig("opsDir") ?: "EPUB"
+
+    val textDir = getConfig("textDir") ?: "Text"
+
+    val styleDir = getConfig("styleDir") ?: "Styles"
+
+    val imageDir = getConfig("imageDir") ?: "Images"
+
+    val extraDir = getConfig("extraDir") ?: "Extras"
+
+    val lang: String = getConfig("language") ?: (book.language ?: Locale.getDefault()).toLanguageTag()
+
+    inline fun <reified T : Any> getConfig(name: String): T? = settings?.get("maker.epub.$name", T::class.java)
+
+    fun writeResource(path: String, id: String) = writeFlob(flobOf(path, javaClass.classLoader), id)
+
+    fun writeFlob(flob: Flob, id: String): Resource {
+        val mime = flob.mimeType
+        val dir = when {
+            mime == EPUB.MIME_CSS -> styleDir
+            mime.startsWith("image/") -> imageDir
+            "html" in mime || mime.startsWith("text/") -> textDir
+            else -> extraDir
+        }
+        val ext = mime.split('/').last().let {
+            when (it) {
+                "jpeg" -> "jpg"
+                else -> it
+            }
+        }
+        val opsPath = "$dir/$id.$ext"
+        writer.writeFlob("$opsDir/$opsPath", flob)
+        return pkg.manifest.addResource(id, opsPath, mime)
+    }
 }

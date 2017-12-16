@@ -18,15 +18,74 @@
 
 package jem.format.epub.v2
 
-import jem.format.epub.opf.DCME
-import jem.format.epub.opf.Resource
+import jclp.xml.attribute
+import jclp.xml.endTag
+import jclp.xml.startTag
+import jem.format.epub.opf.Meta
+import jem.format.epub.opf.Metadata
+import org.xmlpull.v1.XmlSerializer
+import java.time.Instant
+import java.time.temporal.ChronoField
 
-class DCME2(name: String, text: String) : DCME(name, text) {
-    val attrs = linkedMapOf<String, String>()
+class Meta2(name: String, content: String, id: String = "") : Meta(name, content, id) {
+    override fun renderTo(xml: XmlSerializer) {
+        with(xml) {
+            startTag("meta")
+            attribute("name", key)
+            attribute("content", content)
+            endTag()
+        }
+    }
 }
 
-class Resource2(id: String, href: String, mediaType: String, fallback: String) : Resource(id, href, mediaType, fallback) {
-    var fallbackStyle: String = ""
-    var requiredNamespace: String = ""
-    var requiredModules: String = ""
+fun Metadata.addMeta(name: String, content: String, id: String = "") {
+    Meta2(name, content, id).also { this += it }
+}
+
+fun Metadata.addDOI(id: String, doi: String) {
+    addDCME("identifier", doi, id).apply {
+        attr["opf:scheme"] = "DOI"
+    }
+}
+
+fun Metadata.addISBN(id: String, isbn: String) {
+    addDCME("identifier", isbn, id).apply {
+        attr["opf:scheme"] = "ISBN"
+    }
+}
+
+fun Metadata.addUUID(id: String, uuid: String) {
+    addDCME("identifier", uuid, id).apply {
+        attr["opf:scheme"] = "UUID"
+    }
+}
+
+fun Metadata.addModifiedTime(time: Instant) {
+    addDCME("date", time.with(ChronoField.MILLI_OF_SECOND, 0).toString()).apply {
+        attr["opf:event"] = "modification"
+    }
+}
+
+fun Metadata.addAuthor(author: String, fileAs: String = "") {
+    addDCME("creator", author).apply {
+        attr["opf:role"] = "aut"
+        if (fileAs.isNotEmpty()) {
+            attr["opf:file-as"] = fileAs
+        }
+    }
+}
+
+fun Metadata.addVendor(vendor: String, fileAs: String = "") {
+    addDCME("contributor", vendor).apply {
+        attr["opf:role"] = "bkp"
+        if (fileAs.isNotEmpty()) {
+            attr["opf:file-as"] = fileAs
+        }
+    }
+}
+
+fun Metadata.addPubdate(date: Instant) {
+    addDCME("date", date.with(ChronoField.MILLI_OF_SECOND, 0).toString()).apply {
+        attr["opf:event"] = "publication"
+    }
 }

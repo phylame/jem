@@ -94,10 +94,10 @@ fun XmlSerializer.endTag() {
     endTag(namespace, name)
 }
 
-fun newSerializer(output: Writer, indent: String = "  ", newLine: String = System.lineSeparator()): XmlSerializer =
+fun xmlSerializer(output: Writer, indent: String = "  ", newLine: String = System.lineSeparator()): XmlSerializer =
         XmlPullParserFactory.newInstance().newSerializer().apply { init(output, indent, newLine) }
 
-fun newSerializer(output: OutputStream, encoding: String = "UTF-8", indent: String = "  ", newLine: String = System.lineSeparator()): XmlSerializer =
+fun xmlSerializer(output: OutputStream, encoding: String = "UTF-8", indent: String = "  ", newLine: String = System.lineSeparator()): XmlSerializer =
         XmlPullParserFactory.newInstance().newSerializer().apply { init(output, encoding, indent, newLine) }
 
 fun XmlPullParser.getAttribute(name: String): String = getAttributeValue(null, name)

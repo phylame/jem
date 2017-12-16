@@ -18,8 +18,47 @@
 
 package jem.format.epub.opf
 
-open class Resource(val id: String, var href: String, var mediaType: String, var fallback: String)
+import jclp.text.ifNotEmpty
+import jclp.xml.attribute
+import jclp.xml.endTag
+import jclp.xml.startTag
+import jem.format.epub.Taggable
+import org.xmlpull.v1.XmlSerializer
+import java.util.*
 
-class Manifest {
-    val items = linkedMapOf<String, Resource>()
+class Resource(id: String, var href: String, var mediaType: String) : Taggable(id) {
+    override fun renderTo(xml: XmlSerializer) {
+        with(xml) {
+            startTag("item")
+            attribute("id", id)
+            attribute("href", href)
+            attribute("media-type", mediaType)
+            attr.forEach { attribute(it.key, it.value) }
+            endTag()
+        }
+    }
+}
+
+class Manifest(id: String = "") : Taggable(id) {
+    private val items = LinkedList<Resource>()
+
+    operator fun plusAssign(item: Resource) {
+        items += item
+    }
+
+    operator fun minusAssign(item: Resource) {
+        items -= item
+    }
+
+    fun addResource(id: String, href: String, mediaType: String) =
+            Resource(id, href, mediaType).also { items += it }
+
+    override fun renderTo(xml: XmlSerializer) {
+        with(xml) {
+            startTag("manifest")
+            id.ifNotEmpty { attribute("id", it) }
+            items.forEach { it.renderTo(this) }
+            endTag()
+        }
+    }
 }

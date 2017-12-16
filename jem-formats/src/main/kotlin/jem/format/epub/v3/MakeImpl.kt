@@ -87,7 +87,7 @@ internal fun makeImpl30(book: Book, writer: VdmWriter, settings: Settings?) {
     writeContents(data)
 
     val opfPath = "${data.opsDir}/package.opf"
-    writer.newSerializer(opfPath, settings) {
+    writer.xmlSerializer(opfPath, settings) {
         data.pkg.renderTo(this)
     }
 

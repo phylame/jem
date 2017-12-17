@@ -32,6 +32,7 @@ import jclp.io.writeLines
 import jclp.isSelfOrAncestor
 import jclp.log.Log
 import jclp.text.TEXT_PLAIN
+import jclp.text.or
 import jclp.text.textOf
 import jclp.toRoot
 import jem.Chapter
@@ -345,13 +346,16 @@ class TextEditor : TextArea(), EditAware {
             "selectAll" -> selectAll()
             "find" -> {
                 if (length != 0) {
-                    input(tr("d.findText.title"), tr("d.findText.hint"), lastText, canEmpty = false)?.let { str ->
+                    input(tr("d.findText.title"), tr("d.findText.hint"), selectedText or lastText, canEmpty = false)?.let { str ->
                         findAndGo(str)
                     }
                 }
             }
             "findNext" -> {
                 if (length != 0 && !lastText.isEmpty()) findAndGo(lastText)
+            }
+            "findPrevious" -> {
+                if (length != 0 && !lastText.isEmpty()) findPrevious()
             }
             "replace" -> replaceText()
             else -> println("ignore edit action: $command")
@@ -362,8 +366,17 @@ class TextEditor : TextArea(), EditAware {
         val position = text.indexOf(str, minOf(caretPosition, lastPosition))
         if (position != -1) {
             selectRange(position, position + str.length)
-            lastText = str
             lastPosition = position + str.length
+            lastText = str
+        }
+    }
+
+    private fun findPrevious() {
+        val str = lastText
+        val position = text.lastIndexOf(str, minOf(caretPosition, lastPosition))
+        if (position != -1) {
+            selectRange(position, position + str.length)
+            lastPosition = position - str.length
         }
     }
 
@@ -371,7 +384,7 @@ class TextEditor : TextArea(), EditAware {
         if (length == 0) return
         with(alert(Alert.AlertType.NONE, "replace", "")) {
             buttonTypes.setAll(ButtonType.OK, ButtonType.CANCEL)
-            val fromField = TextField(lastText).apply {
+            val fromField = TextField(selectedText or lastText).apply {
                 selectAll()
                 prefColumnCount = 20
                 dialogPane.lookupButton(ButtonType.OK).disableProperty().bind(lengthProperty().isEqualTo(0))

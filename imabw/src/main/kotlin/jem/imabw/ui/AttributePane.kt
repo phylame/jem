@@ -227,7 +227,9 @@ internal class AttributeViewController : Initializable {
         introEditor.promptText = tr("d.editAttribute.intro.hint")
 
         coverView.imageProperty().addListener { _, _, image ->
-            coverView.fitWidth = minOf(UISettings.minCoverWidth, image.width)
+            if (image != null) {
+                coverView.fitWidth = minOf(UISettings.minCoverWidth, image.width)
+            }
         }
 
         val settings = UISettings

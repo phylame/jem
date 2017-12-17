@@ -18,15 +18,9 @@
 
 package jem.format.epub
 
-import jclp.io.slashify
 import jem.epm.EpmFactory
 import jem.epm.FileParser
 import jem.epm.Maker
-import jem.epm.Parser
-import java.nio.file.Path
-
-internal val Path.vdmPath
-    get() = normalize().toString().slashify()
 
 internal object EPUB {
     const val MIME_PATH = "mimetype"
@@ -58,7 +52,5 @@ class EpubFactory : EpmFactory, FileParser {
 
     override val maker: Maker = EpubMaker
 
-    override val hasParser = true
-
-    override val parser: Parser = EpubParser
+    override val hasParser = false
 }

@@ -63,10 +63,8 @@ internal object EpubMaker : VdmMaker {
     }
 }
 
-private const val CONTAINER_PATH = "META-INF/container.xml"
-
 fun writeContainer(writer: VdmWriter, settings: Settings?, files: Map<String, String>) {
-    writer.xmlDsl(CONTAINER_PATH, settings) {
+    writer.xmlDsl("META-INF/container.xml", settings) {
         tag("container") {
             attr["version"] = "1.0"
             attr["xmlns"] = "urn:oasis:names:tc:opendocument:xmlns:container"

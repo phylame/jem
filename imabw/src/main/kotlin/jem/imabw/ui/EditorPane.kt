@@ -382,7 +382,7 @@ class TextEditor : TextArea(), EditAware {
 
     private fun replaceText() {
         if (length == 0) return
-        with(alert(Alert.AlertType.NONE, "replace", "")) {
+        with(alert(Alert.AlertType.NONE, tr("d.replaceText.title"), "")) {
             buttonTypes.setAll(ButtonType.OK, ButtonType.CANCEL)
             val fromField = TextField(selectedText or lastText).apply {
                 selectAll()
@@ -395,7 +395,7 @@ class TextEditor : TextArea(), EditAware {
             }
             dialogPane.content = GridPane().apply {
                 initAsForm(listOf(
-                        Label("Content:"), Label("To:")
+                        Label(tr("d.replaceText.source")), Label(tr("d.replaceText.target"))
                 ), listOf(
                         fromField, toField
                 ))

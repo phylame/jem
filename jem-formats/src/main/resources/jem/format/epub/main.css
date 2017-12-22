@@ -1,21 +1,21 @@
 @font-face {
     font-family: "zw";
-    src: local("宋体"), local("DK-SONGTI");
+    src: local("DK-SONGTI"),local("宋体");
 }
 
 @font-face {
     font-family: "fs";
-    src: local("仿宋"), local("DK-FANGSONG");
+    src: local("DK-FANGSONG"),local("仿宋");
 }
 
 @font-face {
     font-family: "kt";
-    src: local("楷体"), local("DK-KAITI");
+    src: local("DK-KAITI"),local("楷体");
 }
 
 @font-face {
     font-family: "ht";
-    src: local("黑体"), local("DK-HEITI");
+    src: local("DK-HEITI"),local("黑体");
 }
 
 body {
@@ -26,11 +26,13 @@ body {
 h1, h2, h3, h4, h5, h6 {
     margin: 0;
     padding: 0;
+    line-height: 1.3;
 }
 
 h1 {
-    margin: 1em 0;
-    font-family: "ZY-KAITI", "kt", sans-serif;
+    margin: 0.8em 0;
+    font-family: "ZY-KAITI", "kt", serif;
+    font-weight: bold;
     font-size: 1.3em;
     text-align: center;
 }
@@ -38,6 +40,7 @@ h1 {
 p {
     margin: 0.5em 0;
     padding: 0;
+    line-height: 1.8;
     text-align: justify;
 }
 
@@ -51,12 +54,12 @@ p {
 
 .intro h1 {
     font-family: "ZY-XIAOBIAOSONG", "DK-XIAOBIAOSONG", "ZY-KAITI", "kt", serif;
-    font-weight: bold;
+    font-weight: bolder;
     text-shadow: 1px 1px 1px #006C6C;
 }
 
 .intro p {
-    line-height: 120%;
+    line-height: 1.3;
     font-family: "ZY-FANGSONG", "fs", "ZY-KAITI", "kt", serif;
     font-weight: bold;
     text-indent: 2em;
@@ -96,7 +99,8 @@ p {
 }
 
 .section p {
-    line-height: 120%;
+    margin: 0.3em 0;
+    line-height: 1.2;
     font-family: "ZY-FANGSONG", "fs", "ZY-KAITI", "kt", serif;
     font-weight: bold;
     text-indent: 2em;
@@ -107,7 +111,8 @@ p {
 }
 
 .chapter .brief p {
-    line-height: 120%;
+    margin: 0.2em 0;
+    line-height: 1.3;
     font-family: "ZY-KAITI", "kt", serif;
     font-size: 0.9em;
     text-indent: 2em;
@@ -120,7 +125,7 @@ p {
 }
 
 .chapter .text p {
-    line-height: 130%;
+    line-height: 1.5;
     font-family: "ZY-ZW-SONGTI", "zw", "ZY-KAITI", "kt", serif;
     text-indent: 2em;
 }

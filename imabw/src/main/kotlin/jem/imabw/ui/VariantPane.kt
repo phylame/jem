@@ -131,6 +131,7 @@ open class VariantPane(private val values: ValueMap, private val tagId: String, 
         with(table) {
             isEditable = true
             selectionModel.selectionMode = SelectionMode.MULTIPLE
+            columnResizePolicy = TableView.CONSTRAINED_RESIZE_POLICY
             setOnKeyPressed { event ->
                 if (event.code == KeyCode.INSERT) {
                     newItem()

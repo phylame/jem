@@ -6,7 +6,7 @@
 <SplitPane xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="jem.imabw.ui.AttributeViewController" dividerPositions="0.3"
            fx:id="root">
-    <AnchorPane>
+    <AnchorPane SplitPane.resizableWithParent="false">
         <TitledPane collapsible="false" text="Cover" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0"
                     AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0" fx:id="coverTitle">
             <BorderPane>

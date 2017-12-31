@@ -16,14 +16,27 @@
  * limitations under the License.
  */
 
-rootProject.name = 'jem'
+plugins {
+    id 'application'
+    id 'org.jetbrains.kotlin.jvm' version '1.2.10'
+}
 
-include 'commons'
-include 'jem-core'
-include 'jem-formats'
-include 'jem-crawler'
-include 'mala'
-include 'scj'
-include 'imabw'
-include 'bookmgr'
+description = 'Local eBook Management'
 
+mainClassName = 'jem.tool.bookmgr.AppKt'
+
+dependencies {
+    compile project(':jem-core')
+    compile project(':jem-formats')
+    compile project(':jem-crawler')
+    compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.21.0'
+    compile group: 'org.jdbi', name: 'jdbi3-kotlin', version: '3.0.0'
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = javaVersion
+}
+
+compileTestKotlin {
+    kotlinOptions.jvmTarget = javaVersion
+}

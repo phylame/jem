@@ -30,7 +30,9 @@ dependencies {
     compile project(':jem-formats')
     compile project(':jem-crawler')
     compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.21.0'
-    compile group: 'org.jdbi', name: 'jdbi3-kotlin', version: '3.0.0'
+    compile(group: 'org.jdbi', name: 'jdbi3-kotlin', version: '3.0.0') {
+        exclude group: 'org.jetbrains.kotlin'
+    }
 }
 
 compileKotlin {

@@ -27,6 +27,12 @@ import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
+val currentClass: String
+    inline get() = Thread.currentThread().stackTrace.last().className
+
+val currentMethod: String
+    inline get() = Thread.currentThread().stackTrace.last().methodName
+
 val Throwable.traceText: String
     inline get() = with(CharArrayWriter()) {
         printStackTrace(PrintWriter(this))

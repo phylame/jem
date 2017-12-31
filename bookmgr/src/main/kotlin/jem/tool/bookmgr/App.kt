@@ -1,5 +1,6 @@
 package jem.tool.bookmgr
 
+import jclp.currentClass
 import jclp.io.lastModified
 import jclp.io.toLocalDateTime
 import jclp.lastLeafNode
@@ -24,11 +25,20 @@ import java.time.Instant
 import java.time.ZoneOffset
 
 fun main(args: Array<String>) {
-    val jdbi = Jdbi.create("jdbc:sqlite:E:/tmp/book.db")
+    val (dbPath, bookDir) = when (args.size) {
+        0 -> {
+            System.err.println("usage: java $currentClass db_path [book_dir]")
+            System.exit(-1)
+            return
+        }
+        1 -> args[0] to "."
+        else -> args[0] to args[1]
+    }
+    val jdbi = Jdbi.create("jdbc:sqlite:$dbPath")
     jdbi.useHandle<Exception> {
         initDb(it)
     }
-    Files.walk(Paths.get("E:/tmp/books"))
+    Files.walk(Paths.get(bookDir))
             .filter { it.fileName.toString().endsWith(".pmab") }
             .forEach { path ->
                 EpmManager.readBook(ParserParam(path.toString()))?.let {
@@ -44,7 +54,7 @@ fun main(args: Array<String>) {
 private fun addBook(book: Book, path: Path, jdbi: Jdbi) {
     val assetId = addAsset(path, jdbi)
     val updateTime = book.crawlerTime ?: path.lastModified.toLocalDateTime()
-    val lastChapter = book.extensions[EXT_CRAWLER_LAST_CHAPTER] ?: book.lastLeafNode?.title
+    val lastChapter = book.extensions[EXT_CRAWLER_LAST_CHAPTER] ?: book.lastLeafNode.title
     val category = book.extensions[EXT_CRAWLER_SOURCE_SITE]?.toString() or "default"
     val authorIds = book.getValues(AUTHOR)?.let { addAuthors(it, category, jdbi) }
     val genreId = book.genre.ifNotEmpty { addGenre(it, category, jdbi) }
@@ -182,7 +192,7 @@ fun Handle.selectInteger(sql: String, vararg args: Any?): Int? = select(sql, *ar
 
 private fun initDb(handle: Handle) {
     handle.useTransaction<Exception> {
-//        resetTables(it)
+        //        resetTables(it)
         createTables(it)
     }
 }

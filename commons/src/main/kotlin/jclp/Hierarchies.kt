@@ -40,7 +40,12 @@ val Hierarchical<*>.depth: Int
 
 val Hierarchical<*>.isEmpty inline get() = size == 0
 
+
 val Hierarchical<*>.isNotEmpty inline get() = size != 0
+
+val Hierarchical<*>.isLeaf inline get() = isEmpty
+
+val Hierarchical<*>.isNotLeaf inline get() = isNotEmpty
 
 val Hierarchical<*>.isRoot inline get() = parent == null
 
@@ -95,6 +100,12 @@ fun <T : Hierarchical<T>> T.locate(indices: Collection<Int>): T? {
     }
     return item
 }
+
+val <T : Hierarchical<T>> T.firstLeafNode: T
+    get() = if (isLeaf) this else this[0].let { if (isLeaf) it else it.firstLeafNode }
+
+val <T : Hierarchical<T>> T.lastLeafNode: T
+    get() = if (isLeaf) this else this[size - 1].let { if (isLeaf) it else it.lastLeafNode }
 
 inline fun <T : Hierarchical<T>> T.walkTree(block: (T, WalkEvent, Int, Int) -> Unit) {
     if (isNotEmpty) {

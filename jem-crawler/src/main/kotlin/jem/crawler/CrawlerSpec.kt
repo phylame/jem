@@ -28,6 +28,9 @@ import jem.epm.Parser
 import jem.epm.ParserException
 import java.io.InterruptedIOException
 import java.net.URL
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 const val ATTR_CHAPTER_UPDATE_TIME = "updateTime"
 const val ATTR_CHAPTER_SOURCE_URL = "sourceUrl"
@@ -37,6 +40,16 @@ const val EXT_CRAWLER_SOURCE_URL = "jem.ext.crawler.sourceUrl"
 const val EXT_CRAWLER_SOURCE_SITE = "jem.ext.crawler.sourceSite"
 const val EXT_CRAWLER_LAST_CHAPTER = "jem.ext.crawler.lastChapter"
 const val EXT_CRAWLER_UPDATE_TIME = "jem.ext.crawler.updateTime"
+
+val Book.crawlerTime: LocalDateTime?
+    get() = extensions[EXT_CRAWLER_UPDATE_TIME]?.let {
+        when (it) {
+            is LocalDateTime -> it
+            is LocalDate -> it.atTime(8, 0)
+            is LocalTime -> it.atDate(LocalDate.now())
+            else -> throw IllegalStateException("Invalid value for $EXT_CRAWLER_UPDATE_TIME")
+        }
+    }
 
 interface Crawler {
     fun getBook(url: String, settings: Settings?): Book

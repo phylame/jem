@@ -66,7 +66,10 @@ open class Chapter(
 
     operator fun set(name: String, value: Any) = attributes.set(name, value)
 
-    operator fun set(name: String, values: Collection<Any>)
+    fun getValues(name: String): List<String>?
+            = (attributes[name] as? CharSequence)?.split(Attributes.VALUE_SEPARATOR)
+
+    fun setValues(name: String, values: Collection<Any>)
             = attributes.set(name, values.joinToString(VALUE_SEPARATOR))
 
     val isSection inline get() = size != 0

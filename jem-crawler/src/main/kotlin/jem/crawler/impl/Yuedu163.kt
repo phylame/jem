@@ -3,8 +3,10 @@ package jem.crawler.impl
 import jclp.io.baseName
 import jclp.io.dirName
 import jclp.setting.Settings
+import jclp.text.count
 import jclp.text.ifNotEmpty
 import jclp.text.textOf
+import jclp.toLocalDate
 import jclp.toLocalDateTime
 import jclp.toLocalTime
 import jem.*
@@ -115,6 +117,7 @@ class Yuedu163 : ReusableCrawler() {
             str.startsWith("今天") -> LocalDate.now().atTime("${str.substring(3)}:00".toLocalTime())
             str.startsWith("昨天") -> LocalDate.now().minusDays(1).atTime("${str.substring(3)}:00".toLocalTime())
             "分钟" in str -> LocalDate.now().atTime(LocalTime.now().minusSeconds(str.removeSuffix("分钟前").toLong()))
+            str.count('-') == 2 -> str.toLocalDate().atTime(0, 0, 0)
             else -> "$str:00".toLocalDateTime()
         }
     }

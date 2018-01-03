@@ -36,7 +36,6 @@ import org.json.JSONObject
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
-import org.jsoup.nodes.TextNode
 import org.jsoup.select.Elements
 import java.io.InterruptedIOException
 import java.io.Reader
@@ -210,17 +209,3 @@ fun Element.subText(index: Int): String {
             .firstOrNull { it.isNotEmpty() && index == i++ }
             ?: ""
 }
-
-fun Element.joinText(separator: String) =
-        childNodes().map {
-            when (it) {
-                is TextNode -> it.text().htmlTrim()
-                is Element -> it.ownText().htmlTrim()
-                else -> ""
-            }
-        }.filter {
-            it.isNotEmpty()
-        }.joinToString(separator)
-
-fun Elements.joinText(separator: String) =
-        joinToString(separator) { it.joinText(separator) }

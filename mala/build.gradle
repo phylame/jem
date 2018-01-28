@@ -18,7 +18,6 @@
 
 plugins {
     id 'java-library'
-    id 'org.jetbrains.kotlin.jvm' version '1.2.10'
 }
 
 version = '3.0'
@@ -28,12 +27,4 @@ dependencies {
     api project(':commons')
     api "commons-cli:commons-cli:$commonsCliVersion"
     api group: 'org.json', name: 'json', version: '20170516'
-}
-
-compileKotlin {
-    kotlinOptions.jvmTarget = javaVersion
-}
-
-compileTestKotlin {
-    kotlinOptions.jvmTarget = javaVersion
 }

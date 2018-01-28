@@ -97,7 +97,7 @@ object EventBus {
 
     fun <T : Any> register(type: Class<T>, action: EventAction<T>) {
         synchronized(this) {
-            observers.getOrPut(type.objectType) { arrayListOf() }!! += (action)
+            observers.getOrSet(type.objectType) { arrayListOf() }!! += (action)
         }
     }
 

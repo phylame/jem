@@ -22,7 +22,7 @@ import java.util.*
 
 infix fun CharSequence?.or(default: CharSequence) = if (!isNullOrEmpty()) toString() else default.toString()
 
-infix inline fun CharSequence?.or(default: () -> CharSequence) = if (!isNullOrEmpty()) toString() else default().toString()
+inline infix fun CharSequence?.or(default: () -> CharSequence) = if (!isNullOrEmpty()) toString() else default().toString()
 
 inline fun <S : CharSequence, R> S.ifNotEmpty(block: (S) -> R) = if (isNotEmpty()) block(this) else null
 

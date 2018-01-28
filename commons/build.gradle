@@ -16,23 +16,10 @@
  * limitations under the License.
  */
 
-plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.2.10'
-}
-
-version = '3.0'
+version = '3.1'
 group = 'pw.phylame.util'
 description = 'Commons & Utilities for Java'
 
 dependencies {
-    compile 'org.jetbrains.kotlin:kotlin-stdlib-jre8'
-    compile "xpp3:xpp3:$xppVersion"
-}
-
-compileKotlin {
-    kotlinOptions.jvmTarget = javaVersion
-}
-
-compileTestKotlin {
-    kotlinOptions.jvmTarget = javaVersion
+    compile "xpp3:xpp3:$xpp_version"
 }

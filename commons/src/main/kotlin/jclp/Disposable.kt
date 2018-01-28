@@ -18,6 +18,8 @@
 
 package jclp
 
+import java.util.concurrent.atomic.AtomicInteger
+
 interface AutoDisposable {
     fun retain()
 
@@ -43,22 +45,24 @@ inline fun <T, R> managed(obj: T, block: (T) -> R): R = try {
 class DisposedException : IllegalStateException()
 
 abstract class DisposableSupport : AutoDisposable {
-    private var refCount = 1
+    private var refCount = AtomicInteger(1)
 
     private val lock = Any()
 
     override fun retain() {
+        if (refCount.get() == 0) throw DisposedException()
         synchronized(lock) {
-            if (refCount == 0) throw DisposedException()
-            ++refCount
+            if (refCount.get() == 0) throw DisposedException()
+            refCount.incrementAndGet()
         }
     }
 
     override fun release() {
-        synchronized(lock) {
-            if (refCount == 0) throw DisposedException()
-            if (--refCount == 0) {
-                dispose()
+        if (refCount.get() > 0) {
+            synchronized(lock) {
+                if (refCount.get() > 0 && refCount.decrementAndGet() == 0) {
+                    dispose()
+                }
             }
         }
     }

@@ -16,16 +16,38 @@
  * limitations under the License.
  */
 
+buildscript {
+    ext {
+        kotlin_version = '1.2.21'
+        xpp_version = '1.1.4c'
+    }
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
 subprojects {
-    apply plugin: 'java'
+    apply plugin: 'kotlin'
 
     group = 'pw.phylame.jem'
-    version = '5.1.0'
-
-    sourceCompatibility = '1.8'
-    targetCompatibility = '1.8'
+    version = '5.1.0.SNAPSHOT'
 
     repositories {
         jcenter()
+    }
+
+    dependencies {
+        compile 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+    }
+
+    compileKotlin {
+        kotlinOptions.jvmTarget = '1.8'
+    }
+
+    compileTestKotlin {
+        kotlinOptions.jvmTarget = '1.8'
     }
 }

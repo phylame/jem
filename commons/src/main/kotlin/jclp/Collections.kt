@@ -30,7 +30,7 @@ inline fun <E, S : Collection<E>, R> S.ifNotEmpty(block: (S) -> R) = if (isNotEm
 
 inline fun <K, V, M : Map<K, V>, R> M.ifNotEmpty(block: (M) -> R) = if (isNotEmpty()) block(this) else null
 
-inline fun <K, V> MutableMap<K, V>.getOrPut(key: K, default: (K) -> V?): V? {
+inline fun <K, V> MutableMap<K, V>.getOrSet(key: K, default: (K) -> V?): V? {
     var value = get(key)
     if (value == null && (key !in this)) {
         value = default(key)

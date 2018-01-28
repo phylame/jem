@@ -48,12 +48,12 @@ open class ServiceManager<S : KeyedService>(type: Class<S>, loader: ClassLoader?
 
     val services get() = serviceProviders + localRegistry.values
 
-    operator fun get(key: String) = localRegistry.getOrPut(key) {
+    operator fun get(key: String) = localRegistry.getOrSet(key) {
         serviceProviders.firstOrNull { key in it.keys }
     }
 
     operator fun set(name: String, factory: S) {
-        localRegistry.put(name, factory)
+        localRegistry[name] = factory
     }
 
     private fun initServices() {

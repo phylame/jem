@@ -31,15 +31,16 @@ interface Hierarchical<T : Hierarchical<T>> : Iterable<T> {
 val Hierarchical<*>.depth: Int
     get() {
         if (size == 0) return 0
+
         var depth = 0
         for (item in this) {
             depth = maxOf(depth, item.depth)
         }
+
         return depth + 1
     }
 
 val Hierarchical<*>.isEmpty inline get() = size == 0
-
 
 val Hierarchical<*>.isNotEmpty inline get() = size != 0
 
@@ -51,11 +52,14 @@ val Hierarchical<*>.isRoot inline get() = parent == null
 
 val Hierarchical<*>.isNotRoot inline get() = parent != null
 
-fun <T : Hierarchical<T>> T.isSelfOrAncestor(item: T): Boolean
-        = this === item || isAncestor(item)
+fun <T : Hierarchical<T>> T.isSibling(obj: T) = parent === obj.parent
 
-fun <T : Hierarchical<T>> T.isAncestor(item: T): Boolean {
-    var parent = item.parent
+fun <T : Hierarchical<T>> T.isAncestor(ancestor: T) = ancestor.isOffspring(this)
+
+fun <T : Hierarchical<T>> T.isSelfOrOffspring(child: T) = this === child || isOffspring(child)
+
+fun <T : Hierarchical<T>> T.isOffspring(child: T): Boolean {
+    var parent = child.parent
     while (parent != null) {
         if (parent === this) return true
         parent = parent.parent
@@ -63,7 +67,7 @@ fun <T : Hierarchical<T>> T.isAncestor(item: T): Boolean {
     return false
 }
 
-fun <T : Hierarchical<T>> T.belowOf(top: T? = null): T {
+fun <T : Hierarchical<T>> T.ancestorUnder(top: T?): T {
     var parent: T = this
     while (parent.parent != top) {
         parent = parent.parent!!
@@ -71,7 +75,7 @@ fun <T : Hierarchical<T>> T.belowOf(top: T? = null): T {
     return parent
 }
 
-val <T : Hierarchical<T>> T.root inline get() = belowOf(null)
+val <T : Hierarchical<T>> T.root inline get() = ancestorUnder(null)
 
 fun <T : Hierarchical<T>> T.pathTo(top: T?): List<T> {
     val list = LinkedList<T>()
@@ -227,7 +231,7 @@ open class HierarchySupport<T : HierarchySupport<T>> : Hierarchical<T> {
         require(item !== this) { "Cannot add self to child list" }
         require(item !== parent) { "Cannot add parent to child list" }
         require(item.parent == null) { "Item has been in certain hierarchy" }
-        require(!item.isAncestor(this as T)) { "Cannot add ancestor to child list" }
+        require(!item.isOffspring(this as T)) { "Cannot add ancestor to child list" }
         item.parent = this
         return item
     }

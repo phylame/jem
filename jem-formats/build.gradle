@@ -16,20 +16,8 @@
  * limitations under the License.
  */
 
-plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.2.10'
-}
-
 description = 'Implementations for EPM'
 
 dependencies {
     compile project(':jem-core')
-}
-
-compileKotlin {
-    kotlinOptions.jvmTarget = javaVersion
-}
-
-compileTestKotlin {
-    kotlinOptions.jvmTarget = javaVersion
 }

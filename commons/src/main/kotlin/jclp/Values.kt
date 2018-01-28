@@ -91,7 +91,7 @@ object TypeManager {
 
     fun getType(value: Any) = getType(value.javaClass)
 
-    fun getType(clazz: Class<*>) = classes.getOrPut(clazz.objectType) { cls ->
+    fun getType(clazz: Class<*>) = classes.getOrSet(clazz.objectType) { cls ->
         types.entries.run {
             firstOrNull { it.value.clazz == cls } ?: firstOrNull { it.value.clazz!!.isAssignableFrom(cls) }
         }?.key

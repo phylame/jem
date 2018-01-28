@@ -29,7 +29,7 @@ import jclp.EventBus
 import jclp.ifNotEmpty
 import jclp.io.flobOf
 import jclp.io.writeLines
-import jclp.isSelfOrAncestor
+import jclp.isSelfOrOffspring
 import jclp.log.Log
 import jclp.text.TEXT_PLAIN
 import jclp.text.or
@@ -110,7 +110,7 @@ object EditorPane : TabPane(), CommandHandler, EditAware {
     }
 
     fun openTab(chapter: Chapter, icon: Node?) {
-//        require(Workbench.work!!.book.isAncestor(chapter)) { "not child of current book" }
+//        require(Workbench.work!!.book.isOffspring(chapter)) { "not child of current book" }
         val tab = tabs.find { (it as? ChapterTab)?.chapter === chapter } ?: ChapterTab(chapter).also { tabs += it }
         selectionModel.select(tab)
         tab.graphic = icon
@@ -120,7 +120,7 @@ object EditorPane : TabPane(), CommandHandler, EditAware {
         tabs.iterator().apply {
             while (hasNext()) {
                 (next() as? ChapterTab)?.let { tab ->
-                    if (chapter.isSelfOrAncestor(tab.chapter)) {
+                    if (chapter.isSelfOrOffspring(tab.chapter)) {
                         tab.dispose()
                         remove()
                     }
@@ -133,7 +133,7 @@ object EditorPane : TabPane(), CommandHandler, EditAware {
         Log.t(TAG) { "cache text in tabs" }
         for (tab in tabs) {
             (tab as? ChapterTab)?.let {
-                if (chapter?.isSelfOrAncestor(it.chapter) != false) {
+                if (chapter?.isSelfOrOffspring(it.chapter) != false) {
                     it.cacheIfNeed(false)
                 }
             }

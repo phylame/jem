@@ -16,21 +16,16 @@
  * limitations under the License.
  */
 
-.menu-bar {
-    -fx-padding: 0;
-    -fx-background-insets: 0 0 0 0, 0 0 1 0;
+.root {
+    -fx-font-size: 14px;
 }
 
 .menu-button {
-    -fx-padding: 3px 4px;
+    -fx-padding: 4px 5px;
 }
 
 .menu-button > .label {
     -fx-alignment: center;
-}
-
-.context-menu {
-    -fx-padding: 0;
 }
 
 .tool-bar {

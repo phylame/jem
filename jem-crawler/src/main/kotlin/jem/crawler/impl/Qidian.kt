@@ -113,6 +113,7 @@ class Qidian : ReusableCrawler() {
     private fun parseTime(str: String): LocalDateTime = when {
         '-' in str -> str.toLocalDateTime()
         str.startsWith("今天") -> LocalDateTime.of(LocalDate.now(), "${str.substring(2, 7)}:00".toLocalTime())
+        "小时" in str -> LocalDateTime.now().minusHours(str.removeSuffix("小时前").toLong())
         else -> LocalDateTime.of(LocalDate.now().minusDays(1), "${str.substring(2, 7)}:00".toLocalTime())
     }
 
